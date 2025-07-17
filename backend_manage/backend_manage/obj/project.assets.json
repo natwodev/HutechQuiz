@@ -11139,11 +11139,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/Users/nguyenhuynhnam/RiderProjects/manage/backend_manage/backend_manage/backend_manage.csproj",
+      "projectUniqueName": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/backend_manage/backend_manage/backend_manage.csproj",
       "projectName": "backend_manage",
-      "projectPath": "/Users/nguyenhuynhnam/RiderProjects/manage/backend_manage/backend_manage/backend_manage.csproj",
+      "projectPath": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/backend_manage/backend_manage/backend_manage.csproj",
       "packagesPath": "/Users/nguyenhuynhnam/.nuget/packages/",
-      "outputPath": "/Users/nguyenhuynhnam/RiderProjects/manage/backend_manage/backend_manage/obj/",
+      "outputPath": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/backend_manage/backend_manage/obj/",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "/Users/nguyenhuynhnam/.nuget/NuGet/NuGet.Config"

@@ -16,6 +16,7 @@ using backend_manage.Hubs;
 using ICSharpCode.SharpZipLib.Zip;
 using Microsoft.AspNetCore.Http.Features;
 using System.Security.Claims;
+using System.Collections.Generic;
 
 namespace backend_manage.Services.AuthService
 {
@@ -50,6 +51,7 @@ namespace backend_manage.Services.AuthService
             if (!file.FileName.EndsWith(".epz", StringComparison.OrdinalIgnoreCase))
                 throw new ArgumentException("File phải có đuôi .epz");
 
+            // Đọc file .epz từ stream, không ghi ra wwwroot/EPZ
             string xmlContent = null;
             using (var zipStream = new MemoryStream())
             {
@@ -126,12 +128,13 @@ namespace backend_manage.Services.AuthService
             // Lưu các phần (section) dựa vào TenPhan
             if (monHoc.Phan != null)
             {
+                // Map tạm để xử lý parent question
+                var questionIdMap = new Dictionary<string, int>();
                 foreach (var phan in monHoc.Phan)
                 {
                     int? parentChapterId = null;
                     if (!string.IsNullOrEmpty(phan.MaPhanCha) && phan.MaPhanCha != "00000000-0000-0000-0000-000000000000")
                     {
-                        // Tìm TenPhan của parent section dựa vào MaPhanCha
                         var parentPhan = monHoc.Phan.FirstOrDefault(p => p.MaPhan == phan.MaPhanCha);
                         if (parentPhan != null)
                         {
@@ -143,7 +146,6 @@ namespace backend_manage.Services.AuthService
                             }
                         }
                     }
-                    // Tìm hoặc tạo Chapter theo TenPhan
                     var chapter = await _chapterRepository.GetQueryable()
                         .FirstOrDefaultAsync(c => c.Name == phan.TenPhan && c.SubjectId == subject.SubjectId);
                     if (chapter == null)
@@ -155,30 +157,52 @@ namespace backend_manage.Services.AuthService
                             SubjectId = subject.SubjectId,
                             CreatedBy = userIdForExamPaper,
                             CreatedAt = now,
-                            Order = 0, // TODO: lấy thứ tự nếu có
-                            IsGroupQuestion = false, // TODO: xác định nếu có logic nhóm
+                            Order = 0,
+                            IsGroupQuestion = false,
                             ParentChapterId = parentChapterId
                         };
                         await _chapterRepository.AddAsync(chapter);
                     }
-                    // Lưu câu hỏi và OriginalExamPaperDetail cho từng phần (phan.CauHoi)
                     if (phan.CauHoi != null)
                     {
                         int order = 1;
+                        // Lưu tạm mapping MaCauHoi -> OriginalExamPaperDetailId
+                        var tempDetails = new List<(string MaCauHoi, OriginalExamPaperDetail Detail)>();
                         foreach (var cauHoi in phan.CauHoi)
                         {
-                            // Lưu chi tiết đề thi gốc (chỉ lưu nội dung, không còn liên kết Question/Answer)
+                            var answers = cauHoi.CauTraLoi?.OrderBy(a => a.ThuTu).ToList() ?? new List<DTOs.EPZ.CauTraLoiDto>();
                             var detail = new OriginalExamPaperDetail
                             {
                                 OriginalExamPaperId = originalExamPaper.OriginalExamPaperId,
                                 ChapterId = chapter.ChapterId,
                                 Order = order,
+                                QuestionContent = cauHoi.NoiDung,
+                                Answer1 = answers.Count > 0 ? answers[0].NoiDung : null,
+                                Answer2 = answers.Count > 1 ? answers[1].NoiDung : null,
+                                Answer3 = answers.Count > 2 ? answers[2].NoiDung : null,
+                                Answer4 = answers.Count > 3 ? answers[3].NoiDung : null,
+                                CorrectAnswerIndex = answers.FindIndex(a => a.LaDapAn) >= 0 ? answers.FindIndex(a => a.LaDapAn) + 1 : null,
                                 CreatedBy = userIdForExamPaper,
                                 CreatedAt = now,
-                                // Nếu entity có trường QuestionContent/AnswersJson thì lưu ở đây, nếu không thì chỉ lưu các trường hiện có
+                                // ParentQuestionId sẽ gán sau khi đã có mapping
                             };
                             await _originalExamPaperDetailRepository.AddAsync(detail);
+                            tempDetails.Add((cauHoi.MaCauHoi, detail));
                             order++;
+                        }
+                        // Sau khi lưu xong, cập nhật ParentQuestionId nếu có
+                        foreach (var (MaCauHoi, Detail) in tempDetails)
+                        {
+                            var cauHoi = phan.CauHoi.FirstOrDefault(c => c.MaCauHoi == MaCauHoi);
+                            if (cauHoi != null && !string.IsNullOrEmpty(cauHoi.MaCauHoiCha) && cauHoi.MaCauHoiCha != "00000000-0000-0000-0000-000000000000")
+                            {
+                                var parent = tempDetails.FirstOrDefault(t => t.MaCauHoi == cauHoi.MaCauHoiCha).Detail;
+                                if (parent != null)
+                                {
+                                    Detail.ParentQuestionId = parent.OriginalExamPaperDetailId;
+                                    await _originalExamPaperDetailRepository.AddAsync(Detail); // hoặc update nếu repo có hàm update
+                                }
+                            }
                         }
                     }
                 }

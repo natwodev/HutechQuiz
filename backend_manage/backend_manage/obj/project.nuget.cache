@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "VBBRtWxDHu8=",
+  "dgSpecHash": "CSQGO5SdpcI=",
   "success": true,
-  "projectFilePath": "/Users/nguyenhuynhnam/RiderProjects/manage/backend_manage/backend_manage/backend_manage.csproj",
+  "projectFilePath": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/backend_manage/backend_manage/backend_manage.csproj",
   "expectedPackageFiles": [
     "/Users/nguyenhuynhnam/.nuget/packages/aspnetcoreratelimit/5.0.0/aspnetcoreratelimit.5.0.0.nupkg.sha512",
     "/Users/nguyenhuynhnam/.nuget/packages/automapper/12.0.1/automapper.12.0.1.nupkg.sha512",
