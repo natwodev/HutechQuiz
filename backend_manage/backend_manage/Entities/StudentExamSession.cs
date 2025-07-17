@@ -38,7 +38,7 @@ public class StudentExamSession : BaseEntity
 
     // Lý do được gia hạn thêm thời gian
     [MaxLength(200)]
-    public string ReasonForExtra { get; set; }
+    public string? ReasonForExtra { get; set; }
 
     // Số câu trả lời đúng của sinh viên
     public int? CorrectAnswers { get; set; }
@@ -47,7 +47,7 @@ public class StudentExamSession : BaseEntity
     public int? TotalQuestions { get; set; }
 
     // Điểm số của sinh viên (tính theo phần trăm hoặc thang điểm 10)
-    public double Score { get; set; }
+    public double Score { get; set; } = 0;
 
     // Trạng thái hoàn thành bài thi
     // true: đã hoàn thành, false: chưa hoàn thành
@@ -69,7 +69,9 @@ public class StudentExamSession : BaseEntity
     // Navigation property đến entity ExamRoom
     public ExamRoom ExamRoom { get; set; }
 
-    // Collection các câu trả lời của sinh viên trong bài thi này
-    // Mối quan hệ one-to-many với StudentAnswer
-    public ICollection<StudentAnswer> StudentAnswers { get; set; } = new List<StudentAnswer>();
-} 
+    // Chuỗi lưu đáp án của sinh viên, ví dụ: "A,B,C,D,..." hoặc JSON
+    public string? StudentAnswersString { get; set; }
+}
+
+
+

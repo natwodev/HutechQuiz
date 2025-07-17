@@ -47,11 +47,7 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.SemesterId, opt => opt.MapFrom(src => src.SemesterId))
             .ForMember(dest => dest.Description, opt => opt.MapFrom(src => src.Description))
             .ForMember(dest => dest.IsActive, opt => opt.MapFrom(src => src.IsActive));
-
-        // Answer
-        CreateMap<Answer, AnswerDto>();
-        CreateMap<AnswerCreateDto, Answer>();
-        CreateMap<AnswerUpdateDto, Answer>();
+        
 
         // Chapter
         CreateMap<Chapter, ChapterDto>();

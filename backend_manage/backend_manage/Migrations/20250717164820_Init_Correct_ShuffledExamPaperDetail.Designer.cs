@@ -12,8 +12,8 @@ using backend_manage.Data;
 namespace backend_manage.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250717073250_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20250717164820_Init_Correct_ShuffledExamPaperDetail")]
+    partial class Init_Correct_ShuffledExamPaperDetail
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -195,59 +195,6 @@ namespace backend_manage.Migrations
                     b.HasKey("AcademicYearId");
 
                     b.ToTable("AcademicYears");
-                });
-
-            modelBuilder.Entity("backend_manage.Entities.Answer", b =>
-                {
-                    b.Property<int>("AnswerId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("AnswerId"));
-
-                    b.Property<string>("Content")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("CreatedBy")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<bool>("IsCorrect")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsShuffled")
-                        .HasColumnType("bit");
-
-                    b.Property<int>("Order")
-                        .HasColumnType("int");
-
-                    b.Property<int>("QuestionId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("UpdatedBy")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<int>("Version")
-                        .HasColumnType("int");
-
-                    b.HasKey("AnswerId");
-
-                    b.HasIndex("QuestionId");
-
-                    b.ToTable("Answers");
                 });
 
             modelBuilder.Entity("backend_manage.Entities.ApplicationUser", b =>
@@ -519,58 +466,6 @@ namespace backend_manage.Migrations
                     b.HasIndex("ExamBatchId");
 
                     b.ToTable("ExamBatchDetail");
-                });
-
-            modelBuilder.Entity("backend_manage.Entities.ExamPaperRequest", b =>
-                {
-                    b.Property<int>("ExamPaperRequestId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ExamPaperRequestId"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("CreatedBy")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<DateTime?>("ExtractionDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<int>("ShuffledExamPaperId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("TeacherCode")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<string>("TeacherName")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("UpdatedBy")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<int>("Version")
-                        .HasColumnType("int");
-
-                    b.HasKey("ExamPaperRequestId");
-
-                    b.HasIndex("ShuffledExamPaperId");
-
-                    b.ToTable("ExamPaperRequests");
                 });
 
             modelBuilder.Entity("backend_manage.Entities.ExamRoom", b =>
@@ -993,7 +888,22 @@ namespace backend_manage.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("OriginalExamPaperDetailId"));
 
+                    b.Property<string>("Answer1")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Answer2")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Answer3")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Answer4")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int>("ChapterId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("CorrectAnswerIndex")
                         .HasColumnType("int");
 
                     b.Property<DateTime>("CreatedAt")
@@ -1013,8 +923,11 @@ namespace backend_manage.Migrations
                     b.Property<int>("OriginalExamPaperId")
                         .HasColumnType("int");
 
-                    b.Property<int>("QuestionId")
+                    b.Property<int?>("ParentQuestionId")
                         .HasColumnType("int");
+
+                    b.Property<string>("QuestionContent")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
@@ -1032,119 +945,9 @@ namespace backend_manage.Migrations
 
                     b.HasIndex("OriginalExamPaperId");
 
-                    b.HasIndex("QuestionId");
-
-                    b.ToTable("OriginalExamPaperDetails");
-                });
-
-            modelBuilder.Entity("backend_manage.Entities.Question", b =>
-                {
-                    b.Property<int>("QuestionId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("QuestionId"));
-
-                    b.Property<int>("ChapterId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Content")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("CreatedBy")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<int>("Level")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("ParentQuestionId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("SubQuestionCount")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("UpdatedBy")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<int>("UsageCount")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Version")
-                        .HasColumnType("int");
-
-                    b.HasKey("QuestionId");
-
-                    b.HasIndex("ChapterId");
-
                     b.HasIndex("ParentQuestionId");
 
-                    b.ToTable("Questions");
-                });
-
-            modelBuilder.Entity("backend_manage.Entities.QuizFile", b =>
-                {
-                    b.Property<int>("QuizFileId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("QuizFileId"));
-
-                    b.Property<int?>("AnswerId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("CreatedBy")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<string>("FileName")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
-                    b.Property<int>("FileType")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<int?>("QuestionId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("UpdatedBy")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<int>("Version")
-                        .HasColumnType("int");
-
-                    b.HasKey("QuizFileId");
-
-                    b.HasIndex("AnswerId");
-
-                    b.HasIndex("QuestionId");
-
-                    b.ToTable("QuizFile");
+                    b.ToTable("OriginalExamPaperDetails");
                 });
 
             modelBuilder.Entity("backend_manage.Entities.Semester", b =>
@@ -1259,7 +1062,10 @@ namespace backend_manage.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ShuffledExamPaperDetailId"));
 
-                    b.Property<int>("ChapterId")
+                    b.Property<string>("AnswerOrder")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("ChapterId")
                         .HasColumnType("int");
 
                     b.Property<DateTime>("CreatedAt")
@@ -1276,10 +1082,13 @@ namespace backend_manage.Migrations
                     b.Property<int>("Order")
                         .HasColumnType("int");
 
+                    b.Property<int>("OriginalExamPaperDetailId")
+                        .HasColumnType("int");
+
                     b.Property<int?>("OriginalExamPaperId")
                         .HasColumnType("int");
 
-                    b.Property<int>("QuestionId")
+                    b.Property<int?>("ParentQuestionId")
                         .HasColumnType("int");
 
                     b.Property<int>("ShuffledExamPaperId")
@@ -1299,9 +1108,11 @@ namespace backend_manage.Migrations
 
                     b.HasIndex("ChapterId");
 
+                    b.HasIndex("OriginalExamPaperDetailId");
+
                     b.HasIndex("OriginalExamPaperId");
 
-                    b.HasIndex("QuestionId");
+                    b.HasIndex("ParentQuestionId");
 
                     b.HasIndex("ShuffledExamPaperId");
 
@@ -1372,55 +1183,6 @@ namespace backend_manage.Migrations
                     b.ToTable("Students");
                 });
 
-            modelBuilder.Entity("backend_manage.Entities.StudentAnswer", b =>
-                {
-                    b.Property<int>("StudentAnswerId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("StudentAnswerId"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("CreatedBy")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<int>("ExamPaperDetailId")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<int?>("SelectedAnswerId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("StudentExamSessionId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("UpdatedBy")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<int>("Version")
-                        .HasColumnType("int");
-
-                    b.HasKey("StudentAnswerId");
-
-                    b.HasIndex("ExamPaperDetailId");
-
-                    b.HasIndex("SelectedAnswerId");
-
-                    b.HasIndex("StudentExamSessionId");
-
-                    b.ToTable("StudentAnswers");
-                });
-
             modelBuilder.Entity("backend_manage.Entities.StudentExamSession", b =>
                 {
                     b.Property<int>("StudentExamSessionId")
@@ -1459,7 +1221,6 @@ namespace backend_manage.Migrations
                         .HasColumnType("bit");
 
                     b.Property<string>("ReasonForExtra")
-                        .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
@@ -1471,6 +1232,9 @@ namespace backend_manage.Migrations
 
                     b.Property<DateTime?>("StartTime")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("StudentAnswersString")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("StudentId")
                         .HasColumnType("int");
@@ -1602,17 +1366,6 @@ namespace backend_manage.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("backend_manage.Entities.Answer", b =>
-                {
-                    b.HasOne("backend_manage.Entities.Question", "Question")
-                        .WithMany("Answers")
-                        .HasForeignKey("QuestionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Question");
-                });
-
             modelBuilder.Entity("backend_manage.Entities.Chapter", b =>
                 {
                     b.HasOne("backend_manage.Entities.Chapter", "ParentChapter")
@@ -1651,17 +1404,6 @@ namespace backend_manage.Migrations
                         .IsRequired();
 
                     b.Navigation("ExamBatch");
-                });
-
-            modelBuilder.Entity("backend_manage.Entities.ExamPaperRequest", b =>
-                {
-                    b.HasOne("backend_manage.Entities.ShuffledExamPaper", "ShuffledExamPaper")
-                        .WithMany()
-                        .HasForeignKey("ShuffledExamPaperId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("ShuffledExamPaper");
                 });
 
             modelBuilder.Entity("backend_manage.Entities.ExamRoom", b =>
@@ -1792,49 +1534,15 @@ namespace backend_manage.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("backend_manage.Entities.Question", "Question")
-                        .WithMany("OriginalExamPaperDetails")
-                        .HasForeignKey("QuestionId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                    b.HasOne("backend_manage.Entities.OriginalExamPaperDetail", "ParentQuestion")
+                        .WithMany("ChildQuestions")
+                        .HasForeignKey("ParentQuestionId");
 
                     b.Navigation("Chapter");
 
                     b.Navigation("OriginalExamPaper");
 
-                    b.Navigation("Question");
-                });
-
-            modelBuilder.Entity("backend_manage.Entities.Question", b =>
-                {
-                    b.HasOne("backend_manage.Entities.Chapter", "Chapter")
-                        .WithMany("Questions")
-                        .HasForeignKey("ChapterId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("backend_manage.Entities.Question", "ParentQuestion")
-                        .WithMany("SubQuestions")
-                        .HasForeignKey("ParentQuestionId");
-
-                    b.Navigation("Chapter");
-
                     b.Navigation("ParentQuestion");
-                });
-
-            modelBuilder.Entity("backend_manage.Entities.QuizFile", b =>
-                {
-                    b.HasOne("backend_manage.Entities.Answer", "Answer")
-                        .WithMany()
-                        .HasForeignKey("AnswerId");
-
-                    b.HasOne("backend_manage.Entities.Question", "Question")
-                        .WithMany()
-                        .HasForeignKey("QuestionId");
-
-                    b.Navigation("Answer");
-
-                    b.Navigation("Question");
                 });
 
             modelBuilder.Entity("backend_manage.Entities.Semester", b =>
@@ -1865,7 +1573,7 @@ namespace backend_manage.Migrations
                     b.HasOne("backend_manage.Entities.Subject", "Subject")
                         .WithMany("ShuffledExamPapers")
                         .HasForeignKey("SubjectId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("ExamSessionSubject");
@@ -1877,9 +1585,13 @@ namespace backend_manage.Migrations
 
             modelBuilder.Entity("backend_manage.Entities.ShuffledExamPaperDetail", b =>
                 {
-                    b.HasOne("backend_manage.Entities.Chapter", "Chapter")
+                    b.HasOne("backend_manage.Entities.Chapter", null)
                         .WithMany("ShuffledExamPaperDetails")
-                        .HasForeignKey("ChapterId")
+                        .HasForeignKey("ChapterId");
+
+                    b.HasOne("backend_manage.Entities.OriginalExamPaperDetail", "OriginalExamPaperDetail")
+                        .WithMany("ShuffledExamPaperDetails")
+                        .HasForeignKey("OriginalExamPaperDetailId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
@@ -1887,11 +1599,10 @@ namespace backend_manage.Migrations
                         .WithMany("ShuffledExamPaperDetails")
                         .HasForeignKey("OriginalExamPaperId");
 
-                    b.HasOne("backend_manage.Entities.Question", "Question")
-                        .WithMany("ShuffledExamPaperDetails")
-                        .HasForeignKey("QuestionId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                    b.HasOne("backend_manage.Entities.ShuffledExamPaperDetail", "ParentQuestion")
+                        .WithMany("ChildQuestions")
+                        .HasForeignKey("ParentQuestionId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("backend_manage.Entities.ShuffledExamPaper", "ShuffledExamPaper")
                         .WithMany("ShuffledExamPaperDetails")
@@ -1899,37 +1610,11 @@ namespace backend_manage.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Chapter");
+                    b.Navigation("OriginalExamPaperDetail");
 
-                    b.Navigation("Question");
+                    b.Navigation("ParentQuestion");
 
                     b.Navigation("ShuffledExamPaper");
-                });
-
-            modelBuilder.Entity("backend_manage.Entities.StudentAnswer", b =>
-                {
-                    b.HasOne("backend_manage.Entities.ShuffledExamPaperDetail", "ShuffledExamPaperDetail")
-                        .WithMany("StudentAnswers")
-                        .HasForeignKey("ExamPaperDetailId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("backend_manage.Entities.Answer", "SelectedAnswer")
-                        .WithMany()
-                        .HasForeignKey("SelectedAnswerId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("backend_manage.Entities.StudentExamSession", "StudentExamSession")
-                        .WithMany("StudentAnswers")
-                        .HasForeignKey("StudentExamSessionId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("SelectedAnswer");
-
-                    b.Navigation("ShuffledExamPaperDetail");
-
-                    b.Navigation("StudentExamSession");
                 });
 
             modelBuilder.Entity("backend_manage.Entities.StudentExamSession", b =>
@@ -1990,8 +1675,6 @@ namespace backend_manage.Migrations
 
                     b.Navigation("OriginalExamPaperDetails");
 
-                    b.Navigation("Questions");
-
                     b.Navigation("ShuffledExamPaperDetails");
                 });
 
@@ -2050,15 +1733,11 @@ namespace backend_manage.Migrations
                     b.Navigation("ShuffledExamPapers");
                 });
 
-            modelBuilder.Entity("backend_manage.Entities.Question", b =>
+            modelBuilder.Entity("backend_manage.Entities.OriginalExamPaperDetail", b =>
                 {
-                    b.Navigation("Answers");
-
-                    b.Navigation("OriginalExamPaperDetails");
+                    b.Navigation("ChildQuestions");
 
                     b.Navigation("ShuffledExamPaperDetails");
-
-                    b.Navigation("SubQuestions");
                 });
 
             modelBuilder.Entity("backend_manage.Entities.Semester", b =>
@@ -2075,17 +1754,12 @@ namespace backend_manage.Migrations
 
             modelBuilder.Entity("backend_manage.Entities.ShuffledExamPaperDetail", b =>
                 {
-                    b.Navigation("StudentAnswers");
+                    b.Navigation("ChildQuestions");
                 });
 
             modelBuilder.Entity("backend_manage.Entities.Student", b =>
                 {
                     b.Navigation("StudentExamSessions");
-                });
-
-            modelBuilder.Entity("backend_manage.Entities.StudentExamSession", b =>
-                {
-                    b.Navigation("StudentAnswers");
                 });
 
             modelBuilder.Entity("backend_manage.Entities.Subject", b =>

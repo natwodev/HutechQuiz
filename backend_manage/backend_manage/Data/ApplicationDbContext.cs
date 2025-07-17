@@ -12,8 +12,6 @@ namespace backend_manage.Data
         }
         public DbSet<OriginalExamPaper> OriginalExamPapers { get; set; }
         public DbSet<ShuffledExamPaper> ShuffledExamPapers { get; set; }
-        public DbSet<Answer> Answers { get; set; }
-        public DbSet<Question> Questions { get; set; }
         public DbSet<Subject> Subjects { get; set; }
         public DbSet<ExamBatch> ExamBatches { get; set; }
         public DbSet<ExamSession> ExamSessions { get; set; }
@@ -22,14 +20,11 @@ namespace backend_manage.Data
         public DbSet<OriginalExamPaperDetail> OriginalExamPaperDetails { get; set; }
         public DbSet<Chapter> Chapters { get; set; }
         public DbSet<StudentExamSession> StudentExamSessions { get; set; }
-        public DbSet<StudentAnswer> StudentAnswers { get; set; }
         public DbSet<ExamSessionDepartment> ExamSessionDepartments { get; set; }
         public DbSet<ExamSessionSubject> ExamSessionSubjects { get; set; }
         public DbSet<Department> Departments { get; set; }
         public DbSet<AcademicYear> AcademicYears { get; set; }
         public DbSet<Semester> Semesters { get; set; }
-        public DbSet<ExamPaperRequest> ExamPaperRequests { get; set; }
-        public DbSet<QuizFile> QuizFile { get; set; }
         public DbSet<Lecturer> Lecturers { get; set; }
         public DbSet<ExamRoomLecturerAssignment> ExamRoomLecturerAssignments { get; set; }
         
@@ -67,56 +62,26 @@ namespace backend_manage.Data
                 .HasForeignKey(c => c.ParentChapterId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            // Question → Chapter
-            builder.Entity<Question>()
-                .HasOne(q => q.Chapter)
-                .WithMany(c => c.Questions)
-                .HasForeignKey(q => q.ChapterId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            // Answer → Question
-            builder.Entity<Answer>()
-                .HasOne(a => a.Question)
-                .WithMany(q => q.Answers)
-                .HasForeignKey(a => a.QuestionId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            
-           // ShuffledExamPaper → Subject
-            builder.Entity<ShuffledExamPaper>()
-                .HasOne(e => e.Subject)
-                .WithMany(s => s.ShuffledExamPapers) // nếu có navigation ngược
-                .HasForeignKey(e => e.SubjectId)
-                .OnDelete(DeleteBehavior.Restrict); // ✅ Tránh multiple cascade path
-
-            // ShuffledExamPaper → ExamSessionSubject
-            builder.Entity<ShuffledExamPaper>()
-                .HasOne(e => e.ExamSessionSubject)
-                .WithMany(es => es.ShuffledExamPapers) // nếu có navigation ngược
-                .HasForeignKey(e => e.ExamSessionSubjectId)
-                .OnDelete(DeleteBehavior.Cascade); // chỉ 1 quan hệ được cascade
-            
-            
-            // ExamPaperDetail → Question
-            builder.Entity<ShuffledExamPaperDetail>()
-                .HasOne(e => e.Question)
-                .WithMany(q => q.ShuffledExamPaperDetails) // Có navigation ngược
-                .HasForeignKey(e => e.QuestionId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-           // ExamPaperDetail → Chapter
-           builder.Entity<ShuffledExamPaperDetail>()
-               .HasOne(e => e.Chapter)
-               .WithMany(c => c.ShuffledExamPaperDetails) // nên thêm navigation ngược
-               .HasForeignKey(e => e.ChapterId)
-               .OnDelete(DeleteBehavior.Restrict);
-
-           // ExamPaperDetail → ShuffledExamPaper
+            // ExamPaperDetail → ShuffledExamPaper
             builder.Entity<ShuffledExamPaperDetail>()
                 .HasOne(e => e.ShuffledExamPaper)
                 .WithMany(e => e.ShuffledExamPaperDetails) // nếu có navigation
                 .HasForeignKey(e => e.ShuffledExamPaperId)
                 .OnDelete(DeleteBehavior.Cascade); // chỉ cascade 1 quan hệ
+
+            // ShuffledExamPaperDetail → OriginalExamPaperDetail
+            builder.Entity<ShuffledExamPaperDetail>()
+                .HasOne(e => e.OriginalExamPaperDetail)
+                .WithMany(o => o.ShuffledExamPaperDetails)
+                .HasForeignKey(e => e.OriginalExamPaperDetailId)
+                .OnDelete(DeleteBehavior.Restrict); // KHÔNG cascade để tránh multiple cascade paths
+
+            // ShuffledExamPaperDetail → ParentQuestion (self-ref)
+            builder.Entity<ShuffledExamPaperDetail>()
+                .HasOne(e => e.ParentQuestion)
+                .WithMany(p => p.ChildQuestions)
+                .HasForeignKey(e => e.ParentQuestionId)
+                .OnDelete(DeleteBehavior.Restrict); // KHÔNG cascade để tránh multiple cascade paths
 
             // StudentExamSession → Student
             builder.Entity<StudentExamSession>()
@@ -138,34 +103,6 @@ namespace backend_manage.Data
                 .WithMany(ep => ep.StudentExamSessions) // nếu có navigation ngược
                 .HasForeignKey(s => s.ShuffledExamPaperId)
                 .OnDelete(DeleteBehavior.Cascade); // giữ lại 1 cascade là đủ
-
-            // StudentAnswer → StudentExamSession
-            builder.Entity<StudentAnswer>()
-                .HasOne(sa => sa.StudentExamSession)
-                .WithMany(ses => ses.StudentAnswers) // nếu có navigation ngược
-                .HasForeignKey(sa => sa.StudentExamSessionId)
-                .OnDelete(DeleteBehavior.Restrict); // KHÔNG được cascade để tránh lỗi
-
-           // StudentAnswer → ExamPaperDetail
-            builder.Entity<StudentAnswer>()
-                .HasOne(sa => sa.ShuffledExamPaperDetail)
-                .WithMany(epd => epd.StudentAnswers) // nếu có navigation ngược
-                .HasForeignKey(sa => sa.ExamPaperDetailId)
-                .OnDelete(DeleteBehavior.Cascade); // ✅ chỉ nên để 1 cái cascade
-
-           // StudentAnswer → Answer (SelectedAnswer)
-            builder.Entity<StudentAnswer>()
-                .HasOne(sa => sa.SelectedAnswer)
-                .WithMany() // nếu không có navigation ngược
-                .HasForeignKey(sa => sa.SelectedAnswerId)
-                .OnDelete(DeleteBehavior.Restrict); // hoặc .NoAction để tránh rủi ro
-
-            // ExamPaperRequest → ShuffledExamPaper
-            builder.Entity<ExamPaperRequest>()
-                .HasOne(er => er.ShuffledExamPaper)
-                .WithMany() // nếu không có navigation ngược
-                .HasForeignKey(er => er.ShuffledExamPaperId)
-                .OnDelete(DeleteBehavior.Restrict); // Tránh cascade để bảo vệ dữ liệu
 
             // OriginalExamPaper → Subject
             builder.Entity<OriginalExamPaper>()
@@ -200,13 +137,6 @@ namespace backend_manage.Data
                 .HasOne(e => e.Chapter)
                 .WithMany(c => c.OriginalExamPaperDetails)
                 .HasForeignKey(e => e.ChapterId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            // OriginalExamPaperDetail → Question
-            builder.Entity<OriginalExamPaperDetail>()
-                .HasOne(e => e.Question)
-                .WithMany(q => q.OriginalExamPaperDetails)
-                .HasForeignKey(e => e.QuestionId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             // ExamRoomLecturerAssignment → ExamRoom

@@ -537,3 +537,4 @@
 /Users/nguyenhuynhnam/RiderProjects/manage/backend_manage/backend_manage/obj/Debug/net9.0/backend_manage.pdb
 /Users/nguyenhuynhnam/RiderProjects/manage/backend_manage/backend_manage/obj/Debug/net9.0/backend_manage.genruntimeconfig.cache
 /Users/nguyenhuynhnam/RiderProjects/manage/backend_manage/backend_manage/obj/Debug/net9.0/ref/backend_manage.dll
+/Users/nguyenhuynhnam/RiderProjects/manage/backend_manage/backend_manage/obj/Debug/net9.0/backend_manage.sourcelink.json

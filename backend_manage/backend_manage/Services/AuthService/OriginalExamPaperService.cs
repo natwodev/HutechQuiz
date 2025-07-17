@@ -25,24 +25,18 @@ namespace backend_manage.Services.AuthService
         private readonly IRepository<OriginalExamPaper> _originalExamPaperRepository;
         private readonly IRepository<Chapter> _chapterRepository;
         private readonly IRepository<OriginalExamPaperDetail> _originalExamPaperDetailRepository;
-        private readonly IRepository<Question> _questionRepository;
-        private readonly IRepository<Answer> _answerRepository;
         private readonly IHttpContextAccessor _httpContextAccessor;
         public OriginalExamPaperService(
             IRepository<Subject> subjectRepository,
             IRepository<OriginalExamPaper> originalExamPaperRepository,
             IRepository<Chapter> chapterRepository,
             IRepository<OriginalExamPaperDetail> originalExamPaperDetailRepository,
-            IRepository<Question> questionRepository,
-            IRepository<Answer> answerRepository,
             IHttpContextAccessor httpContextAccessor)
         {
             _subjectRepository = subjectRepository;
             _originalExamPaperRepository = originalExamPaperRepository;
             _chapterRepository = chapterRepository;
             _originalExamPaperDetailRepository = originalExamPaperDetailRepository;
-            _questionRepository = questionRepository;
-            _answerRepository = answerRepository;
             _httpContextAccessor = httpContextAccessor;
         }
 
@@ -173,55 +167,15 @@ namespace backend_manage.Services.AuthService
                         int order = 1;
                         foreach (var cauHoi in phan.CauHoi)
                         {
-                            // Tìm hoặc tạo Question theo nội dung và chương
-                            var question = await _questionRepository.GetQueryable()
-                                .FirstOrDefaultAsync(q => q.Content == cauHoi.NoiDung && q.ChapterId == chapter.ChapterId);
-                            if (question == null)
-                            {
-                                question = new Question
-                                {
-                                    Content = cauHoi.NoiDung,
-                                    ChapterId = chapter.ChapterId,
-                                    CreatedBy = userIdForExamPaper,
-                                    CreatedAt = now,
-                                    Level = 1, // TODO: lấy level nếu có
-                                    SubQuestionCount = cauHoi.SoCauHoiCon,
-                                    UsageCount = 0 // TODO: cập nhật nếu cần
-                                };
-                                await _questionRepository.AddAsync(question);
-                            }
-                            // TODO: Lưu đáp án cho câu hỏi (cauHoi.CauTraLoi)
-                            if (cauHoi.CauTraLoi != null)
-                            {
-                                foreach (var cauTraLoi in cauHoi.CauTraLoi)
-                                {
-                                    var answer = await _answerRepository.GetQueryable()
-                                        .FirstOrDefaultAsync(a => a.Content == cauTraLoi.NoiDung && a.QuestionId == question.QuestionId);
-                                    if (answer == null)
-                                    {
-                                        answer = new Answer
-                                        {
-                                            QuestionId = question.QuestionId,
-                                            Content = cauTraLoi.NoiDung,
-                                            Order = cauTraLoi.ThuTu,
-                                            IsCorrect = cauTraLoi.LaDapAn,
-                                            IsShuffled = cauTraLoi.HoanVi,
-                                            CreatedBy = userIdForExamPaper,
-                                            CreatedAt = now
-                                        };
-                                        await _answerRepository.AddAsync(answer);
-                                    }
-                                }
-                            }
-                            // Lưu chi tiết đề thi gốc
+                            // Lưu chi tiết đề thi gốc (chỉ lưu nội dung, không còn liên kết Question/Answer)
                             var detail = new OriginalExamPaperDetail
                             {
                                 OriginalExamPaperId = originalExamPaper.OriginalExamPaperId,
                                 ChapterId = chapter.ChapterId,
-                                QuestionId = question.QuestionId,
                                 Order = order,
                                 CreatedBy = userIdForExamPaper,
-                                CreatedAt = now
+                                CreatedAt = now,
+                                // Nếu entity có trường QuestionContent/AnswersJson thì lưu ở đây, nếu không thì chỉ lưu các trường hiện có
                             };
                             await _originalExamPaperDetailRepository.AddAsync(detail);
                             order++;

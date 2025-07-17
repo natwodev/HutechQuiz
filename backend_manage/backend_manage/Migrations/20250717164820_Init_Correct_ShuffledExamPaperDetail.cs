@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace backend_manage.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class Init_Correct_ShuffledExamPaperDetail : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -441,17 +441,21 @@ namespace backend_manage.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Questions",
+                name: "OriginalExamPaperDetails",
                 columns: table => new
                 {
-                    QuestionId = table.Column<int>(type: "int", nullable: false)
+                    OriginalExamPaperDetailId = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    ChapterId = table.Column<int>(type: "int", nullable: false),
+                    OriginalExamPaperId = table.Column<int>(type: "int", nullable: false),
+                    Order = table.Column<int>(type: "int", nullable: false),
+                    Answer1 = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Answer2 = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Answer3 = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Answer4 = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    QuestionContent = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CorrectAnswerIndex = table.Column<int>(type: "int", nullable: true),
                     ParentQuestionId = table.Column<int>(type: "int", nullable: true),
-                    Content = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    Level = table.Column<int>(type: "int", nullable: false),
-                    SubQuestionCount = table.Column<int>(type: "int", nullable: false),
-                    UsageCount = table.Column<int>(type: "int", nullable: false),
+                    ChapterId = table.Column<int>(type: "int", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     CreatedBy = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
@@ -461,18 +465,24 @@ namespace backend_manage.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Questions", x => x.QuestionId);
+                    table.PrimaryKey("PK_OriginalExamPaperDetails", x => x.OriginalExamPaperDetailId);
                     table.ForeignKey(
-                        name: "FK_Questions_Chapters_ChapterId",
+                        name: "FK_OriginalExamPaperDetails_Chapters_ChapterId",
                         column: x => x.ChapterId,
                         principalTable: "Chapters",
                         principalColumn: "ChapterId",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_Questions_Questions_ParentQuestionId",
+                        name: "FK_OriginalExamPaperDetails_OriginalExamPaperDetails_ParentQuestionId",
                         column: x => x.ParentQuestionId,
-                        principalTable: "Questions",
-                        principalColumn: "QuestionId");
+                        principalTable: "OriginalExamPaperDetails",
+                        principalColumn: "OriginalExamPaperDetailId");
+                    table.ForeignKey(
+                        name: "FK_OriginalExamPaperDetails_OriginalExamPapers_OriginalExamPaperId",
+                        column: x => x.OriginalExamPaperId,
+                        principalTable: "OriginalExamPapers",
+                        principalColumn: "OriginalExamPaperId",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -506,75 +516,6 @@ namespace backend_manage.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Answers",
-                columns: table => new
-                {
-                    AnswerId = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    QuestionId = table.Column<int>(type: "int", nullable: false),
-                    Content = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    Order = table.Column<int>(type: "int", nullable: false),
-                    IsCorrect = table.Column<bool>(type: "bit", nullable: false),
-                    IsShuffled = table.Column<bool>(type: "bit", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    CreatedBy = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    UpdatedBy = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
-                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
-                    Version = table.Column<int>(type: "int", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Answers", x => x.AnswerId);
-                    table.ForeignKey(
-                        name: "FK_Answers_Questions_QuestionId",
-                        column: x => x.QuestionId,
-                        principalTable: "Questions",
-                        principalColumn: "QuestionId",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "OriginalExamPaperDetails",
-                columns: table => new
-                {
-                    OriginalExamPaperDetailId = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    OriginalExamPaperId = table.Column<int>(type: "int", nullable: false),
-                    ChapterId = table.Column<int>(type: "int", nullable: false),
-                    QuestionId = table.Column<int>(type: "int", nullable: false),
-                    Order = table.Column<int>(type: "int", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    CreatedBy = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    UpdatedBy = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
-                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
-                    Version = table.Column<int>(type: "int", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_OriginalExamPaperDetails", x => x.OriginalExamPaperDetailId);
-                    table.ForeignKey(
-                        name: "FK_OriginalExamPaperDetails_Chapters_ChapterId",
-                        column: x => x.ChapterId,
-                        principalTable: "Chapters",
-                        principalColumn: "ChapterId",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_OriginalExamPaperDetails_OriginalExamPapers_OriginalExamPaperId",
-                        column: x => x.OriginalExamPaperId,
-                        principalTable: "OriginalExamPapers",
-                        principalColumn: "OriginalExamPaperId",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_OriginalExamPaperDetails_Questions_QuestionId",
-                        column: x => x.QuestionId,
-                        principalTable: "Questions",
-                        principalColumn: "QuestionId",
-                        onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "ExamSessionDepartments",
                 columns: table => new
                 {
@@ -604,38 +545,6 @@ namespace backend_manage.Migrations
                         principalTable: "ExamSessions",
                         principalColumn: "ExamSessionId",
                         onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "QuizFile",
-                columns: table => new
-                {
-                    QuizFileId = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    QuestionId = table.Column<int>(type: "int", nullable: true),
-                    AnswerId = table.Column<int>(type: "int", nullable: true),
-                    FileName = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
-                    FileType = table.Column<int>(type: "int", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    CreatedBy = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    UpdatedBy = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
-                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
-                    Version = table.Column<int>(type: "int", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_QuizFile", x => x.QuizFileId);
-                    table.ForeignKey(
-                        name: "FK_QuizFile_Answers_AnswerId",
-                        column: x => x.AnswerId,
-                        principalTable: "Answers",
-                        principalColumn: "AnswerId");
-                    table.ForeignKey(
-                        name: "FK_QuizFile_Questions_QuestionId",
-                        column: x => x.QuestionId,
-                        principalTable: "Questions",
-                        principalColumn: "QuestionId");
                 });
 
             migrationBuilder.CreateTable(
@@ -746,7 +655,7 @@ namespace backend_manage.Migrations
                         column: x => x.SubjectId,
                         principalTable: "Subjects",
                         principalColumn: "SubjectId",
-                        onDelete: ReferentialAction.Restrict);
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -782,43 +691,17 @@ namespace backend_manage.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "ExamPaperRequests",
-                columns: table => new
-                {
-                    ExamPaperRequestId = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    ExtractionDate = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    TeacherCode = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
-                    TeacherName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    ShuffledExamPaperId = table.Column<int>(type: "int", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    CreatedBy = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    UpdatedBy = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
-                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
-                    Version = table.Column<int>(type: "int", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_ExamPaperRequests", x => x.ExamPaperRequestId);
-                    table.ForeignKey(
-                        name: "FK_ExamPaperRequests_ShuffledExamPapers_ShuffledExamPaperId",
-                        column: x => x.ShuffledExamPaperId,
-                        principalTable: "ShuffledExamPapers",
-                        principalColumn: "ShuffledExamPaperId",
-                        onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "ShuffledExamPaperDetails",
                 columns: table => new
                 {
                     ShuffledExamPaperDetailId = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     ShuffledExamPaperId = table.Column<int>(type: "int", nullable: false),
-                    ChapterId = table.Column<int>(type: "int", nullable: false),
-                    QuestionId = table.Column<int>(type: "int", nullable: false),
                     Order = table.Column<int>(type: "int", nullable: false),
+                    AnswerOrder = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    OriginalExamPaperDetailId = table.Column<int>(type: "int", nullable: false),
+                    ParentQuestionId = table.Column<int>(type: "int", nullable: true),
+                    ChapterId = table.Column<int>(type: "int", nullable: true),
                     OriginalExamPaperId = table.Column<int>(type: "int", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     CreatedBy = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
@@ -834,7 +717,12 @@ namespace backend_manage.Migrations
                         name: "FK_ShuffledExamPaperDetails_Chapters_ChapterId",
                         column: x => x.ChapterId,
                         principalTable: "Chapters",
-                        principalColumn: "ChapterId",
+                        principalColumn: "ChapterId");
+                    table.ForeignKey(
+                        name: "FK_ShuffledExamPaperDetails_OriginalExamPaperDetails_OriginalExamPaperDetailId",
+                        column: x => x.OriginalExamPaperDetailId,
+                        principalTable: "OriginalExamPaperDetails",
+                        principalColumn: "OriginalExamPaperDetailId",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_ShuffledExamPaperDetails_OriginalExamPapers_OriginalExamPaperId",
@@ -842,10 +730,10 @@ namespace backend_manage.Migrations
                         principalTable: "OriginalExamPapers",
                         principalColumn: "OriginalExamPaperId");
                     table.ForeignKey(
-                        name: "FK_ShuffledExamPaperDetails_Questions_QuestionId",
-                        column: x => x.QuestionId,
-                        principalTable: "Questions",
-                        principalColumn: "QuestionId",
+                        name: "FK_ShuffledExamPaperDetails_ShuffledExamPaperDetails_ParentQuestionId",
+                        column: x => x.ParentQuestionId,
+                        principalTable: "ShuffledExamPaperDetails",
+                        principalColumn: "ShuffledExamPaperDetailId",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_ShuffledExamPaperDetails_ShuffledExamPapers_ShuffledExamPaperId",
@@ -867,12 +755,13 @@ namespace backend_manage.Migrations
                     ExamSessionSubjectId = table.Column<int>(type: "int", nullable: false),
                     ShuffledExamPaperId = table.Column<int>(type: "int", nullable: false),
                     ExtraMinutes = table.Column<int>(type: "int", nullable: false),
-                    ReasonForExtra = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                    ReasonForExtra = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
                     CorrectAnswers = table.Column<int>(type: "int", nullable: true),
                     TotalQuestions = table.Column<int>(type: "int", nullable: true),
                     Score = table.Column<double>(type: "float", nullable: false),
                     IsCompleted = table.Column<bool>(type: "bit", nullable: false),
                     ExamRoomId = table.Column<int>(type: "int", nullable: true),
+                    StudentAnswersString = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     CreatedBy = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
@@ -907,50 +796,6 @@ namespace backend_manage.Migrations
                         principalColumn: "StudentId",
                         onDelete: ReferentialAction.Restrict);
                 });
-
-            migrationBuilder.CreateTable(
-                name: "StudentAnswers",
-                columns: table => new
-                {
-                    StudentAnswerId = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    StudentExamSessionId = table.Column<int>(type: "int", nullable: false),
-                    ExamPaperDetailId = table.Column<int>(type: "int", nullable: false),
-                    SelectedAnswerId = table.Column<int>(type: "int", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    CreatedBy = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    UpdatedBy = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
-                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
-                    Version = table.Column<int>(type: "int", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_StudentAnswers", x => x.StudentAnswerId);
-                    table.ForeignKey(
-                        name: "FK_StudentAnswers_Answers_SelectedAnswerId",
-                        column: x => x.SelectedAnswerId,
-                        principalTable: "Answers",
-                        principalColumn: "AnswerId",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_StudentAnswers_ShuffledExamPaperDetails_ExamPaperDetailId",
-                        column: x => x.ExamPaperDetailId,
-                        principalTable: "ShuffledExamPaperDetails",
-                        principalColumn: "ShuffledExamPaperDetailId",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_StudentAnswers_StudentExamSessions_StudentExamSessionId",
-                        column: x => x.StudentExamSessionId,
-                        principalTable: "StudentExamSessions",
-                        principalColumn: "StudentExamSessionId",
-                        onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Answers_QuestionId",
-                table: "Answers",
-                column: "QuestionId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_AspNetRoleClaims_RoleId",
@@ -1010,11 +855,6 @@ namespace backend_manage.Migrations
                 name: "IX_ExamBatches_SemesterId",
                 table: "ExamBatches",
                 column: "SemesterId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_ExamPaperRequests_ShuffledExamPaperId",
-                table: "ExamPaperRequests",
-                column: "ShuffledExamPaperId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_ExamRoom_ExamSessionSubjectId",
@@ -1084,34 +924,14 @@ namespace backend_manage.Migrations
                 column: "OriginalExamPaperId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_OriginalExamPaperDetails_QuestionId",
+                name: "IX_OriginalExamPaperDetails_ParentQuestionId",
                 table: "OriginalExamPaperDetails",
-                column: "QuestionId");
+                column: "ParentQuestionId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_OriginalExamPapers_SubjectId",
                 table: "OriginalExamPapers",
                 column: "SubjectId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Questions_ChapterId",
-                table: "Questions",
-                column: "ChapterId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Questions_ParentQuestionId",
-                table: "Questions",
-                column: "ParentQuestionId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_QuizFile_AnswerId",
-                table: "QuizFile",
-                column: "AnswerId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_QuizFile_QuestionId",
-                table: "QuizFile",
-                column: "QuestionId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Semesters_AcademicYearId",
@@ -1124,14 +944,19 @@ namespace backend_manage.Migrations
                 column: "ChapterId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_ShuffledExamPaperDetails_OriginalExamPaperDetailId",
+                table: "ShuffledExamPaperDetails",
+                column: "OriginalExamPaperDetailId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_ShuffledExamPaperDetails_OriginalExamPaperId",
                 table: "ShuffledExamPaperDetails",
                 column: "OriginalExamPaperId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_ShuffledExamPaperDetails_QuestionId",
+                name: "IX_ShuffledExamPaperDetails_ParentQuestionId",
                 table: "ShuffledExamPaperDetails",
-                column: "QuestionId");
+                column: "ParentQuestionId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_ShuffledExamPaperDetails_ShuffledExamPaperId",
@@ -1152,21 +977,6 @@ namespace backend_manage.Migrations
                 name: "IX_ShuffledExamPapers_SubjectId",
                 table: "ShuffledExamPapers",
                 column: "SubjectId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_StudentAnswers_ExamPaperDetailId",
-                table: "StudentAnswers",
-                column: "ExamPaperDetailId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_StudentAnswers_SelectedAnswerId",
-                table: "StudentAnswers",
-                column: "SelectedAnswerId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_StudentAnswers_StudentExamSessionId",
-                table: "StudentAnswers",
-                column: "StudentExamSessionId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_StudentExamSessions_ExamRoomId",
@@ -1213,28 +1023,7 @@ namespace backend_manage.Migrations
                 name: "AspNetUserTokens");
 
             migrationBuilder.DropTable(
-                name: "ExamPaperRequests");
-
-            migrationBuilder.DropTable(
                 name: "ExamRoomLecturerAssignments");
-
-            migrationBuilder.DropTable(
-                name: "OriginalExamPaperDetails");
-
-            migrationBuilder.DropTable(
-                name: "QuizFile");
-
-            migrationBuilder.DropTable(
-                name: "StudentAnswers");
-
-            migrationBuilder.DropTable(
-                name: "AspNetRoles");
-
-            migrationBuilder.DropTable(
-                name: "Lecturers");
-
-            migrationBuilder.DropTable(
-                name: "Answers");
 
             migrationBuilder.DropTable(
                 name: "ShuffledExamPaperDetails");
@@ -1243,10 +1032,13 @@ namespace backend_manage.Migrations
                 name: "StudentExamSessions");
 
             migrationBuilder.DropTable(
-                name: "AspNetUsers");
+                name: "AspNetRoles");
 
             migrationBuilder.DropTable(
-                name: "Questions");
+                name: "Lecturers");
+
+            migrationBuilder.DropTable(
+                name: "OriginalExamPaperDetails");
 
             migrationBuilder.DropTable(
                 name: "ExamRoom");
@@ -1256,6 +1048,9 @@ namespace backend_manage.Migrations
 
             migrationBuilder.DropTable(
                 name: "Students");
+
+            migrationBuilder.DropTable(
+                name: "AspNetUsers");
 
             migrationBuilder.DropTable(
                 name: "Chapters");
