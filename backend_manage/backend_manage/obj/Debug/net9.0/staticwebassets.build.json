@@ -1,0 +1,465 @@
+{
+  "Version": 1,
+  "Hash": "yB1T0sOqsVq2DMydwm3yfFG4nff4rtgv5W0wOUU8/Vw=",
+  "Source": "backend_manage",
+  "BasePath": "_content/backend_manage",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [
+    {
+      "Name": "backend_manage/wwwroot",
+      "Source": "backend_manage",
+      "ContentRoot": "/Users/nguyenhuynhnam/RiderProjects/manage/backend_manage/backend_manage/wwwroot/",
+      "BasePath": "_content/backend_manage",
+      "Pattern": "**"
+    }
+  ],
+  "Assets": [
+    {
+      "Identity": "/Users/nguyenhuynhnam/RiderProjects/manage/backend_manage/backend_manage/obj/Debug/net9.0/compressed/38dqi6ccc0-d60u976qks.gz",
+      "SourceId": "backend_manage",
+      "SourceType": "Discovered",
+      "ContentRoot": "/Users/nguyenhuynhnam/RiderProjects/manage/backend_manage/backend_manage/obj/Debug/net9.0/compressed/",
+      "BasePath": "_content/backend_manage",
+      "RelativePath": "EPZ/c8839d97-d670-4771-9d19-b8ee445e6d44#[.{fingerprint=d60u976qks}]?.xml.gz",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Alternative",
+      "AssetMergeBehavior": "",
+      "AssetMergeSource": "",
+      "RelatedAsset": "/Users/nguyenhuynhnam/RiderProjects/manage/backend_manage/backend_manage/wwwroot/EPZ/c8839d97-d670-4771-9d19-b8ee445e6d44.xml",
+      "AssetTraitName": "Content-Encoding",
+      "AssetTraitValue": "gzip",
+      "Fingerprint": "tbd4wxp4lo",
+      "Integrity": "efCceD/Y8/hiMRO7XYPRzwCVQPIq/txk9/if8msP3G4=",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "/Users/nguyenhuynhnam/RiderProjects/manage/backend_manage/backend_manage/wwwroot/EPZ/c8839d97-d670-4771-9d19-b8ee445e6d44.xml"
+    },
+    {
+      "Identity": "/Users/nguyenhuynhnam/RiderProjects/manage/backend_manage/backend_manage/wwwroot/EPZ/c8839d97-d670-4771-9d19-b8ee445e6d44.xml",
+      "SourceId": "backend_manage",
+      "SourceType": "Discovered",
+      "ContentRoot": "/Users/nguyenhuynhnam/RiderProjects/manage/backend_manage/backend_manage/wwwroot/",
+      "BasePath": "_content/backend_manage",
+      "RelativePath": "EPZ/c8839d97-d670-4771-9d19-b8ee445e6d44#[.{fingerprint}]?.xml",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "Fingerprint": "d60u976qks",
+      "Integrity": "m56I6F3lXyH8qZKylS/3XX9ofXFNGp508n+ztqfcoSg=",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot/EPZ/c8839d97-d670-4771-9d19-b8ee445e6d44.xml"
+    },
+    {
+      "Identity": "/Users/nguyenhuynhnam/RiderProjects/manage/backend_manage/backend_manage/wwwroot/Tool/FileTool.cs",
+      "SourceId": "backend_manage",
+      "SourceType": "Discovered",
+      "ContentRoot": "/Users/nguyenhuynhnam/RiderProjects/manage/backend_manage/backend_manage/wwwroot/",
+      "BasePath": "_content/backend_manage",
+      "RelativePath": "Tool/FileTool#[.{fingerprint}]?.cs",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "Fingerprint": "2wzlej9m8p",
+      "Integrity": "8rKN4onq3bAcPn1ZNY9QbsurM20NcsoDbHxmKt7JfpQ=",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot/Tool/FileTool.cs"
+    }
+  ],
+  "Endpoints": [
+    {
+      "Route": "EPZ/c8839d97-d670-4771-9d19-b8ee445e6d44.d60u976qks.xml",
+      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/manage/backend_manage/backend_manage/obj/Debug/net9.0/compressed/38dqi6ccc0-d60u976qks.gz",
+      "Selectors": [
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip",
+          "Quality": "0.001901140684"
+        }
+      ],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "525"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"efCceD/Y8/hiMRO7XYPRzwCVQPIq/txk9/if8msP3G4=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Thu, 17 Jul 2025 07:33:25 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip"
+        },
+        {
+          "Name": "Vary",
+          "Value": "Content-Encoding"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/xml"
+        },
+        {
+          "Name": "ETag",
+          "Value": "W/\"m56I6F3lXyH8qZKylS/3XX9ofXFNGp508n+ztqfcoSg=\""
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "d60u976qks"
+        },
+        {
+          "Name": "label",
+          "Value": "EPZ/c8839d97-d670-4771-9d19-b8ee445e6d44.xml"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-m56I6F3lXyH8qZKylS/3XX9ofXFNGp508n+ztqfcoSg="
+        }
+      ]
+    },
+    {
+      "Route": "EPZ/c8839d97-d670-4771-9d19-b8ee445e6d44.d60u976qks.xml",
+      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/manage/backend_manage/backend_manage/wwwroot/EPZ/c8839d97-d670-4771-9d19-b8ee445e6d44.xml",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "4137"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/xml"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"m56I6F3lXyH8qZKylS/3XX9ofXFNGp508n+ztqfcoSg=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Thu, 17 Jul 2025 07:33:25 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "d60u976qks"
+        },
+        {
+          "Name": "label",
+          "Value": "EPZ/c8839d97-d670-4771-9d19-b8ee445e6d44.xml"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-m56I6F3lXyH8qZKylS/3XX9ofXFNGp508n+ztqfcoSg="
+        }
+      ]
+    },
+    {
+      "Route": "EPZ/c8839d97-d670-4771-9d19-b8ee445e6d44.d60u976qks.xml.gz",
+      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/manage/backend_manage/backend_manage/obj/Debug/net9.0/compressed/38dqi6ccc0-d60u976qks.gz",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "525"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/xml"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"efCceD/Y8/hiMRO7XYPRzwCVQPIq/txk9/if8msP3G4=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Thu, 17 Jul 2025 07:33:25 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip"
+        },
+        {
+          "Name": "Vary",
+          "Value": "Content-Encoding"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "d60u976qks"
+        },
+        {
+          "Name": "label",
+          "Value": "EPZ/c8839d97-d670-4771-9d19-b8ee445e6d44.xml.gz"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-efCceD/Y8/hiMRO7XYPRzwCVQPIq/txk9/if8msP3G4="
+        }
+      ]
+    },
+    {
+      "Route": "EPZ/c8839d97-d670-4771-9d19-b8ee445e6d44.xml",
+      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/manage/backend_manage/backend_manage/obj/Debug/net9.0/compressed/38dqi6ccc0-d60u976qks.gz",
+      "Selectors": [
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip",
+          "Quality": "0.001901140684"
+        }
+      ],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "525"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"efCceD/Y8/hiMRO7XYPRzwCVQPIq/txk9/if8msP3G4=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Thu, 17 Jul 2025 07:33:25 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        },
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip"
+        },
+        {
+          "Name": "Vary",
+          "Value": "Content-Encoding"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/xml"
+        },
+        {
+          "Name": "ETag",
+          "Value": "W/\"m56I6F3lXyH8qZKylS/3XX9ofXFNGp508n+ztqfcoSg=\""
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-m56I6F3lXyH8qZKylS/3XX9ofXFNGp508n+ztqfcoSg="
+        }
+      ]
+    },
+    {
+      "Route": "EPZ/c8839d97-d670-4771-9d19-b8ee445e6d44.xml",
+      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/manage/backend_manage/backend_manage/wwwroot/EPZ/c8839d97-d670-4771-9d19-b8ee445e6d44.xml",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "4137"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/xml"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"m56I6F3lXyH8qZKylS/3XX9ofXFNGp508n+ztqfcoSg=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Thu, 17 Jul 2025 07:33:25 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-m56I6F3lXyH8qZKylS/3XX9ofXFNGp508n+ztqfcoSg="
+        }
+      ]
+    },
+    {
+      "Route": "EPZ/c8839d97-d670-4771-9d19-b8ee445e6d44.xml.gz",
+      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/manage/backend_manage/backend_manage/obj/Debug/net9.0/compressed/38dqi6ccc0-d60u976qks.gz",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "525"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/xml"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"efCceD/Y8/hiMRO7XYPRzwCVQPIq/txk9/if8msP3G4=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Thu, 17 Jul 2025 07:33:25 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        },
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip"
+        },
+        {
+          "Name": "Vary",
+          "Value": "Content-Encoding"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-efCceD/Y8/hiMRO7XYPRzwCVQPIq/txk9/if8msP3G4="
+        }
+      ]
+    },
+    {
+      "Route": "Tool/FileTool.2wzlej9m8p.cs",
+      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/manage/backend_manage/backend_manage/wwwroot/Tool/FileTool.cs",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "2633"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/octet-stream"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"8rKN4onq3bAcPn1ZNY9QbsurM20NcsoDbHxmKt7JfpQ=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Wed, 16 Jul 2025 17:37:03 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "2wzlej9m8p"
+        },
+        {
+          "Name": "label",
+          "Value": "Tool/FileTool.cs"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-8rKN4onq3bAcPn1ZNY9QbsurM20NcsoDbHxmKt7JfpQ="
+        }
+      ]
+    },
+    {
+      "Route": "Tool/FileTool.cs",
+      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/manage/backend_manage/backend_manage/wwwroot/Tool/FileTool.cs",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "2633"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/octet-stream"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"8rKN4onq3bAcPn1ZNY9QbsurM20NcsoDbHxmKt7JfpQ=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Wed, 16 Jul 2025 17:37:03 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-8rKN4onq3bAcPn1ZNY9QbsurM20NcsoDbHxmKt7JfpQ="
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+@page "/student-dashboard"
+@using frontend_manage.Services
+@using FrontEnd.DTOs
+<link href="css/info/info.css" rel="stylesheet" />
+
+<div class="dashboard-student-center">
+    <div class="component-thong-tin">
+        <div class="overlap">
+            <!-- Logo trường -->
+            <img src="images/exam/Logo.svg" class="logo" />
+
+            <!-- Thông tin sinh viên -->
+            <div class="student-info-wrapper">
+                <img src="images/exam/ava.jpg" class="avatar" />
+
+                <div class="student-info">
+                    @if (studentInfo != null)
+                    {
+                        <div class="id">Mã số sinh viên: @studentInfo.StudentCode</div>
+                        <div class="name">Họ: @studentInfo.LastName</div>
+                        <div class="name">Tên: @studentInfo.FirstName</div>
+                    }
+                    <div class="time">Thời gian hiện tại: @currentTime</div>
+                    <button class="button-sign-out" @onclick="Logout">
+                        <span><span>&#x2190;</span> ĐĂNG XUẤT</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

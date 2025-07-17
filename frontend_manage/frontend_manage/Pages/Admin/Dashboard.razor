@@ -1,0 +1,37 @@
+@page "/dashboard"
+@using frontend_manage.Services
+@inject AuthService AuthService
+@inject NavigationManager Navigation
+
+<PageTitle>Dashboard Admin</PageTitle>
+
+<h1>Dashboard Admin</h1>
+
+@if (!isAdminChecked)
+{
+    <p>Đang kiểm tra quyền truy cập...</p>
+}
+else if (!isAdmin)
+{
+    <div class="alert alert-danger">Bạn không có quyền truy cập trang này.</div>
+}
+else
+{
+    <p>Chào mừng Admin!</p>
+    <!-- Nội dung dashboard admin ở đây -->
+}
+
+@code {
+    private bool isAdmin;
+    private bool isAdminChecked = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        isAdmin = await AuthService.IsAdmin();
+        isAdminChecked = true;
+        if (!isAdmin)
+        {
+            Navigation.NavigateTo("/");
+        }
+    }
+} 

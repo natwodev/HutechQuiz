@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <title>Hutech.Exam</title>
+    <base href="/" />
+    <link href="/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <script src="/jquery/jquery.min.js"></script>
+    <script src="/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <!-- Load thư viện canvas ảnh cho điểm thí sinh -->
+    <script src="_content/Blazor.Extensions.Canvas/blazor.extensions.canvas.js"></script>
+    <!-- Load thư viện Latex ngay ban đầu tránh tải lâu-->
+    <script id="MathJax-script" async
+            src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+    </script>
+    <link href="css/app.css" rel="stylesheet" />
+    <!--Tải MudBlazor-->
+    <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" rel="stylesheet" />
+    <link href="_content/MudBlazor/MudBlazor.min.css" rel="stylesheet" />
+    <!-- If you add any scoped CSS files, uncomment the following to load them
+    <link href="Hutech.Exam.Client.styles.css" rel="stylesheet" /> -->
+</head>
+
+<body class="warm-filter">
+    <div id="app">
+        <div class="progress" style="height: 5px;">
+            <div class="progress-bar" role="progressbar" style="width: var(--blazor-load-percentage, 0%); background-color: rgb(0,107,179)" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100"></div>
+        </div>
+        <div class="vh-100 d-flex align-items-center justify-content-center gap-3" style="font-family: Segoe UI-Bold, Helvetica;">
+            <div class="h5 spinner-border"></div>
+            <div class="h2">Vui lòng chờ</div>
+        </div>
+    </div>
+
+    <div id="blazor-error-ui">
+        An unhandled error has occurred.
+        <a href="" class="reload">Reload</a>
+        <a class="dismiss">🗙</a>
+    </div>
+    <script src="_framework/blazor.webassembly.js"></script>
+    <script src="_content/MudBlazor/MudBlazor.min.js"></script>
+    <script>
+        // chặn cache form input
+        window.disableAutocomplete = () => {
+            document.querySelectorAll("input").forEach(i => {
+                i.setAttribute("autocomplete", "off");
+            });
+        };
+    </script>
+</body>
+
+</html>
+
+<style>
+    .warm-filter {
+        filter: invert(0.03) hue-rotate(1deg);
+    }
+</style>

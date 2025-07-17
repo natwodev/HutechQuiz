@@ -1,0 +1,249 @@
+{
+  "Files": [
+    {
+      "Id": "/Users/nguyenhuynhnam/RiderProjects/ProjectQuiz/manage/frontend_manage/frontend_manage/bin/Debug/net9.0/wwwroot/_framework/blazor.webassembly.js",
+      "PackagePath": "staticwebassets/_framework/blazor.webassembly.js"
+    },
+    {
+      "Id": "/Users/nguyenhuynhnam/RiderProjects/ProjectQuiz/manage/frontend_manage/frontend_manage/obj/Debug/net9.0/scopedcss/bundle/frontend_manage.styles.css",
+      "PackagePath": "staticwebassets/frontend_manage.styles.css"
+    },
+    {
+      "Id": "/Users/nguyenhuynhnam/RiderProjects/ProjectQuiz/manage/frontend_manage/frontend_manage/wwwroot/audio/What_are_you_going_to_do.mp3",
+      "PackagePath": "staticwebassets/audio/What_are_you_going_to_do.mp3"
+    },
+    {
+      "Id": "/Users/nguyenhuynhnam/RiderProjects/ProjectQuiz/manage/frontend_manage/frontend_manage/wwwroot/audio/helloim-going-to-talk-about-b1672025838.mp3",
+      "PackagePath": "staticwebassets/audio/helloim-going-to-talk-about-b1672025838.mp3"
+    },
+    {
+      "Id": "/Users/nguyenhuynhnam/RiderProjects/ProjectQuiz/manage/frontend_manage/frontend_manage/wwwroot/bootstrap/css/bootstrap.min.css",
+      "PackagePath": "staticwebassets/bootstrap/css/bootstrap.min.css"
+    },
+    {
+      "Id": "/Users/nguyenhuynhnam/RiderProjects/ProjectQuiz/manage/frontend_manage/frontend_manage/wwwroot/bootstrap/js/bootstrap.bundle.min.js",
+      "PackagePath": "staticwebassets/bootstrap/js/bootstrap.bundle.min.js"
+    },
+    {
+      "Id": "/Users/nguyenhuynhnam/RiderProjects/ProjectQuiz/manage/frontend_manage/frontend_manage/wwwroot/css/Result/style.css",
+      "PackagePath": "staticwebassets/css/Result/style.css"
+    },
+    {
+      "Id": "/Users/nguyenhuynhnam/RiderProjects/ProjectQuiz/manage/frontend_manage/frontend_manage/wwwroot/css/admin/ManageExam.css",
+      "PackagePath": "staticwebassets/css/admin/ManageExam.css"
+    },
+    {
+      "Id": "/Users/nguyenhuynhnam/RiderProjects/ProjectQuiz/manage/frontend_manage/frontend_manage/wwwroot/css/admin/MessageBox.css",
+      "PackagePath": "staticwebassets/css/admin/MessageBox.css"
+    },
+    {
+      "Id": "/Users/nguyenhuynhnam/RiderProjects/ProjectQuiz/manage/frontend_manage/frontend_manage/wwwroot/css/admin/monitor/global.css",
+      "PackagePath": "staticwebassets/css/admin/monitor/global.css"
+    },
+    {
+      "Id": "/Users/nguyenhuynhnam/RiderProjects/ProjectQuiz/manage/frontend_manage/frontend_manage/wwwroot/css/admin/monitor/style.css",
+      "PackagePath": "staticwebassets/css/admin/monitor/style.css"
+    },
+    {
+      "Id": "/Users/nguyenhuynhnam/RiderProjects/ProjectQuiz/manage/frontend_manage/frontend_manage/wwwroot/css/admin/monitor/styleguide.css",
+      "PackagePath": "staticwebassets/css/admin/monitor/styleguide.css"
+    },
+    {
+      "Id": "/Users/nguyenhuynhnam/RiderProjects/ProjectQuiz/manage/frontend_manage/frontend_manage/wwwroot/css/app.css",
+      "PackagePath": "staticwebassets/css/app.css"
+    },
+    {
+      "Id": "/Users/nguyenhuynhnam/RiderProjects/ProjectQuiz/manage/frontend_manage/frontend_manage/wwwroot/css/exam/reset.css",
+      "PackagePath": "staticwebassets/css/exam/reset.css"
+    },
+    {
+      "Id": "/Users/nguyenhuynhnam/RiderProjects/ProjectQuiz/manage/frontend_manage/frontend_manage/wwwroot/css/exam/style.css",
+      "PackagePath": "staticwebassets/css/exam/style.css"
+    },
+    {
+      "Id": "/Users/nguyenhuynhnam/RiderProjects/ProjectQuiz/manage/frontend_manage/frontend_manage/wwwroot/css/info/info.css",
+      "PackagePath": "staticwebassets/css/info/info.css"
+    },
+    {
+      "Id": "/Users/nguyenhuynhnam/RiderProjects/ProjectQuiz/manage/frontend_manage/frontend_manage/wwwroot/css/login/login.css",
+      "PackagePath": "staticwebassets/css/login/login.css"
+    },
+    {
+      "Id": "/Users/nguyenhuynhnam/RiderProjects/ProjectQuiz/manage/frontend_manage/frontend_manage/wwwroot/css/main_layout/notauthorize.css",
+      "PackagePath": "staticwebassets/css/main_layout/notauthorize.css"
+    },
+    {
+      "Id": "/Users/nguyenhuynhnam/RiderProjects/ProjectQuiz/manage/frontend_manage/frontend_manage/wwwroot/css/monitor.css",
+      "PackagePath": "staticwebassets/css/monitor.css"
+    },
+    {
+      "Id": "/Users/nguyenhuynhnam/RiderProjects/ProjectQuiz/manage/frontend_manage/frontend_manage/wwwroot/images/admin/home/exam_monitor.png",
+      "PackagePath": "staticwebassets/images/admin/home/exam_monitor.png"
+    },
+    {
+      "Id": "/Users/nguyenhuynhnam/RiderProjects/ProjectQuiz/manage/frontend_manage/frontend_manage/wwwroot/images/admin/home/manage_account.png",
+      "PackagePath": "staticwebassets/images/admin/home/manage_account.png"
+    },
+    {
+      "Id": "/Users/nguyenhuynhnam/RiderProjects/ProjectQuiz/manage/frontend_manage/frontend_manage/wwwroot/images/admin/home/manage_classroom.png",
+      "PackagePath": "staticwebassets/images/admin/home/manage_classroom.png"
+    },
+    {
+      "Id": "/Users/nguyenhuynhnam/RiderProjects/ProjectQuiz/manage/frontend_manage/frontend_manage/wwwroot/images/admin/home/manage_exam.png",
+      "PackagePath": "staticwebassets/images/admin/home/manage_exam.png"
+    },
+    {
+      "Id": "/Users/nguyenhuynhnam/RiderProjects/ProjectQuiz/manage/frontend_manage/frontend_manage/wwwroot/images/admin/home/organize_exam.png",
+      "PackagePath": "staticwebassets/images/admin/home/organize_exam.png"
+    },
+    {
+      "Id": "/Users/nguyenhuynhnam/RiderProjects/ProjectQuiz/manage/frontend_manage/frontend_manage/wwwroot/images/admin/home/report.png",
+      "PackagePath": "staticwebassets/images/admin/home/report.png"
+    },
+    {
+      "Id": "/Users/nguyenhuynhnam/RiderProjects/ProjectQuiz/manage/frontend_manage/frontend_manage/wwwroot/images/admin/monitor/data.png",
+      "PackagePath": "staticwebassets/images/admin/monitor/data.png"
+    },
+    {
+      "Id": "/Users/nguyenhuynhnam/RiderProjects/ProjectQuiz/manage/frontend_manage/frontend_manage/wwwroot/images/admin/monitor/excel.svg",
+      "PackagePath": "staticwebassets/images/admin/monitor/excel.svg"
+    },
+    {
+      "Id": "/Users/nguyenhuynhnam/RiderProjects/ProjectQuiz/manage/frontend_manage/frontend_manage/wwwroot/images/admin/monitor/frame-1.svg",
+      "PackagePath": "staticwebassets/images/admin/monitor/frame-1.svg"
+    },
+    {
+      "Id": "/Users/nguyenhuynhnam/RiderProjects/ProjectQuiz/manage/frontend_manage/frontend_manage/wwwroot/images/admin/monitor/frame.svg",
+      "PackagePath": "staticwebassets/images/admin/monitor/frame.svg"
+    },
+    {
+      "Id": "/Users/nguyenhuynhnam/RiderProjects/ProjectQuiz/manage/frontend_manage/frontend_manage/wwwroot/images/admin/monitor/header.svg",
+      "PackagePath": "staticwebassets/images/admin/monitor/header.svg"
+    },
+    {
+      "Id": "/Users/nguyenhuynhnam/RiderProjects/ProjectQuiz/manage/frontend_manage/frontend_manage/wwwroot/images/admin/monitor/left-arrow-alt-regular-24.png",
+      "PackagePath": "staticwebassets/images/admin/monitor/left-arrow-alt-regular-24.png"
+    },
+    {
+      "Id": "/Users/nguyenhuynhnam/RiderProjects/ProjectQuiz/manage/frontend_manage/frontend_manage/wwwroot/images/admin/monitor/line-10.svg",
+      "PackagePath": "staticwebassets/images/admin/monitor/line-10.svg"
+    },
+    {
+      "Id": "/Users/nguyenhuynhnam/RiderProjects/ProjectQuiz/manage/frontend_manage/frontend_manage/wwwroot/images/admin/monitor/line-11.svg",
+      "PackagePath": "staticwebassets/images/admin/monitor/line-11.svg"
+    },
+    {
+      "Id": "/Users/nguyenhuynhnam/RiderProjects/ProjectQuiz/manage/frontend_manage/frontend_manage/wwwroot/images/admin/monitor/pdf.svg",
+      "PackagePath": "staticwebassets/images/admin/monitor/pdf.svg"
+    },
+    {
+      "Id": "/Users/nguyenhuynhnam/RiderProjects/ProjectQuiz/manage/frontend_manage/frontend_manage/wwwroot/images/admin/monitor/print.svg",
+      "PackagePath": "staticwebassets/images/admin/monitor/print.svg"
+    },
+    {
+      "Id": "/Users/nguyenhuynhnam/RiderProjects/ProjectQuiz/manage/frontend_manage/frontend_manage/wwwroot/images/admin/monitor/right-arrow-alt-regular-24.png",
+      "PackagePath": "staticwebassets/images/admin/monitor/right-arrow-alt-regular-24.png"
+    },
+    {
+      "Id": "/Users/nguyenhuynhnam/RiderProjects/ProjectQuiz/manage/frontend_manage/frontend_manage/wwwroot/images/exam/Ellipse 1.svg",
+      "PackagePath": "staticwebassets/images/exam/Ellipse 1.svg"
+    },
+    {
+      "Id": "/Users/nguyenhuynhnam/RiderProjects/ProjectQuiz/manage/frontend_manage/frontend_manage/wwwroot/images/exam/Logo.svg",
+      "PackagePath": "staticwebassets/images/exam/Logo.svg"
+    },
+    {
+      "Id": "/Users/nguyenhuynhnam/RiderProjects/ProjectQuiz/manage/frontend_manage/frontend_manage/wwwroot/images/exam/ava.jpg",
+      "PackagePath": "staticwebassets/images/exam/ava.jpg"
+    },
+    {
+      "Id": "/Users/nguyenhuynhnam/RiderProjects/ProjectQuiz/manage/frontend_manage/frontend_manage/wwwroot/images/exam/clock-stand-svgrepo-com 1.svg",
+      "PackagePath": "staticwebassets/images/exam/clock-stand-svgrepo-com 1.svg"
+    },
+    {
+      "Id": "/Users/nguyenhuynhnam/RiderProjects/ProjectQuiz/manage/frontend_manage/frontend_manage/wwwroot/images/garden_radius.png",
+      "PackagePath": "staticwebassets/images/garden_radius.png"
+    },
+    {
+      "Id": "/Users/nguyenhuynhnam/RiderProjects/ProjectQuiz/manage/frontend_manage/frontend_manage/wwwroot/images/login/images.png",
+      "PackagePath": "staticwebassets/images/login/images.png"
+    },
+    {
+      "Id": "/Users/nguyenhuynhnam/RiderProjects/ProjectQuiz/manage/frontend_manage/frontend_manage/wwwroot/images/login/login-video.mp4",
+      "PackagePath": "staticwebassets/images/login/login-video.mp4"
+    },
+    {
+      "Id": "/Users/nguyenhuynhnam/RiderProjects/ProjectQuiz/manage/frontend_manage/frontend_manage/wwwroot/images/login/password.svg",
+      "PackagePath": "staticwebassets/images/login/password.svg"
+    },
+    {
+      "Id": "/Users/nguyenhuynhnam/RiderProjects/ProjectQuiz/manage/frontend_manage/frontend_manage/wwwroot/images/login/username.png",
+      "PackagePath": "staticwebassets/images/login/username.png"
+    },
+    {
+      "Id": "/Users/nguyenhuynhnam/RiderProjects/ProjectQuiz/manage/frontend_manage/frontend_manage/wwwroot/images/map_Oxy.png",
+      "PackagePath": "staticwebassets/images/map_Oxy.png"
+    },
+    {
+      "Id": "/Users/nguyenhuynhnam/RiderProjects/ProjectQuiz/manage/frontend_manage/frontend_manage/wwwroot/index.html",
+      "PackagePath": "staticwebassets/index.html"
+    },
+    {
+      "Id": "/Users/nguyenhuynhnam/RiderProjects/ProjectQuiz/manage/frontend_manage/frontend_manage/wwwroot/jquery/jquery.min.js",
+      "PackagePath": "staticwebassets/jquery/jquery.min.js"
+    },
+    {
+      "Id": "/Users/nguyenhuynhnam/RiderProjects/ProjectQuiz/manage/frontend_manage/frontend_manage/wwwroot/js/jquery.jslatex.js",
+      "PackagePath": "staticwebassets/js/jquery.jslatex.js"
+    },
+    {
+      "Id": "/Users/nguyenhuynhnam/RiderProjects/ProjectQuiz/manage/frontend_manage/frontend_manage/wwwroot/js/main.js",
+      "PackagePath": "staticwebassets/js/main.js"
+    },
+    {
+      "Id": "/Users/nguyenhuynhnam/RiderProjects/ProjectQuiz/manage/frontend_manage/frontend_manage/wwwroot/js/mathJaxBlazor.js",
+      "PackagePath": "staticwebassets/js/mathJaxBlazor.js"
+    },
+    {
+      "Id": "/Users/nguyenhuynhnam/RiderProjects/ProjectQuiz/manage/frontend_manage/frontend_manage/wwwroot/js/mathJaxBlazor.js.map",
+      "PackagePath": "staticwebassets/js/mathJaxBlazor.js.map"
+    },
+    {
+      "Id": "/Users/nguyenhuynhnam/RiderProjects/ProjectQuiz/manage/frontend_manage/frontend_manage/wwwroot/js/mathJaxBlazor.ts",
+      "PackagePath": "staticwebassets/js/mathJaxBlazor.ts"
+    },
+    {
+      "Id": "/Users/nguyenhuynhnam/RiderProjects/ProjectQuiz/manage/frontend_manage/frontend_manage/wwwroot/js/notauthorize.js",
+      "PackagePath": "staticwebassets/js/notauthorize.js"
+    },
+    {
+      "Id": "/Users/nguyenhuynhnam/RiderProjects/ProjectQuiz/manage/frontend_manage/frontend_manage/wwwroot/js/security.js",
+      "PackagePath": "staticwebassets/js/security.js"
+    },
+    {
+      "Id": "/Users/nguyenhuynhnam/RiderProjects/ProjectQuiz/manage/frontend_manage/frontend_manage/wwwroot/js/sweetalert.js",
+      "PackagePath": "staticwebassets/js/sweetalert.js"
+    },
+    {
+      "Id": "obj/Debug/net9.0/staticwebassets/msbuild.build.frontend_manage.props",
+      "PackagePath": "build\\frontend_manage.props"
+    },
+    {
+      "Id": "obj/Debug/net9.0/staticwebassets/msbuild.buildMultiTargeting.frontend_manage.props",
+      "PackagePath": "buildMultiTargeting\\frontend_manage.props"
+    },
+    {
+      "Id": "obj/Debug/net9.0/staticwebassets/msbuild.buildTransitive.frontend_manage.props",
+      "PackagePath": "buildTransitive\\frontend_manage.props"
+    },
+    {
+      "Id": "obj/Debug/net9.0/staticwebassets/msbuild.frontend_manage.Microsoft.AspNetCore.StaticWebAssetEndpoints.props",
+      "PackagePath": "build\\Microsoft.AspNetCore.StaticWebAssetEndpoints.props"
+    },
+    {
+      "Id": "obj/Debug/net9.0/staticwebassets/msbuild.frontend_manage.Microsoft.AspNetCore.StaticWebAssets.props",
+      "PackagePath": "build\\Microsoft.AspNetCore.StaticWebAssets.props"
+    }
+  ],
+  "ElementsToRemove": []
+}

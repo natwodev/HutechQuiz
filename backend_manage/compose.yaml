@@ -1,0 +1,7 @@
+﻿services:
+  backend_manage:
+    image: backend_manage
+    build:
+      context: .
+      dockerfile: backend_manage/Dockerfile
+

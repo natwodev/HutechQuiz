@@ -1,0 +1,157 @@
+﻿:root {
+    --fraction-rem-height: calc(100vh / 16);
+    font-size: 17px;
+}
+
+body {
+    margin: 0;
+    background-color: #d9d9d9d9;
+}
+
+.dashboard-student-center {
+    width: 100vw;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #ededed;
+}
+
+.component-thong-tin {
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.12);
+    padding: 20px 18px 20px 18px;
+    max-width: 520px;
+    width: 98vw;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+}
+
+.logo {
+    width: 265px;
+    height: auto;
+    display: block;
+    margin: 0 auto 6px auto;
+}
+
+.overlap {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+}
+
+.student-info-wrapper {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+}
+
+.avatar {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    border: 5px solid #111;
+    object-fit: cover;
+    background: #fff;
+    flex-shrink: 0;
+    transform: translateY(-27px); /* dịch lên trên 10px */
+}
+
+
+.student-info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 1rem;
+    color: #222;
+    min-width: 180px;
+    max-width: 320px;
+}
+
+.id, .name, .email, .time {
+    font-family: "Segoe UI", Helvetica, Arial, sans-serif;
+    font-weight: 220;
+    color: #222;
+    font-size: 1rem; /* Giảm từ 1rem xuống */
+    background: none;
+    border-radius: 0;
+    padding: 0;
+    width: 100%;
+    text-align: left;
+    box-shadow: none;
+    margin: 0;
+}
+
+.button-sign-out {
+    margin-top: 18px;
+    align-self: center;
+    padding: 5px 14px; /* giảm padding */
+    border-radius: 6px; /* giảm bo góc */
+    font-family: "Segoe UI", Helvetica, Arial, sans-serif;
+    font-weight: 600; /* giảm nhẹ độ đậm */
+    color: #f11d1d;
+    background: #fff;
+    font-size: 0.9rem; /* giảm kích thước chữ */
+    border: 2px solid #f11d1d;
+    transition: background 0.2s, color 0.2s;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px; /* giảm khoảng cách giữa icon và text */
+}
+
+.button-sign-out:hover {
+    color: #fff;
+    background: #f11d1d;
+}
+
+@media (max-width: 900px) {
+    .student-info-wrapper {
+        flex-direction: column;
+        gap: 14px;
+    }
+    .avatar {
+        width: 60px;
+        height: 60px;
+        border-width: 4px;
+    }
+    .student-info {
+        min-width: 0;
+        max-width: 98vw;
+        font-size: 0.95rem;
+        align-items: center;
+    }
+}
+
+@media (max-width: 600px) {
+    .component-thong-tin {
+        padding: 8px 1vw 8px 1vw;
+        max-width: 99vw;
+    }
+    .logo {
+        width: 80px;
+    }
+    .avatar {
+        width: 40px;
+        height: 40px;
+        border-width: 2.5px;
+    }
+    .student-info {
+        font-size: 0.85rem;
+        gap: 6px;
+    }
+    .button-sign-out {
+        font-size: 0.9rem;
+        padding: 6px 0;
+        width: 100%;
+    }
+}

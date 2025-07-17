@@ -1,0 +1,40 @@
+﻿<Project>
+  <ItemGroup>
+    <StaticWebAsset Include="$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\EPZ\c8839d97-d670-4771-9d19-b8ee445e6d44.xml'))">
+      <SourceType>Package</SourceType>
+      <SourceId>backend_manage</SourceId>
+      <ContentRoot>$(MSBuildThisFileDirectory)..\staticwebassets\</ContentRoot>
+      <BasePath>_content/backend_manage</BasePath>
+      <RelativePath>EPZ/c8839d97-d670-4771-9d19-b8ee445e6d44.xml</RelativePath>
+      <AssetKind>All</AssetKind>
+      <AssetMode>All</AssetMode>
+      <AssetRole>Primary</AssetRole>
+      <RelatedAsset></RelatedAsset>
+      <AssetTraitName></AssetTraitName>
+      <AssetTraitValue></AssetTraitValue>
+      <Fingerprint>d60u976qks</Fingerprint>
+      <Integrity>m56I6F3lXyH8qZKylS/3XX9ofXFNGp508n+ztqfcoSg=</Integrity>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <OriginalItemSpec>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\EPZ\c8839d97-d670-4771-9d19-b8ee445e6d44.xml'))</OriginalItemSpec>
+    </StaticWebAsset>
+    <StaticWebAsset Include="$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\Tool\FileTool.cs'))">
+      <SourceType>Package</SourceType>
+      <SourceId>backend_manage</SourceId>
+      <ContentRoot>$(MSBuildThisFileDirectory)..\staticwebassets\</ContentRoot>
+      <BasePath>_content/backend_manage</BasePath>
+      <RelativePath>Tool/FileTool.cs</RelativePath>
+      <AssetKind>All</AssetKind>
+      <AssetMode>All</AssetMode>
+      <AssetRole>Primary</AssetRole>
+      <RelatedAsset></RelatedAsset>
+      <AssetTraitName></AssetTraitName>
+      <AssetTraitValue></AssetTraitValue>
+      <Fingerprint>2wzlej9m8p</Fingerprint>
+      <Integrity>8rKN4onq3bAcPn1ZNY9QbsurM20NcsoDbHxmKt7JfpQ=</Integrity>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <OriginalItemSpec>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\Tool\FileTool.cs'))</OriginalItemSpec>
+    </StaticWebAsset>
+  </ItemGroup>
+</Project>

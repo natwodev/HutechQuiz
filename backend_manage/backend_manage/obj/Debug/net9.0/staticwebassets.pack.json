@@ -1,0 +1,33 @@
+{
+  "Files": [
+    {
+      "Id": "/Users/nguyenhuynhnam/RiderProjects/manage/backend_manage/backend_manage/wwwroot/EPZ/c8839d97-d670-4771-9d19-b8ee445e6d44.xml",
+      "PackagePath": "staticwebassets/EPZ/c8839d97-d670-4771-9d19-b8ee445e6d44.xml"
+    },
+    {
+      "Id": "/Users/nguyenhuynhnam/RiderProjects/manage/backend_manage/backend_manage/wwwroot/Tool/FileTool.cs",
+      "PackagePath": "staticwebassets/Tool/FileTool.cs"
+    },
+    {
+      "Id": "obj/Debug/net9.0/staticwebassets/msbuild.backend_manage.Microsoft.AspNetCore.StaticWebAssetEndpoints.props",
+      "PackagePath": "build\\Microsoft.AspNetCore.StaticWebAssetEndpoints.props"
+    },
+    {
+      "Id": "obj/Debug/net9.0/staticwebassets/msbuild.backend_manage.Microsoft.AspNetCore.StaticWebAssets.props",
+      "PackagePath": "build\\Microsoft.AspNetCore.StaticWebAssets.props"
+    },
+    {
+      "Id": "obj/Debug/net9.0/staticwebassets/msbuild.build.backend_manage.props",
+      "PackagePath": "build\\backend_manage.props"
+    },
+    {
+      "Id": "obj/Debug/net9.0/staticwebassets/msbuild.buildMultiTargeting.backend_manage.props",
+      "PackagePath": "buildMultiTargeting\\backend_manage.props"
+    },
+    {
+      "Id": "obj/Debug/net9.0/staticwebassets/msbuild.buildTransitive.backend_manage.props",
+      "PackagePath": "buildTransitive\\backend_manage.props"
+    }
+  ],
+  "ElementsToRemove": []
+}
