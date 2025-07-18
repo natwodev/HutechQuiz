@@ -7,6 +7,7 @@ using backend_manage.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using backend_manage.Hubs;
 
 namespace backend_manage.Services.AuthService
 {
@@ -53,7 +54,7 @@ namespace backend_manage.Services.AuthService
             if (string.IsNullOrEmpty(userId))
                 throw new UnauthorizedAccessException("Không thể xác định người dùng tạo ExamSessionSubject.");
             entity.CreatedBy = userId;
-            entity.CreatedAt = DateTime.UtcNow;
+            entity.CreatedAt = DateTimeHelper.GetVietnamTime();
             var result = await _repository.AddAsync(entity);
 
             var fullEntity = await _repository.GetQueryable()
@@ -74,7 +75,7 @@ namespace backend_manage.Services.AuthService
             if (string.IsNullOrEmpty(userId))
                 throw new UnauthorizedAccessException("Không thể xác định người dùng cập nhật ExamSessionSubject.");
             entity.UpdatedBy = userId;
-            entity.UpdatedAt = DateTime.UtcNow;
+            entity.UpdatedAt = DateTimeHelper.GetVietnamTime();
             var result = await _repository.UpdateAsync(entity);
             return _mapper.Map<ExamSessionSubjectDto>(result);
         }
@@ -89,7 +90,21 @@ namespace backend_manage.Services.AuthService
                 throw new UnauthorizedAccessException("Không thể xác định người dùng xóa ExamSessionSubject.");
             entity.IsDeleted = true;
             entity.UpdatedBy = userId;
-            entity.UpdatedAt = DateTime.UtcNow;
+            entity.UpdatedAt = DateTimeHelper.GetVietnamTime();
+            await _repository.UpdateAsync(entity);
+            return true;
+        }
+
+        public async Task<bool> UpdateOriginalExamPaperIdAsync(int examSessionSubjectId, int originalExamPaperId)
+        {
+            var entity = await _repository.GetByIdAsync(examSessionSubjectId);
+            if (entity == null) return false;
+            entity.OriginalExamPaperId = originalExamPaperId;
+            var userId = _httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+                throw new UnauthorizedAccessException("Không thể xác định người dùng cập nhật ExamSessionSubject.");
+            entity.UpdatedBy = userId;
+            entity.UpdatedAt = DateTimeHelper.GetVietnamTime();
             await _repository.UpdateAsync(entity);
             return true;
         }

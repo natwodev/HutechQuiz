@@ -18,11 +18,11 @@ namespace backend_manage.Controllers
         }
 
         [HttpPost("import-xml")]
-        public async Task<IActionResult> ImportXml([FromForm] IFormFile file)
+        public async Task<IActionResult> ImportXml([FromForm] IFormFile file,[FromForm] string OriginalExamPaperCore)
         {
             if (file == null || file.Length == 0)
                 return BadRequest("File không hợp lệ hoặc rỗng");
-            await _originalExamPaperService.ImportFromXmlAsync(file);
+            await _originalExamPaperService.ImportFromXmlAsync(file,OriginalExamPaperCore);
             return Ok(new { message = "Import thành công (nếu mã môn học chưa tồn tại)." });
         }
     }

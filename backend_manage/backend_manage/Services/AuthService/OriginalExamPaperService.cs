@@ -44,12 +44,17 @@ namespace backend_manage.Services.AuthService
         // Pass giải nén file XML
         public const string ExtractPassword = "649224E2-F0AC-42B1-AD1B-2EAF04E2AC7D-FE602240-7E60-43BF-828D-D6AF38A70429-52572FD1-BB94-45AD-95CF-7B2B5C2E85A6-1B3D4CCF-808E-4ABF-8F9E-73ADF041C78B";
 
-        public async Task ImportFromXmlAsync(IFormFile file)
+        public async Task ImportFromXmlAsync(IFormFile file, string originalExamPaperCore)
         {
             if (file == null || file.Length == 0)
                 throw new ArgumentException("File không hợp lệ hoặc rỗng");
             if (!file.FileName.EndsWith(".epz", StringComparison.OrdinalIgnoreCase))
                 throw new ArgumentException("File phải có đuôi .epz");
+
+            // Kiểm tra OriginalExamPaperCore đã tồn tại chưa
+            var existedExamPaper = await _originalExamPaperRepository.GetQueryable().FirstOrDefaultAsync(x => x.OriginalExamPaperCore == originalExamPaperCore);
+            if (existedExamPaper != null)
+                throw new Exception($"OriginalExamPaperCore '{originalExamPaperCore}' đã tồn tại trong hệ thống.");
 
             // Đọc file .epz từ stream, không ghi ra wwwroot/EPZ
             string xmlContent = null;
@@ -121,7 +126,7 @@ namespace backend_manage.Services.AuthService
                 CreatedAt = now,
                 DurationMinutes = 0, // TODO: Bổ sung nếu có trường thời gian làm bài trong XML
                 TotalQuestions = monHoc.TongSoCauLay > 0 ? monHoc.TongSoCauLay : 0,
-                OriginalExamPaperCore = "mã đề gốc khi thêm vào hệ thống thi sau"
+                OriginalExamPaperCore = originalExamPaperCore // <-- cập nhật ở đây
             };
             await _originalExamPaperRepository.AddAsync(originalExamPaper);
 

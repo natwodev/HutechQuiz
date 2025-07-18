@@ -55,5 +55,13 @@ namespace backend_manage.Controllers
             if (!success) return NotFound();
             return NoContent();
         }
+
+        [HttpPatch("{id}/original-exam-paper/{originalExamPaperId}")]
+        public async Task<IActionResult> UpdateOriginalExamPaperId(int id, int originalExamPaperId)
+        {
+            var success = await _service.UpdateOriginalExamPaperIdAsync(id, originalExamPaperId);
+            if (!success) return NotFound();
+            return Ok(new { message = "Cập nhật OriginalExamPaperId thành công." });
+        }
     }
 } 

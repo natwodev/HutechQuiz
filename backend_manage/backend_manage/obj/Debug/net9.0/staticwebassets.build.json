@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "BkQPkXpmOfVwvBxhCtFEuhotixd2bP4yLcOUcUML7r4=",
+  "Hash": "B8gfwLvgR6kH7UgmJnrnqF48RT7l9QfPArTXyHUx0EM=",
   "Source": "backend_manage",
   "BasePath": "_content/backend_manage",
   "Mode": "Default",
@@ -10,17 +10,17 @@
     {
       "Name": "backend_manage/wwwroot",
       "Source": "backend_manage",
-      "ContentRoot": "/Users/nguyenhuynhnam/RiderProjects/manage/backend_manage/backend_manage/wwwroot/",
+      "ContentRoot": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/backend_manage/backend_manage/wwwroot/",
       "BasePath": "_content/backend_manage",
       "Pattern": "**"
     }
   ],
   "Assets": [
     {
-      "Identity": "/Users/nguyenhuynhnam/RiderProjects/manage/backend_manage/backend_manage/obj/Debug/net9.0/compressed/38dqi6ccc0-d60u976qks.gz",
+      "Identity": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/backend_manage/backend_manage/obj/Debug/net9.0/compressed/38dqi6ccc0-d60u976qks.gz",
       "SourceId": "backend_manage",
       "SourceType": "Discovered",
-      "ContentRoot": "/Users/nguyenhuynhnam/RiderProjects/manage/backend_manage/backend_manage/obj/Debug/net9.0/compressed/",
+      "ContentRoot": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/backend_manage/backend_manage/obj/Debug/net9.0/compressed/",
       "BasePath": "_content/backend_manage",
       "RelativePath": "EPZ/c8839d97-d670-4771-9d19-b8ee445e6d44#[.{fingerprint=d60u976qks}]?.xml.gz",
       "AssetKind": "All",
@@ -28,20 +28,20 @@
       "AssetRole": "Alternative",
       "AssetMergeBehavior": "",
       "AssetMergeSource": "",
-      "RelatedAsset": "/Users/nguyenhuynhnam/RiderProjects/manage/backend_manage/backend_manage/wwwroot/EPZ/c8839d97-d670-4771-9d19-b8ee445e6d44.xml",
+      "RelatedAsset": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/backend_manage/backend_manage/wwwroot/EPZ/c8839d97-d670-4771-9d19-b8ee445e6d44.xml",
       "AssetTraitName": "Content-Encoding",
       "AssetTraitValue": "gzip",
       "Fingerprint": "tbd4wxp4lo",
       "Integrity": "efCceD/Y8/hiMRO7XYPRzwCVQPIq/txk9/if8msP3G4=",
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
-      "OriginalItemSpec": "/Users/nguyenhuynhnam/RiderProjects/manage/backend_manage/backend_manage/wwwroot/EPZ/c8839d97-d670-4771-9d19-b8ee445e6d44.xml"
+      "OriginalItemSpec": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/backend_manage/backend_manage/wwwroot/EPZ/c8839d97-d670-4771-9d19-b8ee445e6d44.xml"
     },
     {
-      "Identity": "/Users/nguyenhuynhnam/RiderProjects/manage/backend_manage/backend_manage/wwwroot/EPZ/c8839d97-d670-4771-9d19-b8ee445e6d44.xml",
+      "Identity": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/backend_manage/backend_manage/wwwroot/EPZ/c8839d97-d670-4771-9d19-b8ee445e6d44.xml",
       "SourceId": "backend_manage",
       "SourceType": "Discovered",
-      "ContentRoot": "/Users/nguyenhuynhnam/RiderProjects/manage/backend_manage/backend_manage/wwwroot/",
+      "ContentRoot": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/backend_manage/backend_manage/wwwroot/",
       "BasePath": "_content/backend_manage",
       "RelativePath": "EPZ/c8839d97-d670-4771-9d19-b8ee445e6d44#[.{fingerprint}]?.xml",
       "AssetKind": "All",
@@ -59,10 +59,10 @@
       "OriginalItemSpec": "wwwroot/EPZ/c8839d97-d670-4771-9d19-b8ee445e6d44.xml"
     },
     {
-      "Identity": "/Users/nguyenhuynhnam/RiderProjects/manage/backend_manage/backend_manage/wwwroot/Tool/FileTool.cs",
+      "Identity": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/backend_manage/backend_manage/wwwroot/Tool/FileTool.cs",
       "SourceId": "backend_manage",
       "SourceType": "Discovered",
-      "ContentRoot": "/Users/nguyenhuynhnam/RiderProjects/manage/backend_manage/backend_manage/wwwroot/",
+      "ContentRoot": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/backend_manage/backend_manage/wwwroot/",
       "BasePath": "_content/backend_manage",
       "RelativePath": "Tool/FileTool#[.{fingerprint}]?.cs",
       "AssetKind": "All",
@@ -83,7 +83,7 @@
   "Endpoints": [
     {
       "Route": "EPZ/c8839d97-d670-4771-9d19-b8ee445e6d44.d60u976qks.xml",
-      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/manage/backend_manage/backend_manage/obj/Debug/net9.0/compressed/38dqi6ccc0-d60u976qks.gz",
+      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/backend_manage/backend_manage/obj/Debug/net9.0/compressed/38dqi6ccc0-d60u976qks.gz",
       "Selectors": [
         {
           "Name": "Content-Encoding",
@@ -106,7 +106,7 @@
         },
         {
           "Name": "Last-Modified",
-          "Value": "Thu, 17 Jul 2025 07:39:00 GMT"
+          "Value": "Fri, 18 Jul 2025 14:22:25 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -146,7 +146,7 @@
     },
     {
       "Route": "EPZ/c8839d97-d670-4771-9d19-b8ee445e6d44.d60u976qks.xml",
-      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/manage/backend_manage/backend_manage/wwwroot/EPZ/c8839d97-d670-4771-9d19-b8ee445e6d44.xml",
+      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/backend_manage/backend_manage/wwwroot/EPZ/c8839d97-d670-4771-9d19-b8ee445e6d44.xml",
       "Selectors": [],
       "ResponseHeaders": [
         {
@@ -167,7 +167,7 @@
         },
         {
           "Name": "Last-Modified",
-          "Value": "Thu, 17 Jul 2025 07:39:00 GMT"
+          "Value": "Fri, 18 Jul 2025 14:22:25 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -191,7 +191,7 @@
     },
     {
       "Route": "EPZ/c8839d97-d670-4771-9d19-b8ee445e6d44.d60u976qks.xml.gz",
-      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/manage/backend_manage/backend_manage/obj/Debug/net9.0/compressed/38dqi6ccc0-d60u976qks.gz",
+      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/backend_manage/backend_manage/obj/Debug/net9.0/compressed/38dqi6ccc0-d60u976qks.gz",
       "Selectors": [],
       "ResponseHeaders": [
         {
@@ -212,7 +212,7 @@
         },
         {
           "Name": "Last-Modified",
-          "Value": "Thu, 17 Jul 2025 07:39:00 GMT"
+          "Value": "Fri, 18 Jul 2025 14:22:25 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -244,7 +244,7 @@
     },
     {
       "Route": "EPZ/c8839d97-d670-4771-9d19-b8ee445e6d44.xml",
-      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/manage/backend_manage/backend_manage/obj/Debug/net9.0/compressed/38dqi6ccc0-d60u976qks.gz",
+      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/backend_manage/backend_manage/obj/Debug/net9.0/compressed/38dqi6ccc0-d60u976qks.gz",
       "Selectors": [
         {
           "Name": "Content-Encoding",
@@ -267,7 +267,7 @@
         },
         {
           "Name": "Last-Modified",
-          "Value": "Thu, 17 Jul 2025 07:39:00 GMT"
+          "Value": "Fri, 18 Jul 2025 14:22:25 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -299,7 +299,7 @@
     },
     {
       "Route": "EPZ/c8839d97-d670-4771-9d19-b8ee445e6d44.xml",
-      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/manage/backend_manage/backend_manage/wwwroot/EPZ/c8839d97-d670-4771-9d19-b8ee445e6d44.xml",
+      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/backend_manage/backend_manage/wwwroot/EPZ/c8839d97-d670-4771-9d19-b8ee445e6d44.xml",
       "Selectors": [],
       "ResponseHeaders": [
         {
@@ -320,7 +320,7 @@
         },
         {
           "Name": "Last-Modified",
-          "Value": "Thu, 17 Jul 2025 07:39:00 GMT"
+          "Value": "Fri, 18 Jul 2025 14:22:25 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -336,7 +336,7 @@
     },
     {
       "Route": "EPZ/c8839d97-d670-4771-9d19-b8ee445e6d44.xml.gz",
-      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/manage/backend_manage/backend_manage/obj/Debug/net9.0/compressed/38dqi6ccc0-d60u976qks.gz",
+      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/backend_manage/backend_manage/obj/Debug/net9.0/compressed/38dqi6ccc0-d60u976qks.gz",
       "Selectors": [],
       "ResponseHeaders": [
         {
@@ -357,7 +357,7 @@
         },
         {
           "Name": "Last-Modified",
-          "Value": "Thu, 17 Jul 2025 07:39:00 GMT"
+          "Value": "Fri, 18 Jul 2025 14:22:25 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -381,7 +381,7 @@
     },
     {
       "Route": "Tool/FileTool.2wzlej9m8p.cs",
-      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/manage/backend_manage/backend_manage/wwwroot/Tool/FileTool.cs",
+      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/backend_manage/backend_manage/wwwroot/Tool/FileTool.cs",
       "Selectors": [],
       "ResponseHeaders": [
         {
@@ -402,7 +402,7 @@
         },
         {
           "Name": "Last-Modified",
-          "Value": "Wed, 16 Jul 2025 17:37:03 GMT"
+          "Value": "Thu, 17 Jul 2025 17:57:52 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -426,7 +426,7 @@
     },
     {
       "Route": "Tool/FileTool.cs",
-      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/manage/backend_manage/backend_manage/wwwroot/Tool/FileTool.cs",
+      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/backend_manage/backend_manage/wwwroot/Tool/FileTool.cs",
       "Selectors": [],
       "ResponseHeaders": [
         {
@@ -447,7 +447,7 @@
         },
         {
           "Name": "Last-Modified",
-          "Value": "Wed, 16 Jul 2025 17:37:03 GMT"
+          "Value": "Thu, 17 Jul 2025 17:57:52 GMT"
         },
         {
           "Name": "Cache-Control",

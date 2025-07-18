@@ -1,0 +1,8 @@
+# Bỏ qua file editorconfig sinh ra tự động trong obj
+obj/**/*.editorconfig 
+
+# Loại trừ toàn bộ thư mục .idea (cấu hình IDE)
+.idea/ 
+
+# Loại trừ migration
+Migrations/ 
