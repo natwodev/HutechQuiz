@@ -17,6 +17,10 @@ public class ShuffledExamPaper : BaseEntity  //đề thi đã được hoán v�
     [StringLength(100)]
     public string Title { get; set; }
     
+    // Mã định danh đề thi hoán vị (ví dụ: "SHP001")
+    [MaxLength(50)]
+    public string ShuffledExamPaperCore { get; set; }
+    
     // Khóa ngoại liên kết với bảng OriginalExamPaper
     // Xác định đề thi hoán vị thuộc đề thi gốc nào
     [ForeignKey("OriginalExamPaper")]
@@ -25,7 +29,7 @@ public class ShuffledExamPaper : BaseEntity  //đề thi đã được hoán v�
     // Khóa ngoại liên kết với bảng ExamSessionSubject
     // Xác định đề thi hoán vị thuộc môn thi nào trong ca thi nào
     [ForeignKey("ExamSessionSubject")]
-    public int ExamSessionSubjectId { get; set; }
+    public int? ExamSessionSubjectId { get; set; }
     
     // Khóa ngoại liên kết với bảng Subject
     // Xác định đề thi hoán vị thuộc môn học nào
@@ -38,6 +42,9 @@ public class ShuffledExamPaper : BaseEntity  //đề thi đã được hoán v�
     
     // Total number of times this shuffled exam paper has been used for testing
     public int TotalUsageCount { get; set; } = 0;
+    
+    // Chuỗi đáp án đúng của đề hoán vị (ví dụ: "ABCDACDB...")
+    public string? AnswerKey { get; set; }
     
     // Navigation property đến entity OriginalExamPaper
     public OriginalExamPaper OriginalExamPaper { get; set; }

@@ -31,7 +31,7 @@ public class StudentExamSession : BaseEntity
     // Khóa ngoại liên kết với bảng ShuffledExamPaper
     // Xác định đề thi hoán vị mà sinh viên làm
     [ForeignKey("ShuffledExamPaper")]
-    public int ShuffledExamPaperId { get; set; }
+    public int? ShuffledExamPaperId { get; set; }
 
     // Số phút được cộng thêm cho sinh viên (nếu có)
     public int ExtraMinutes { get; set; }
@@ -57,6 +57,10 @@ public class StudentExamSession : BaseEntity
     [ForeignKey("ExamRoom")]
     public int? ExamRoomId { get; set; }
     
+    // Chuỗi lưu đáp án của sinh viên, ví dụ: "A,B,C,D,..." hoặc JSON
+    public string StudentAnswersString { get; set; }
+
+    
     // Navigation property đến entity Student
     public Student Student { get; set; }
     
@@ -69,8 +73,6 @@ public class StudentExamSession : BaseEntity
     // Navigation property đến entity ExamRoom
     public ExamRoom ExamRoom { get; set; }
 
-    // Chuỗi lưu đáp án của sinh viên, ví dụ: "A,B,C,D,..." hoặc JSON
-    public string? StudentAnswersString { get; set; }
 }
 
 

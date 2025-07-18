@@ -6,3 +6,7 @@ obj/**/*.editorconfig
 
 # Loại trừ migration
 Migrations/ 
+
+# Loại trừ toàn bộ thư mục bin và obj
+bin/
+obj/ 

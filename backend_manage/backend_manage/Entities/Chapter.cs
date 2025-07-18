@@ -46,10 +46,6 @@ namespace backend_manage.Entities
         
         // Collection các chương con của chương này
         public ICollection<Chapter> ChildChapters { get; set; } = new List<Chapter>();
-
-        // Collection các chi tiết đề thi hoán vị có chương này
-        // Mối quan hệ one-to-many với ShuffledExamPaperDetail
-        public ICollection<ShuffledExamPaperDetail> ShuffledExamPaperDetails { get; set; } = new List<ShuffledExamPaperDetail>();
         
         // Collection các chi tiết đề thi gốc có chương này
         // Mối quan hệ one-to-many với OriginalExamPaperDetail

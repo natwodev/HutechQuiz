@@ -57,7 +57,5 @@ public class OriginalExamPaper : BaseEntity
     // Mối quan hệ one-to-many với OriginalExamPaperDetail
     public ICollection<OriginalExamPaperDetail> OriginalExamPaperDetails { get; set; } = new List<OriginalExamPaperDetail>();
     
-    // Collection các chi tiết câu hỏi trong đề thi hoán vị
-    // Mối quan hệ one-to-many với ShuffledExamPaperDetail
-    public ICollection<ShuffledExamPaperDetail>? ShuffledExamPaperDetails { get; set; }
+
 } 

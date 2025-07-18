@@ -19,6 +19,8 @@ namespace backend_manage.Entities
         // Thứ tự hiển thị của câu hỏi trong đề thi
         public int Order { get; set; }
 
+        // Nội dung câu hỏi
+        public string? QuestionContent { get; set; }
         // Đáp án 1
         public string? Answer1 { get; set; }
         // Đáp án 2
@@ -27,9 +29,7 @@ namespace backend_manage.Entities
         public string? Answer3 { get; set; }
         // Đáp án 4
         public string? Answer4 { get; set; }
-
-        // Nội dung câu hỏi
-        public string? QuestionContent { get; set; }
+        
 
         // Chỉ số đáp án đúng (1, 2, 3, 4)
         public int? CorrectAnswerIndex { get; set; }

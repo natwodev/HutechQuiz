@@ -26,23 +26,34 @@ namespace backend_manage.Services.AuthService
         private readonly IRepository<OriginalExamPaper> _originalExamPaperRepository;
         private readonly IRepository<Chapter> _chapterRepository;
         private readonly IRepository<OriginalExamPaperDetail> _originalExamPaperDetailRepository;
+        private readonly IRepository<ShuffledExamPaper> _shuffledExamPaperRepository;
+        private readonly IRepository<ShuffledExamPaperDetail> _shuffledExamPaperDetailRepository;
+        private readonly IRepository<ExamSessionSubject> _examSessionSubjectRepository;
         private readonly IHttpContextAccessor _httpContextAccessor;
+
         public OriginalExamPaperService(
             IRepository<Subject> subjectRepository,
             IRepository<OriginalExamPaper> originalExamPaperRepository,
             IRepository<Chapter> chapterRepository,
             IRepository<OriginalExamPaperDetail> originalExamPaperDetailRepository,
-            IHttpContextAccessor httpContextAccessor)
+            IHttpContextAccessor httpContextAccessor,
+            IRepository<ShuffledExamPaper> shuffledExamPaperRepository,
+            IRepository<ShuffledExamPaperDetail> shuffledExamPaperDetailRepository,
+            IRepository<ExamSessionSubject> examSessionSubjectRepository)
         {
             _subjectRepository = subjectRepository;
             _originalExamPaperRepository = originalExamPaperRepository;
             _chapterRepository = chapterRepository;
             _originalExamPaperDetailRepository = originalExamPaperDetailRepository;
             _httpContextAccessor = httpContextAccessor;
+            _shuffledExamPaperRepository = shuffledExamPaperRepository;
+            _shuffledExamPaperDetailRepository = shuffledExamPaperDetailRepository;
+            _examSessionSubjectRepository = examSessionSubjectRepository;
         }
 
         // Pass giải nén file XML
-        public const string ExtractPassword = "649224E2-F0AC-42B1-AD1B-2EAF04E2AC7D-FE602240-7E60-43BF-828D-D6AF38A70429-52572FD1-BB94-45AD-95CF-7B2B5C2E85A6-1B3D4CCF-808E-4ABF-8F9E-73ADF041C78B";
+        public const string ExtractPassword =
+            "649224E2-F0AC-42B1-AD1B-2EAF04E2AC7D-FE602240-7E60-43BF-828D-D6AF38A70429-52572FD1-BB94-45AD-95CF-7B2B5C2E85A6-1B3D4CCF-808E-4ABF-8F9E-73ADF041C78B";
 
         public async Task ImportFromXmlAsync(IFormFile file, string originalExamPaperCore)
         {
@@ -52,7 +63,8 @@ namespace backend_manage.Services.AuthService
                 throw new ArgumentException("File phải có đuôi .epz");
 
             // Kiểm tra OriginalExamPaperCore đã tồn tại chưa
-            var existedExamPaper = await _originalExamPaperRepository.GetQueryable().FirstOrDefaultAsync(x => x.OriginalExamPaperCore == originalExamPaperCore);
+            var existedExamPaper = await _originalExamPaperRepository.GetQueryable()
+                .FirstOrDefaultAsync(x => x.OriginalExamPaperCore == originalExamPaperCore);
             if (existedExamPaper != null)
                 throw new Exception($"OriginalExamPaperCore '{originalExamPaperCore}' đã tồn tại trong hệ thống.");
 
@@ -74,11 +86,13 @@ namespace backend_manage.Services.AuthService
                             {
                                 xmlContent = await reader.ReadToEndAsync();
                             }
+
                             break;
                         }
                     }
                 }
             }
+
             if (xmlContent == null)
                 throw new Exception("Không tìm thấy file XML trong archive");
 
@@ -88,6 +102,7 @@ namespace backend_manage.Services.AuthService
             {
                 epz = (EPZDto)serializer.Deserialize(reader);
             }
+
             var monHoc = epz.MonHoc;
             if (monHoc == null) throw new Exception("XML không hợp lệ: thiếu MonHoc");
             // Kiểm tra SubjectCore đã tồn tại chưa
@@ -113,7 +128,8 @@ namespace backend_manage.Services.AuthService
             }
             else
             {
-                subject = await _subjectRepository.GetQueryable().FirstOrDefaultAsync(s => s.SubjectCore == monHoc.MaSoMonHoc);
+                subject = await _subjectRepository.GetQueryable()
+                    .FirstOrDefaultAsync(s => s.SubjectCore == monHoc.MaSoMonHoc);
             }
 
             // Save OriginalExamPaper (phải tạo trước để lấy Id cho detail)
@@ -138,19 +154,22 @@ namespace backend_manage.Services.AuthService
                 foreach (var phan in monHoc.Phan)
                 {
                     int? parentChapterId = null;
-                    if (!string.IsNullOrEmpty(phan.MaPhanCha) && phan.MaPhanCha != "00000000-0000-0000-0000-000000000000")
+                    if (!string.IsNullOrEmpty(phan.MaPhanCha) &&
+                        phan.MaPhanCha != "00000000-0000-0000-0000-000000000000")
                     {
                         var parentPhan = monHoc.Phan.FirstOrDefault(p => p.MaPhan == phan.MaPhanCha);
                         if (parentPhan != null)
                         {
                             var parentChapter = await _chapterRepository.GetQueryable()
-                                .FirstOrDefaultAsync(c => c.Name == parentPhan.TenPhan && c.SubjectId == subject.SubjectId);
+                                .FirstOrDefaultAsync(c =>
+                                    c.Name == parentPhan.TenPhan && c.SubjectId == subject.SubjectId);
                             if (parentChapter != null)
                             {
                                 parentChapterId = parentChapter.ChapterId;
                             }
                         }
                     }
+
                     var chapter = await _chapterRepository.GetQueryable()
                         .FirstOrDefaultAsync(c => c.Name == phan.TenPhan && c.SubjectId == subject.SubjectId);
                     if (chapter == null)
@@ -168,6 +187,7 @@ namespace backend_manage.Services.AuthService
                         };
                         await _chapterRepository.AddAsync(chapter);
                     }
+
                     if (phan.CauHoi != null)
                     {
                         int order = 1;
@@ -175,7 +195,8 @@ namespace backend_manage.Services.AuthService
                         var tempDetails = new List<(string MaCauHoi, OriginalExamPaperDetail Detail)>();
                         foreach (var cauHoi in phan.CauHoi)
                         {
-                            var answers = cauHoi.CauTraLoi?.OrderBy(a => a.ThuTu).ToList() ?? new List<DTOs.EPZ.CauTraLoiDto>();
+                            var answers = cauHoi.CauTraLoi?.OrderBy(a => a.ThuTu).ToList() ??
+                                          new List<DTOs.EPZ.CauTraLoiDto>();
                             var detail = new OriginalExamPaperDetail
                             {
                                 OriginalExamPaperId = originalExamPaper.OriginalExamPaperId,
@@ -186,7 +207,9 @@ namespace backend_manage.Services.AuthService
                                 Answer2 = answers.Count > 1 ? answers[1].NoiDung : null,
                                 Answer3 = answers.Count > 2 ? answers[2].NoiDung : null,
                                 Answer4 = answers.Count > 3 ? answers[3].NoiDung : null,
-                                CorrectAnswerIndex = answers.FindIndex(a => a.LaDapAn) >= 0 ? answers.FindIndex(a => a.LaDapAn) + 1 : null,
+                                CorrectAnswerIndex = answers.FindIndex(a => a.LaDapAn) >= 0
+                                    ? answers.FindIndex(a => a.LaDapAn) + 1
+                                    : null,
                                 CreatedBy = userIdForExamPaper,
                                 CreatedAt = now,
                                 // ParentQuestionId sẽ gán sau khi đã có mapping
@@ -195,17 +218,20 @@ namespace backend_manage.Services.AuthService
                             tempDetails.Add((cauHoi.MaCauHoi, detail));
                             order++;
                         }
+
                         // Sau khi lưu xong, cập nhật ParentQuestionId nếu có
                         foreach (var (MaCauHoi, Detail) in tempDetails)
                         {
                             var cauHoi = phan.CauHoi.FirstOrDefault(c => c.MaCauHoi == MaCauHoi);
-                            if (cauHoi != null && !string.IsNullOrEmpty(cauHoi.MaCauHoiCha) && cauHoi.MaCauHoiCha != "00000000-0000-0000-0000-000000000000")
+                            if (cauHoi != null && !string.IsNullOrEmpty(cauHoi.MaCauHoiCha) &&
+                                cauHoi.MaCauHoiCha != "00000000-0000-0000-0000-000000000000")
                             {
                                 var parent = tempDetails.FirstOrDefault(t => t.MaCauHoi == cauHoi.MaCauHoiCha).Detail;
                                 if (parent != null)
                                 {
                                     Detail.ParentQuestionId = parent.OriginalExamPaperDetailId;
-                                    await _originalExamPaperDetailRepository.AddAsync(Detail); // hoặc update nếu repo có hàm update
+                                    await _originalExamPaperDetailRepository
+                                        .AddAsync(Detail); // hoặc update nếu repo có hàm update
                                 }
                             }
                         }
@@ -213,5 +239,89 @@ namespace backend_manage.Services.AuthService
                 }
             }
         }
+        
+        public async Task CreateShuffledExamPapersAsync(string originalExamPaperCore, int count)
+        {
+            if (string.IsNullOrWhiteSpace(originalExamPaperCore))
+                throw new ArgumentException("Mã đề thi gốc không hợp lệ");
+            if (count <= 0)
+                throw new ArgumentException("Số lượng đề hoán vị phải lớn hơn 0");
+
+            var originalExamPaper = await _originalExamPaperRepository.GetQueryable()
+                .Include(o => o.OriginalExamPaperDetails)
+                .FirstOrDefaultAsync(o => o.OriginalExamPaperCore == originalExamPaperCore);
+            if (originalExamPaper == null)
+                throw new Exception($"Không tìm thấy đề thi gốc với mã '{originalExamPaperCore}'");
+
+            var subjectId = originalExamPaper.SubjectId;
+            var now = DateTimeHelper.GetVietnamTime();
+            var userId = _httpContextAccessor.HttpContext?.User?.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+                throw new UnauthorizedAccessException("Không thể xác định người dùng tạo đề hoán vị.");
+
+            for (int i = 0; i < count; i++)
+            {
+                int nextIndex = originalExamPaper.TotalShuffledPapers + 1 + i;
+                string shuffledExamPaperCore = $"{originalExamPaper.OriginalExamPaperCore}HV{nextIndex}";
+                var shuffledExamPaper = new ShuffledExamPaper
+                {
+                    Title = $"{originalExamPaper.Title} - Hoán vị {nextIndex}",
+                    ShuffledExamPaperCore = shuffledExamPaperCore,
+                    OriginalExamPaperId = originalExamPaper.OriginalExamPaperId,
+                    ExamSessionSubjectId = null,
+                    SubjectId = subjectId,
+                    IsApproved = false,
+                    CreatedBy = userId,
+                    CreatedAt = now,
+                    TotalUsageCount = 0
+                };
+                await _shuffledExamPaperRepository.AddAsync(shuffledExamPaper);
+
+                // Tạo detail cho đề hoán vị này
+                var originalDetails = originalExamPaper.OriginalExamPaperDetails.ToList();
+                var random = new Random();
+                var shuffledQuestions = originalDetails.OrderBy(x => random.Next()).ToList();
+                var answerKeyParts = new List<string>();
+                int order = 1;
+                foreach (var question in shuffledQuestions)
+                {
+                    // Hoán vị vị trí đáp án
+                    var answerIndexes = new List<int> { 1, 2, 3, 4 };
+                    answerIndexes = answerIndexes.OrderBy(x => random.Next()).ToList();
+                    string answerOrder = string.Join("", answerIndexes);
+
+                    string?[] answers = { question.Answer1, question.Answer2, question.Answer3, question.Answer4 };
+                    string?[] shuffledAnswers = new string?[4];
+                    for (int j = 0; j < 4; j++)
+                    {
+                        shuffledAnswers[j] = answers[answerIndexes[j] - 1];
+                    }
+                    int? correctIndex = question.CorrectAnswerIndex.HasValue ? answerIndexes.IndexOf(question.CorrectAnswerIndex.Value) + 1 : (int?)null;
+
+                    // Xác định ký tự đáp án đúng (A/B/C/D)
+                    string correctChar = correctIndex.HasValue && correctIndex.Value >= 1 && correctIndex.Value <= 4
+                        ? ((char)('A' + correctIndex.Value - 1)).ToString()
+                        : "-";
+                    answerKeyParts.Add($"({order},{correctChar})");
+
+                    var shuffledDetail = new ShuffledExamPaperDetail
+                    {
+                        ShuffledExamPaperId = shuffledExamPaper.ShuffledExamPaperId,
+                        Order = order++,
+                        AnswerOrder = answerOrder,
+                        OriginalExamPaperDetailId = question.OriginalExamPaperDetailId,
+                        ParentQuestionId = null, // Nếu có logic cha-con thì cần xử lý thêm
+                        CreatedBy = userId,
+                        CreatedAt = now
+                    };
+                    await _shuffledExamPaperDetailRepository.AddAsync(shuffledDetail);
+                }
+                // Lưu AnswerKey vào đề hoán vị
+                shuffledExamPaper.AnswerKey = string.Join(";", answerKeyParts) + ";";
+                await _shuffledExamPaperRepository.UpdateAsync(shuffledExamPaper);
+            }
+            originalExamPaper.TotalShuffledPapers += count;
+            await _originalExamPaperRepository.UpdateAsync(originalExamPaper);
+        }
     }
-} 
+}
