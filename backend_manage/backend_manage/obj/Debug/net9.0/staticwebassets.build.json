@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "RfP0vfFY+R6rZKeadycTEhngREHI4dfYgJv0RKuXJYo=",
+  "Hash": "2w66TFr/ryYSERZnUKTpX2Xr37uN8EdbmtkVU5L6Z48=",
   "Source": "backend_manage",
   "BasePath": "_content/backend_manage",
   "Mode": "Default",
@@ -17,33 +17,54 @@
   ],
   "Assets": [
     {
-      "Identity": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/backend_manage/backend_manage/obj/Debug/net9.0/compressed/38dqi6ccc0-d60u976qks.gz",
+      "Identity": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/backend_manage/backend_manage/obj/Debug/net9.0/compressed/1bntlhh0at-ff3sfxl6l3.gz",
       "SourceId": "backend_manage",
       "SourceType": "Discovered",
       "ContentRoot": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/backend_manage/backend_manage/obj/Debug/net9.0/compressed/",
       "BasePath": "_content/backend_manage",
-      "RelativePath": "EPZ/c8839d97-d670-4771-9d19-b8ee445e6d44#[.{fingerprint=d60u976qks}]?.xml.gz",
+      "RelativePath": "EPZ/CNPM010/9f92ab68-54e9-4efe-af23-6f7f59e68373/9f92ab68-54e9-4efe-af23-6f7f59e68373#[.{fingerprint=ff3sfxl6l3}]?.xml.gz",
       "AssetKind": "All",
       "AssetMode": "All",
       "AssetRole": "Alternative",
       "AssetMergeBehavior": "",
       "AssetMergeSource": "",
-      "RelatedAsset": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/backend_manage/backend_manage/wwwroot/EPZ/c8839d97-d670-4771-9d19-b8ee445e6d44.xml",
+      "RelatedAsset": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/backend_manage/backend_manage/wwwroot/EPZ/CNPM010/9f92ab68-54e9-4efe-af23-6f7f59e68373/9f92ab68-54e9-4efe-af23-6f7f59e68373.xml",
       "AssetTraitName": "Content-Encoding",
       "AssetTraitValue": "gzip",
-      "Fingerprint": "tbd4wxp4lo",
-      "Integrity": "efCceD/Y8/hiMRO7XYPRzwCVQPIq/txk9/if8msP3G4=",
+      "Fingerprint": "sdix6n1axa",
+      "Integrity": "UO1sI9/W2jVX9c8B2MvDTtScs9wsYulajQvsXgKSiF0=",
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
-      "OriginalItemSpec": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/backend_manage/backend_manage/wwwroot/EPZ/c8839d97-d670-4771-9d19-b8ee445e6d44.xml"
+      "OriginalItemSpec": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/backend_manage/backend_manage/wwwroot/EPZ/CNPM010/9f92ab68-54e9-4efe-af23-6f7f59e68373/9f92ab68-54e9-4efe-af23-6f7f59e68373.xml"
     },
     {
-      "Identity": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/backend_manage/backend_manage/wwwroot/EPZ/c8839d97-d670-4771-9d19-b8ee445e6d44.xml",
+      "Identity": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/backend_manage/backend_manage/obj/Debug/net9.0/compressed/1pwbf8bqf2-ff3sfxl6l3.gz",
+      "SourceId": "backend_manage",
+      "SourceType": "Discovered",
+      "ContentRoot": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/backend_manage/backend_manage/obj/Debug/net9.0/compressed/",
+      "BasePath": "_content/backend_manage",
+      "RelativePath": "EPZ/CNPM009/9f92ab68-54e9-4efe-af23-6f7f59e68373/9f92ab68-54e9-4efe-af23-6f7f59e68373#[.{fingerprint=ff3sfxl6l3}]?.xml.gz",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Alternative",
+      "AssetMergeBehavior": "",
+      "AssetMergeSource": "",
+      "RelatedAsset": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/backend_manage/backend_manage/wwwroot/EPZ/CNPM009/9f92ab68-54e9-4efe-af23-6f7f59e68373/9f92ab68-54e9-4efe-af23-6f7f59e68373.xml",
+      "AssetTraitName": "Content-Encoding",
+      "AssetTraitValue": "gzip",
+      "Fingerprint": "sdix6n1axa",
+      "Integrity": "UO1sI9/W2jVX9c8B2MvDTtScs9wsYulajQvsXgKSiF0=",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/backend_manage/backend_manage/wwwroot/EPZ/CNPM009/9f92ab68-54e9-4efe-af23-6f7f59e68373/9f92ab68-54e9-4efe-af23-6f7f59e68373.xml"
+    },
+    {
+      "Identity": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/backend_manage/backend_manage/wwwroot/EPZ/CNPM009.zip",
       "SourceId": "backend_manage",
       "SourceType": "Discovered",
       "ContentRoot": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/backend_manage/backend_manage/wwwroot/",
       "BasePath": "_content/backend_manage",
-      "RelativePath": "EPZ/c8839d97-d670-4771-9d19-b8ee445e6d44#[.{fingerprint}]?.xml",
+      "RelativePath": "EPZ/CNPM009#[.{fingerprint}]?.zip",
       "AssetKind": "All",
       "AssetMode": "All",
       "AssetRole": "Primary",
@@ -52,19 +73,19 @@
       "RelatedAsset": "",
       "AssetTraitName": "",
       "AssetTraitValue": "",
-      "Fingerprint": "d60u976qks",
-      "Integrity": "m56I6F3lXyH8qZKylS/3XX9ofXFNGp508n+ztqfcoSg=",
+      "Fingerprint": "vp8yfic5xt",
+      "Integrity": "Xah2p9LRQvvIiFkKzvAFnqDhKDSkL4HCMFgURNwNg/Q=",
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
-      "OriginalItemSpec": "wwwroot/EPZ/c8839d97-d670-4771-9d19-b8ee445e6d44.xml"
+      "OriginalItemSpec": "wwwroot/EPZ/CNPM009.zip"
     },
     {
-      "Identity": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/backend_manage/backend_manage/wwwroot/Tool/FileTool.cs",
+      "Identity": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/backend_manage/backend_manage/wwwroot/EPZ/CNPM009/9f92ab68-54e9-4efe-af23-6f7f59e68373/9f92ab68-54e9-4efe-af23-6f7f59e68373.xml",
       "SourceId": "backend_manage",
       "SourceType": "Discovered",
       "ContentRoot": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/backend_manage/backend_manage/wwwroot/",
       "BasePath": "_content/backend_manage",
-      "RelativePath": "Tool/FileTool#[.{fingerprint}]?.cs",
+      "RelativePath": "EPZ/CNPM009/9f92ab68-54e9-4efe-af23-6f7f59e68373/9f92ab68-54e9-4efe-af23-6f7f59e68373#[.{fingerprint}]?.xml",
       "AssetKind": "All",
       "AssetMode": "All",
       "AssetRole": "Primary",
@@ -73,22 +94,146 @@
       "RelatedAsset": "",
       "AssetTraitName": "",
       "AssetTraitValue": "",
-      "Fingerprint": "2wzlej9m8p",
-      "Integrity": "8rKN4onq3bAcPn1ZNY9QbsurM20NcsoDbHxmKt7JfpQ=",
+      "Fingerprint": "ff3sfxl6l3",
+      "Integrity": "pZy5z3HnTOeV4czU8ujiGrYvg6QFFEOtVzhEhHZvFUg=",
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
-      "OriginalItemSpec": "wwwroot/Tool/FileTool.cs"
+      "OriginalItemSpec": "wwwroot/EPZ/CNPM009/9f92ab68-54e9-4efe-af23-6f7f59e68373/9f92ab68-54e9-4efe-af23-6f7f59e68373.xml"
+    },
+    {
+      "Identity": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/backend_manage/backend_manage/wwwroot/EPZ/CNPM010.zip",
+      "SourceId": "backend_manage",
+      "SourceType": "Discovered",
+      "ContentRoot": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/backend_manage/backend_manage/wwwroot/",
+      "BasePath": "_content/backend_manage",
+      "RelativePath": "EPZ/CNPM010#[.{fingerprint}]?.zip",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "Fingerprint": "vp8yfic5xt",
+      "Integrity": "Xah2p9LRQvvIiFkKzvAFnqDhKDSkL4HCMFgURNwNg/Q=",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot/EPZ/CNPM010.zip"
+    },
+    {
+      "Identity": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/backend_manage/backend_manage/wwwroot/EPZ/CNPM010/9f92ab68-54e9-4efe-af23-6f7f59e68373/9f92ab68-54e9-4efe-af23-6f7f59e68373.xml",
+      "SourceId": "backend_manage",
+      "SourceType": "Discovered",
+      "ContentRoot": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/backend_manage/backend_manage/wwwroot/",
+      "BasePath": "_content/backend_manage",
+      "RelativePath": "EPZ/CNPM010/9f92ab68-54e9-4efe-af23-6f7f59e68373/9f92ab68-54e9-4efe-af23-6f7f59e68373#[.{fingerprint}]?.xml",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "Fingerprint": "ff3sfxl6l3",
+      "Integrity": "pZy5z3HnTOeV4czU8ujiGrYvg6QFFEOtVzhEhHZvFUg=",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot/EPZ/CNPM010/9f92ab68-54e9-4efe-af23-6f7f59e68373/9f92ab68-54e9-4efe-af23-6f7f59e68373.xml"
     }
   ],
   "Endpoints": [
     {
-      "Route": "EPZ/c8839d97-d670-4771-9d19-b8ee445e6d44.d60u976qks.xml",
-      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/backend_manage/backend_manage/obj/Debug/net9.0/compressed/38dqi6ccc0-d60u976qks.gz",
+      "Route": "EPZ/CNPM009.vp8yfic5xt.zip",
+      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/backend_manage/backend_manage/wwwroot/EPZ/CNPM009.zip",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "2134"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/x-zip-compressed"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"Xah2p9LRQvvIiFkKzvAFnqDhKDSkL4HCMFgURNwNg/Q=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 19 Jul 2025 12:53:53 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "vp8yfic5xt"
+        },
+        {
+          "Name": "label",
+          "Value": "EPZ/CNPM009.zip"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-Xah2p9LRQvvIiFkKzvAFnqDhKDSkL4HCMFgURNwNg/Q="
+        }
+      ]
+    },
+    {
+      "Route": "EPZ/CNPM009.zip",
+      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/backend_manage/backend_manage/wwwroot/EPZ/CNPM009.zip",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "2134"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/x-zip-compressed"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"Xah2p9LRQvvIiFkKzvAFnqDhKDSkL4HCMFgURNwNg/Q=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 19 Jul 2025 12:53:53 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-Xah2p9LRQvvIiFkKzvAFnqDhKDSkL4HCMFgURNwNg/Q="
+        }
+      ]
+    },
+    {
+      "Route": "EPZ/CNPM009/9f92ab68-54e9-4efe-af23-6f7f59e68373/9f92ab68-54e9-4efe-af23-6f7f59e68373.ff3sfxl6l3.xml",
+      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/backend_manage/backend_manage/obj/Debug/net9.0/compressed/1pwbf8bqf2-ff3sfxl6l3.gz",
       "Selectors": [
         {
           "Name": "Content-Encoding",
           "Value": "gzip",
-          "Quality": "0.001901140684"
+          "Quality": "0.000768049155"
         }
       ],
       "ResponseHeaders": [
@@ -98,15 +243,15 @@
         },
         {
           "Name": "Content-Length",
-          "Value": "525"
+          "Value": "1301"
         },
         {
           "Name": "ETag",
-          "Value": "\"efCceD/Y8/hiMRO7XYPRzwCVQPIq/txk9/if8msP3G4=\""
+          "Value": "\"UO1sI9/W2jVX9c8B2MvDTtScs9wsYulajQvsXgKSiF0=\""
         },
         {
           "Name": "Last-Modified",
-          "Value": "Fri, 18 Jul 2025 16:29:18 GMT"
+          "Value": "Sat, 19 Jul 2025 12:53:53 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -126,27 +271,27 @@
         },
         {
           "Name": "ETag",
-          "Value": "W/\"m56I6F3lXyH8qZKylS/3XX9ofXFNGp508n+ztqfcoSg=\""
+          "Value": "W/\"pZy5z3HnTOeV4czU8ujiGrYvg6QFFEOtVzhEhHZvFUg=\""
         }
       ],
       "EndpointProperties": [
         {
           "Name": "fingerprint",
-          "Value": "d60u976qks"
+          "Value": "ff3sfxl6l3"
         },
         {
           "Name": "label",
-          "Value": "EPZ/c8839d97-d670-4771-9d19-b8ee445e6d44.xml"
+          "Value": "EPZ/CNPM009/9f92ab68-54e9-4efe-af23-6f7f59e68373/9f92ab68-54e9-4efe-af23-6f7f59e68373.xml"
         },
         {
           "Name": "integrity",
-          "Value": "sha256-m56I6F3lXyH8qZKylS/3XX9ofXFNGp508n+ztqfcoSg="
+          "Value": "sha256-pZy5z3HnTOeV4czU8ujiGrYvg6QFFEOtVzhEhHZvFUg="
         }
       ]
     },
     {
-      "Route": "EPZ/c8839d97-d670-4771-9d19-b8ee445e6d44.d60u976qks.xml",
-      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/backend_manage/backend_manage/wwwroot/EPZ/c8839d97-d670-4771-9d19-b8ee445e6d44.xml",
+      "Route": "EPZ/CNPM009/9f92ab68-54e9-4efe-af23-6f7f59e68373/9f92ab68-54e9-4efe-af23-6f7f59e68373.ff3sfxl6l3.xml",
+      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/backend_manage/backend_manage/wwwroot/EPZ/CNPM009/9f92ab68-54e9-4efe-af23-6f7f59e68373/9f92ab68-54e9-4efe-af23-6f7f59e68373.xml",
       "Selectors": [],
       "ResponseHeaders": [
         {
@@ -155,7 +300,7 @@
         },
         {
           "Name": "Content-Length",
-          "Value": "4137"
+          "Value": "8987"
         },
         {
           "Name": "Content-Type",
@@ -163,11 +308,11 @@
         },
         {
           "Name": "ETag",
-          "Value": "\"m56I6F3lXyH8qZKylS/3XX9ofXFNGp508n+ztqfcoSg=\""
+          "Value": "\"pZy5z3HnTOeV4czU8ujiGrYvg6QFFEOtVzhEhHZvFUg=\""
         },
         {
           "Name": "Last-Modified",
-          "Value": "Fri, 18 Jul 2025 16:29:18 GMT"
+          "Value": "Sat, 19 Jul 2025 12:53:53 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -177,21 +322,21 @@
       "EndpointProperties": [
         {
           "Name": "fingerprint",
-          "Value": "d60u976qks"
+          "Value": "ff3sfxl6l3"
         },
         {
           "Name": "label",
-          "Value": "EPZ/c8839d97-d670-4771-9d19-b8ee445e6d44.xml"
+          "Value": "EPZ/CNPM009/9f92ab68-54e9-4efe-af23-6f7f59e68373/9f92ab68-54e9-4efe-af23-6f7f59e68373.xml"
         },
         {
           "Name": "integrity",
-          "Value": "sha256-m56I6F3lXyH8qZKylS/3XX9ofXFNGp508n+ztqfcoSg="
+          "Value": "sha256-pZy5z3HnTOeV4czU8ujiGrYvg6QFFEOtVzhEhHZvFUg="
         }
       ]
     },
     {
-      "Route": "EPZ/c8839d97-d670-4771-9d19-b8ee445e6d44.d60u976qks.xml.gz",
-      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/backend_manage/backend_manage/obj/Debug/net9.0/compressed/38dqi6ccc0-d60u976qks.gz",
+      "Route": "EPZ/CNPM009/9f92ab68-54e9-4efe-af23-6f7f59e68373/9f92ab68-54e9-4efe-af23-6f7f59e68373.ff3sfxl6l3.xml.gz",
+      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/backend_manage/backend_manage/obj/Debug/net9.0/compressed/1pwbf8bqf2-ff3sfxl6l3.gz",
       "Selectors": [],
       "ResponseHeaders": [
         {
@@ -200,7 +345,7 @@
         },
         {
           "Name": "Content-Length",
-          "Value": "525"
+          "Value": "1301"
         },
         {
           "Name": "Content-Type",
@@ -208,11 +353,11 @@
         },
         {
           "Name": "ETag",
-          "Value": "\"efCceD/Y8/hiMRO7XYPRzwCVQPIq/txk9/if8msP3G4=\""
+          "Value": "\"UO1sI9/W2jVX9c8B2MvDTtScs9wsYulajQvsXgKSiF0=\""
         },
         {
           "Name": "Last-Modified",
-          "Value": "Fri, 18 Jul 2025 16:29:18 GMT"
+          "Value": "Sat, 19 Jul 2025 12:53:53 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -230,26 +375,26 @@
       "EndpointProperties": [
         {
           "Name": "fingerprint",
-          "Value": "d60u976qks"
+          "Value": "ff3sfxl6l3"
         },
         {
           "Name": "label",
-          "Value": "EPZ/c8839d97-d670-4771-9d19-b8ee445e6d44.xml.gz"
+          "Value": "EPZ/CNPM009/9f92ab68-54e9-4efe-af23-6f7f59e68373/9f92ab68-54e9-4efe-af23-6f7f59e68373.xml.gz"
         },
         {
           "Name": "integrity",
-          "Value": "sha256-efCceD/Y8/hiMRO7XYPRzwCVQPIq/txk9/if8msP3G4="
+          "Value": "sha256-UO1sI9/W2jVX9c8B2MvDTtScs9wsYulajQvsXgKSiF0="
         }
       ]
     },
     {
-      "Route": "EPZ/c8839d97-d670-4771-9d19-b8ee445e6d44.xml",
-      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/backend_manage/backend_manage/obj/Debug/net9.0/compressed/38dqi6ccc0-d60u976qks.gz",
+      "Route": "EPZ/CNPM009/9f92ab68-54e9-4efe-af23-6f7f59e68373/9f92ab68-54e9-4efe-af23-6f7f59e68373.xml",
+      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/backend_manage/backend_manage/obj/Debug/net9.0/compressed/1pwbf8bqf2-ff3sfxl6l3.gz",
       "Selectors": [
         {
           "Name": "Content-Encoding",
           "Value": "gzip",
-          "Quality": "0.001901140684"
+          "Quality": "0.000768049155"
         }
       ],
       "ResponseHeaders": [
@@ -259,15 +404,15 @@
         },
         {
           "Name": "Content-Length",
-          "Value": "525"
+          "Value": "1301"
         },
         {
           "Name": "ETag",
-          "Value": "\"efCceD/Y8/hiMRO7XYPRzwCVQPIq/txk9/if8msP3G4=\""
+          "Value": "\"UO1sI9/W2jVX9c8B2MvDTtScs9wsYulajQvsXgKSiF0=\""
         },
         {
           "Name": "Last-Modified",
-          "Value": "Fri, 18 Jul 2025 16:29:18 GMT"
+          "Value": "Sat, 19 Jul 2025 12:53:53 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -287,19 +432,19 @@
         },
         {
           "Name": "ETag",
-          "Value": "W/\"m56I6F3lXyH8qZKylS/3XX9ofXFNGp508n+ztqfcoSg=\""
+          "Value": "W/\"pZy5z3HnTOeV4czU8ujiGrYvg6QFFEOtVzhEhHZvFUg=\""
         }
       ],
       "EndpointProperties": [
         {
           "Name": "integrity",
-          "Value": "sha256-m56I6F3lXyH8qZKylS/3XX9ofXFNGp508n+ztqfcoSg="
+          "Value": "sha256-pZy5z3HnTOeV4czU8ujiGrYvg6QFFEOtVzhEhHZvFUg="
         }
       ]
     },
     {
-      "Route": "EPZ/c8839d97-d670-4771-9d19-b8ee445e6d44.xml",
-      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/backend_manage/backend_manage/wwwroot/EPZ/c8839d97-d670-4771-9d19-b8ee445e6d44.xml",
+      "Route": "EPZ/CNPM009/9f92ab68-54e9-4efe-af23-6f7f59e68373/9f92ab68-54e9-4efe-af23-6f7f59e68373.xml",
+      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/backend_manage/backend_manage/wwwroot/EPZ/CNPM009/9f92ab68-54e9-4efe-af23-6f7f59e68373/9f92ab68-54e9-4efe-af23-6f7f59e68373.xml",
       "Selectors": [],
       "ResponseHeaders": [
         {
@@ -308,7 +453,7 @@
         },
         {
           "Name": "Content-Length",
-          "Value": "4137"
+          "Value": "8987"
         },
         {
           "Name": "Content-Type",
@@ -316,11 +461,11 @@
         },
         {
           "Name": "ETag",
-          "Value": "\"m56I6F3lXyH8qZKylS/3XX9ofXFNGp508n+ztqfcoSg=\""
+          "Value": "\"pZy5z3HnTOeV4czU8ujiGrYvg6QFFEOtVzhEhHZvFUg=\""
         },
         {
           "Name": "Last-Modified",
-          "Value": "Fri, 18 Jul 2025 16:29:18 GMT"
+          "Value": "Sat, 19 Jul 2025 12:53:53 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -330,13 +475,13 @@
       "EndpointProperties": [
         {
           "Name": "integrity",
-          "Value": "sha256-m56I6F3lXyH8qZKylS/3XX9ofXFNGp508n+ztqfcoSg="
+          "Value": "sha256-pZy5z3HnTOeV4czU8ujiGrYvg6QFFEOtVzhEhHZvFUg="
         }
       ]
     },
     {
-      "Route": "EPZ/c8839d97-d670-4771-9d19-b8ee445e6d44.xml.gz",
-      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/backend_manage/backend_manage/obj/Debug/net9.0/compressed/38dqi6ccc0-d60u976qks.gz",
+      "Route": "EPZ/CNPM009/9f92ab68-54e9-4efe-af23-6f7f59e68373/9f92ab68-54e9-4efe-af23-6f7f59e68373.xml.gz",
+      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/backend_manage/backend_manage/obj/Debug/net9.0/compressed/1pwbf8bqf2-ff3sfxl6l3.gz",
       "Selectors": [],
       "ResponseHeaders": [
         {
@@ -345,7 +490,7 @@
         },
         {
           "Name": "Content-Length",
-          "Value": "525"
+          "Value": "1301"
         },
         {
           "Name": "Content-Type",
@@ -353,11 +498,11 @@
         },
         {
           "Name": "ETag",
-          "Value": "\"efCceD/Y8/hiMRO7XYPRzwCVQPIq/txk9/if8msP3G4=\""
+          "Value": "\"UO1sI9/W2jVX9c8B2MvDTtScs9wsYulajQvsXgKSiF0=\""
         },
         {
           "Name": "Last-Modified",
-          "Value": "Fri, 18 Jul 2025 16:29:18 GMT"
+          "Value": "Sat, 19 Jul 2025 12:53:53 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -375,13 +520,13 @@
       "EndpointProperties": [
         {
           "Name": "integrity",
-          "Value": "sha256-efCceD/Y8/hiMRO7XYPRzwCVQPIq/txk9/if8msP3G4="
+          "Value": "sha256-UO1sI9/W2jVX9c8B2MvDTtScs9wsYulajQvsXgKSiF0="
         }
       ]
     },
     {
-      "Route": "Tool/FileTool.2wzlej9m8p.cs",
-      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/backend_manage/backend_manage/wwwroot/Tool/FileTool.cs",
+      "Route": "EPZ/CNPM010.vp8yfic5xt.zip",
+      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/backend_manage/backend_manage/wwwroot/EPZ/CNPM010.zip",
       "Selectors": [],
       "ResponseHeaders": [
         {
@@ -390,19 +535,19 @@
         },
         {
           "Name": "Content-Length",
-          "Value": "2633"
+          "Value": "2134"
         },
         {
           "Name": "Content-Type",
-          "Value": "application/octet-stream"
+          "Value": "application/x-zip-compressed"
         },
         {
           "Name": "ETag",
-          "Value": "\"8rKN4onq3bAcPn1ZNY9QbsurM20NcsoDbHxmKt7JfpQ=\""
+          "Value": "\"Xah2p9LRQvvIiFkKzvAFnqDhKDSkL4HCMFgURNwNg/Q=\""
         },
         {
           "Name": "Last-Modified",
-          "Value": "Thu, 17 Jul 2025 17:57:52 GMT"
+          "Value": "Sat, 19 Jul 2025 12:59:51 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -412,21 +557,21 @@
       "EndpointProperties": [
         {
           "Name": "fingerprint",
-          "Value": "2wzlej9m8p"
+          "Value": "vp8yfic5xt"
         },
         {
           "Name": "label",
-          "Value": "Tool/FileTool.cs"
+          "Value": "EPZ/CNPM010.zip"
         },
         {
           "Name": "integrity",
-          "Value": "sha256-8rKN4onq3bAcPn1ZNY9QbsurM20NcsoDbHxmKt7JfpQ="
+          "Value": "sha256-Xah2p9LRQvvIiFkKzvAFnqDhKDSkL4HCMFgURNwNg/Q="
         }
       ]
     },
     {
-      "Route": "Tool/FileTool.cs",
-      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/backend_manage/backend_manage/wwwroot/Tool/FileTool.cs",
+      "Route": "EPZ/CNPM010.zip",
+      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/backend_manage/backend_manage/wwwroot/EPZ/CNPM010.zip",
       "Selectors": [],
       "ResponseHeaders": [
         {
@@ -435,19 +580,19 @@
         },
         {
           "Name": "Content-Length",
-          "Value": "2633"
+          "Value": "2134"
         },
         {
           "Name": "Content-Type",
-          "Value": "application/octet-stream"
+          "Value": "application/x-zip-compressed"
         },
         {
           "Name": "ETag",
-          "Value": "\"8rKN4onq3bAcPn1ZNY9QbsurM20NcsoDbHxmKt7JfpQ=\""
+          "Value": "\"Xah2p9LRQvvIiFkKzvAFnqDhKDSkL4HCMFgURNwNg/Q=\""
         },
         {
           "Name": "Last-Modified",
-          "Value": "Thu, 17 Jul 2025 17:57:52 GMT"
+          "Value": "Sat, 19 Jul 2025 12:59:51 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -457,7 +602,305 @@
       "EndpointProperties": [
         {
           "Name": "integrity",
-          "Value": "sha256-8rKN4onq3bAcPn1ZNY9QbsurM20NcsoDbHxmKt7JfpQ="
+          "Value": "sha256-Xah2p9LRQvvIiFkKzvAFnqDhKDSkL4HCMFgURNwNg/Q="
+        }
+      ]
+    },
+    {
+      "Route": "EPZ/CNPM010/9f92ab68-54e9-4efe-af23-6f7f59e68373/9f92ab68-54e9-4efe-af23-6f7f59e68373.ff3sfxl6l3.xml",
+      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/backend_manage/backend_manage/obj/Debug/net9.0/compressed/1bntlhh0at-ff3sfxl6l3.gz",
+      "Selectors": [
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip",
+          "Quality": "0.000768049155"
+        }
+      ],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "1301"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"UO1sI9/W2jVX9c8B2MvDTtScs9wsYulajQvsXgKSiF0=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 19 Jul 2025 12:59:51 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip"
+        },
+        {
+          "Name": "Vary",
+          "Value": "Content-Encoding"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/xml"
+        },
+        {
+          "Name": "ETag",
+          "Value": "W/\"pZy5z3HnTOeV4czU8ujiGrYvg6QFFEOtVzhEhHZvFUg=\""
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "ff3sfxl6l3"
+        },
+        {
+          "Name": "label",
+          "Value": "EPZ/CNPM010/9f92ab68-54e9-4efe-af23-6f7f59e68373/9f92ab68-54e9-4efe-af23-6f7f59e68373.xml"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-pZy5z3HnTOeV4czU8ujiGrYvg6QFFEOtVzhEhHZvFUg="
+        }
+      ]
+    },
+    {
+      "Route": "EPZ/CNPM010/9f92ab68-54e9-4efe-af23-6f7f59e68373/9f92ab68-54e9-4efe-af23-6f7f59e68373.ff3sfxl6l3.xml",
+      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/backend_manage/backend_manage/wwwroot/EPZ/CNPM010/9f92ab68-54e9-4efe-af23-6f7f59e68373/9f92ab68-54e9-4efe-af23-6f7f59e68373.xml",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "8987"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/xml"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"pZy5z3HnTOeV4czU8ujiGrYvg6QFFEOtVzhEhHZvFUg=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 19 Jul 2025 12:59:51 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "ff3sfxl6l3"
+        },
+        {
+          "Name": "label",
+          "Value": "EPZ/CNPM010/9f92ab68-54e9-4efe-af23-6f7f59e68373/9f92ab68-54e9-4efe-af23-6f7f59e68373.xml"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-pZy5z3HnTOeV4czU8ujiGrYvg6QFFEOtVzhEhHZvFUg="
+        }
+      ]
+    },
+    {
+      "Route": "EPZ/CNPM010/9f92ab68-54e9-4efe-af23-6f7f59e68373/9f92ab68-54e9-4efe-af23-6f7f59e68373.ff3sfxl6l3.xml.gz",
+      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/backend_manage/backend_manage/obj/Debug/net9.0/compressed/1bntlhh0at-ff3sfxl6l3.gz",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "1301"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/xml"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"UO1sI9/W2jVX9c8B2MvDTtScs9wsYulajQvsXgKSiF0=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 19 Jul 2025 12:59:51 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip"
+        },
+        {
+          "Name": "Vary",
+          "Value": "Content-Encoding"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "ff3sfxl6l3"
+        },
+        {
+          "Name": "label",
+          "Value": "EPZ/CNPM010/9f92ab68-54e9-4efe-af23-6f7f59e68373/9f92ab68-54e9-4efe-af23-6f7f59e68373.xml.gz"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-UO1sI9/W2jVX9c8B2MvDTtScs9wsYulajQvsXgKSiF0="
+        }
+      ]
+    },
+    {
+      "Route": "EPZ/CNPM010/9f92ab68-54e9-4efe-af23-6f7f59e68373/9f92ab68-54e9-4efe-af23-6f7f59e68373.xml",
+      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/backend_manage/backend_manage/obj/Debug/net9.0/compressed/1bntlhh0at-ff3sfxl6l3.gz",
+      "Selectors": [
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip",
+          "Quality": "0.000768049155"
+        }
+      ],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "1301"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"UO1sI9/W2jVX9c8B2MvDTtScs9wsYulajQvsXgKSiF0=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 19 Jul 2025 12:59:51 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        },
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip"
+        },
+        {
+          "Name": "Vary",
+          "Value": "Content-Encoding"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/xml"
+        },
+        {
+          "Name": "ETag",
+          "Value": "W/\"pZy5z3HnTOeV4czU8ujiGrYvg6QFFEOtVzhEhHZvFUg=\""
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-pZy5z3HnTOeV4czU8ujiGrYvg6QFFEOtVzhEhHZvFUg="
+        }
+      ]
+    },
+    {
+      "Route": "EPZ/CNPM010/9f92ab68-54e9-4efe-af23-6f7f59e68373/9f92ab68-54e9-4efe-af23-6f7f59e68373.xml",
+      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/backend_manage/backend_manage/wwwroot/EPZ/CNPM010/9f92ab68-54e9-4efe-af23-6f7f59e68373/9f92ab68-54e9-4efe-af23-6f7f59e68373.xml",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "8987"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/xml"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"pZy5z3HnTOeV4czU8ujiGrYvg6QFFEOtVzhEhHZvFUg=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 19 Jul 2025 12:59:51 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-pZy5z3HnTOeV4czU8ujiGrYvg6QFFEOtVzhEhHZvFUg="
+        }
+      ]
+    },
+    {
+      "Route": "EPZ/CNPM010/9f92ab68-54e9-4efe-af23-6f7f59e68373/9f92ab68-54e9-4efe-af23-6f7f59e68373.xml.gz",
+      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/backend_manage/backend_manage/obj/Debug/net9.0/compressed/1bntlhh0at-ff3sfxl6l3.gz",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "1301"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/xml"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"UO1sI9/W2jVX9c8B2MvDTtScs9wsYulajQvsXgKSiF0=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 19 Jul 2025 12:59:51 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        },
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip"
+        },
+        {
+          "Name": "Vary",
+          "Value": "Content-Encoding"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-UO1sI9/W2jVX9c8B2MvDTtScs9wsYulajQvsXgKSiF0="
         }
       ]
     }

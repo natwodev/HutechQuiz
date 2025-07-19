@@ -14,6 +14,7 @@ namespace backend_manage.Data
         public DbSet<ShuffledExamPaper> ShuffledExamPapers { get; set; }
         public DbSet<Subject> Subjects { get; set; }
         public DbSet<ExamBatch> ExamBatches { get; set; }
+        public DbSet<ExamBatchDetail> ExamBatchDetails { get; set; }
         public DbSet<ExamSession> ExamSessions { get; set; }
         public DbSet<Student> Students { get; set; }
         public DbSet<ShuffledExamPaperDetail> ShuffledExamPaperDetails { get; set; }

@@ -792,7 +792,6 @@
 /Users/nguyenhuynhnam/RiderProjects/HutechQuiz/backend_manage/backend_manage/obj/Debug/net9.0/backend_manage.MvcApplicationPartsAssemblyInfo.cache
 /Users/nguyenhuynhnam/RiderProjects/HutechQuiz/backend_manage/backend_manage/obj/Debug/net9.0/backend_manage.sourcelink.json
 /Users/nguyenhuynhnam/RiderProjects/HutechQuiz/backend_manage/backend_manage/obj/Debug/net9.0/scopedcss/bundle/backend_manage.styles.css
-/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/backend_manage/backend_manage/obj/Debug/net9.0/compressed/38dqi6ccc0-d60u976qks.gz
 /Users/nguyenhuynhnam/RiderProjects/HutechQuiz/backend_manage/backend_manage/obj/Debug/net9.0/staticwebassets.build.json
 /Users/nguyenhuynhnam/RiderProjects/HutechQuiz/backend_manage/backend_manage/obj/Debug/net9.0/staticwebassets.development.json
 /Users/nguyenhuynhnam/RiderProjects/HutechQuiz/backend_manage/backend_manage/obj/Debug/net9.0/staticwebassets.build.endpoints.json
@@ -808,3 +807,5 @@
 /Users/nguyenhuynhnam/RiderProjects/HutechQuiz/backend_manage/backend_manage/obj/Debug/net9.0/backend_manage.pdb
 /Users/nguyenhuynhnam/RiderProjects/HutechQuiz/backend_manage/backend_manage/obj/Debug/net9.0/backend_manage.genruntimeconfig.cache
 /Users/nguyenhuynhnam/RiderProjects/HutechQuiz/backend_manage/backend_manage/obj/Debug/net9.0/ref/backend_manage.dll
+/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/backend_manage/backend_manage/obj/Debug/net9.0/compressed/1pwbf8bqf2-ff3sfxl6l3.gz
+/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/backend_manage/backend_manage/obj/Debug/net9.0/compressed/1bntlhh0at-ff3sfxl6l3.gz

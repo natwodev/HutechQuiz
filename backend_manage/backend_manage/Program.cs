@@ -1,6 +1,5 @@
 using backend_manage.Extensions;
 using OfficeOpenXml; // Thêm dòng này để sử dụng EPPlus
-using backend_manage.wwwroot.Tool; // Thêm dòng này ở đầu file nếu chưa có
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -43,7 +42,5 @@ app.ConfigureMiddleware();
 ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
 
 // Trước app.Run();
-string result = XmlReaderHelper.ReadAndReplaceGuids();
-Console.WriteLine(result);
 
 app.Run();
