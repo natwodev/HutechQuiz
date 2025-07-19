@@ -89,5 +89,42 @@ public class MappingProfile : Profile
         CreateMap<ExamSessionSubjectCreateDto, ExamSessionSubject>();
         CreateMap<ExamSessionSubjectUpdateDto, ExamSessionSubject>();
 
+        // OriginalExamPaper & Detail
+        CreateMap<OriginalExamPaper, OriginalExamPaperDto>()
+            .ForMember(dest => dest.Details, opt => opt.MapFrom(src => src.OriginalExamPaperDetails.Where(d => d.ParentQuestionId == null)));
+        CreateMap<OriginalExamPaperDetail, OriginalExamPaperDetailDto>()
+            .ForMember(dest => dest.ChildQuestions, opt => opt.MapFrom(src => src.ChildQuestions));
+
+        // ShuffledExamPaper & Detail
+        CreateMap<ShuffledExamPaper, ShuffledExamPaperDto>()
+            .ForMember(dest => dest.Details, opt => opt.MapFrom(src => src.ShuffledExamPaperDetails));
+        CreateMap<ShuffledExamPaperDetail, ShuffledExamPaperDetailDto>()
+            .ForMember(dest => dest.QuestionContent, opt => opt.MapFrom(src => src.OriginalExamPaperDetail.QuestionContent))
+            .ForMember(dest => dest.Answer1, opt => opt.Ignore())
+            .ForMember(dest => dest.Answer2, opt => opt.Ignore())
+            .ForMember(dest => dest.Answer3, opt => opt.Ignore())
+            .ForMember(dest => dest.Answer4, opt => opt.Ignore())
+            .ForMember(dest => dest.ChildQuestions, opt => opt.MapFrom(src => src.ChildQuestions))
+            .AfterMap((src, dest) => {
+                var original = src.OriginalExamPaperDetail;
+                if (original == null || string.IsNullOrEmpty(src.AnswerOrder))
+                {
+                    dest.Answer1 = original?.Answer1;
+                    dest.Answer2 = original?.Answer2;
+                    dest.Answer3 = original?.Answer3;
+                    dest.Answer4 = original?.Answer4;
+                }
+                else
+                {
+                    var answers = new[] { original.Answer1, original.Answer2, original.Answer3, original.Answer4 };
+                    var order = src.AnswerOrder.ToCharArray().Select(c => int.Parse(c.ToString()) - 1).ToArray();
+                    var shuffledAnswers = order.Select(i => answers.ElementAtOrDefault(i)).ToArray();
+                    dest.Answer1 = shuffledAnswers.ElementAtOrDefault(0);
+                    dest.Answer2 = shuffledAnswers.ElementAtOrDefault(1);
+                    dest.Answer3 = shuffledAnswers.ElementAtOrDefault(2);
+                    dest.Answer4 = shuffledAnswers.ElementAtOrDefault(3);
+                }
+            });
+
     }
 }

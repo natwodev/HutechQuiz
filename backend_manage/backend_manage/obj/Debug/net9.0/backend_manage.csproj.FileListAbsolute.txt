@@ -809,3 +809,4 @@
 /Users/nguyenhuynhnam/RiderProjects/HutechQuiz/backend_manage/backend_manage/obj/Debug/net9.0/ref/backend_manage.dll
 /Users/nguyenhuynhnam/RiderProjects/HutechQuiz/backend_manage/backend_manage/obj/Debug/net9.0/compressed/1pwbf8bqf2-ff3sfxl6l3.gz
 /Users/nguyenhuynhnam/RiderProjects/HutechQuiz/backend_manage/backend_manage/obj/Debug/net9.0/compressed/1bntlhh0at-ff3sfxl6l3.gz
+/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/backend_manage/backend_manage/obj/Debug/net9.0/compressed/iwvlxk6tx5-ff3sfxl6l3.gz

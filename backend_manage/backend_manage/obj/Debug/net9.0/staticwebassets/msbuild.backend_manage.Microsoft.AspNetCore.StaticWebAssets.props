@@ -1,5 +1,41 @@
 ﻿<Project>
   <ItemGroup>
+    <StaticWebAsset Include="$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\EPZ\CNPM001.zip'))">
+      <SourceType>Package</SourceType>
+      <SourceId>backend_manage</SourceId>
+      <ContentRoot>$(MSBuildThisFileDirectory)..\staticwebassets\</ContentRoot>
+      <BasePath>_content/backend_manage</BasePath>
+      <RelativePath>EPZ/CNPM001.zip</RelativePath>
+      <AssetKind>All</AssetKind>
+      <AssetMode>All</AssetMode>
+      <AssetRole>Primary</AssetRole>
+      <RelatedAsset></RelatedAsset>
+      <AssetTraitName></AssetTraitName>
+      <AssetTraitValue></AssetTraitValue>
+      <Fingerprint>vp8yfic5xt</Fingerprint>
+      <Integrity>Xah2p9LRQvvIiFkKzvAFnqDhKDSkL4HCMFgURNwNg/Q=</Integrity>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <OriginalItemSpec>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\EPZ\CNPM001.zip'))</OriginalItemSpec>
+    </StaticWebAsset>
+    <StaticWebAsset Include="$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\EPZ\CNPM001\9f92ab68-54e9-4efe-af23-6f7f59e68373\9f92ab68-54e9-4efe-af23-6f7f59e68373.xml'))">
+      <SourceType>Package</SourceType>
+      <SourceId>backend_manage</SourceId>
+      <ContentRoot>$(MSBuildThisFileDirectory)..\staticwebassets\</ContentRoot>
+      <BasePath>_content/backend_manage</BasePath>
+      <RelativePath>EPZ/CNPM001/9f92ab68-54e9-4efe-af23-6f7f59e68373/9f92ab68-54e9-4efe-af23-6f7f59e68373.xml</RelativePath>
+      <AssetKind>All</AssetKind>
+      <AssetMode>All</AssetMode>
+      <AssetRole>Primary</AssetRole>
+      <RelatedAsset></RelatedAsset>
+      <AssetTraitName></AssetTraitName>
+      <AssetTraitValue></AssetTraitValue>
+      <Fingerprint>ff3sfxl6l3</Fingerprint>
+      <Integrity>pZy5z3HnTOeV4czU8ujiGrYvg6QFFEOtVzhEhHZvFUg=</Integrity>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <OriginalItemSpec>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\EPZ\CNPM001\9f92ab68-54e9-4efe-af23-6f7f59e68373\9f92ab68-54e9-4efe-af23-6f7f59e68373.xml'))</OriginalItemSpec>
+    </StaticWebAsset>
     <StaticWebAsset Include="$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\EPZ\CNPM009.zip'))">
       <SourceType>Package</SourceType>
       <SourceId>backend_manage</SourceId>

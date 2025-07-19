@@ -30,7 +30,7 @@ namespace backend_manage.Configurations
             services.AddScoped<IExamSessionDepartmentService, ExamSessionDepartmentService>();
             services.AddScoped<IExamSessionSubjectService, ExamSessionSubjectService>();
             services.AddScoped<IOriginalExamPaperService, OriginalExamPaperService>();
-            
+            services.AddScoped<IShuffledExamPaperService, ShuffledExamPaperService>();
         }
     }
 }

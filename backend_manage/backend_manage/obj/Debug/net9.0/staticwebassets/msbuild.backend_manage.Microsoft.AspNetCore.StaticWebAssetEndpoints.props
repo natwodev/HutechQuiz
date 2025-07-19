@@ -1,5 +1,29 @@
 ﻿<Project>
   <ItemGroup>
+    <StaticWebAssetEndpoint Include="_content/backend_manage/EPZ/CNPM001.vp8yfic5xt.zip">
+      <AssetFile>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\EPZ\CNPM001.zip'))</AssetFile>
+      <Selectors><![CDATA[[]]]></Selectors>
+      <EndpointProperties><![CDATA[[{"Name":"fingerprint","Value":"vp8yfic5xt"},{"Name":"integrity","Value":"sha256-Xah2p9LRQvvIiFkKzvAFnqDhKDSkL4HCMFgURNwNg/Q="},{"Name":"label","Value":"_content/backend_manage/EPZ/CNPM001.zip"}]]]></EndpointProperties>
+      <ResponseHeaders><![CDATA[[{"Name":"Accept-Ranges","Value":"bytes"},{"Name":"Cache-Control","Value":"max-age=31536000, immutable"},{"Name":"Content-Length","Value":"2134"},{"Name":"Content-Type","Value":"application/x-zip-compressed"},{"Name":"ETag","Value":"\u0022Xah2p9LRQvvIiFkKzvAFnqDhKDSkL4HCMFgURNwNg/Q=\u0022"},{"Name":"Last-Modified","Value":"Sat, 19 Jul 2025 14:44:47 GMT"}]]]></ResponseHeaders>
+    </StaticWebAssetEndpoint>
+    <StaticWebAssetEndpoint Include="_content/backend_manage/EPZ/CNPM001.zip">
+      <AssetFile>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\EPZ\CNPM001.zip'))</AssetFile>
+      <Selectors><![CDATA[[]]]></Selectors>
+      <EndpointProperties><![CDATA[[{"Name":"integrity","Value":"sha256-Xah2p9LRQvvIiFkKzvAFnqDhKDSkL4HCMFgURNwNg/Q="}]]]></EndpointProperties>
+      <ResponseHeaders><![CDATA[[{"Name":"Accept-Ranges","Value":"bytes"},{"Name":"Cache-Control","Value":"no-cache"},{"Name":"Content-Length","Value":"2134"},{"Name":"Content-Type","Value":"application/x-zip-compressed"},{"Name":"ETag","Value":"\u0022Xah2p9LRQvvIiFkKzvAFnqDhKDSkL4HCMFgURNwNg/Q=\u0022"},{"Name":"Last-Modified","Value":"Sat, 19 Jul 2025 14:44:47 GMT"}]]]></ResponseHeaders>
+    </StaticWebAssetEndpoint>
+    <StaticWebAssetEndpoint Include="_content/backend_manage/EPZ/CNPM001/9f92ab68-54e9-4efe-af23-6f7f59e68373/9f92ab68-54e9-4efe-af23-6f7f59e68373.ff3sfxl6l3.xml">
+      <AssetFile>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\EPZ\CNPM001\9f92ab68-54e9-4efe-af23-6f7f59e68373\9f92ab68-54e9-4efe-af23-6f7f59e68373.xml'))</AssetFile>
+      <Selectors><![CDATA[[]]]></Selectors>
+      <EndpointProperties><![CDATA[[{"Name":"fingerprint","Value":"ff3sfxl6l3"},{"Name":"integrity","Value":"sha256-pZy5z3HnTOeV4czU8ujiGrYvg6QFFEOtVzhEhHZvFUg="},{"Name":"label","Value":"_content/backend_manage/EPZ/CNPM001/9f92ab68-54e9-4efe-af23-6f7f59e68373/9f92ab68-54e9-4efe-af23-6f7f59e68373.xml"}]]]></EndpointProperties>
+      <ResponseHeaders><![CDATA[[{"Name":"Accept-Ranges","Value":"bytes"},{"Name":"Cache-Control","Value":"max-age=31536000, immutable"},{"Name":"Content-Length","Value":"8987"},{"Name":"Content-Type","Value":"text/xml"},{"Name":"ETag","Value":"\u0022pZy5z3HnTOeV4czU8ujiGrYvg6QFFEOtVzhEhHZvFUg=\u0022"},{"Name":"Last-Modified","Value":"Sat, 19 Jul 2025 14:44:47 GMT"}]]]></ResponseHeaders>
+    </StaticWebAssetEndpoint>
+    <StaticWebAssetEndpoint Include="_content/backend_manage/EPZ/CNPM001/9f92ab68-54e9-4efe-af23-6f7f59e68373/9f92ab68-54e9-4efe-af23-6f7f59e68373.xml">
+      <AssetFile>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\EPZ\CNPM001\9f92ab68-54e9-4efe-af23-6f7f59e68373\9f92ab68-54e9-4efe-af23-6f7f59e68373.xml'))</AssetFile>
+      <Selectors><![CDATA[[]]]></Selectors>
+      <EndpointProperties><![CDATA[[{"Name":"integrity","Value":"sha256-pZy5z3HnTOeV4czU8ujiGrYvg6QFFEOtVzhEhHZvFUg="}]]]></EndpointProperties>
+      <ResponseHeaders><![CDATA[[{"Name":"Accept-Ranges","Value":"bytes"},{"Name":"Cache-Control","Value":"no-cache"},{"Name":"Content-Length","Value":"8987"},{"Name":"Content-Type","Value":"text/xml"},{"Name":"ETag","Value":"\u0022pZy5z3HnTOeV4czU8ujiGrYvg6QFFEOtVzhEhHZvFUg=\u0022"},{"Name":"Last-Modified","Value":"Sat, 19 Jul 2025 14:44:47 GMT"}]]]></ResponseHeaders>
+    </StaticWebAssetEndpoint>
     <StaticWebAssetEndpoint Include="_content/backend_manage/EPZ/CNPM009.vp8yfic5xt.zip">
       <AssetFile>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\EPZ\CNPM009.zip'))</AssetFile>
       <Selectors><![CDATA[[]]]></Selectors>

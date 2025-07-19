@@ -17,6 +17,8 @@ using ICSharpCode.SharpZipLib.Zip;
 using Microsoft.AspNetCore.Http.Features;
 using System.Security.Claims;
 using System.Collections.Generic;
+using backend_manage.DTOs;
+using AutoMapper;
 
 namespace backend_manage.Services.AuthService
 {
@@ -30,6 +32,7 @@ namespace backend_manage.Services.AuthService
         private readonly IRepository<ShuffledExamPaperDetail> _shuffledExamPaperDetailRepository;
         private readonly IRepository<ExamSessionSubject> _examSessionSubjectRepository;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly IMapper _mapper;
 
         public OriginalExamPaperService(
             IRepository<Subject> subjectRepository,
@@ -39,7 +42,8 @@ namespace backend_manage.Services.AuthService
             IHttpContextAccessor httpContextAccessor,
             IRepository<ShuffledExamPaper> shuffledExamPaperRepository,
             IRepository<ShuffledExamPaperDetail> shuffledExamPaperDetailRepository,
-            IRepository<ExamSessionSubject> examSessionSubjectRepository)
+            IRepository<ExamSessionSubject> examSessionSubjectRepository,
+            IMapper mapper)
         {
             _subjectRepository = subjectRepository;
             _originalExamPaperRepository = originalExamPaperRepository;
@@ -49,6 +53,7 @@ namespace backend_manage.Services.AuthService
             _shuffledExamPaperRepository = shuffledExamPaperRepository;
             _shuffledExamPaperDetailRepository = shuffledExamPaperDetailRepository;
             _examSessionSubjectRepository = examSessionSubjectRepository;
+            _mapper = mapper;
         }
 
         // Pass giải nén file XML
@@ -359,6 +364,17 @@ namespace backend_manage.Services.AuthService
             }
             originalExamPaper.TotalShuffledPapers += count;
             await _originalExamPaperRepository.UpdateAsync(originalExamPaper);
+        }
+
+        public async Task<OriginalExamPaperDto> GetWithDetailsAsync(string originalExamPaperCore)
+        {
+            var examPaper = await _originalExamPaperRepository.GetQueryable()
+                .Where(x => x.OriginalExamPaperCore == originalExamPaperCore)
+                .Include(x => x.OriginalExamPaperDetails)
+                .ThenInclude(d => d.ChildQuestions)
+                .FirstOrDefaultAsync();
+            if (examPaper == null) return null;
+            return _mapper.Map<OriginalExamPaperDto>(examPaper);
         }
     }
 }

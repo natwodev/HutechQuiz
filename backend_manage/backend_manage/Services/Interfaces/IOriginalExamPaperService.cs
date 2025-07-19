@@ -1,5 +1,6 @@
 using System.Threading.Tasks;
 using backend_manage.DTOs.EPZ;
+using backend_manage.DTOs;
 
 namespace backend_manage.Services.Interfaces
 {
@@ -7,5 +8,6 @@ namespace backend_manage.Services.Interfaces
     {
         Task ImportFromXmlAsync(Microsoft.AspNetCore.Http.IFormFile file, string OriginalExamPaperCore);
         Task CreateShuffledExamPapersAsync(string originalExamPaperCore, int count);
+        Task<OriginalExamPaperDto> GetWithDetailsAsync(string originalExamPaperCore);
     }
 } 
