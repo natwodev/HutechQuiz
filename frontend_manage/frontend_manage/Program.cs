@@ -14,6 +14,7 @@ builder.RootComponents.Add<HeadOutlet>("head::after");
 
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<InfoApi>();
+builder.Services.AddSingleton<NotificationService>();
 
 // Đăng ký AuthHeaderHandler
 builder.Services.AddTransient<AuthHeaderHandler>();

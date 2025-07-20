@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "hBD7/RES+04E+IkDL8fqYB4ZULw2Yv3ZCj+p2zoVq0E=",
+  "Hash": "qeskL+plmVrJXInepA8PRLIPo8+BALZpNLxW/swoD2I=",
   "Source": "frontend_manage",
   "BasePath": "/",
   "Mode": "Root",
@@ -73,8 +73,8 @@
       "RelatedAsset": "",
       "AssetTraitName": "WasmResource",
       "AssetTraitValue": "manifest",
-      "Fingerprint": "jj39z8hxw8",
-      "Integrity": "0RItazSeuJv1dkihC/BHPmvwirDpaArMPvsTb4+haPE=",
+      "Fingerprint": "nqy7xtbks1",
+      "Integrity": "YU8F1UvZtrLei6Ivl6t/Jpk4hhRFkWn6+fX5ofgdATc=",
       "CopyToOutputDirectory": "PreserveNewest",
       "CopyToPublishDirectory": "Never",
       "OriginalItemSpec": "obj/Debug/net9.0/blazor.boot.json"
@@ -241,8 +241,8 @@
       "RelatedAsset": "",
       "AssetTraitName": "WasmResource",
       "AssetTraitValue": "symbol",
-      "Fingerprint": "7tchawsko4",
-      "Integrity": "G+XrzoEfMbV+gMoQmWHyBrU0WoHM9jhitL22ur+PIZ8=",
+      "Fingerprint": "5ckyik96i5",
+      "Integrity": "dc09FxAPtTB07cl1p/+e3IbfrxeWdW3SyQtxKFmhI+k=",
       "CopyToOutputDirectory": "PreserveNewest",
       "CopyToPublishDirectory": "Never",
       "OriginalItemSpec": "obj/Debug/net9.0/frontend_manage.pdb"
@@ -262,8 +262,8 @@
       "RelatedAsset": "",
       "AssetTraitName": "WasmResource",
       "AssetTraitValue": "runtime",
-      "Fingerprint": "nsak9f4xgc",
-      "Integrity": "Wcc45bCjSY6imfvidZUbb6cO4kLK+YgZVQIULOxdGfA=",
+      "Fingerprint": "vksh2crkpf",
+      "Integrity": "EbMXtrYKi0mSoUsXzkxUIP2YPs1d0rWysji+nJdMAko=",
       "CopyToOutputDirectory": "PreserveNewest",
       "CopyToPublishDirectory": "Never",
       "OriginalItemSpec": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/webcil/frontend_manage.wasm"
@@ -437,6 +437,69 @@
       "OriginalItemSpec": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/webcil/Microsoft.AspNetCore.Components.WebAssembly.wasm"
     },
     {
+      "Identity": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/bin/Debug/net9.0/wwwroot/_framework/Microsoft.AspNetCore.Connections.Abstractions.wasm",
+      "SourceId": "frontend_manage",
+      "SourceType": "Computed",
+      "ContentRoot": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/bin/Debug/net9.0/wwwroot/",
+      "BasePath": "/",
+      "RelativePath": "_framework/Microsoft.AspNetCore.Connections.Abstractions#[.{fingerprint}]!.wasm",
+      "AssetKind": "Build",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "WasmResource",
+      "AssetTraitValue": "runtime",
+      "Fingerprint": "re4qmsvrc2",
+      "Integrity": "LfGHCmMbtFugN6/UAE8tStds6/pLJCSd1ZoqyB/xgck=",
+      "CopyToOutputDirectory": "PreserveNewest",
+      "CopyToPublishDirectory": "Never",
+      "OriginalItemSpec": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/webcil/Microsoft.AspNetCore.Connections.Abstractions.wasm"
+    },
+    {
+      "Identity": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/bin/Debug/net9.0/wwwroot/_framework/Microsoft.AspNetCore.Http.Connections.Client.wasm",
+      "SourceId": "frontend_manage",
+      "SourceType": "Computed",
+      "ContentRoot": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/bin/Debug/net9.0/wwwroot/",
+      "BasePath": "/",
+      "RelativePath": "_framework/Microsoft.AspNetCore.Http.Connections.Client#[.{fingerprint}]!.wasm",
+      "AssetKind": "Build",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "WasmResource",
+      "AssetTraitValue": "runtime",
+      "Fingerprint": "ria3b3yh7v",
+      "Integrity": "/XC+TlU2XX6E2tGkmrCDnUri6qyIvflcibI0gtlXhzw=",
+      "CopyToOutputDirectory": "PreserveNewest",
+      "CopyToPublishDirectory": "Never",
+      "OriginalItemSpec": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/webcil/Microsoft.AspNetCore.Http.Connections.Client.wasm"
+    },
+    {
+      "Identity": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/bin/Debug/net9.0/wwwroot/_framework/Microsoft.AspNetCore.Http.Connections.Common.wasm",
+      "SourceId": "frontend_manage",
+      "SourceType": "Computed",
+      "ContentRoot": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/bin/Debug/net9.0/wwwroot/",
+      "BasePath": "/",
+      "RelativePath": "_framework/Microsoft.AspNetCore.Http.Connections.Common#[.{fingerprint}]!.wasm",
+      "AssetKind": "Build",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "WasmResource",
+      "AssetTraitValue": "runtime",
+      "Fingerprint": "zdonk3bxxf",
+      "Integrity": "ybSlmndApBb07LeKP8ZYrC9jyKmmOQRchEx1aN208KM=",
+      "CopyToOutputDirectory": "PreserveNewest",
+      "CopyToPublishDirectory": "Never",
+      "OriginalItemSpec": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/webcil/Microsoft.AspNetCore.Http.Connections.Common.wasm"
+    },
+    {
       "Identity": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/bin/Debug/net9.0/wwwroot/_framework/Microsoft.AspNetCore.Metadata.wasm",
       "SourceId": "frontend_manage",
       "SourceType": "Computed",
@@ -456,6 +519,90 @@
       "CopyToOutputDirectory": "PreserveNewest",
       "CopyToPublishDirectory": "Never",
       "OriginalItemSpec": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/webcil/Microsoft.AspNetCore.Metadata.wasm"
+    },
+    {
+      "Identity": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/bin/Debug/net9.0/wwwroot/_framework/Microsoft.AspNetCore.SignalR.Client.Core.wasm",
+      "SourceId": "frontend_manage",
+      "SourceType": "Computed",
+      "ContentRoot": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/bin/Debug/net9.0/wwwroot/",
+      "BasePath": "/",
+      "RelativePath": "_framework/Microsoft.AspNetCore.SignalR.Client.Core#[.{fingerprint}]!.wasm",
+      "AssetKind": "Build",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "WasmResource",
+      "AssetTraitValue": "runtime",
+      "Fingerprint": "dets1m3r3l",
+      "Integrity": "K9PyPf9AzfvwzF2sDTofDAfTkL7r34AzTloWET6vdlk=",
+      "CopyToOutputDirectory": "PreserveNewest",
+      "CopyToPublishDirectory": "Never",
+      "OriginalItemSpec": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/webcil/Microsoft.AspNetCore.SignalR.Client.Core.wasm"
+    },
+    {
+      "Identity": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/bin/Debug/net9.0/wwwroot/_framework/Microsoft.AspNetCore.SignalR.Client.wasm",
+      "SourceId": "frontend_manage",
+      "SourceType": "Computed",
+      "ContentRoot": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/bin/Debug/net9.0/wwwroot/",
+      "BasePath": "/",
+      "RelativePath": "_framework/Microsoft.AspNetCore.SignalR.Client#[.{fingerprint}]!.wasm",
+      "AssetKind": "Build",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "WasmResource",
+      "AssetTraitValue": "runtime",
+      "Fingerprint": "sjz384hi2d",
+      "Integrity": "uP6wjZKQ4aI5RFU5zqomJm52mK2PVOjvDVVZyVOl6Q8=",
+      "CopyToOutputDirectory": "PreserveNewest",
+      "CopyToPublishDirectory": "Never",
+      "OriginalItemSpec": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/webcil/Microsoft.AspNetCore.SignalR.Client.wasm"
+    },
+    {
+      "Identity": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/bin/Debug/net9.0/wwwroot/_framework/Microsoft.AspNetCore.SignalR.Common.wasm",
+      "SourceId": "frontend_manage",
+      "SourceType": "Computed",
+      "ContentRoot": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/bin/Debug/net9.0/wwwroot/",
+      "BasePath": "/",
+      "RelativePath": "_framework/Microsoft.AspNetCore.SignalR.Common#[.{fingerprint}]!.wasm",
+      "AssetKind": "Build",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "WasmResource",
+      "AssetTraitValue": "runtime",
+      "Fingerprint": "vkcfi4fj3v",
+      "Integrity": "kYDNegPxemOTOh3A+aYV8HFuFV9TyyW+5onD0EboF28=",
+      "CopyToOutputDirectory": "PreserveNewest",
+      "CopyToPublishDirectory": "Never",
+      "OriginalItemSpec": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/webcil/Microsoft.AspNetCore.SignalR.Common.wasm"
+    },
+    {
+      "Identity": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/bin/Debug/net9.0/wwwroot/_framework/Microsoft.AspNetCore.SignalR.Protocols.Json.wasm",
+      "SourceId": "frontend_manage",
+      "SourceType": "Computed",
+      "ContentRoot": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/bin/Debug/net9.0/wwwroot/",
+      "BasePath": "/",
+      "RelativePath": "_framework/Microsoft.AspNetCore.SignalR.Protocols.Json#[.{fingerprint}]!.wasm",
+      "AssetKind": "Build",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "WasmResource",
+      "AssetTraitValue": "runtime",
+      "Fingerprint": "h1gc7obt0j",
+      "Integrity": "NZNq5RE6uLxnG2MFWybRU9ppw8ENfyb3n81BqLYtGQk=",
+      "CopyToOutputDirectory": "PreserveNewest",
+      "CopyToPublishDirectory": "Never",
+      "OriginalItemSpec": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/webcil/Microsoft.AspNetCore.SignalR.Protocols.Json.wasm"
     },
     {
       "Identity": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/bin/Debug/net9.0/wwwroot/_framework/Microsoft.CSharp.wasm",
@@ -624,6 +771,27 @@
       "CopyToOutputDirectory": "PreserveNewest",
       "CopyToPublishDirectory": "Never",
       "OriginalItemSpec": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/webcil/Microsoft.Extensions.DependencyInjection.wasm"
+    },
+    {
+      "Identity": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/bin/Debug/net9.0/wwwroot/_framework/Microsoft.Extensions.Features.wasm",
+      "SourceId": "frontend_manage",
+      "SourceType": "Computed",
+      "ContentRoot": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/bin/Debug/net9.0/wwwroot/",
+      "BasePath": "/",
+      "RelativePath": "_framework/Microsoft.Extensions.Features#[.{fingerprint}]!.wasm",
+      "AssetKind": "Build",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "WasmResource",
+      "AssetTraitValue": "runtime",
+      "Fingerprint": "j2y3j59j12",
+      "Integrity": "xbmhIB8qt+7seSkmxTpmM/Db1rsIGfyNRefCRKNSnNQ=",
+      "CopyToOutputDirectory": "PreserveNewest",
+      "CopyToPublishDirectory": "Never",
+      "OriginalItemSpec": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/webcil/Microsoft.Extensions.Features.wasm"
     },
     {
       "Identity": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/bin/Debug/net9.0/wwwroot/_framework/Microsoft.Extensions.FileProviders.Abstractions.wasm",
@@ -2556,6 +2724,27 @@
       "CopyToOutputDirectory": "PreserveNewest",
       "CopyToPublishDirectory": "Never",
       "OriginalItemSpec": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/webcil/System.Net.Security.wasm"
+    },
+    {
+      "Identity": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/bin/Debug/net9.0/wwwroot/_framework/System.Net.ServerSentEvents.wasm",
+      "SourceId": "frontend_manage",
+      "SourceType": "Computed",
+      "ContentRoot": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/bin/Debug/net9.0/wwwroot/",
+      "BasePath": "/",
+      "RelativePath": "_framework/System.Net.ServerSentEvents#[.{fingerprint}]!.wasm",
+      "AssetKind": "Build",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "WasmResource",
+      "AssetTraitValue": "runtime",
+      "Fingerprint": "fe9u1w2puz",
+      "Integrity": "FwzA5yz/f/RvolvQADdjt0rQZfcnPU0WH8CVRshVeI4=",
+      "CopyToOutputDirectory": "PreserveNewest",
+      "CopyToPublishDirectory": "Never",
+      "OriginalItemSpec": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/webcil/System.Net.ServerSentEvents.wasm"
     },
     {
       "Identity": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/bin/Debug/net9.0/wwwroot/_framework/System.Net.ServicePoint.wasm",
@@ -4532,12 +4721,33 @@
       "OriginalItemSpec": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/bin/Debug/net9.0/wwwroot/_framework/dotnet.runtime.js"
     },
     {
-      "Identity": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/0hm0583o52-nsak9f4xgc.gz",
+      "Identity": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/0c2pkcwthn-re4qmsvrc2.gz",
       "SourceId": "frontend_manage",
       "SourceType": "Computed",
       "ContentRoot": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/",
       "BasePath": "/",
-      "RelativePath": "_framework/frontend_manage#[.{fingerprint=nsak9f4xgc}]!.wasm.gz",
+      "RelativePath": "_framework/Microsoft.AspNetCore.Connections.Abstractions#[.{fingerprint=re4qmsvrc2}]!.wasm.gz",
+      "AssetKind": "Build",
+      "AssetMode": "All",
+      "AssetRole": "Alternative",
+      "AssetMergeBehavior": "",
+      "AssetMergeSource": "",
+      "RelatedAsset": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/bin/Debug/net9.0/wwwroot/_framework/Microsoft.AspNetCore.Connections.Abstractions.wasm",
+      "AssetTraitName": "Content-Encoding",
+      "AssetTraitValue": "gzip",
+      "Fingerprint": "o4umbfubt7",
+      "Integrity": "+JZcTEg050OBt21MqX6ZcG8U1G7ue/tLl6V62u5l9uM=",
+      "CopyToOutputDirectory": "PreserveNewest",
+      "CopyToPublishDirectory": "Never",
+      "OriginalItemSpec": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/bin/Debug/net9.0/wwwroot/_framework/Microsoft.AspNetCore.Connections.Abstractions.wasm"
+    },
+    {
+      "Identity": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/0hm0583o52-vksh2crkpf.gz",
+      "SourceId": "frontend_manage",
+      "SourceType": "Computed",
+      "ContentRoot": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/",
+      "BasePath": "/",
+      "RelativePath": "_framework/frontend_manage#[.{fingerprint=vksh2crkpf}]!.wasm.gz",
       "AssetKind": "Build",
       "AssetMode": "All",
       "AssetRole": "Alternative",
@@ -4546,8 +4756,8 @@
       "RelatedAsset": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/bin/Debug/net9.0/wwwroot/_framework/frontend_manage.wasm",
       "AssetTraitName": "Content-Encoding",
       "AssetTraitValue": "gzip",
-      "Fingerprint": "he0vrnufyy",
-      "Integrity": "N5V9g4oj/1Tm0gG7Mf9syyRP08mqGSaNJj8PCTXhVEQ=",
+      "Fingerprint": "w5ihdgwil9",
+      "Integrity": "NGMv8xniKIteEM6LbKzzVEZNK7TdrvAmE1vHt+JCd/A=",
       "CopyToOutputDirectory": "PreserveNewest",
       "CopyToPublishDirectory": "Never",
       "OriginalItemSpec": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/bin/Debug/net9.0/wwwroot/_framework/frontend_manage.wasm"
@@ -4931,12 +5141,12 @@
       "OriginalItemSpec": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/bin/Debug/net9.0/wwwroot/_framework/System.Runtime.Serialization.Primitives.wasm"
     },
     {
-      "Identity": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/2f7ezuk8ra-7tchawsko4.gz",
+      "Identity": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/2f7ezuk8ra-5ckyik96i5.gz",
       "SourceId": "frontend_manage",
       "SourceType": "Computed",
       "ContentRoot": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/",
       "BasePath": "/",
-      "RelativePath": "_framework/frontend_manage#[.{fingerprint=7tchawsko4}]!.pdb.gz",
+      "RelativePath": "_framework/frontend_manage#[.{fingerprint=5ckyik96i5}]!.pdb.gz",
       "AssetKind": "Build",
       "AssetMode": "All",
       "AssetRole": "Alternative",
@@ -4945,8 +5155,8 @@
       "RelatedAsset": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/bin/Debug/net9.0/wwwroot/_framework/frontend_manage.pdb",
       "AssetTraitName": "Content-Encoding",
       "AssetTraitValue": "gzip",
-      "Fingerprint": "2st55ejs1p",
-      "Integrity": "AnO7Bo5gGK84NR+1JN6ViCLrLCPtSo6nz9hTlbySoIY=",
+      "Fingerprint": "3ndddxdwzi",
+      "Integrity": "T6ecINjiewIWUCL1PJn7Af0kmkrNlClghAfyywQe09M=",
       "CopyToOutputDirectory": "PreserveNewest",
       "CopyToPublishDirectory": "Never",
       "OriginalItemSpec": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/bin/Debug/net9.0/wwwroot/_framework/frontend_manage.pdb"
@@ -6317,6 +6527,27 @@
       "OriginalItemSpec": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/bin/Debug/net9.0/wwwroot/_framework/System.Configuration.wasm"
     },
     {
+      "Identity": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/c1yb4dpuks-j2y3j59j12.gz",
+      "SourceId": "frontend_manage",
+      "SourceType": "Computed",
+      "ContentRoot": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/",
+      "BasePath": "/",
+      "RelativePath": "_framework/Microsoft.Extensions.Features#[.{fingerprint=j2y3j59j12}]!.wasm.gz",
+      "AssetKind": "Build",
+      "AssetMode": "All",
+      "AssetRole": "Alternative",
+      "AssetMergeBehavior": "",
+      "AssetMergeSource": "",
+      "RelatedAsset": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/bin/Debug/net9.0/wwwroot/_framework/Microsoft.Extensions.Features.wasm",
+      "AssetTraitName": "Content-Encoding",
+      "AssetTraitValue": "gzip",
+      "Fingerprint": "a0qq4wu76z",
+      "Integrity": "1lW4Jg262IzfkWobpmU1nJFIdABM+hTzmOcPsbpxu6M=",
+      "CopyToOutputDirectory": "PreserveNewest",
+      "CopyToPublishDirectory": "Never",
+      "OriginalItemSpec": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/bin/Debug/net9.0/wwwroot/_framework/Microsoft.Extensions.Features.wasm"
+    },
+    {
       "Identity": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/c7ozlsi8na-t0xgg5v1wp.gz",
       "SourceId": "frontend_manage",
       "SourceType": "Computed",
@@ -6695,6 +6926,27 @@
       "OriginalItemSpec": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/bin/Debug/net9.0/wwwroot/_framework/System.Web.wasm"
     },
     {
+      "Identity": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/e3q2mhjxrr-fe9u1w2puz.gz",
+      "SourceId": "frontend_manage",
+      "SourceType": "Computed",
+      "ContentRoot": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/",
+      "BasePath": "/",
+      "RelativePath": "_framework/System.Net.ServerSentEvents#[.{fingerprint=fe9u1w2puz}]!.wasm.gz",
+      "AssetKind": "Build",
+      "AssetMode": "All",
+      "AssetRole": "Alternative",
+      "AssetMergeBehavior": "",
+      "AssetMergeSource": "",
+      "RelatedAsset": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/bin/Debug/net9.0/wwwroot/_framework/System.Net.ServerSentEvents.wasm",
+      "AssetTraitName": "Content-Encoding",
+      "AssetTraitValue": "gzip",
+      "Fingerprint": "70ap2rwoxz",
+      "Integrity": "GXM28cT7afnYpLBA1nrcPOwHY3E9aHRtEY59E5ii8dk=",
+      "CopyToOutputDirectory": "PreserveNewest",
+      "CopyToPublishDirectory": "Never",
+      "OriginalItemSpec": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/bin/Debug/net9.0/wwwroot/_framework/System.Net.ServerSentEvents.wasm"
+    },
+    {
       "Identity": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/ebqoxr3m8x-lcwd5nnnzg.gz",
       "SourceId": "frontend_manage",
       "SourceType": "Computed",
@@ -6756,6 +7008,27 @@
       "CopyToOutputDirectory": "PreserveNewest",
       "CopyToPublishDirectory": "Never",
       "OriginalItemSpec": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/bin/Debug/net9.0/wwwroot/_framework/System.Reflection.Emit.wasm"
+    },
+    {
+      "Identity": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/em6k1kq9p6-dets1m3r3l.gz",
+      "SourceId": "frontend_manage",
+      "SourceType": "Computed",
+      "ContentRoot": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/",
+      "BasePath": "/",
+      "RelativePath": "_framework/Microsoft.AspNetCore.SignalR.Client.Core#[.{fingerprint=dets1m3r3l}]!.wasm.gz",
+      "AssetKind": "Build",
+      "AssetMode": "All",
+      "AssetRole": "Alternative",
+      "AssetMergeBehavior": "",
+      "AssetMergeSource": "",
+      "RelatedAsset": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/bin/Debug/net9.0/wwwroot/_framework/Microsoft.AspNetCore.SignalR.Client.Core.wasm",
+      "AssetTraitName": "Content-Encoding",
+      "AssetTraitValue": "gzip",
+      "Fingerprint": "v0eyailcr7",
+      "Integrity": "f522STIiNE9LJGDeyGL0Pn29uWxS3DiFHVSNKGECHIQ=",
+      "CopyToOutputDirectory": "PreserveNewest",
+      "CopyToPublishDirectory": "Never",
+      "OriginalItemSpec": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/bin/Debug/net9.0/wwwroot/_framework/Microsoft.AspNetCore.SignalR.Client.Core.wasm"
     },
     {
       "Identity": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/f0h2kbaie9-lfu7j35m59.gz",
@@ -6840,6 +7113,27 @@
       "CopyToOutputDirectory": "PreserveNewest",
       "CopyToPublishDirectory": "Never",
       "OriginalItemSpec": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/bin/Debug/net9.0/wwwroot/_framework/System.Runtime.Handles.wasm"
+    },
+    {
+      "Identity": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/gppyqp3e34-vkcfi4fj3v.gz",
+      "SourceId": "frontend_manage",
+      "SourceType": "Computed",
+      "ContentRoot": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/",
+      "BasePath": "/",
+      "RelativePath": "_framework/Microsoft.AspNetCore.SignalR.Common#[.{fingerprint=vkcfi4fj3v}]!.wasm.gz",
+      "AssetKind": "Build",
+      "AssetMode": "All",
+      "AssetRole": "Alternative",
+      "AssetMergeBehavior": "",
+      "AssetMergeSource": "",
+      "RelatedAsset": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/bin/Debug/net9.0/wwwroot/_framework/Microsoft.AspNetCore.SignalR.Common.wasm",
+      "AssetTraitName": "Content-Encoding",
+      "AssetTraitValue": "gzip",
+      "Fingerprint": "i0w9ps1jdk",
+      "Integrity": "UoPsuuLauFce9kyTcYmA9+TShIZxLxHFOLOWkOOrqa4=",
+      "CopyToOutputDirectory": "PreserveNewest",
+      "CopyToPublishDirectory": "Never",
+      "OriginalItemSpec": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/bin/Debug/net9.0/wwwroot/_framework/Microsoft.AspNetCore.SignalR.Common.wasm"
     },
     {
       "Identity": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/gqow17jjx7-tmt7veun1h.gz",
@@ -7071,6 +7365,27 @@
       "CopyToOutputDirectory": "PreserveNewest",
       "CopyToPublishDirectory": "Never",
       "OriginalItemSpec": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/bin/Debug/net9.0/wwwroot/_framework/System.Runtime.wasm"
+    },
+    {
+      "Identity": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/i0ck0n24f1-h1gc7obt0j.gz",
+      "SourceId": "frontend_manage",
+      "SourceType": "Computed",
+      "ContentRoot": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/",
+      "BasePath": "/",
+      "RelativePath": "_framework/Microsoft.AspNetCore.SignalR.Protocols.Json#[.{fingerprint=h1gc7obt0j}]!.wasm.gz",
+      "AssetKind": "Build",
+      "AssetMode": "All",
+      "AssetRole": "Alternative",
+      "AssetMergeBehavior": "",
+      "AssetMergeSource": "",
+      "RelatedAsset": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/bin/Debug/net9.0/wwwroot/_framework/Microsoft.AspNetCore.SignalR.Protocols.Json.wasm",
+      "AssetTraitName": "Content-Encoding",
+      "AssetTraitValue": "gzip",
+      "Fingerprint": "qlahsme26q",
+      "Integrity": "EpzeUv1Eu5KLKCL66m8rNz9b+KXOj41VIcbiExKdSZA=",
+      "CopyToOutputDirectory": "PreserveNewest",
+      "CopyToPublishDirectory": "Never",
+      "OriginalItemSpec": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/bin/Debug/net9.0/wwwroot/_framework/Microsoft.AspNetCore.SignalR.Protocols.Json.wasm"
     },
     {
       "Identity": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/i2nqtiqzjd-rtp8879em7.gz",
@@ -7428,6 +7743,27 @@
       "CopyToOutputDirectory": "PreserveNewest",
       "CopyToPublishDirectory": "Never",
       "OriginalItemSpec": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/bin/Debug/net9.0/wwwroot/_framework/System.Runtime.Intrinsics.wasm"
+    },
+    {
+      "Identity": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/jygc4odg8l-zdonk3bxxf.gz",
+      "SourceId": "frontend_manage",
+      "SourceType": "Computed",
+      "ContentRoot": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/",
+      "BasePath": "/",
+      "RelativePath": "_framework/Microsoft.AspNetCore.Http.Connections.Common#[.{fingerprint=zdonk3bxxf}]!.wasm.gz",
+      "AssetKind": "Build",
+      "AssetMode": "All",
+      "AssetRole": "Alternative",
+      "AssetMergeBehavior": "",
+      "AssetMergeSource": "",
+      "RelatedAsset": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/bin/Debug/net9.0/wwwroot/_framework/Microsoft.AspNetCore.Http.Connections.Common.wasm",
+      "AssetTraitName": "Content-Encoding",
+      "AssetTraitValue": "gzip",
+      "Fingerprint": "a9mv237km2",
+      "Integrity": "biDehUPQWH8icxB3C5nMS11GwLl6AqUhZjfueOTquDk=",
+      "CopyToOutputDirectory": "PreserveNewest",
+      "CopyToPublishDirectory": "Never",
+      "OriginalItemSpec": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/bin/Debug/net9.0/wwwroot/_framework/Microsoft.AspNetCore.Http.Connections.Common.wasm"
     },
     {
       "Identity": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/jylqdagazq-kwdybu2ptu.gz",
@@ -8142,6 +8478,27 @@
       "CopyToOutputDirectory": "PreserveNewest",
       "CopyToPublishDirectory": "Never",
       "OriginalItemSpec": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/bin/Debug/net9.0/wwwroot/_framework/System.Runtime.Serialization.Xml.wasm"
+    },
+    {
+      "Identity": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/p2hq1eif4w-ria3b3yh7v.gz",
+      "SourceId": "frontend_manage",
+      "SourceType": "Computed",
+      "ContentRoot": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/",
+      "BasePath": "/",
+      "RelativePath": "_framework/Microsoft.AspNetCore.Http.Connections.Client#[.{fingerprint=ria3b3yh7v}]!.wasm.gz",
+      "AssetKind": "Build",
+      "AssetMode": "All",
+      "AssetRole": "Alternative",
+      "AssetMergeBehavior": "",
+      "AssetMergeSource": "",
+      "RelatedAsset": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/bin/Debug/net9.0/wwwroot/_framework/Microsoft.AspNetCore.Http.Connections.Client.wasm",
+      "AssetTraitName": "Content-Encoding",
+      "AssetTraitValue": "gzip",
+      "Fingerprint": "7tfgumwecs",
+      "Integrity": "CyrMNKqZSMw1VMRmM82AqkcDIqcXUc3YTgJQAOZg4Bc=",
+      "CopyToOutputDirectory": "PreserveNewest",
+      "CopyToPublishDirectory": "Never",
+      "OriginalItemSpec": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/bin/Debug/net9.0/wwwroot/_framework/Microsoft.AspNetCore.Http.Connections.Client.wasm"
     },
     {
       "Identity": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/p3ig4hhc15-58oscw10fc.gz",
@@ -9593,7 +9950,28 @@
       "OriginalItemSpec": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/bin/Debug/net9.0/wwwroot/_framework/System.Windows.wasm"
     },
     {
-      "Identity": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/yodah3lpl2-jj39z8hxw8.gz",
+      "Identity": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/yltqgl3el0-sjz384hi2d.gz",
+      "SourceId": "frontend_manage",
+      "SourceType": "Computed",
+      "ContentRoot": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/",
+      "BasePath": "/",
+      "RelativePath": "_framework/Microsoft.AspNetCore.SignalR.Client#[.{fingerprint=sjz384hi2d}]!.wasm.gz",
+      "AssetKind": "Build",
+      "AssetMode": "All",
+      "AssetRole": "Alternative",
+      "AssetMergeBehavior": "",
+      "AssetMergeSource": "",
+      "RelatedAsset": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/bin/Debug/net9.0/wwwroot/_framework/Microsoft.AspNetCore.SignalR.Client.wasm",
+      "AssetTraitName": "Content-Encoding",
+      "AssetTraitValue": "gzip",
+      "Fingerprint": "969qc92zy0",
+      "Integrity": "Dx+3bsCkhK6YTYWv1dtWCt8i/Axu5JsWV067mB1CMSU=",
+      "CopyToOutputDirectory": "PreserveNewest",
+      "CopyToPublishDirectory": "Never",
+      "OriginalItemSpec": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/bin/Debug/net9.0/wwwroot/_framework/Microsoft.AspNetCore.SignalR.Client.wasm"
+    },
+    {
+      "Identity": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/yodah3lpl2-nqy7xtbks1.gz",
       "SourceId": "frontend_manage",
       "SourceType": "Computed",
       "ContentRoot": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/",
@@ -9607,8 +9985,8 @@
       "RelatedAsset": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/bin/Debug/net9.0/wwwroot/_framework/blazor.boot.json",
       "AssetTraitName": "Content-Encoding",
       "AssetTraitValue": "gzip",
-      "Fingerprint": "ijmgfpo0kv",
-      "Integrity": "Hsmft1tuS2oXzKJh00IW/tPc9FYIAvoWmEQ0wcpXjlY=",
+      "Fingerprint": "4xhynsqngt",
+      "Integrity": "OFaTxKNMKO4fh99nM6y59vjJcsftb5s5fQbrbYwB3XQ=",
       "CopyToOutputDirectory": "PreserveNewest",
       "CopyToPublishDirectory": "Never",
       "OriginalItemSpec": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/bin/Debug/net9.0/wwwroot/_framework/blazor.boot.json"
@@ -11355,7 +11733,7 @@
         },
         {
           "Name": "Content-Length",
-          "Value": "40472"
+          "Value": "42542"
         },
         {
           "Name": "Content-Type",
@@ -11363,11 +11741,11 @@
         },
         {
           "Name": "ETag",
-          "Value": "\"0RItazSeuJv1dkihC/BHPmvwirDpaArMPvsTb4+haPE=\""
+          "Value": "\"YU8F1UvZtrLei6Ivl6t/Jpk4hhRFkWn6+fX5ofgdATc=\""
         },
         {
           "Name": "Last-Modified",
-          "Value": "Sun, 20 Jul 2025 07:13:14 GMT"
+          "Value": "Sun, 20 Jul 2025 08:33:15 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -11377,18 +11755,18 @@
       "EndpointProperties": [
         {
           "Name": "integrity",
-          "Value": "sha256-0RItazSeuJv1dkihC/BHPmvwirDpaArMPvsTb4+haPE="
+          "Value": "sha256-YU8F1UvZtrLei6Ivl6t/Jpk4hhRFkWn6+fX5ofgdATc="
         }
       ]
     },
     {
       "Route": "_framework/blazor.boot.json",
-      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/yodah3lpl2-jj39z8hxw8.gz",
+      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/yodah3lpl2-nqy7xtbks1.gz",
       "Selectors": [
         {
           "Name": "Content-Encoding",
           "Value": "gzip",
-          "Quality": "0.000078222778"
+          "Quality": "0.000074973759"
         }
       ],
       "ResponseHeaders": [
@@ -11398,15 +11776,15 @@
         },
         {
           "Name": "Content-Length",
-          "Value": "12783"
+          "Value": "13337"
         },
         {
           "Name": "ETag",
-          "Value": "\"Hsmft1tuS2oXzKJh00IW/tPc9FYIAvoWmEQ0wcpXjlY=\""
+          "Value": "\"OFaTxKNMKO4fh99nM6y59vjJcsftb5s5fQbrbYwB3XQ=\""
         },
         {
           "Name": "Last-Modified",
-          "Value": "Sun, 20 Jul 2025 07:09:50 GMT"
+          "Value": "Sun, 20 Jul 2025 08:32:54 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -11426,19 +11804,19 @@
         },
         {
           "Name": "ETag",
-          "Value": "W/\"0RItazSeuJv1dkihC/BHPmvwirDpaArMPvsTb4+haPE=\""
+          "Value": "W/\"YU8F1UvZtrLei6Ivl6t/Jpk4hhRFkWn6+fX5ofgdATc=\""
         }
       ],
       "EndpointProperties": [
         {
           "Name": "integrity",
-          "Value": "sha256-0RItazSeuJv1dkihC/BHPmvwirDpaArMPvsTb4+haPE="
+          "Value": "sha256-YU8F1UvZtrLei6Ivl6t/Jpk4hhRFkWn6+fX5ofgdATc="
         }
       ]
     },
     {
       "Route": "_framework/blazor.boot.json.gz",
-      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/yodah3lpl2-jj39z8hxw8.gz",
+      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/yodah3lpl2-nqy7xtbks1.gz",
       "Selectors": [],
       "ResponseHeaders": [
         {
@@ -11447,7 +11825,7 @@
         },
         {
           "Name": "Content-Length",
-          "Value": "12783"
+          "Value": "13337"
         },
         {
           "Name": "Content-Type",
@@ -11455,11 +11833,11 @@
         },
         {
           "Name": "ETag",
-          "Value": "\"Hsmft1tuS2oXzKJh00IW/tPc9FYIAvoWmEQ0wcpXjlY=\""
+          "Value": "\"OFaTxKNMKO4fh99nM6y59vjJcsftb5s5fQbrbYwB3XQ=\""
         },
         {
           "Name": "Last-Modified",
-          "Value": "Sun, 20 Jul 2025 07:09:50 GMT"
+          "Value": "Sun, 20 Jul 2025 08:32:54 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -11477,7 +11855,7 @@
       "EndpointProperties": [
         {
           "Name": "integrity",
-          "Value": "sha256-Hsmft1tuS2oXzKJh00IW/tPc9FYIAvoWmEQ0wcpXjlY="
+          "Value": "sha256-OFaTxKNMKO4fh99nM6y59vjJcsftb5s5fQbrbYwB3XQ="
         }
       ]
     },
@@ -13407,7 +13785,7 @@
       ]
     },
     {
-      "Route": "_framework/frontend_manage.7tchawsko4.pdb",
+      "Route": "_framework/frontend_manage.5ckyik96i5.pdb",
       "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/bin/Debug/net9.0/wwwroot/_framework/frontend_manage.pdb",
       "Selectors": [],
       "ResponseHeaders": [
@@ -13417,7 +13795,7 @@
         },
         {
           "Name": "Content-Length",
-          "Value": "33572"
+          "Value": "36668"
         },
         {
           "Name": "Content-Type",
@@ -13425,11 +13803,11 @@
         },
         {
           "Name": "ETag",
-          "Value": "\"G+XrzoEfMbV+gMoQmWHyBrU0WoHM9jhitL22ur+PIZ8=\""
+          "Value": "\"dc09FxAPtTB07cl1p/+e3IbfrxeWdW3SyQtxKFmhI+k=\""
         },
         {
           "Name": "Last-Modified",
-          "Value": "Sun, 20 Jul 2025 07:13:12 GMT"
+          "Value": "Sun, 20 Jul 2025 08:33:12 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -13439,7 +13817,7 @@
       "EndpointProperties": [
         {
           "Name": "fingerprint",
-          "Value": "7tchawsko4"
+          "Value": "5ckyik96i5"
         },
         {
           "Name": "label",
@@ -13447,18 +13825,18 @@
         },
         {
           "Name": "integrity",
-          "Value": "sha256-G+XrzoEfMbV+gMoQmWHyBrU0WoHM9jhitL22ur+PIZ8="
+          "Value": "sha256-dc09FxAPtTB07cl1p/+e3IbfrxeWdW3SyQtxKFmhI+k="
         }
       ]
     },
     {
-      "Route": "_framework/frontend_manage.7tchawsko4.pdb",
-      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/2f7ezuk8ra-7tchawsko4.gz",
+      "Route": "_framework/frontend_manage.5ckyik96i5.pdb",
+      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/2f7ezuk8ra-5ckyik96i5.gz",
       "Selectors": [
         {
           "Name": "Content-Encoding",
           "Value": "gzip",
-          "Quality": "0.000043001505"
+          "Quality": "0.000039174208"
         }
       ],
       "ResponseHeaders": [
@@ -13468,15 +13846,15 @@
         },
         {
           "Name": "Content-Length",
-          "Value": "23254"
+          "Value": "25526"
         },
         {
           "Name": "ETag",
-          "Value": "\"AnO7Bo5gGK84NR+1JN6ViCLrLCPtSo6nz9hTlbySoIY=\""
+          "Value": "\"T6ecINjiewIWUCL1PJn7Af0kmkrNlClghAfyywQe09M=\""
         },
         {
           "Name": "Last-Modified",
-          "Value": "Sun, 20 Jul 2025 07:13:15 GMT"
+          "Value": "Sun, 20 Jul 2025 08:33:15 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -13496,13 +13874,13 @@
         },
         {
           "Name": "ETag",
-          "Value": "W/\"G+XrzoEfMbV+gMoQmWHyBrU0WoHM9jhitL22ur+PIZ8=\""
+          "Value": "W/\"dc09FxAPtTB07cl1p/+e3IbfrxeWdW3SyQtxKFmhI+k=\""
         }
       ],
       "EndpointProperties": [
         {
           "Name": "fingerprint",
-          "Value": "7tchawsko4"
+          "Value": "5ckyik96i5"
         },
         {
           "Name": "label",
@@ -13510,13 +13888,13 @@
         },
         {
           "Name": "integrity",
-          "Value": "sha256-G+XrzoEfMbV+gMoQmWHyBrU0WoHM9jhitL22ur+PIZ8="
+          "Value": "sha256-dc09FxAPtTB07cl1p/+e3IbfrxeWdW3SyQtxKFmhI+k="
         }
       ]
     },
     {
-      "Route": "_framework/frontend_manage.7tchawsko4.pdb.gz",
-      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/2f7ezuk8ra-7tchawsko4.gz",
+      "Route": "_framework/frontend_manage.5ckyik96i5.pdb.gz",
+      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/2f7ezuk8ra-5ckyik96i5.gz",
       "Selectors": [],
       "ResponseHeaders": [
         {
@@ -13525,7 +13903,7 @@
         },
         {
           "Name": "Content-Length",
-          "Value": "23254"
+          "Value": "25526"
         },
         {
           "Name": "Content-Type",
@@ -13533,11 +13911,11 @@
         },
         {
           "Name": "ETag",
-          "Value": "\"AnO7Bo5gGK84NR+1JN6ViCLrLCPtSo6nz9hTlbySoIY=\""
+          "Value": "\"T6ecINjiewIWUCL1PJn7Af0kmkrNlClghAfyywQe09M=\""
         },
         {
           "Name": "Last-Modified",
-          "Value": "Sun, 20 Jul 2025 07:13:15 GMT"
+          "Value": "Sun, 20 Jul 2025 08:33:15 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -13555,7 +13933,7 @@
       "EndpointProperties": [
         {
           "Name": "fingerprint",
-          "Value": "7tchawsko4"
+          "Value": "5ckyik96i5"
         },
         {
           "Name": "label",
@@ -13563,168 +13941,7 @@
         },
         {
           "Name": "integrity",
-          "Value": "sha256-AnO7Bo5gGK84NR+1JN6ViCLrLCPtSo6nz9hTlbySoIY="
-        }
-      ]
-    },
-    {
-      "Route": "_framework/frontend_manage.nsak9f4xgc.wasm",
-      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/bin/Debug/net9.0/wwwroot/_framework/frontend_manage.wasm",
-      "Selectors": [],
-      "ResponseHeaders": [
-        {
-          "Name": "Accept-Ranges",
-          "Value": "bytes"
-        },
-        {
-          "Name": "Content-Length",
-          "Value": "45333"
-        },
-        {
-          "Name": "Content-Type",
-          "Value": "application/wasm"
-        },
-        {
-          "Name": "ETag",
-          "Value": "\"Wcc45bCjSY6imfvidZUbb6cO4kLK+YgZVQIULOxdGfA=\""
-        },
-        {
-          "Name": "Last-Modified",
-          "Value": "Sun, 20 Jul 2025 07:13:12 GMT"
-        },
-        {
-          "Name": "Cache-Control",
-          "Value": "max-age=31536000, immutable"
-        }
-      ],
-      "EndpointProperties": [
-        {
-          "Name": "fingerprint",
-          "Value": "nsak9f4xgc"
-        },
-        {
-          "Name": "label",
-          "Value": "_framework/frontend_manage.wasm"
-        },
-        {
-          "Name": "integrity",
-          "Value": "sha256-Wcc45bCjSY6imfvidZUbb6cO4kLK+YgZVQIULOxdGfA="
-        }
-      ]
-    },
-    {
-      "Route": "_framework/frontend_manage.nsak9f4xgc.wasm",
-      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/0hm0583o52-nsak9f4xgc.gz",
-      "Selectors": [
-        {
-          "Name": "Content-Encoding",
-          "Value": "gzip",
-          "Quality": "0.000051894136"
-        }
-      ],
-      "ResponseHeaders": [
-        {
-          "Name": "Accept-Ranges",
-          "Value": "bytes"
-        },
-        {
-          "Name": "Content-Length",
-          "Value": "19269"
-        },
-        {
-          "Name": "ETag",
-          "Value": "\"N5V9g4oj/1Tm0gG7Mf9syyRP08mqGSaNJj8PCTXhVEQ=\""
-        },
-        {
-          "Name": "Last-Modified",
-          "Value": "Sun, 20 Jul 2025 07:13:15 GMT"
-        },
-        {
-          "Name": "Cache-Control",
-          "Value": "max-age=31536000, immutable"
-        },
-        {
-          "Name": "Content-Encoding",
-          "Value": "gzip"
-        },
-        {
-          "Name": "Vary",
-          "Value": "Content-Encoding"
-        },
-        {
-          "Name": "Content-Type",
-          "Value": "application/wasm"
-        },
-        {
-          "Name": "ETag",
-          "Value": "W/\"Wcc45bCjSY6imfvidZUbb6cO4kLK+YgZVQIULOxdGfA=\""
-        }
-      ],
-      "EndpointProperties": [
-        {
-          "Name": "fingerprint",
-          "Value": "nsak9f4xgc"
-        },
-        {
-          "Name": "label",
-          "Value": "_framework/frontend_manage.wasm"
-        },
-        {
-          "Name": "integrity",
-          "Value": "sha256-Wcc45bCjSY6imfvidZUbb6cO4kLK+YgZVQIULOxdGfA="
-        }
-      ]
-    },
-    {
-      "Route": "_framework/frontend_manage.nsak9f4xgc.wasm.gz",
-      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/0hm0583o52-nsak9f4xgc.gz",
-      "Selectors": [],
-      "ResponseHeaders": [
-        {
-          "Name": "Accept-Ranges",
-          "Value": "bytes"
-        },
-        {
-          "Name": "Content-Length",
-          "Value": "19269"
-        },
-        {
-          "Name": "Content-Type",
-          "Value": "application/wasm"
-        },
-        {
-          "Name": "ETag",
-          "Value": "\"N5V9g4oj/1Tm0gG7Mf9syyRP08mqGSaNJj8PCTXhVEQ=\""
-        },
-        {
-          "Name": "Last-Modified",
-          "Value": "Sun, 20 Jul 2025 07:13:15 GMT"
-        },
-        {
-          "Name": "Cache-Control",
-          "Value": "max-age=31536000, immutable"
-        },
-        {
-          "Name": "Content-Encoding",
-          "Value": "gzip"
-        },
-        {
-          "Name": "Vary",
-          "Value": "Content-Encoding"
-        }
-      ],
-      "EndpointProperties": [
-        {
-          "Name": "fingerprint",
-          "Value": "nsak9f4xgc"
-        },
-        {
-          "Name": "label",
-          "Value": "_framework/frontend_manage.wasm.gz"
-        },
-        {
-          "Name": "integrity",
-          "Value": "sha256-N5V9g4oj/1Tm0gG7Mf9syyRP08mqGSaNJj8PCTXhVEQ="
+          "Value": "sha256-T6ecINjiewIWUCL1PJn7Af0kmkrNlClghAfyywQe09M="
         }
       ]
     },
@@ -13739,7 +13956,7 @@
         },
         {
           "Name": "Content-Length",
-          "Value": "33572"
+          "Value": "36668"
         },
         {
           "Name": "Content-Type",
@@ -13747,11 +13964,11 @@
         },
         {
           "Name": "ETag",
-          "Value": "\"G+XrzoEfMbV+gMoQmWHyBrU0WoHM9jhitL22ur+PIZ8=\""
+          "Value": "\"dc09FxAPtTB07cl1p/+e3IbfrxeWdW3SyQtxKFmhI+k=\""
         },
         {
           "Name": "Last-Modified",
-          "Value": "Sun, 20 Jul 2025 07:13:12 GMT"
+          "Value": "Sun, 20 Jul 2025 08:33:12 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -13761,18 +13978,18 @@
       "EndpointProperties": [
         {
           "Name": "integrity",
-          "Value": "sha256-G+XrzoEfMbV+gMoQmWHyBrU0WoHM9jhitL22ur+PIZ8="
+          "Value": "sha256-dc09FxAPtTB07cl1p/+e3IbfrxeWdW3SyQtxKFmhI+k="
         }
       ]
     },
     {
       "Route": "_framework/frontend_manage.pdb",
-      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/2f7ezuk8ra-7tchawsko4.gz",
+      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/2f7ezuk8ra-5ckyik96i5.gz",
       "Selectors": [
         {
           "Name": "Content-Encoding",
           "Value": "gzip",
-          "Quality": "0.000043001505"
+          "Quality": "0.000039174208"
         }
       ],
       "ResponseHeaders": [
@@ -13782,15 +13999,15 @@
         },
         {
           "Name": "Content-Length",
-          "Value": "23254"
+          "Value": "25526"
         },
         {
           "Name": "ETag",
-          "Value": "\"AnO7Bo5gGK84NR+1JN6ViCLrLCPtSo6nz9hTlbySoIY=\""
+          "Value": "\"T6ecINjiewIWUCL1PJn7Af0kmkrNlClghAfyywQe09M=\""
         },
         {
           "Name": "Last-Modified",
-          "Value": "Sun, 20 Jul 2025 07:13:15 GMT"
+          "Value": "Sun, 20 Jul 2025 08:33:15 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -13810,19 +14027,19 @@
         },
         {
           "Name": "ETag",
-          "Value": "W/\"G+XrzoEfMbV+gMoQmWHyBrU0WoHM9jhitL22ur+PIZ8=\""
+          "Value": "W/\"dc09FxAPtTB07cl1p/+e3IbfrxeWdW3SyQtxKFmhI+k=\""
         }
       ],
       "EndpointProperties": [
         {
           "Name": "integrity",
-          "Value": "sha256-G+XrzoEfMbV+gMoQmWHyBrU0WoHM9jhitL22ur+PIZ8="
+          "Value": "sha256-dc09FxAPtTB07cl1p/+e3IbfrxeWdW3SyQtxKFmhI+k="
         }
       ]
     },
     {
       "Route": "_framework/frontend_manage.pdb.gz",
-      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/2f7ezuk8ra-7tchawsko4.gz",
+      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/2f7ezuk8ra-5ckyik96i5.gz",
       "Selectors": [],
       "ResponseHeaders": [
         {
@@ -13831,7 +14048,7 @@
         },
         {
           "Name": "Content-Length",
-          "Value": "23254"
+          "Value": "25526"
         },
         {
           "Name": "Content-Type",
@@ -13839,11 +14056,11 @@
         },
         {
           "Name": "ETag",
-          "Value": "\"AnO7Bo5gGK84NR+1JN6ViCLrLCPtSo6nz9hTlbySoIY=\""
+          "Value": "\"T6ecINjiewIWUCL1PJn7Af0kmkrNlClghAfyywQe09M=\""
         },
         {
           "Name": "Last-Modified",
-          "Value": "Sun, 20 Jul 2025 07:13:15 GMT"
+          "Value": "Sun, 20 Jul 2025 08:33:15 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -13861,7 +14078,168 @@
       "EndpointProperties": [
         {
           "Name": "integrity",
-          "Value": "sha256-AnO7Bo5gGK84NR+1JN6ViCLrLCPtSo6nz9hTlbySoIY="
+          "Value": "sha256-T6ecINjiewIWUCL1PJn7Af0kmkrNlClghAfyywQe09M="
+        }
+      ]
+    },
+    {
+      "Route": "_framework/frontend_manage.vksh2crkpf.wasm",
+      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/bin/Debug/net9.0/wwwroot/_framework/frontend_manage.wasm",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "49429"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/wasm"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"EbMXtrYKi0mSoUsXzkxUIP2YPs1d0rWysji+nJdMAko=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sun, 20 Jul 2025 08:33:13 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "vksh2crkpf"
+        },
+        {
+          "Name": "label",
+          "Value": "_framework/frontend_manage.wasm"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-EbMXtrYKi0mSoUsXzkxUIP2YPs1d0rWysji+nJdMAko="
+        }
+      ]
+    },
+    {
+      "Route": "_framework/frontend_manage.vksh2crkpf.wasm",
+      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/0hm0583o52-vksh2crkpf.gz",
+      "Selectors": [
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip",
+          "Quality": "0.000047655356"
+        }
+      ],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "20983"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"NGMv8xniKIteEM6LbKzzVEZNK7TdrvAmE1vHt+JCd/A=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sun, 20 Jul 2025 08:33:15 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip"
+        },
+        {
+          "Name": "Vary",
+          "Value": "Content-Encoding"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/wasm"
+        },
+        {
+          "Name": "ETag",
+          "Value": "W/\"EbMXtrYKi0mSoUsXzkxUIP2YPs1d0rWysji+nJdMAko=\""
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "vksh2crkpf"
+        },
+        {
+          "Name": "label",
+          "Value": "_framework/frontend_manage.wasm"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-EbMXtrYKi0mSoUsXzkxUIP2YPs1d0rWysji+nJdMAko="
+        }
+      ]
+    },
+    {
+      "Route": "_framework/frontend_manage.vksh2crkpf.wasm.gz",
+      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/0hm0583o52-vksh2crkpf.gz",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "20983"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/wasm"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"NGMv8xniKIteEM6LbKzzVEZNK7TdrvAmE1vHt+JCd/A=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sun, 20 Jul 2025 08:33:15 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip"
+        },
+        {
+          "Name": "Vary",
+          "Value": "Content-Encoding"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "vksh2crkpf"
+        },
+        {
+          "Name": "label",
+          "Value": "_framework/frontend_manage.wasm.gz"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-NGMv8xniKIteEM6LbKzzVEZNK7TdrvAmE1vHt+JCd/A="
         }
       ]
     },
@@ -13876,7 +14254,7 @@
         },
         {
           "Name": "Content-Length",
-          "Value": "45333"
+          "Value": "49429"
         },
         {
           "Name": "Content-Type",
@@ -13884,11 +14262,11 @@
         },
         {
           "Name": "ETag",
-          "Value": "\"Wcc45bCjSY6imfvidZUbb6cO4kLK+YgZVQIULOxdGfA=\""
+          "Value": "\"EbMXtrYKi0mSoUsXzkxUIP2YPs1d0rWysji+nJdMAko=\""
         },
         {
           "Name": "Last-Modified",
-          "Value": "Sun, 20 Jul 2025 07:13:12 GMT"
+          "Value": "Sun, 20 Jul 2025 08:33:13 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -13898,18 +14276,18 @@
       "EndpointProperties": [
         {
           "Name": "integrity",
-          "Value": "sha256-Wcc45bCjSY6imfvidZUbb6cO4kLK+YgZVQIULOxdGfA="
+          "Value": "sha256-EbMXtrYKi0mSoUsXzkxUIP2YPs1d0rWysji+nJdMAko="
         }
       ]
     },
     {
       "Route": "_framework/frontend_manage.wasm",
-      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/0hm0583o52-nsak9f4xgc.gz",
+      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/0hm0583o52-vksh2crkpf.gz",
       "Selectors": [
         {
           "Name": "Content-Encoding",
           "Value": "gzip",
-          "Quality": "0.000051894136"
+          "Quality": "0.000047655356"
         }
       ],
       "ResponseHeaders": [
@@ -13919,15 +14297,15 @@
         },
         {
           "Name": "Content-Length",
-          "Value": "19269"
+          "Value": "20983"
         },
         {
           "Name": "ETag",
-          "Value": "\"N5V9g4oj/1Tm0gG7Mf9syyRP08mqGSaNJj8PCTXhVEQ=\""
+          "Value": "\"NGMv8xniKIteEM6LbKzzVEZNK7TdrvAmE1vHt+JCd/A=\""
         },
         {
           "Name": "Last-Modified",
-          "Value": "Sun, 20 Jul 2025 07:13:15 GMT"
+          "Value": "Sun, 20 Jul 2025 08:33:15 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -13947,19 +14325,19 @@
         },
         {
           "Name": "ETag",
-          "Value": "W/\"Wcc45bCjSY6imfvidZUbb6cO4kLK+YgZVQIULOxdGfA=\""
+          "Value": "W/\"EbMXtrYKi0mSoUsXzkxUIP2YPs1d0rWysji+nJdMAko=\""
         }
       ],
       "EndpointProperties": [
         {
           "Name": "integrity",
-          "Value": "sha256-Wcc45bCjSY6imfvidZUbb6cO4kLK+YgZVQIULOxdGfA="
+          "Value": "sha256-EbMXtrYKi0mSoUsXzkxUIP2YPs1d0rWysji+nJdMAko="
         }
       ]
     },
     {
       "Route": "_framework/frontend_manage.wasm.gz",
-      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/0hm0583o52-nsak9f4xgc.gz",
+      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/0hm0583o52-vksh2crkpf.gz",
       "Selectors": [],
       "ResponseHeaders": [
         {
@@ -13968,7 +14346,7 @@
         },
         {
           "Name": "Content-Length",
-          "Value": "19269"
+          "Value": "20983"
         },
         {
           "Name": "Content-Type",
@@ -13976,11 +14354,11 @@
         },
         {
           "Name": "ETag",
-          "Value": "\"N5V9g4oj/1Tm0gG7Mf9syyRP08mqGSaNJj8PCTXhVEQ=\""
+          "Value": "\"NGMv8xniKIteEM6LbKzzVEZNK7TdrvAmE1vHt+JCd/A=\""
         },
         {
           "Name": "Last-Modified",
-          "Value": "Sun, 20 Jul 2025 07:13:15 GMT"
+          "Value": "Sun, 20 Jul 2025 08:33:15 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -13998,7 +14376,7 @@
       "EndpointProperties": [
         {
           "Name": "integrity",
-          "Value": "sha256-N5V9g4oj/1Tm0gG7Mf9syyRP08mqGSaNJj8PCTXhVEQ="
+          "Value": "sha256-NGMv8xniKIteEM6LbKzzVEZNK7TdrvAmE1vHt+JCd/A="
         }
       ]
     },
@@ -16387,6 +16765,900 @@
       ]
     },
     {
+      "Route": "_framework/Microsoft.AspNetCore.Connections.Abstractions.re4qmsvrc2.wasm",
+      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/bin/Debug/net9.0/wwwroot/_framework/Microsoft.AspNetCore.Connections.Abstractions.wasm",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "30997"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/wasm"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"LfGHCmMbtFugN6/UAE8tStds6/pLJCSd1ZoqyB/xgck=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sun, 20 Jul 2025 08:08:56 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "re4qmsvrc2"
+        },
+        {
+          "Name": "label",
+          "Value": "_framework/Microsoft.AspNetCore.Connections.Abstractions.wasm"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-LfGHCmMbtFugN6/UAE8tStds6/pLJCSd1ZoqyB/xgck="
+        }
+      ]
+    },
+    {
+      "Route": "_framework/Microsoft.AspNetCore.Connections.Abstractions.re4qmsvrc2.wasm",
+      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/0c2pkcwthn-re4qmsvrc2.gz",
+      "Selectors": [
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip",
+          "Quality": "0.000073276178"
+        }
+      ],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "13646"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"+JZcTEg050OBt21MqX6ZcG8U1G7ue/tLl6V62u5l9uM=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sun, 20 Jul 2025 08:09:16 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip"
+        },
+        {
+          "Name": "Vary",
+          "Value": "Content-Encoding"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/wasm"
+        },
+        {
+          "Name": "ETag",
+          "Value": "W/\"LfGHCmMbtFugN6/UAE8tStds6/pLJCSd1ZoqyB/xgck=\""
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "re4qmsvrc2"
+        },
+        {
+          "Name": "label",
+          "Value": "_framework/Microsoft.AspNetCore.Connections.Abstractions.wasm"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-LfGHCmMbtFugN6/UAE8tStds6/pLJCSd1ZoqyB/xgck="
+        }
+      ]
+    },
+    {
+      "Route": "_framework/Microsoft.AspNetCore.Connections.Abstractions.re4qmsvrc2.wasm.gz",
+      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/0c2pkcwthn-re4qmsvrc2.gz",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "13646"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/wasm"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"+JZcTEg050OBt21MqX6ZcG8U1G7ue/tLl6V62u5l9uM=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sun, 20 Jul 2025 08:09:16 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip"
+        },
+        {
+          "Name": "Vary",
+          "Value": "Content-Encoding"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "re4qmsvrc2"
+        },
+        {
+          "Name": "label",
+          "Value": "_framework/Microsoft.AspNetCore.Connections.Abstractions.wasm.gz"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-+JZcTEg050OBt21MqX6ZcG8U1G7ue/tLl6V62u5l9uM="
+        }
+      ]
+    },
+    {
+      "Route": "_framework/Microsoft.AspNetCore.Connections.Abstractions.wasm",
+      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/bin/Debug/net9.0/wwwroot/_framework/Microsoft.AspNetCore.Connections.Abstractions.wasm",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "30997"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/wasm"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"LfGHCmMbtFugN6/UAE8tStds6/pLJCSd1ZoqyB/xgck=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sun, 20 Jul 2025 08:08:56 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-LfGHCmMbtFugN6/UAE8tStds6/pLJCSd1ZoqyB/xgck="
+        }
+      ]
+    },
+    {
+      "Route": "_framework/Microsoft.AspNetCore.Connections.Abstractions.wasm",
+      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/0c2pkcwthn-re4qmsvrc2.gz",
+      "Selectors": [
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip",
+          "Quality": "0.000073276178"
+        }
+      ],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "13646"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"+JZcTEg050OBt21MqX6ZcG8U1G7ue/tLl6V62u5l9uM=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sun, 20 Jul 2025 08:09:16 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        },
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip"
+        },
+        {
+          "Name": "Vary",
+          "Value": "Content-Encoding"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/wasm"
+        },
+        {
+          "Name": "ETag",
+          "Value": "W/\"LfGHCmMbtFugN6/UAE8tStds6/pLJCSd1ZoqyB/xgck=\""
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-LfGHCmMbtFugN6/UAE8tStds6/pLJCSd1ZoqyB/xgck="
+        }
+      ]
+    },
+    {
+      "Route": "_framework/Microsoft.AspNetCore.Connections.Abstractions.wasm.gz",
+      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/0c2pkcwthn-re4qmsvrc2.gz",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "13646"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/wasm"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"+JZcTEg050OBt21MqX6ZcG8U1G7ue/tLl6V62u5l9uM=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sun, 20 Jul 2025 08:09:16 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        },
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip"
+        },
+        {
+          "Name": "Vary",
+          "Value": "Content-Encoding"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-+JZcTEg050OBt21MqX6ZcG8U1G7ue/tLl6V62u5l9uM="
+        }
+      ]
+    },
+    {
+      "Route": "_framework/Microsoft.AspNetCore.Http.Connections.Client.ria3b3yh7v.wasm",
+      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/bin/Debug/net9.0/wwwroot/_framework/Microsoft.AspNetCore.Http.Connections.Client.wasm",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "106261"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/wasm"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"/XC+TlU2XX6E2tGkmrCDnUri6qyIvflcibI0gtlXhzw=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sun, 20 Jul 2025 08:08:56 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "ria3b3yh7v"
+        },
+        {
+          "Name": "label",
+          "Value": "_framework/Microsoft.AspNetCore.Http.Connections.Client.wasm"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-/XC+TlU2XX6E2tGkmrCDnUri6qyIvflcibI0gtlXhzw="
+        }
+      ]
+    },
+    {
+      "Route": "_framework/Microsoft.AspNetCore.Http.Connections.Client.ria3b3yh7v.wasm",
+      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/p2hq1eif4w-ria3b3yh7v.gz",
+      "Selectors": [
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip",
+          "Quality": "0.000023462612"
+        }
+      ],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "42620"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"CyrMNKqZSMw1VMRmM82AqkcDIqcXUc3YTgJQAOZg4Bc=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sun, 20 Jul 2025 08:09:16 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip"
+        },
+        {
+          "Name": "Vary",
+          "Value": "Content-Encoding"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/wasm"
+        },
+        {
+          "Name": "ETag",
+          "Value": "W/\"/XC+TlU2XX6E2tGkmrCDnUri6qyIvflcibI0gtlXhzw=\""
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "ria3b3yh7v"
+        },
+        {
+          "Name": "label",
+          "Value": "_framework/Microsoft.AspNetCore.Http.Connections.Client.wasm"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-/XC+TlU2XX6E2tGkmrCDnUri6qyIvflcibI0gtlXhzw="
+        }
+      ]
+    },
+    {
+      "Route": "_framework/Microsoft.AspNetCore.Http.Connections.Client.ria3b3yh7v.wasm.gz",
+      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/p2hq1eif4w-ria3b3yh7v.gz",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "42620"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/wasm"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"CyrMNKqZSMw1VMRmM82AqkcDIqcXUc3YTgJQAOZg4Bc=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sun, 20 Jul 2025 08:09:16 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip"
+        },
+        {
+          "Name": "Vary",
+          "Value": "Content-Encoding"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "ria3b3yh7v"
+        },
+        {
+          "Name": "label",
+          "Value": "_framework/Microsoft.AspNetCore.Http.Connections.Client.wasm.gz"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-CyrMNKqZSMw1VMRmM82AqkcDIqcXUc3YTgJQAOZg4Bc="
+        }
+      ]
+    },
+    {
+      "Route": "_framework/Microsoft.AspNetCore.Http.Connections.Client.wasm",
+      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/bin/Debug/net9.0/wwwroot/_framework/Microsoft.AspNetCore.Http.Connections.Client.wasm",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "106261"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/wasm"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"/XC+TlU2XX6E2tGkmrCDnUri6qyIvflcibI0gtlXhzw=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sun, 20 Jul 2025 08:08:56 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-/XC+TlU2XX6E2tGkmrCDnUri6qyIvflcibI0gtlXhzw="
+        }
+      ]
+    },
+    {
+      "Route": "_framework/Microsoft.AspNetCore.Http.Connections.Client.wasm",
+      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/p2hq1eif4w-ria3b3yh7v.gz",
+      "Selectors": [
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip",
+          "Quality": "0.000023462612"
+        }
+      ],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "42620"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"CyrMNKqZSMw1VMRmM82AqkcDIqcXUc3YTgJQAOZg4Bc=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sun, 20 Jul 2025 08:09:16 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        },
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip"
+        },
+        {
+          "Name": "Vary",
+          "Value": "Content-Encoding"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/wasm"
+        },
+        {
+          "Name": "ETag",
+          "Value": "W/\"/XC+TlU2XX6E2tGkmrCDnUri6qyIvflcibI0gtlXhzw=\""
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-/XC+TlU2XX6E2tGkmrCDnUri6qyIvflcibI0gtlXhzw="
+        }
+      ]
+    },
+    {
+      "Route": "_framework/Microsoft.AspNetCore.Http.Connections.Client.wasm.gz",
+      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/p2hq1eif4w-ria3b3yh7v.gz",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "42620"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/wasm"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"CyrMNKqZSMw1VMRmM82AqkcDIqcXUc3YTgJQAOZg4Bc=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sun, 20 Jul 2025 08:09:16 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        },
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip"
+        },
+        {
+          "Name": "Vary",
+          "Value": "Content-Encoding"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-CyrMNKqZSMw1VMRmM82AqkcDIqcXUc3YTgJQAOZg4Bc="
+        }
+      ]
+    },
+    {
+      "Route": "_framework/Microsoft.AspNetCore.Http.Connections.Common.wasm",
+      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/bin/Debug/net9.0/wwwroot/_framework/Microsoft.AspNetCore.Http.Connections.Common.wasm",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "18709"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/wasm"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"ybSlmndApBb07LeKP8ZYrC9jyKmmOQRchEx1aN208KM=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sun, 20 Jul 2025 08:08:56 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-ybSlmndApBb07LeKP8ZYrC9jyKmmOQRchEx1aN208KM="
+        }
+      ]
+    },
+    {
+      "Route": "_framework/Microsoft.AspNetCore.Http.Connections.Common.wasm",
+      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/jygc4odg8l-zdonk3bxxf.gz",
+      "Selectors": [
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip",
+          "Quality": "0.000119760479"
+        }
+      ],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "8349"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"biDehUPQWH8icxB3C5nMS11GwLl6AqUhZjfueOTquDk=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sun, 20 Jul 2025 08:09:16 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        },
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip"
+        },
+        {
+          "Name": "Vary",
+          "Value": "Content-Encoding"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/wasm"
+        },
+        {
+          "Name": "ETag",
+          "Value": "W/\"ybSlmndApBb07LeKP8ZYrC9jyKmmOQRchEx1aN208KM=\""
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-ybSlmndApBb07LeKP8ZYrC9jyKmmOQRchEx1aN208KM="
+        }
+      ]
+    },
+    {
+      "Route": "_framework/Microsoft.AspNetCore.Http.Connections.Common.wasm.gz",
+      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/jygc4odg8l-zdonk3bxxf.gz",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "8349"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/wasm"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"biDehUPQWH8icxB3C5nMS11GwLl6AqUhZjfueOTquDk=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sun, 20 Jul 2025 08:09:16 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        },
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip"
+        },
+        {
+          "Name": "Vary",
+          "Value": "Content-Encoding"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-biDehUPQWH8icxB3C5nMS11GwLl6AqUhZjfueOTquDk="
+        }
+      ]
+    },
+    {
+      "Route": "_framework/Microsoft.AspNetCore.Http.Connections.Common.zdonk3bxxf.wasm",
+      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/bin/Debug/net9.0/wwwroot/_framework/Microsoft.AspNetCore.Http.Connections.Common.wasm",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "18709"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/wasm"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"ybSlmndApBb07LeKP8ZYrC9jyKmmOQRchEx1aN208KM=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sun, 20 Jul 2025 08:08:56 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "zdonk3bxxf"
+        },
+        {
+          "Name": "label",
+          "Value": "_framework/Microsoft.AspNetCore.Http.Connections.Common.wasm"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-ybSlmndApBb07LeKP8ZYrC9jyKmmOQRchEx1aN208KM="
+        }
+      ]
+    },
+    {
+      "Route": "_framework/Microsoft.AspNetCore.Http.Connections.Common.zdonk3bxxf.wasm",
+      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/jygc4odg8l-zdonk3bxxf.gz",
+      "Selectors": [
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip",
+          "Quality": "0.000119760479"
+        }
+      ],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "8349"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"biDehUPQWH8icxB3C5nMS11GwLl6AqUhZjfueOTquDk=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sun, 20 Jul 2025 08:09:16 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip"
+        },
+        {
+          "Name": "Vary",
+          "Value": "Content-Encoding"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/wasm"
+        },
+        {
+          "Name": "ETag",
+          "Value": "W/\"ybSlmndApBb07LeKP8ZYrC9jyKmmOQRchEx1aN208KM=\""
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "zdonk3bxxf"
+        },
+        {
+          "Name": "label",
+          "Value": "_framework/Microsoft.AspNetCore.Http.Connections.Common.wasm"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-ybSlmndApBb07LeKP8ZYrC9jyKmmOQRchEx1aN208KM="
+        }
+      ]
+    },
+    {
+      "Route": "_framework/Microsoft.AspNetCore.Http.Connections.Common.zdonk3bxxf.wasm.gz",
+      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/jygc4odg8l-zdonk3bxxf.gz",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "8349"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/wasm"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"biDehUPQWH8icxB3C5nMS11GwLl6AqUhZjfueOTquDk=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sun, 20 Jul 2025 08:09:16 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip"
+        },
+        {
+          "Name": "Vary",
+          "Value": "Content-Encoding"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "zdonk3bxxf"
+        },
+        {
+          "Name": "label",
+          "Value": "_framework/Microsoft.AspNetCore.Http.Connections.Common.wasm.gz"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-biDehUPQWH8icxB3C5nMS11GwLl6AqUhZjfueOTquDk="
+        }
+      ]
+    },
+    {
       "Route": "_framework/Microsoft.AspNetCore.Metadata.kwdybu2ptu.wasm",
       "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/bin/Debug/net9.0/wwwroot/_framework/Microsoft.AspNetCore.Metadata.wasm",
       "Selectors": [],
@@ -16681,6 +17953,1198 @@
         {
           "Name": "integrity",
           "Value": "sha256-iuY+nB/F0kyrrwYWIzDeBnl6+wsmE78vDF0Ltsrn+T0="
+        }
+      ]
+    },
+    {
+      "Route": "_framework/Microsoft.AspNetCore.SignalR.Client.Core.dets1m3r3l.wasm",
+      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/bin/Debug/net9.0/wwwroot/_framework/Microsoft.AspNetCore.SignalR.Client.Core.wasm",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "198933"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/wasm"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"K9PyPf9AzfvwzF2sDTofDAfTkL7r34AzTloWET6vdlk=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sun, 20 Jul 2025 08:08:57 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "dets1m3r3l"
+        },
+        {
+          "Name": "label",
+          "Value": "_framework/Microsoft.AspNetCore.SignalR.Client.Core.wasm"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-K9PyPf9AzfvwzF2sDTofDAfTkL7r34AzTloWET6vdlk="
+        }
+      ]
+    },
+    {
+      "Route": "_framework/Microsoft.AspNetCore.SignalR.Client.Core.dets1m3r3l.wasm",
+      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/em6k1kq9p6-dets1m3r3l.gz",
+      "Selectors": [
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip",
+          "Quality": "0.000013372917"
+        }
+      ],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "74777"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"f522STIiNE9LJGDeyGL0Pn29uWxS3DiFHVSNKGECHIQ=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sun, 20 Jul 2025 08:09:16 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip"
+        },
+        {
+          "Name": "Vary",
+          "Value": "Content-Encoding"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/wasm"
+        },
+        {
+          "Name": "ETag",
+          "Value": "W/\"K9PyPf9AzfvwzF2sDTofDAfTkL7r34AzTloWET6vdlk=\""
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "dets1m3r3l"
+        },
+        {
+          "Name": "label",
+          "Value": "_framework/Microsoft.AspNetCore.SignalR.Client.Core.wasm"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-K9PyPf9AzfvwzF2sDTofDAfTkL7r34AzTloWET6vdlk="
+        }
+      ]
+    },
+    {
+      "Route": "_framework/Microsoft.AspNetCore.SignalR.Client.Core.dets1m3r3l.wasm.gz",
+      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/em6k1kq9p6-dets1m3r3l.gz",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "74777"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/wasm"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"f522STIiNE9LJGDeyGL0Pn29uWxS3DiFHVSNKGECHIQ=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sun, 20 Jul 2025 08:09:16 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip"
+        },
+        {
+          "Name": "Vary",
+          "Value": "Content-Encoding"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "dets1m3r3l"
+        },
+        {
+          "Name": "label",
+          "Value": "_framework/Microsoft.AspNetCore.SignalR.Client.Core.wasm.gz"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-f522STIiNE9LJGDeyGL0Pn29uWxS3DiFHVSNKGECHIQ="
+        }
+      ]
+    },
+    {
+      "Route": "_framework/Microsoft.AspNetCore.SignalR.Client.Core.wasm",
+      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/bin/Debug/net9.0/wwwroot/_framework/Microsoft.AspNetCore.SignalR.Client.Core.wasm",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "198933"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/wasm"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"K9PyPf9AzfvwzF2sDTofDAfTkL7r34AzTloWET6vdlk=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sun, 20 Jul 2025 08:08:57 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-K9PyPf9AzfvwzF2sDTofDAfTkL7r34AzTloWET6vdlk="
+        }
+      ]
+    },
+    {
+      "Route": "_framework/Microsoft.AspNetCore.SignalR.Client.Core.wasm",
+      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/em6k1kq9p6-dets1m3r3l.gz",
+      "Selectors": [
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip",
+          "Quality": "0.000013372917"
+        }
+      ],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "74777"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"f522STIiNE9LJGDeyGL0Pn29uWxS3DiFHVSNKGECHIQ=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sun, 20 Jul 2025 08:09:16 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        },
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip"
+        },
+        {
+          "Name": "Vary",
+          "Value": "Content-Encoding"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/wasm"
+        },
+        {
+          "Name": "ETag",
+          "Value": "W/\"K9PyPf9AzfvwzF2sDTofDAfTkL7r34AzTloWET6vdlk=\""
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-K9PyPf9AzfvwzF2sDTofDAfTkL7r34AzTloWET6vdlk="
+        }
+      ]
+    },
+    {
+      "Route": "_framework/Microsoft.AspNetCore.SignalR.Client.Core.wasm.gz",
+      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/em6k1kq9p6-dets1m3r3l.gz",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "74777"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/wasm"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"f522STIiNE9LJGDeyGL0Pn29uWxS3DiFHVSNKGECHIQ=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sun, 20 Jul 2025 08:09:16 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        },
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip"
+        },
+        {
+          "Name": "Vary",
+          "Value": "Content-Encoding"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-f522STIiNE9LJGDeyGL0Pn29uWxS3DiFHVSNKGECHIQ="
+        }
+      ]
+    },
+    {
+      "Route": "_framework/Microsoft.AspNetCore.SignalR.Client.sjz384hi2d.wasm",
+      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/bin/Debug/net9.0/wwwroot/_framework/Microsoft.AspNetCore.SignalR.Client.wasm",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "10005"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/wasm"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"uP6wjZKQ4aI5RFU5zqomJm52mK2PVOjvDVVZyVOl6Q8=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sun, 20 Jul 2025 08:08:57 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "sjz384hi2d"
+        },
+        {
+          "Name": "label",
+          "Value": "_framework/Microsoft.AspNetCore.SignalR.Client.wasm"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-uP6wjZKQ4aI5RFU5zqomJm52mK2PVOjvDVVZyVOl6Q8="
+        }
+      ]
+    },
+    {
+      "Route": "_framework/Microsoft.AspNetCore.SignalR.Client.sjz384hi2d.wasm",
+      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/yltqgl3el0-sjz384hi2d.gz",
+      "Selectors": [
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip",
+          "Quality": "0.000226142017"
+        }
+      ],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "4421"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"Dx+3bsCkhK6YTYWv1dtWCt8i/Axu5JsWV067mB1CMSU=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sun, 20 Jul 2025 08:09:16 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip"
+        },
+        {
+          "Name": "Vary",
+          "Value": "Content-Encoding"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/wasm"
+        },
+        {
+          "Name": "ETag",
+          "Value": "W/\"uP6wjZKQ4aI5RFU5zqomJm52mK2PVOjvDVVZyVOl6Q8=\""
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "sjz384hi2d"
+        },
+        {
+          "Name": "label",
+          "Value": "_framework/Microsoft.AspNetCore.SignalR.Client.wasm"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-uP6wjZKQ4aI5RFU5zqomJm52mK2PVOjvDVVZyVOl6Q8="
+        }
+      ]
+    },
+    {
+      "Route": "_framework/Microsoft.AspNetCore.SignalR.Client.sjz384hi2d.wasm.gz",
+      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/yltqgl3el0-sjz384hi2d.gz",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "4421"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/wasm"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"Dx+3bsCkhK6YTYWv1dtWCt8i/Axu5JsWV067mB1CMSU=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sun, 20 Jul 2025 08:09:16 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip"
+        },
+        {
+          "Name": "Vary",
+          "Value": "Content-Encoding"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "sjz384hi2d"
+        },
+        {
+          "Name": "label",
+          "Value": "_framework/Microsoft.AspNetCore.SignalR.Client.wasm.gz"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-Dx+3bsCkhK6YTYWv1dtWCt8i/Axu5JsWV067mB1CMSU="
+        }
+      ]
+    },
+    {
+      "Route": "_framework/Microsoft.AspNetCore.SignalR.Client.wasm",
+      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/bin/Debug/net9.0/wwwroot/_framework/Microsoft.AspNetCore.SignalR.Client.wasm",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "10005"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/wasm"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"uP6wjZKQ4aI5RFU5zqomJm52mK2PVOjvDVVZyVOl6Q8=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sun, 20 Jul 2025 08:08:57 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-uP6wjZKQ4aI5RFU5zqomJm52mK2PVOjvDVVZyVOl6Q8="
+        }
+      ]
+    },
+    {
+      "Route": "_framework/Microsoft.AspNetCore.SignalR.Client.wasm",
+      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/yltqgl3el0-sjz384hi2d.gz",
+      "Selectors": [
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip",
+          "Quality": "0.000226142017"
+        }
+      ],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "4421"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"Dx+3bsCkhK6YTYWv1dtWCt8i/Axu5JsWV067mB1CMSU=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sun, 20 Jul 2025 08:09:16 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        },
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip"
+        },
+        {
+          "Name": "Vary",
+          "Value": "Content-Encoding"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/wasm"
+        },
+        {
+          "Name": "ETag",
+          "Value": "W/\"uP6wjZKQ4aI5RFU5zqomJm52mK2PVOjvDVVZyVOl6Q8=\""
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-uP6wjZKQ4aI5RFU5zqomJm52mK2PVOjvDVVZyVOl6Q8="
+        }
+      ]
+    },
+    {
+      "Route": "_framework/Microsoft.AspNetCore.SignalR.Client.wasm.gz",
+      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/yltqgl3el0-sjz384hi2d.gz",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "4421"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/wasm"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"Dx+3bsCkhK6YTYWv1dtWCt8i/Axu5JsWV067mB1CMSU=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sun, 20 Jul 2025 08:09:16 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        },
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip"
+        },
+        {
+          "Name": "Vary",
+          "Value": "Content-Encoding"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-Dx+3bsCkhK6YTYWv1dtWCt8i/Axu5JsWV067mB1CMSU="
+        }
+      ]
+    },
+    {
+      "Route": "_framework/Microsoft.AspNetCore.SignalR.Common.vkcfi4fj3v.wasm",
+      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/bin/Debug/net9.0/wwwroot/_framework/Microsoft.AspNetCore.SignalR.Common.wasm",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "32533"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/wasm"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"kYDNegPxemOTOh3A+aYV8HFuFV9TyyW+5onD0EboF28=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sun, 20 Jul 2025 08:08:57 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "vkcfi4fj3v"
+        },
+        {
+          "Name": "label",
+          "Value": "_framework/Microsoft.AspNetCore.SignalR.Common.wasm"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-kYDNegPxemOTOh3A+aYV8HFuFV9TyyW+5onD0EboF28="
+        }
+      ]
+    },
+    {
+      "Route": "_framework/Microsoft.AspNetCore.SignalR.Common.vkcfi4fj3v.wasm",
+      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/gppyqp3e34-vkcfi4fj3v.gz",
+      "Selectors": [
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip",
+          "Quality": "0.000066401062"
+        }
+      ],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "15059"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"UoPsuuLauFce9kyTcYmA9+TShIZxLxHFOLOWkOOrqa4=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sun, 20 Jul 2025 08:09:16 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip"
+        },
+        {
+          "Name": "Vary",
+          "Value": "Content-Encoding"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/wasm"
+        },
+        {
+          "Name": "ETag",
+          "Value": "W/\"kYDNegPxemOTOh3A+aYV8HFuFV9TyyW+5onD0EboF28=\""
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "vkcfi4fj3v"
+        },
+        {
+          "Name": "label",
+          "Value": "_framework/Microsoft.AspNetCore.SignalR.Common.wasm"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-kYDNegPxemOTOh3A+aYV8HFuFV9TyyW+5onD0EboF28="
+        }
+      ]
+    },
+    {
+      "Route": "_framework/Microsoft.AspNetCore.SignalR.Common.vkcfi4fj3v.wasm.gz",
+      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/gppyqp3e34-vkcfi4fj3v.gz",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "15059"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/wasm"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"UoPsuuLauFce9kyTcYmA9+TShIZxLxHFOLOWkOOrqa4=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sun, 20 Jul 2025 08:09:16 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip"
+        },
+        {
+          "Name": "Vary",
+          "Value": "Content-Encoding"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "vkcfi4fj3v"
+        },
+        {
+          "Name": "label",
+          "Value": "_framework/Microsoft.AspNetCore.SignalR.Common.wasm.gz"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-UoPsuuLauFce9kyTcYmA9+TShIZxLxHFOLOWkOOrqa4="
+        }
+      ]
+    },
+    {
+      "Route": "_framework/Microsoft.AspNetCore.SignalR.Common.wasm",
+      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/bin/Debug/net9.0/wwwroot/_framework/Microsoft.AspNetCore.SignalR.Common.wasm",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "32533"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/wasm"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"kYDNegPxemOTOh3A+aYV8HFuFV9TyyW+5onD0EboF28=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sun, 20 Jul 2025 08:08:57 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-kYDNegPxemOTOh3A+aYV8HFuFV9TyyW+5onD0EboF28="
+        }
+      ]
+    },
+    {
+      "Route": "_framework/Microsoft.AspNetCore.SignalR.Common.wasm",
+      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/gppyqp3e34-vkcfi4fj3v.gz",
+      "Selectors": [
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip",
+          "Quality": "0.000066401062"
+        }
+      ],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "15059"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"UoPsuuLauFce9kyTcYmA9+TShIZxLxHFOLOWkOOrqa4=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sun, 20 Jul 2025 08:09:16 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        },
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip"
+        },
+        {
+          "Name": "Vary",
+          "Value": "Content-Encoding"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/wasm"
+        },
+        {
+          "Name": "ETag",
+          "Value": "W/\"kYDNegPxemOTOh3A+aYV8HFuFV9TyyW+5onD0EboF28=\""
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-kYDNegPxemOTOh3A+aYV8HFuFV9TyyW+5onD0EboF28="
+        }
+      ]
+    },
+    {
+      "Route": "_framework/Microsoft.AspNetCore.SignalR.Common.wasm.gz",
+      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/gppyqp3e34-vkcfi4fj3v.gz",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "15059"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/wasm"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"UoPsuuLauFce9kyTcYmA9+TShIZxLxHFOLOWkOOrqa4=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sun, 20 Jul 2025 08:09:16 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        },
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip"
+        },
+        {
+          "Name": "Vary",
+          "Value": "Content-Encoding"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-UoPsuuLauFce9kyTcYmA9+TShIZxLxHFOLOWkOOrqa4="
+        }
+      ]
+    },
+    {
+      "Route": "_framework/Microsoft.AspNetCore.SignalR.Protocols.Json.h1gc7obt0j.wasm",
+      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/bin/Debug/net9.0/wwwroot/_framework/Microsoft.AspNetCore.SignalR.Protocols.Json.wasm",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "27925"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/wasm"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"NZNq5RE6uLxnG2MFWybRU9ppw8ENfyb3n81BqLYtGQk=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sun, 20 Jul 2025 08:08:57 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "h1gc7obt0j"
+        },
+        {
+          "Name": "label",
+          "Value": "_framework/Microsoft.AspNetCore.SignalR.Protocols.Json.wasm"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-NZNq5RE6uLxnG2MFWybRU9ppw8ENfyb3n81BqLYtGQk="
+        }
+      ]
+    },
+    {
+      "Route": "_framework/Microsoft.AspNetCore.SignalR.Protocols.Json.h1gc7obt0j.wasm",
+      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/i0ck0n24f1-h1gc7obt0j.gz",
+      "Selectors": [
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip",
+          "Quality": "0.000076751861"
+        }
+      ],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "13028"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"EpzeUv1Eu5KLKCL66m8rNz9b+KXOj41VIcbiExKdSZA=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sun, 20 Jul 2025 08:09:16 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip"
+        },
+        {
+          "Name": "Vary",
+          "Value": "Content-Encoding"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/wasm"
+        },
+        {
+          "Name": "ETag",
+          "Value": "W/\"NZNq5RE6uLxnG2MFWybRU9ppw8ENfyb3n81BqLYtGQk=\""
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "h1gc7obt0j"
+        },
+        {
+          "Name": "label",
+          "Value": "_framework/Microsoft.AspNetCore.SignalR.Protocols.Json.wasm"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-NZNq5RE6uLxnG2MFWybRU9ppw8ENfyb3n81BqLYtGQk="
+        }
+      ]
+    },
+    {
+      "Route": "_framework/Microsoft.AspNetCore.SignalR.Protocols.Json.h1gc7obt0j.wasm.gz",
+      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/i0ck0n24f1-h1gc7obt0j.gz",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "13028"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/wasm"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"EpzeUv1Eu5KLKCL66m8rNz9b+KXOj41VIcbiExKdSZA=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sun, 20 Jul 2025 08:09:16 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip"
+        },
+        {
+          "Name": "Vary",
+          "Value": "Content-Encoding"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "h1gc7obt0j"
+        },
+        {
+          "Name": "label",
+          "Value": "_framework/Microsoft.AspNetCore.SignalR.Protocols.Json.wasm.gz"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-EpzeUv1Eu5KLKCL66m8rNz9b+KXOj41VIcbiExKdSZA="
+        }
+      ]
+    },
+    {
+      "Route": "_framework/Microsoft.AspNetCore.SignalR.Protocols.Json.wasm",
+      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/bin/Debug/net9.0/wwwroot/_framework/Microsoft.AspNetCore.SignalR.Protocols.Json.wasm",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "27925"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/wasm"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"NZNq5RE6uLxnG2MFWybRU9ppw8ENfyb3n81BqLYtGQk=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sun, 20 Jul 2025 08:08:57 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-NZNq5RE6uLxnG2MFWybRU9ppw8ENfyb3n81BqLYtGQk="
+        }
+      ]
+    },
+    {
+      "Route": "_framework/Microsoft.AspNetCore.SignalR.Protocols.Json.wasm",
+      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/i0ck0n24f1-h1gc7obt0j.gz",
+      "Selectors": [
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip",
+          "Quality": "0.000076751861"
+        }
+      ],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "13028"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"EpzeUv1Eu5KLKCL66m8rNz9b+KXOj41VIcbiExKdSZA=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sun, 20 Jul 2025 08:09:16 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        },
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip"
+        },
+        {
+          "Name": "Vary",
+          "Value": "Content-Encoding"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/wasm"
+        },
+        {
+          "Name": "ETag",
+          "Value": "W/\"NZNq5RE6uLxnG2MFWybRU9ppw8ENfyb3n81BqLYtGQk=\""
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-NZNq5RE6uLxnG2MFWybRU9ppw8ENfyb3n81BqLYtGQk="
+        }
+      ]
+    },
+    {
+      "Route": "_framework/Microsoft.AspNetCore.SignalR.Protocols.Json.wasm.gz",
+      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/i0ck0n24f1-h1gc7obt0j.gz",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "13028"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/wasm"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"EpzeUv1Eu5KLKCL66m8rNz9b+KXOj41VIcbiExKdSZA=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sun, 20 Jul 2025 08:09:16 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        },
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip"
+        },
+        {
+          "Name": "Vary",
+          "Value": "Content-Encoding"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-EpzeUv1Eu5KLKCL66m8rNz9b+KXOj41VIcbiExKdSZA="
         }
       ]
     },
@@ -19065,6 +21529,304 @@
         {
           "Name": "integrity",
           "Value": "sha256-HnhjfC+Teg1m0qxjt2hGCkkbOIVxKwr2+u3nrThbyLI="
+        }
+      ]
+    },
+    {
+      "Route": "_framework/Microsoft.Extensions.Features.j2y3j59j12.wasm",
+      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/bin/Debug/net9.0/wwwroot/_framework/Microsoft.Extensions.Features.wasm",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "16149"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/wasm"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"xbmhIB8qt+7seSkmxTpmM/Db1rsIGfyNRefCRKNSnNQ=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sun, 20 Jul 2025 08:08:57 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "j2y3j59j12"
+        },
+        {
+          "Name": "label",
+          "Value": "_framework/Microsoft.Extensions.Features.wasm"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-xbmhIB8qt+7seSkmxTpmM/Db1rsIGfyNRefCRKNSnNQ="
+        }
+      ]
+    },
+    {
+      "Route": "_framework/Microsoft.Extensions.Features.j2y3j59j12.wasm",
+      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/c1yb4dpuks-j2y3j59j12.gz",
+      "Selectors": [
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip",
+          "Quality": "0.000137155397"
+        }
+      ],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "7290"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"1lW4Jg262IzfkWobpmU1nJFIdABM+hTzmOcPsbpxu6M=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sun, 20 Jul 2025 08:09:16 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip"
+        },
+        {
+          "Name": "Vary",
+          "Value": "Content-Encoding"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/wasm"
+        },
+        {
+          "Name": "ETag",
+          "Value": "W/\"xbmhIB8qt+7seSkmxTpmM/Db1rsIGfyNRefCRKNSnNQ=\""
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "j2y3j59j12"
+        },
+        {
+          "Name": "label",
+          "Value": "_framework/Microsoft.Extensions.Features.wasm"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-xbmhIB8qt+7seSkmxTpmM/Db1rsIGfyNRefCRKNSnNQ="
+        }
+      ]
+    },
+    {
+      "Route": "_framework/Microsoft.Extensions.Features.j2y3j59j12.wasm.gz",
+      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/c1yb4dpuks-j2y3j59j12.gz",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "7290"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/wasm"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"1lW4Jg262IzfkWobpmU1nJFIdABM+hTzmOcPsbpxu6M=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sun, 20 Jul 2025 08:09:16 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip"
+        },
+        {
+          "Name": "Vary",
+          "Value": "Content-Encoding"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "j2y3j59j12"
+        },
+        {
+          "Name": "label",
+          "Value": "_framework/Microsoft.Extensions.Features.wasm.gz"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-1lW4Jg262IzfkWobpmU1nJFIdABM+hTzmOcPsbpxu6M="
+        }
+      ]
+    },
+    {
+      "Route": "_framework/Microsoft.Extensions.Features.wasm",
+      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/bin/Debug/net9.0/wwwroot/_framework/Microsoft.Extensions.Features.wasm",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "16149"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/wasm"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"xbmhIB8qt+7seSkmxTpmM/Db1rsIGfyNRefCRKNSnNQ=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sun, 20 Jul 2025 08:08:57 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-xbmhIB8qt+7seSkmxTpmM/Db1rsIGfyNRefCRKNSnNQ="
+        }
+      ]
+    },
+    {
+      "Route": "_framework/Microsoft.Extensions.Features.wasm",
+      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/c1yb4dpuks-j2y3j59j12.gz",
+      "Selectors": [
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip",
+          "Quality": "0.000137155397"
+        }
+      ],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "7290"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"1lW4Jg262IzfkWobpmU1nJFIdABM+hTzmOcPsbpxu6M=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sun, 20 Jul 2025 08:09:16 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        },
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip"
+        },
+        {
+          "Name": "Vary",
+          "Value": "Content-Encoding"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/wasm"
+        },
+        {
+          "Name": "ETag",
+          "Value": "W/\"xbmhIB8qt+7seSkmxTpmM/Db1rsIGfyNRefCRKNSnNQ=\""
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-xbmhIB8qt+7seSkmxTpmM/Db1rsIGfyNRefCRKNSnNQ="
+        }
+      ]
+    },
+    {
+      "Route": "_framework/Microsoft.Extensions.Features.wasm.gz",
+      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/c1yb4dpuks-j2y3j59j12.gz",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "7290"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/wasm"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"1lW4Jg262IzfkWobpmU1nJFIdABM+hTzmOcPsbpxu6M=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sun, 20 Jul 2025 08:09:16 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        },
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip"
+        },
+        {
+          "Name": "Vary",
+          "Value": "Content-Encoding"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-1lW4Jg262IzfkWobpmU1nJFIdABM+hTzmOcPsbpxu6M="
         }
       ]
     },
@@ -46803,6 +49565,304 @@
         {
           "Name": "integrity",
           "Value": "sha256-FVe3R9TxQq735iaPrCGYKcvxr0OH4X4A9NK5EyDdpvY="
+        }
+      ]
+    },
+    {
+      "Route": "_framework/System.Net.ServerSentEvents.fe9u1w2puz.wasm",
+      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/bin/Debug/net9.0/wwwroot/_framework/System.Net.ServerSentEvents.wasm",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "24341"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/wasm"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"FwzA5yz/f/RvolvQADdjt0rQZfcnPU0WH8CVRshVeI4=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sun, 20 Jul 2025 08:08:57 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "fe9u1w2puz"
+        },
+        {
+          "Name": "label",
+          "Value": "_framework/System.Net.ServerSentEvents.wasm"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-FwzA5yz/f/RvolvQADdjt0rQZfcnPU0WH8CVRshVeI4="
+        }
+      ]
+    },
+    {
+      "Route": "_framework/System.Net.ServerSentEvents.fe9u1w2puz.wasm",
+      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/e3q2mhjxrr-fe9u1w2puz.gz",
+      "Selectors": [
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip",
+          "Quality": "0.000085660442"
+        }
+      ],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "11673"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"GXM28cT7afnYpLBA1nrcPOwHY3E9aHRtEY59E5ii8dk=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sun, 20 Jul 2025 08:09:16 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip"
+        },
+        {
+          "Name": "Vary",
+          "Value": "Content-Encoding"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/wasm"
+        },
+        {
+          "Name": "ETag",
+          "Value": "W/\"FwzA5yz/f/RvolvQADdjt0rQZfcnPU0WH8CVRshVeI4=\""
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "fe9u1w2puz"
+        },
+        {
+          "Name": "label",
+          "Value": "_framework/System.Net.ServerSentEvents.wasm"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-FwzA5yz/f/RvolvQADdjt0rQZfcnPU0WH8CVRshVeI4="
+        }
+      ]
+    },
+    {
+      "Route": "_framework/System.Net.ServerSentEvents.fe9u1w2puz.wasm.gz",
+      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/e3q2mhjxrr-fe9u1w2puz.gz",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "11673"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/wasm"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"GXM28cT7afnYpLBA1nrcPOwHY3E9aHRtEY59E5ii8dk=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sun, 20 Jul 2025 08:09:16 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip"
+        },
+        {
+          "Name": "Vary",
+          "Value": "Content-Encoding"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "fe9u1w2puz"
+        },
+        {
+          "Name": "label",
+          "Value": "_framework/System.Net.ServerSentEvents.wasm.gz"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-GXM28cT7afnYpLBA1nrcPOwHY3E9aHRtEY59E5ii8dk="
+        }
+      ]
+    },
+    {
+      "Route": "_framework/System.Net.ServerSentEvents.wasm",
+      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/bin/Debug/net9.0/wwwroot/_framework/System.Net.ServerSentEvents.wasm",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "24341"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/wasm"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"FwzA5yz/f/RvolvQADdjt0rQZfcnPU0WH8CVRshVeI4=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sun, 20 Jul 2025 08:08:57 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-FwzA5yz/f/RvolvQADdjt0rQZfcnPU0WH8CVRshVeI4="
+        }
+      ]
+    },
+    {
+      "Route": "_framework/System.Net.ServerSentEvents.wasm",
+      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/e3q2mhjxrr-fe9u1w2puz.gz",
+      "Selectors": [
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip",
+          "Quality": "0.000085660442"
+        }
+      ],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "11673"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"GXM28cT7afnYpLBA1nrcPOwHY3E9aHRtEY59E5ii8dk=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sun, 20 Jul 2025 08:09:16 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        },
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip"
+        },
+        {
+          "Name": "Vary",
+          "Value": "Content-Encoding"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/wasm"
+        },
+        {
+          "Name": "ETag",
+          "Value": "W/\"FwzA5yz/f/RvolvQADdjt0rQZfcnPU0WH8CVRshVeI4=\""
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-FwzA5yz/f/RvolvQADdjt0rQZfcnPU0WH8CVRshVeI4="
+        }
+      ]
+    },
+    {
+      "Route": "_framework/System.Net.ServerSentEvents.wasm.gz",
+      "AssetFile": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/e3q2mhjxrr-fe9u1w2puz.gz",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "11673"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/wasm"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"GXM28cT7afnYpLBA1nrcPOwHY3E9aHRtEY59E5ii8dk=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sun, 20 Jul 2025 08:09:16 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        },
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip"
+        },
+        {
+          "Name": "Vary",
+          "Value": "Content-Encoding"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-GXM28cT7afnYpLBA1nrcPOwHY3E9aHRtEY59E5ii8dk="
         }
       ]
     },

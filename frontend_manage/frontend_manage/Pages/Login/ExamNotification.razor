@@ -1,6 +1,44 @@
-@page "/ExamNotification"
-<h3>ExamNotification</h3>
+@using frontend_manage.Services
+@inject NotificationService NotificationService
+
+<div class="alert alert-info" role="alert" style="position:fixed; top:10px; right:10px;" hidden="@(!showNotification)">
+    <strong>@message</strong><br />
+    Giờ thi: @examTime.ToString("HH:mm dd/MM/yyyy")
+</div>
 
 @code {
-    
+    private string message;
+    private DateTime examTime;
+    private bool showNotification;
+
+    protected override async Task OnInitializedAsync()
+    {
+        NotificationService.OnExamReminderReceived += (msg, time) =>
+        {
+            message = msg;
+            examTime = time;
+            showNotification = true;
+
+            StateHasChanged();
+
+            _ = HideAfterDelay();
+        };
+
+        try
+        {
+            await NotificationService.StartAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Lỗi kết nối SignalR: {ex.Message}");
+            // Có thể show thông báo UI nếu muốn
+        }
+    }
+
+    private async Task HideAfterDelay()
+    {
+        await Task.Delay(10000); // ẩn sau 10 giây
+        showNotification = false;
+        StateHasChanged();
+    }
 }
