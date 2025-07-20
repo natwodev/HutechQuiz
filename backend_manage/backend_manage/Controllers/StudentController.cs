@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using OfficeOpenXml;
 using System.IO;
 using System.Linq;
+using System.Security.Claims;
 
 namespace backend_manage.Controllers;
 
@@ -44,6 +45,30 @@ public class StudentController : ControllerBase
         var student = await _studentService.GetByStudentCodeAsync(studentCode);
         if (student == null) return NotFound();
         return Ok(student);
+    }
+    
+    
+    // GET: api/students/profile
+    [HttpGet("profile")]
+    public async Task<ActionResult<StudentDto>> GetProfile()
+    {
+        try
+        {
+            var studentCode = User.FindFirst("studentCode")?.Value;
+            if (string.IsNullOrEmpty(studentCode))
+                return Unauthorized(new { message = "Token không hợp lệ!" });
+
+            var student = await _studentService.GetByStudentCodeAsync(studentCode);
+            return Ok(student);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 }
 
