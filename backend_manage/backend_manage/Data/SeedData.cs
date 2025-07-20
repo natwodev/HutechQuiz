@@ -302,6 +302,7 @@ namespace backend_manage.Data
                         {
                             ExamSessionDepartmentId = cnttSessionDept.ExamSessionDepartmentId,
                             SubjectId = cnttSubject.SubjectId,
+                            ExamSessionSubjectCore = $"{cnttSubject.SubjectCore}-{now:yyyyMMddHHmmss}",
                             CreatedBy = "seed",
                             CreatedAt = now,
                             IsDeleted = false,
@@ -313,6 +314,7 @@ namespace backend_manage.Data
                         {
                             ExamSessionDepartmentId = kinhteSessionDept.ExamSessionDepartmentId,
                             SubjectId = kinhteSubject.SubjectId,
+                            ExamSessionSubjectCore = $"{kinhteSubject.SubjectCore}-{now:yyyyMMddHHmmss}",
                             CreatedBy = "seed",
                             CreatedAt = now,
                             IsDeleted = false,

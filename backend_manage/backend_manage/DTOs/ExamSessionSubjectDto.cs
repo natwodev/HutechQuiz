@@ -14,6 +14,7 @@ namespace backend_manage.DTOs
         public bool IsCompleted { get; set; }
         public DateTime StartTime { get; set; }
         public DateTime? EndTime { get; set; }
+        public string ExamSessionSubjectCore { get; set; }
     }
 
     public class ExamSessionSubjectCreateDto
@@ -25,6 +26,7 @@ namespace backend_manage.DTOs
         public bool IsCompleted { get; set; }
         public DateTime StartTime { get; set; }
         public DateTime? EndTime { get; set; }
+        public string ExamSessionSubjectCore { get; set; }
     }
 
     public class ExamSessionSubjectUpdateDto
@@ -36,5 +38,6 @@ namespace backend_manage.DTOs
         public bool IsCompleted { get; set; }
         public DateTime StartTime { get; set; }
         public DateTime? EndTime { get; set; }
+        public string ExamSessionSubjectCore { get; set; }
     }
 } 

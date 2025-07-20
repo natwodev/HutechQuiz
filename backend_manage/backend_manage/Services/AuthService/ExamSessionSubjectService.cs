@@ -50,6 +50,10 @@ namespace backend_manage.Services.AuthService
         {
             var entity = _mapper.Map<ExamSessionSubject>(dto);
             entity.EndTime = entity.StartTime.AddMinutes(entity.Duration);
+            if (string.IsNullOrEmpty(entity.ExamSessionSubjectCore))
+            {
+                entity.ExamSessionSubjectCore = $"ESS-{entity.SubjectId}-{DateTimeHelper.GetVietnamTime():yyyyMMddHHmmss}";
+            }
             var userId = _httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(userId))
                 throw new UnauthorizedAccessException("Không thể xác định người dùng tạo ExamSessionSubject.");

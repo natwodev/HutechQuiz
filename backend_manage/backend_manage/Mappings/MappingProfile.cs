@@ -85,7 +85,8 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.SubjectName, opt => opt.MapFrom(src => src.Subject != null ? src.Subject.SubjectName : null))
             .ForMember(dest => dest.OriginalExamPaperTitle, opt => opt.MapFrom(src => src.OriginalExamPaper != null ? src.OriginalExamPaper.Title : null))
             .ForMember(dest => dest.StartTime, opt => opt.MapFrom(src => src.StartTime))
-            .ForMember(dest => dest.EndTime, opt => opt.MapFrom(src => src.EndTime));
+            .ForMember(dest => dest.EndTime, opt => opt.MapFrom(src => src.EndTime))
+            .ForMember(dest => dest.ExamSessionSubjectCore, opt => opt.MapFrom(src => src.ExamSessionSubjectCore));
         CreateMap<ExamSessionSubjectCreateDto, ExamSessionSubject>();
         CreateMap<ExamSessionSubjectUpdateDto, ExamSessionSubject>();
 
