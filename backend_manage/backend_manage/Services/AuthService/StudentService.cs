@@ -181,16 +181,24 @@ public class StudentService : IStudentService
             }
         }
         // Lấy danh sách StudentCode đã tồn tại
-        var existingStudentCodes = (await _repository.GetAllAsync()).Select(s => s.StudentCode).ToHashSet();
+        var existingStudents = (await _repository.GetAllAsync()).ToDictionary(s => s.StudentCode);
         int addedCount = 0;
         foreach (var student in students)
         {
-            if (!existingStudentCodes.Contains(student.StudentCode))
+            if (!existingStudents.ContainsKey(student.StudentCode))
             {
                 await _repository.AddAsync(student);
                 addedCount++;
             }
-            // Nếu đã tồn tại thì bỏ qua
+            else
+            {
+                // Nếu đã tồn tại thì tăng version, cập nhật UpdatedBy, UpdatedAt
+                var exist = existingStudents[student.StudentCode];
+                exist.Version += 1;
+                exist.UpdatedBy = userId;
+                exist.UpdatedAt = DateTimeHelper.GetVietnamTime();
+                await _repository.UpdateAsync(exist);
+            }
         }
         return addedCount;
     }

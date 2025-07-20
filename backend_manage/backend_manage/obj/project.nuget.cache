@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "CSQGO5SdpcI=",
+  "dgSpecHash": "CCW27fJ3jVo=",
   "success": true,
   "projectFilePath": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/backend_manage/backend_manage/backend_manage.csproj",
   "expectedPackageFiles": [
@@ -11,6 +11,7 @@
     "/Users/nguyenhuynhnam/.nuget/packages/azure.identity/1.11.4/azure.identity.1.11.4.nupkg.sha512",
     "/Users/nguyenhuynhnam/.nuget/packages/bcrypt.net-next/4.0.3/bcrypt.net-next.4.0.3.nupkg.sha512",
     "/Users/nguyenhuynhnam/.nuget/packages/bouncycastle.cryptography/2.5.1/bouncycastle.cryptography.2.5.1.nupkg.sha512",
+    "/Users/nguyenhuynhnam/.nuget/packages/confluent.kafka/2.11.0/confluent.kafka.2.11.0.nupkg.sha512",
     "/Users/nguyenhuynhnam/.nuget/packages/epplus/7.7.0/epplus.7.7.0.nupkg.sha512",
     "/Users/nguyenhuynhnam/.nuget/packages/epplus.interfaces/7.7.0/epplus.interfaces.7.7.0.nupkg.sha512",
     "/Users/nguyenhuynhnam/.nuget/packages/epplus.system.drawing/7.7.0/epplus.system.drawing.7.7.0.nupkg.sha512",
@@ -18,6 +19,7 @@
     "/Users/nguyenhuynhnam/.nuget/packages/itext/9.1.0/itext.9.1.0.nupkg.sha512",
     "/Users/nguyenhuynhnam/.nuget/packages/itext.commons/9.1.0/itext.commons.9.1.0.nupkg.sha512",
     "/Users/nguyenhuynhnam/.nuget/packages/itext7/9.1.0/itext7.9.1.0.nupkg.sha512",
+    "/Users/nguyenhuynhnam/.nuget/packages/librdkafka.redist/2.11.0/librdkafka.redist.2.11.0.nupkg.sha512",
     "/Users/nguyenhuynhnam/.nuget/packages/mailkit/4.11.0/mailkit.4.11.0.nupkg.sha512",
     "/Users/nguyenhuynhnam/.nuget/packages/microsoft.aspnetcore.authentication.abstractions/2.3.0/microsoft.aspnetcore.authentication.abstractions.2.3.0.nupkg.sha512",
     "/Users/nguyenhuynhnam/.nuget/packages/microsoft.aspnetcore.authentication.jwtbearer/8.0.0/microsoft.aspnetcore.authentication.jwtbearer.8.0.0.nupkg.sha512",

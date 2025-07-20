@@ -11,6 +11,7 @@
           "AspNetCoreRateLimit": "5.0.0",
           "AutoMapper.Extensions.Microsoft.DependencyInjection": "12.0.1",
           "BCrypt.Net-Next": "4.0.3",
+          "Confluent.Kafka": "2.11.0",
           "EPPlus": "7.7.0",
           "MailKit": "4.11.0",
           "Microsoft.AspNetCore.Authentication.JwtBearer": "8.0.0",
@@ -119,6 +120,17 @@
           "lib/net6.0/BouncyCastle.Cryptography.dll": {
             "assemblyVersion": "2.0.0.0",
             "fileVersion": "2.5.1.28965"
+          }
+        }
+      },
+      "Confluent.Kafka/2.11.0": {
+        "dependencies": {
+          "librdkafka.redist": "2.11.0"
+        },
+        "runtime": {
+          "lib/net8.0/Confluent.Kafka.dll": {
+            "assemblyVersion": "2.11.0.0",
+            "fileVersion": "2.11.0.0"
           }
         }
       },
@@ -246,6 +258,130 @@
       "itext7/9.1.0": {
         "dependencies": {
           "itext": "9.1.0"
+        }
+      },
+      "librdkafka.redist/2.11.0": {
+        "runtimeTargets": {
+          "runtimes/linux-arm64/native/librdkafka.so": {
+            "rid": "linux-arm64",
+            "assetType": "native",
+            "fileVersion": "0.0.0.0"
+          },
+          "runtimes/linux-x64/native/alpine-librdkafka.so": {
+            "rid": "linux-x64",
+            "assetType": "native",
+            "fileVersion": "0.0.0.0"
+          },
+          "runtimes/linux-x64/native/centos8-librdkafka.so": {
+            "rid": "linux-x64",
+            "assetType": "native",
+            "fileVersion": "0.0.0.0"
+          },
+          "runtimes/linux-x64/native/librdkafka.so": {
+            "rid": "linux-x64",
+            "assetType": "native",
+            "fileVersion": "0.0.0.0"
+          },
+          "runtimes/osx-arm64/native/librdkafka.dylib": {
+            "rid": "osx-arm64",
+            "assetType": "native",
+            "fileVersion": "0.0.0.0"
+          },
+          "runtimes/osx-x64/native/librdkafka.dylib": {
+            "rid": "osx-x64",
+            "assetType": "native",
+            "fileVersion": "0.0.0.0"
+          },
+          "runtimes/win-x64/native/libcrypto-3-x64.dll": {
+            "rid": "win-x64",
+            "assetType": "native",
+            "fileVersion": "0.0.0.0"
+          },
+          "runtimes/win-x64/native/libcurl.dll": {
+            "rid": "win-x64",
+            "assetType": "native",
+            "fileVersion": "0.0.0.0"
+          },
+          "runtimes/win-x64/native/librdkafka.dll": {
+            "rid": "win-x64",
+            "assetType": "native",
+            "fileVersion": "0.0.0.0"
+          },
+          "runtimes/win-x64/native/librdkafkacpp.dll": {
+            "rid": "win-x64",
+            "assetType": "native",
+            "fileVersion": "0.0.0.0"
+          },
+          "runtimes/win-x64/native/libssl-3-x64.dll": {
+            "rid": "win-x64",
+            "assetType": "native",
+            "fileVersion": "0.0.0.0"
+          },
+          "runtimes/win-x64/native/msvcp140.dll": {
+            "rid": "win-x64",
+            "assetType": "native",
+            "fileVersion": "0.0.0.0"
+          },
+          "runtimes/win-x64/native/vcruntime140.dll": {
+            "rid": "win-x64",
+            "assetType": "native",
+            "fileVersion": "0.0.0.0"
+          },
+          "runtimes/win-x64/native/zlib1.dll": {
+            "rid": "win-x64",
+            "assetType": "native",
+            "fileVersion": "0.0.0.0"
+          },
+          "runtimes/win-x64/native/zstd.dll": {
+            "rid": "win-x64",
+            "assetType": "native",
+            "fileVersion": "0.0.0.0"
+          },
+          "runtimes/win-x86/native/libcrypto-3.dll": {
+            "rid": "win-x86",
+            "assetType": "native",
+            "fileVersion": "0.0.0.0"
+          },
+          "runtimes/win-x86/native/libcurl.dll": {
+            "rid": "win-x86",
+            "assetType": "native",
+            "fileVersion": "0.0.0.0"
+          },
+          "runtimes/win-x86/native/librdkafka.dll": {
+            "rid": "win-x86",
+            "assetType": "native",
+            "fileVersion": "0.0.0.0"
+          },
+          "runtimes/win-x86/native/librdkafkacpp.dll": {
+            "rid": "win-x86",
+            "assetType": "native",
+            "fileVersion": "0.0.0.0"
+          },
+          "runtimes/win-x86/native/libssl-3.dll": {
+            "rid": "win-x86",
+            "assetType": "native",
+            "fileVersion": "0.0.0.0"
+          },
+          "runtimes/win-x86/native/msvcp140.dll": {
+            "rid": "win-x86",
+            "assetType": "native",
+            "fileVersion": "0.0.0.0"
+          },
+          "runtimes/win-x86/native/vcruntime140.dll": {
+            "rid": "win-x86",
+            "assetType": "native",
+            "fileVersion": "0.0.0.0"
+          },
+          "runtimes/win-x86/native/zlib1.dll": {
+            "rid": "win-x86",
+            "assetType": "native",
+            "fileVersion": "0.0.0.0"
+          },
+          "runtimes/win-x86/native/zstd.dll": {
+            "rid": "win-x86",
+            "assetType": "native",
+            "fileVersion": "0.0.0.0"
+          }
         }
       },
       "MailKit/4.11.0": {
@@ -2377,6 +2513,13 @@
       "path": "bouncycastle.cryptography/2.5.1",
       "hashPath": "bouncycastle.cryptography.2.5.1.nupkg.sha512"
     },
+    "Confluent.Kafka/2.11.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-LlGynxX1lkylZkVJ6GqZGeDNs2pRLjmjJ1VAWiybKmabGlVFKitidOEkohdFpz2qsrFQnAvB+fBZIurBsSj7hw==",
+      "path": "confluent.kafka/2.11.0",
+      "hashPath": "confluent.kafka.2.11.0.nupkg.sha512"
+    },
     "EPPlus/7.7.0": {
       "type": "package",
       "serviceable": true,
@@ -2425,6 +2568,13 @@
       "sha512": "sha512-xHRttMKi/9W7XDIIWRgMoau3Eo2+4JvctqN25X8a0k8uHFf56WgIMjFnGadH1nACJy+5ABi3XoWvJsUv20Wd2w==",
       "path": "itext7/9.1.0",
       "hashPath": "itext7.9.1.0.nupkg.sha512"
+    },
+    "librdkafka.redist/2.11.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-+CMp3EuJSuDhOZZbjdcWgB2McrqJnjMvi8GsaCecnDEmfVRJzOP55CoT92uJxATrztq4F0daFFyPWaKS1nsoxA==",
+      "path": "librdkafka.redist/2.11.0",
+      "hashPath": "librdkafka.redist.2.11.0.nupkg.sha512"
     },
     "MailKit/4.11.0": {
       "type": "package",
