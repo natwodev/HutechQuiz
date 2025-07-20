@@ -9,4 +9,8 @@ Migrations/
 
 # Loại trừ toàn bộ thư mục bin và obj
 bin/
-obj/ 
+obj/
+
+# Loại trừ các file cấu hình appsettings (thường chứa thông tin nhạy cảm)
+appsettings.json
+appsettings.*.json

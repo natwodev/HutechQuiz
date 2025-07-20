@@ -39,9 +39,13 @@ namespace backend_manage.Entities
         // Thời gian được phép bắt đầu làm bài và thời gian kết thúc làm bài cho môn thi này trong ca thi
         public DateTime StartTime { get; set; }
         public DateTime? EndTime { get; set; }
+
+        [MaxLength(50)]
+        public string ExamSessionSubjectCore { get; set; }
         
         // Navigation property đến entity ExamSessionDepartment
         public ExamSessionDepartment ExamSessionDepartment { get; set; }
+
         
         // Navigation property đến entity Subject
         public Subject Subject { get; set; }
@@ -56,5 +60,7 @@ namespace backend_manage.Entities
         // Collection các sinh viên tham gia thi môn này trong ca thi
         // Mối quan hệ one-to-many với StudentExamSession
         public ICollection<StudentExamSession> StudentExamSessions { get; set; } = new List<StudentExamSession>();
+
+
     }
 } 
