@@ -50,7 +50,14 @@
         }
         else
         {
-            ErrorMessage = result.ErrorMessage;
+            if (result.ErrorMessage == "Không tìm thấy sinh viên với mã này.")
+            {
+                ErrorMessage = "Không tìm thấy thông tin thí sinh, vui lòng liên hệ cán bộ coi thi";
+            }
+            else
+            {
+                ErrorMessage = result.ErrorMessage;
+            }
         }
     }
 } 

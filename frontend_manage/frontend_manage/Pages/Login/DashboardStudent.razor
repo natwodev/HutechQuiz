@@ -17,8 +17,7 @@
                     @if (studentInfo != null)
                     {
                         <div class="id">Mã số sinh viên: @studentInfo.StudentCode</div>
-                        <div class="name">Họ: @studentInfo.LastName</div>
-                        <div class="name">Tên: @studentInfo.FirstName</div>
+                        <div class="name">Họ và tên: @($"{studentInfo.LastName} {studentInfo.FirstName}")</div>
                     }
                     <div class="time">Thời gian hiện tại: @currentTime</div>
                     <button class="button-sign-out" @onclick="Logout">

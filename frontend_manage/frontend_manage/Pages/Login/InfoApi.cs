@@ -13,9 +13,8 @@ public class InfoApi
         _httpClient = httpClient;
     }
 
-    public async Task<StudentInfoDto?> GetStudentInfoByCodeAsync(string studentCode)
+    public async Task<StudentInfoDto?> GetStudentProfileAsync()
     {
-        if (string.IsNullOrEmpty(studentCode)) return null;
-        return await _httpClient.GetFromJsonAsync<StudentInfoDto>($"api/student/by-code/{studentCode}");
+        return await _httpClient.GetFromJsonAsync<StudentInfoDto>("api/student/profile");
     }
 }

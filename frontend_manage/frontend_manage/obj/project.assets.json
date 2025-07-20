@@ -2221,11 +2221,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/Users/nguyenhuynhnam/RiderProjects/manage/frontend_manage/frontend_manage/frontend_manage.csproj",
+      "projectUniqueName": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/frontend_manage.csproj",
       "projectName": "frontend_manage",
-      "projectPath": "/Users/nguyenhuynhnam/RiderProjects/manage/frontend_manage/frontend_manage/frontend_manage.csproj",
+      "projectPath": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/frontend_manage.csproj",
       "packagesPath": "/Users/nguyenhuynhnam/.nuget/packages/",
-      "outputPath": "/Users/nguyenhuynhnam/RiderProjects/manage/frontend_manage/frontend_manage/obj/",
+      "outputPath": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "/Users/nguyenhuynhnam/.nuget/NuGet/NuGet.Config"

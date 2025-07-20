@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "HMw7eatv9oU=",
+  "dgSpecHash": "BQ9ml+VuooE=",
   "success": true,
-  "projectFilePath": "/Users/nguyenhuynhnam/RiderProjects/manage/frontend_manage/frontend_manage/frontend_manage.csproj",
+  "projectFilePath": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/frontend_manage.csproj",
   "expectedPackageFiles": [
     "/Users/nguyenhuynhnam/.nuget/packages/microsoft.aspnetcore.authorization/9.0.5/microsoft.aspnetcore.authorization.9.0.5.nupkg.sha512",
     "/Users/nguyenhuynhnam/.nuget/packages/microsoft.aspnetcore.components/9.0.5/microsoft.aspnetcore.components.9.0.5.nupkg.sha512",

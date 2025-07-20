@@ -87,37 +87,39 @@ public class AuthService
             };
 
             var response = await _httpClient.PostAsJsonAsync("api/student/login", loginModel);
+            var responseContent = await response.Content.ReadAsStringAsync();
 
             if (response.IsSuccessStatusCode)
             {
-                var responseContent = await response.Content.ReadAsStringAsync();
                 try
                 {
-                    var jsonDoc = JsonDocument.Parse(responseContent);
-                    if (jsonDoc.RootElement.TryGetProperty("token", out var tokenElement) && tokenElement.ValueKind == JsonValueKind.String)
+                    using var jsonDoc = JsonDocument.Parse(responseContent);
+                    var root = jsonDoc.RootElement;
+                    var token = root.TryGetProperty("token", out var tokenElement) && tokenElement.ValueKind == JsonValueKind.String
+                        ? tokenElement.GetString() : null;
+                    if (!string.IsNullOrEmpty(token))
                     {
-                        var token = tokenElement.GetString();
-                        if (!string.IsNullOrEmpty(token))
+                        await _jsRuntime.InvokeVoidAsync("localStorage.setItem", TokenKey, token);
+                        if (root.TryGetProperty("studentInfo", out var studentInfoElement))
                         {
-                            await _jsRuntime.InvokeVoidAsync("localStorage.setItem", TokenKey, token);
-                            // Lưu studentInfo nếu có
-                            if (jsonDoc.RootElement.TryGetProperty("studentInfo", out var studentInfoElement))
+                            await _jsRuntime.InvokeVoidAsync("localStorage.setItem", StudentInfoKey, studentInfoElement.GetRawText());
+                            if (studentInfoElement.TryGetProperty("studentCode", out var studentCodeElement) && studentCodeElement.ValueKind == JsonValueKind.String)
                             {
-                                var studentInfoJson = studentInfoElement.GetRawText();
-                                await _jsRuntime.InvokeVoidAsync("localStorage.setItem", StudentInfoKey, studentInfoJson);
-                                // Lưu thêm studentCode riêng biệt
-                                if (studentInfoElement.TryGetProperty("studentCode", out var studentCodeElement) && studentCodeElement.ValueKind == JsonValueKind.String)
-                                {
-                                    var studentCodeValue = studentCodeElement.GetString();
-                                    if (!string.IsNullOrEmpty(studentCodeValue))
-                                    {
-                                        await _jsRuntime.InvokeVoidAsync("localStorage.setItem", "studentCode", studentCodeValue);
-                                    }
-                                }
+                                var studentCodeValue = studentCodeElement.GetString();
+                                if (!string.IsNullOrEmpty(studentCodeValue))
+                                    await _jsRuntime.InvokeVoidAsync("localStorage.setItem", "studentCode", studentCodeValue);
                             }
-                            OnAuthStateChanged?.Invoke();
-                            return new AuthResultDto { IsSuccess = true, Token = token };
                         }
+                        OnAuthStateChanged?.Invoke();
+                        return new AuthResultDto { IsSuccess = true, Token = token };
+                    }
+                    // Nếu không có token, kiểm tra errorMessage
+                    if (root.TryGetProperty("errorMessage", out var errorMsgElement) && errorMsgElement.ValueKind == JsonValueKind.String)
+                    {
+                        var errorMsg = errorMsgElement.GetString();
+                        if (errorMsg == "Không tìm thấy sinh viên với mã này.")
+                            errorMsg = "Không tìm thấy thông tin thí sinh, vui lòng liên hệ cán bộ coi thi";
+                        return new AuthResultDto { IsSuccess = false, ErrorMessage = errorMsg };
                     }
                     return new AuthResultDto { IsSuccess = false, ErrorMessage = "Không thể đọc token từ server" };
                 }
@@ -126,11 +128,12 @@ public class AuthService
                     return new AuthResultDto { IsSuccess = false, ErrorMessage = "Phản hồi từ server không hợp lệ." };
                 }
             }
-
-            var errorContent = await response.Content.ReadAsStringAsync();
+            // Trường hợp lỗi
             try
             {
-                var errorResult = JsonSerializer.Deserialize<AuthResultDto>(errorContent);
+                var errorResult = JsonSerializer.Deserialize<AuthResultDto>(responseContent);
+                if (errorResult != null && errorResult.ErrorMessage == "Không tìm thấy sinh viên với mã này.")
+                    errorResult.ErrorMessage = "Không tìm thấy thông tin thí sinh, vui lòng liên hệ cán bộ coi thi";
                 return errorResult ?? new AuthResultDto { IsSuccess = false, ErrorMessage = "Đăng nhập thất bại" };
             }
             catch

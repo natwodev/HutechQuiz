@@ -22,4 +22,14 @@ public class StudentInfoDto
     public string LastName { get; set; }
     public string Gender { get; set; }
     public string DateOfBirth { get; set; }
+    public bool? IsLogin { get; set; }
+    public DateTime? LastLoggedIn { get; set; }
+    public DateTime? LastLoggedOut { get; set; }
+   // public object StudentExamSessions { get; set; } // Có thể tạo class riêng nếu cần
+    public DateTime? CreatedAt { get; set; }
+    public string CreatedBy { get; set; }
+    public DateTime? UpdatedAt { get; set; }
+    public string UpdatedBy { get; set; }
+    public bool? IsDeleted { get; set; }
+    public int? Version { get; set; }
 } 

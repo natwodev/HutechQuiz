@@ -6,15 +6,18 @@ using frontend_manage.Services;
 using System.Net.Http.Json;
 using FrontEnd.DTOs;
 using frontend_manage.Pages.Login;
+using Microsoft.JSInterop;
 
 namespace frontend_manage.Pages.Login
 {
     public partial class DashboardStudent : ComponentBase, IDisposable
     {
-        [Inject] private AuthService AuthService { get; set; }
+        // Xóa các Inject không cần thiết
+        // [Inject] private AuthService AuthService { get; set; }
         [Inject] private NavigationManager Navigation { get; set; }
-        [Inject] private HttpClient Http { get; set; } // Thêm dòng này
-        [Inject] private InfoApi InfoApi { get; set; } // Inject InfoApi
+        [Inject] private IJSRuntime JSRuntime { get; set; }
+        // [Inject] private HttpClient Http { get; set; }
+        [Inject] private InfoApi InfoApi { get; set; }
 
         private bool isStudent;
         private bool isStudentChecked = false;
@@ -24,25 +27,28 @@ namespace frontend_manage.Pages.Login
 
         protected override async Task OnInitializedAsync()
         {
-            var role = await AuthService.GetUserRoleFromToken();
-            isStudent = role == "Student";
-            isStudentChecked = true;
-            if (!isStudent)
+            try
             {
-                Navigation.NavigateTo("/student-login");
-                return;
+                var info = await InfoApi.GetStudentProfileAsync();
+                if (info != null)
+                {
+                    studentInfo = new StudentInfoDto
+                    {
+                        StudentCode = info.StudentCode,
+                        FirstName = info.FirstName,
+                        LastName = info.LastName
+                    };
+                }
+                else
+                {
+                    studentInfo = null;
+                }
             }
-            var localStudentInfo = await AuthService.GetStudentInfoAsync();
-            Console.WriteLine($"[DEBUG] localStudentInfo: {localStudentInfo?.StudentCode}");
-            if (localStudentInfo != null && !string.IsNullOrEmpty(localStudentInfo.StudentCode))
+            catch
             {
-                studentInfo = await InfoApi.GetStudentInfoByCodeAsync(localStudentInfo.StudentCode);
-                Console.WriteLine($"[DEBUG] studentInfo: {studentInfo?.StudentCode} {studentInfo?.FirstName} {studentInfo?.LastName}");
+                studentInfo = null;
             }
-            else
-            {
-                Console.WriteLine("[DEBUG] Không lấy được studentCode từ localStorage!");
-            }
+            currentTime = DateTime.Now.ToString("hh:mm:ss tt");
             timer = new Timer(UpdateTime, null, 0, 1000);
         }
 
@@ -59,7 +65,10 @@ namespace frontend_manage.Pages.Login
 
         private async Task Logout()
         {
-            await AuthService.Logout();
+            await JSRuntime.InvokeVoidAsync("localStorage.removeItem", "authToken");
+            await JSRuntime.InvokeVoidAsync("localStorage.removeItem", "studentInfo");
+            await JSRuntime.InvokeVoidAsync("localStorage.removeItem", "studentCode");
+            Navigation.NavigateTo("/student-login", true);
         }
     }
 }
