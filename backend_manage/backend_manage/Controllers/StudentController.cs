@@ -33,9 +33,9 @@ public class StudentController : ControllerBase
     }
 
     [HttpPost("import-excel")]
-    public async Task<IActionResult> ImportExcel([FromForm] IFormFile file, [FromForm] string examSessionSubjectCore, [FromForm] string examRoomName)
+    public async Task<IActionResult> ImportExcel([FromForm] IFormFile file, [FromForm] string examSessionSubjectCore, [FromForm] int examRoomId)
     {
-        var result = await _studentService.ImportFromExcelAsync(file, examSessionSubjectCore, examRoomName);
+        var result = await _studentService.ImportFromExcelAsync(file, examSessionSubjectCore, examRoomId);
         return Ok(new { imported = result });
     }
 

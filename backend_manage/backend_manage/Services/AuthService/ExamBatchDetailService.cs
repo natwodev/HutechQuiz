@@ -2,6 +2,7 @@ using System.Security.Claims;
 using AutoMapper;
 using backend_manage.DTOs;
 using backend_manage.Entities;
+using backend_manage.Hubs;
 using backend_manage.Repositories.Interfaces;
 using backend_manage.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -43,7 +44,7 @@ namespace backend_manage.Services.AuthService
             if (string.IsNullOrEmpty(userId))
                 throw new UnauthorizedAccessException("Không thể xác định người dùng tạo ExamBatchDetail.");
             entity.CreatedBy = userId;
-            entity.CreatedAt = DateTime.UtcNow;
+            entity.CreatedAt = DateTimeHelper.GetVietnamTime();
             var result = await _repository.AddAsync(entity);
 
             // Truy vấn lại entity kèm navigation ExamBatch
@@ -62,7 +63,7 @@ namespace backend_manage.Services.AuthService
             if (string.IsNullOrEmpty(userId))
                 throw new UnauthorizedAccessException("Không thể xác định người dùng cập nhật ExamBatchDetail.");
             entity.UpdatedBy = userId;
-            entity.UpdatedAt = DateTime.UtcNow;
+            entity.UpdatedAt = DateTimeHelper.GetVietnamTime();
             _mapper.Map(dto, entity);
             var result = await _repository.UpdateAsync(entity);
             return _mapper.Map<ExamBatchDetailDto>(result);
@@ -78,7 +79,7 @@ namespace backend_manage.Services.AuthService
                 throw new UnauthorizedAccessException("Không thể xác định người dùng xóa ExamBatchDetail.");
             entity.IsDeleted = true;
             entity.UpdatedBy = userId;
-            entity.UpdatedAt = DateTime.UtcNow;
+            entity.UpdatedAt = DateTimeHelper.GetVietnamTime();
             await _repository.UpdateAsync(entity);
             return true;
         }

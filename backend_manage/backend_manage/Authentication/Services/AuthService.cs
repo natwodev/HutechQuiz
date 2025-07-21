@@ -1,6 +1,7 @@
 using System.IdentityModel.Tokens.Jwt;
 using backend_manage.Authentication.Repositories;
 using backend_manage.Entities;
+using backend_manage.Hubs;
 using backend_manage.Middlewares.Jwt;
 using backend_manage.Repositories.Interfaces;
 using Microsoft.AspNetCore.Identity;
@@ -44,7 +45,7 @@ namespace backend_manage.Authentication.Services
               }
               
               // Kiểm tra tài khoản có bị khóa không
-              if (user.LockoutEnabled && user.LockoutEnd > DateTime.UtcNow)
+              if (user.LockoutEnabled && user.LockoutEnd > DateTimeHelper.GetVietnamTime())
               {
                   return new AuthResultDto
                   {
@@ -85,7 +86,7 @@ namespace backend_manage.Authentication.Services
               }
 
               var expirationTime = jwtToken.ValidTo;
-              var timeToExpire = expirationTime - DateTime.UtcNow;
+              var timeToExpire = expirationTime - DateTimeHelper.GetVietnamTime();
 
               if (timeToExpire.TotalSeconds > 0)
               {

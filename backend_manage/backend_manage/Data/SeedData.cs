@@ -1,8 +1,7 @@
 using backend_manage.Entities;
+using backend_manage.Hubs;
 using Microsoft.AspNetCore.Identity;
-using System;
-using System.Linq;
-using System.Threading.Tasks;
+
 
 namespace backend_manage.Data
 {
@@ -99,7 +98,7 @@ namespace backend_manage.Data
             // Seed 2 khoa nếu chưa có
             if (!context.Departments.Any())
             {
-                var now = DateTime.UtcNow;
+                var now = DateTimeHelper.GetVietnamTime();
                 var departments = new[]
                 {
                     new Department
@@ -133,7 +132,7 @@ namespace backend_manage.Data
             // Seed 2 môn học nếu chưa có
             if (!context.Subjects.Any())
             {
-                var now = DateTime.UtcNow;
+                var now = DateTimeHelper.GetVietnamTime();
                 var subjects = new[]
                 {
                     new Subject
@@ -169,7 +168,7 @@ namespace backend_manage.Data
             // Seed AcademicYear nếu chưa có
             if (!context.AcademicYears.Any())
             {
-                var now = DateTime.UtcNow;
+                var now = DateTimeHelper.GetVietnamTime();
                 var academicYear = new AcademicYear
                 {
                     AcademicYearName = "2025-2026",
@@ -303,6 +302,9 @@ namespace backend_manage.Data
                             ExamSessionDepartmentId = cnttSessionDept.ExamSessionDepartmentId,
                             SubjectId = cnttSubject.SubjectId,
                             ExamSessionSubjectCore = $"{cnttSubject.SubjectCore}-{now:yyyyMMddHHmmss}",
+                            Duration = 120,
+                            StartTime  = now, 
+                            EndTime = now.AddMinutes(120),
                             CreatedBy = "seed",
                             CreatedAt = now,
                             IsDeleted = false,
@@ -315,6 +317,9 @@ namespace backend_manage.Data
                             ExamSessionDepartmentId = kinhteSessionDept.ExamSessionDepartmentId,
                             SubjectId = kinhteSubject.SubjectId,
                             ExamSessionSubjectCore = $"{kinhteSubject.SubjectCore}-{now:yyyyMMddHHmmss}",
+                            Duration = 120,
+                            StartTime  = now, 
+                            EndTime = now.AddMinutes(120),
                             CreatedBy = "seed",
                             CreatedAt = now,
                             IsDeleted = false,
@@ -331,6 +336,22 @@ namespace backend_manage.Data
             else
             {
                 Console.WriteLine("ℹ️ Đã có dữ liệu năm học.");
+            }
+
+            // Seed 4 phòng thi nếu chưa có
+            if (!context.ExamRooms.Any())
+            {
+                var now = DateTimeHelper.GetVietnamTime();
+                var rooms = new[]
+                {
+                    new ExamRoom { RoomName = "A101", CreatedBy = "seed", CreatedAt = now, UpdatedBy = "seed", UpdatedAt = now, IsDeleted = false, Version = 1 },
+                    new ExamRoom { RoomName = "A102", CreatedBy = "seed", CreatedAt = now, UpdatedBy = "seed", UpdatedAt = now, IsDeleted = false, Version = 1 },
+                    new ExamRoom { RoomName = "B201", CreatedBy = "seed", CreatedAt = now, UpdatedBy = "seed", UpdatedAt = now, IsDeleted = false, Version = 1 },
+                    new ExamRoom { RoomName = "B202", CreatedBy = "seed", CreatedAt = now, UpdatedBy = "seed", UpdatedAt = now, IsDeleted = false, Version = 1 }
+                };
+                context.ExamRooms.AddRange(rooms);
+                await context.SaveChangesAsync();
+                Console.WriteLine("✅ Đã seed 4 phòng thi: A101, A102, B201, B202.");
             }
         }
     }

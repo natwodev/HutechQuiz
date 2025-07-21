@@ -22,6 +22,10 @@ namespace backend_manage.Entities
         [ForeignKey("Subject")]
         public int SubjectId { get; set; }
 
+        
+        [MaxLength(50)]
+        public string ExamSessionSubjectCore { get; set; }
+        
         // Thời lượng làm bài thi (tính bằng phút)
         // Mặc định 120 phút (2 giờ) nếu không được cấu hình
         public int Duration { get; set; }
@@ -38,10 +42,7 @@ namespace backend_manage.Entities
 
         // Thời gian được phép bắt đầu làm bài và thời gian kết thúc làm bài cho môn thi này trong ca thi
         public DateTime StartTime { get; set; }
-        public DateTime? EndTime { get; set; }
-
-        [MaxLength(50)]
-        public string ExamSessionSubjectCore { get; set; }
+        public DateTime EndTime { get; set; }
         
         // Navigation property đến entity ExamSessionDepartment
         public ExamSessionDepartment ExamSessionDepartment { get; set; }

@@ -11,6 +11,6 @@ public static class DateTimeHelper
             : "Asia/Ho_Chi_Minh";
 
         var vietnamTimeZone = TimeZoneInfo.FindSystemTimeZoneById(tzId);
-        return TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, vietnamTimeZone);
+        return TimeZoneInfo.ConvertTimeFromUtc(DateTimeHelper.GetVietnamTime(), vietnamTimeZone);
     }
 }

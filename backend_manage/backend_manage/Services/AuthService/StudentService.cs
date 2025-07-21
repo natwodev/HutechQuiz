@@ -7,9 +7,7 @@ using System.Security.Claims;
 using System.Text;
 using backend_manage.Repositories.Interfaces;
 using OfficeOpenXml;
-
 using backend_manage.Services.Interfaces;
-using Microsoft.AspNetCore.Http;
 using backend_manage.Hubs;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
@@ -78,7 +76,7 @@ public class StudentService : IStudentService
                 new Claim("studentCode", student.StudentCode),
                 new Claim("role", "Student")
             }),
-            Expires = DateTime.UtcNow.AddHours(24),
+            Expires = DateTimeHelper.GetVietnamTime().AddHours(24),
             Issuer = _configuration["JWT:Issuer"],
             Audience = _configuration["JWT:Audience"],
             SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
@@ -164,7 +162,7 @@ public class StudentService : IStudentService
         return entities.Count;
     }
 
-    public async Task<int> ImportFromExcelAsync(IFormFile file, string examSessionSubjectCore, string examRoomName)
+    public async Task<int> ImportFromExcelAsync(IFormFile file, string examSessionSubjectCore, int examRoomId)
     {
         if (file == null || file.Length == 0)
             return 0;
@@ -204,9 +202,7 @@ public class StudentService : IStudentService
         var examSessionSubject = await _examSessionSubjectRepository.GetQueryable().FirstOrDefaultAsync(x => x.ExamSessionSubjectCore == examSessionSubjectCore);
         if (examSessionSubject == null)
             throw new Exception($"Không tìm thấy ExamSessionSubject với core: {examSessionSubjectCore}");
-        // Lấy ExamRoomId từ examRoomName
-        var examRoom = await _examRoomRepository.GetQueryable().FirstOrDefaultAsync(x => x.RoomName == examRoomName);
-        int? examRoomId = examRoom?.ExamRoomId;
+        int? examRoomIdValue = examRoomId;
         int addedCount = 0;
         foreach (var student in students)
         {
@@ -225,18 +221,25 @@ public class StudentService : IStudentService
                 dbStudent.UpdatedAt = DateTimeHelper.GetVietnamTime();
                 await _repository.UpdateAsync(dbStudent);
             }
-            // Tạo mới StudentExamSession
-            
-            var studentExamSession = new StudentExamSession
+            // Chỉ tạo mới nếu chưa có StudentExamSession trùng StudentId + ExamSessionSubjectId
+            var exists = await _studentExamSessionRepository.GetQueryable()
+                .AnyAsync(x => x.StudentId == dbStudent.StudentId && x.ExamSessionSubjectId == examSessionSubject.ExamSessionSubjectId);
+            if (!exists)
             {
-                StudentId = dbStudent.StudentId,
-                StudentCode = student.StudentCode,
-                ExamSessionSubjectId = examSessionSubject.ExamSessionSubjectId,
-                ExamRoomId = examRoomId,
-                CreatedBy = userId,
-                CreatedAt = DateTimeHelper.GetVietnamTime()
-            };
-            await _studentExamSessionRepository.AddAsync(studentExamSession);
+                var studentExamSession = new StudentExamSession
+                {
+                    StudentId = dbStudent.StudentId,
+                    StudentCode = student.StudentCode,
+                    ExamSessionSubjectId = examSessionSubject.ExamSessionSubjectId,
+                    ExamRoomId = examRoomIdValue,
+                    CreatedBy = userId,
+                    CreatedAt = DateTimeHelper.GetVietnamTime(),
+                    StudentAnswersString = "",
+                    IsCompleted = false,
+                    Score = 0
+                };
+                await _studentExamSessionRepository.AddAsync(studentExamSession);
+            }
         }
         return addedCount;
     }
@@ -325,11 +328,16 @@ public class StudentService : IStudentService
         return paperDto;
     }
    
-    public async Task<List<StudentExamSessionDto>> GetStudentExamSessionsAsync(string studentCode)
+    public async Task<IEnumerable<StudentExamSessionDto>> GetStudentExamSessionsAsync(string studentCode)
     {
+        var student = await _repository.GetQueryable().FirstOrDefaultAsync(x => x.StudentCode == studentCode);
+        if (student == null) return Enumerable.Empty<StudentExamSessionDto>();
         var sessions = await _studentExamSessionRepository.GetQueryable()
-            .Where(x => x.StudentCode == studentCode)
+            .Where(x => x.StudentId == student.StudentId)
+            .Include(x => x.ExamSessionSubject)
+                .ThenInclude(x => x.Subject)
+            .Include(x => x.ExamRoom)
             .ToListAsync();
-        return sessions.Select(x => _mapper.Map<StudentExamSessionDto>(x)).ToList();
+        return sessions.Select(x => _mapper.Map<StudentExamSessionDto>(x));
     }
 } 

@@ -1,6 +1,7 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using backend_manage.Hubs;
 using Microsoft.IdentityModel.Tokens;
 
 namespace backend_manage.Middlewares.Jwt
@@ -32,7 +33,7 @@ namespace backend_manage.Middlewares.Jwt
             var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = new ClaimsIdentity(claims),
-                Expires = DateTime.UtcNow.AddHours(24),
+                Expires = DateTimeHelper.GetVietnamTime().AddHours(24),
                 Issuer = _configuration["JWT:Issuer"],
                 Audience = _configuration["JWT:Audience"],
                 SigningCredentials = new SigningCredentials(

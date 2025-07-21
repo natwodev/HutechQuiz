@@ -28,6 +28,7 @@ namespace backend_manage.Data
         public DbSet<Semester> Semesters { get; set; }
         public DbSet<Lecturer> Lecturers { get; set; }
         public DbSet<ExamRoomLecturerAssignment> ExamRoomLecturerAssignments { get; set; }
+        public DbSet<ExamRoom> ExamRooms { get; set; }
         
         
         protected override void OnModelCreating(ModelBuilder builder)

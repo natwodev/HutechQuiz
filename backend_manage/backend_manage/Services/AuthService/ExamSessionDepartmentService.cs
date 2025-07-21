@@ -7,6 +7,7 @@ using backend_manage.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using backend_manage.Hubs;
 
 namespace backend_manage.Services.AuthService
 {
@@ -52,7 +53,7 @@ namespace backend_manage.Services.AuthService
             if (string.IsNullOrEmpty(userId))
                 throw new UnauthorizedAccessException("Không thể xác định người dùng tạo ExamSessionDepartment.");
             entity.CreatedBy = userId;
-            entity.CreatedAt = DateTime.UtcNow;
+            entity.CreatedAt = DateTimeHelper.GetVietnamTime();
             var result = await _repository.AddAsync(entity);
 
             var fullEntity = await _repository.GetQueryable()
@@ -71,7 +72,7 @@ namespace backend_manage.Services.AuthService
             if (string.IsNullOrEmpty(userId))
                 throw new UnauthorizedAccessException("Không thể xác định người dùng cập nhật ExamSessionDepartment.");
             entity.UpdatedBy = userId;
-            entity.UpdatedAt = DateTime.UtcNow;
+            entity.UpdatedAt = DateTimeHelper.GetVietnamTime();
             _mapper.Map(dto, entity);
             var result = await _repository.UpdateAsync(entity);
             return _mapper.Map<ExamSessionDepartmentDto>(result);
@@ -87,7 +88,7 @@ namespace backend_manage.Services.AuthService
                 throw new UnauthorizedAccessException("Không thể xác định người dùng xóa ExamSessionDepartment.");
             entity.IsDeleted = true;
             entity.UpdatedBy = userId;
-            entity.UpdatedAt = DateTime.UtcNow;
+            entity.UpdatedAt = DateTimeHelper.GetVietnamTime();
             await _repository.UpdateAsync(entity);
             return true;
         }
