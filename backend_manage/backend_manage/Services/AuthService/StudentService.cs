@@ -11,17 +11,30 @@ using OfficeOpenXml;
 using backend_manage.Services.Interfaces;
 using Microsoft.AspNetCore.Http;
 using backend_manage.Hubs;
+using Microsoft.EntityFrameworkCore;
 
 namespace backend_manage.Services.AuthService;
 
 public class StudentService : IStudentService
 {
     private readonly IRepository<Student> _repository;
+    private readonly IRepository<StudentExamSession> _studentExamSessionRepository;
+    private readonly IRepository<ExamSessionSubject> _examSessionSubjectRepository;
+    private readonly IRepository<ExamRoom> _examRoomRepository;
     private readonly IConfiguration _configuration;
     private readonly IHttpContextAccessor _httpContextAccessor;
-    public StudentService(IRepository<Student> repository, IConfiguration configuration, IHttpContextAccessor httpContextAccessor)
+    public StudentService(
+        IRepository<Student> repository,
+        IRepository<StudentExamSession> studentExamSessionRepository,
+        IRepository<ExamSessionSubject> examSessionSubjectRepository,
+        IRepository<ExamRoom> examRoomRepository,
+        IConfiguration configuration,
+        IHttpContextAccessor httpContextAccessor)
     {
         _repository = repository;
+        _studentExamSessionRepository = studentExamSessionRepository;
+        _examSessionSubjectRepository = examSessionSubjectRepository;
+        _examRoomRepository = examRoomRepository;
         _configuration = configuration;
         _httpContextAccessor = httpContextAccessor;
     }
@@ -146,7 +159,7 @@ public class StudentService : IStudentService
         return entities.Count;
     }
 
-    public async Task<int> ImportFromExcelAsync(IFormFile file)
+    public async Task<int> ImportFromExcelAsync(IFormFile file, string examSessionSubjectCore, string examRoomName)
     {
         if (file == null || file.Length == 0)
             return 0;
@@ -182,23 +195,41 @@ public class StudentService : IStudentService
         }
         // Lấy danh sách StudentCode đã tồn tại
         var existingStudents = (await _repository.GetAllAsync()).ToDictionary(s => s.StudentCode);
+        // Lấy ExamSessionSubjectId từ examSessionSubjectCore
+        var examSessionSubject = await _examSessionSubjectRepository.GetQueryable().FirstOrDefaultAsync(x => x.ExamSessionSubjectCore == examSessionSubjectCore);
+        if (examSessionSubject == null)
+            throw new Exception($"Không tìm thấy ExamSessionSubject với core: {examSessionSubjectCore}");
+        // Lấy ExamRoomId từ examRoomName
+        var examRoom = await _examRoomRepository.GetQueryable().FirstOrDefaultAsync(x => x.RoomName == examRoomName);
+        int? examRoomId = examRoom?.ExamRoomId;
         int addedCount = 0;
         foreach (var student in students)
         {
+            Student dbStudent;
             if (!existingStudents.ContainsKey(student.StudentCode))
             {
-                await _repository.AddAsync(student);
+                dbStudent = await _repository.AddAsync(student);
                 addedCount++;
             }
             else
             {
                 // Nếu đã tồn tại thì tăng version, cập nhật UpdatedBy, UpdatedAt
-                var exist = existingStudents[student.StudentCode];
-                exist.Version += 1;
-                exist.UpdatedBy = userId;
-                exist.UpdatedAt = DateTimeHelper.GetVietnamTime();
-                await _repository.UpdateAsync(exist);
+                dbStudent = existingStudents[student.StudentCode];
+                dbStudent.Version += 1;
+                dbStudent.UpdatedBy = userId;
+                dbStudent.UpdatedAt = DateTimeHelper.GetVietnamTime();
+                await _repository.UpdateAsync(dbStudent);
             }
+            // Tạo mới StudentExamSession
+            var studentExamSession = new StudentExamSession
+            {
+                StudentId = dbStudent.StudentId,
+                ExamSessionSubjectId = examSessionSubject.ExamSessionSubjectId,
+                ExamRoomId = examRoomId,
+                CreatedBy = userId,
+                CreatedAt = DateTimeHelper.GetVietnamTime()
+            };
+            await _studentExamSessionRepository.AddAsync(studentExamSession);
         }
         return addedCount;
     }

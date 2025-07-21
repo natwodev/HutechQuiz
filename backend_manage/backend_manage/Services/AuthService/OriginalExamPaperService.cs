@@ -103,20 +103,20 @@ namespace backend_manage.Services.AuthService
                 Directory.CreateDirectory(extractFolder);
             }
             using (var zipStream = new FileStream(zipFilePath, FileMode.Open, FileAccess.Read))
-            using (var zipFile = new ICSharpCode.SharpZipLib.Zip.ZipFile(zipStream))
-            {
-                zipFile.Password = ExtractPassword;
-                foreach (ZipEntry entry in zipFile)
+                using (var zipFile = new ICSharpCode.SharpZipLib.Zip.ZipFile(zipStream))
                 {
+                zipFile.Password = ExtractPassword;
+                    foreach (ZipEntry entry in zipFile)
+                    {
                     if (!entry.IsFile) continue;
                     // Đảm bảo đúng cấu trúc thư mục
                     var entryPath = Path.Combine(extractFolder, entry.Name.Replace("\\", Path.DirectorySeparatorChar.ToString()).Replace("/", Path.DirectorySeparatorChar.ToString()));
                     var entryDir = Path.GetDirectoryName(entryPath);
                     if (!Directory.Exists(entryDir))
-                    {
+                        {
                         Directory.CreateDirectory(entryDir);
                     }
-                    using (var entryStream = zipFile.GetInputStream(entry))
+                            using (var entryStream = zipFile.GetInputStream(entry))
                     using (var outFileStream = File.Create(entryPath))
                     {
                         await entryStream.CopyToAsync(outFileStream);
@@ -128,9 +128,9 @@ namespace backend_manage.Services.AuthService
             string xmlContent = null;
             var xmlFile = Directory.GetFiles(extractFolder, "*.xml", SearchOption.AllDirectories).FirstOrDefault();
             if (xmlFile != null)
-            {
+                            {
                 xmlContent = await File.ReadAllTextAsync(xmlFile);
-            }
+                            }
             if (xmlContent == null)
                 throw new Exception("Không tìm thấy file XML trong archive");
 

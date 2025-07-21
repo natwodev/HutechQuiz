@@ -6,5 +6,6 @@ namespace backend_manage.Services.Interfaces
     public interface IShuffledExamPaperService
     {
         Task<ShuffledExamPaperDto> GetWithDetailsAsync(string shuffledExamPaperCore);
+        Task<bool> DeleteSoftAsync(int shuffledExamPaperId);
     }
 } 

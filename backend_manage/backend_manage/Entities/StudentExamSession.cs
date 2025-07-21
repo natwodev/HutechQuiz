@@ -14,7 +14,7 @@ public class StudentExamSession : BaseEntity
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public int StudentExamSessionId { get; set; }
 
-    // Thời gian bắt đầu làm bài và kết thúc làm bài thi của sinh viên
+    // Thời gian bắt đầu làm bài và kết thúc làm bài thi của sinh viên (lúc sinh viên bấm làm bài và nộp bài)
     public DateTime? StartTime { get; set; }
     public DateTime? EndTime { get; set; }
 

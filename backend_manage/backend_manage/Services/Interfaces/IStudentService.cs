@@ -12,6 +12,6 @@ public interface IStudentService
     Task<bool> DeleteAsync(string id);
     Task<IEnumerable<Student>> AddRangeAsync(IEnumerable<StudentCreateDto> dtos);
     Task<int> BulkImportStudentsAsync(List<StudentCreateDto> students);
-    Task<int> ImportFromExcelAsync(Microsoft.AspNetCore.Http.IFormFile file);
+    Task<int> ImportFromExcelAsync(IFormFile file, string examSessionSubjectCore, string examRoomName);
     Task<Student?> GetByStudentCodeAsync(string studentCode);
 } 
