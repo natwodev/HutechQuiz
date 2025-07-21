@@ -14,4 +14,6 @@ public interface IStudentService
     Task<int> BulkImportStudentsAsync(List<StudentCreateDto> students);
     Task<int> ImportFromExcelAsync(IFormFile file, string examSessionSubjectCore, string examRoomName);
     Task<Student?> GetByStudentCodeAsync(string studentCode);
+    Task<ShuffledExamPaperDto> StartExamAsync(string studentCode, int examSessionSubjectId);
+    Task<List<StudentExamSessionDto>> GetStudentExamSessionsAsync(string studentCode);
 } 

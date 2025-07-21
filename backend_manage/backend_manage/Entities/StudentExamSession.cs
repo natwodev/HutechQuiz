@@ -18,6 +18,10 @@ public class StudentExamSession : BaseEntity
     public DateTime? StartTime { get; set; }
     public DateTime? EndTime { get; set; }
 
+    // Mã sinh viên (có thể khác với StudentId)
+    [StringLength(20)]
+    public string StudentCode { get; set; }
+    
     // Khóa ngoại liên kết với bảng Student
     // Xác định sinh viên tham gia thi
     [ForeignKey("Student")]

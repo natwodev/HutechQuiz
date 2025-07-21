@@ -127,5 +127,6 @@ public class MappingProfile : Profile
                 }
             });
 
+        CreateMap<StudentExamSession, StudentExamSessionDto>();
     }
 }
