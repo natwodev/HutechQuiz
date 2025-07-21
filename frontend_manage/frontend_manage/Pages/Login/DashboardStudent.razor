@@ -2,62 +2,65 @@
 @using frontend_manage.Services
 @using FrontEnd.DTOs
 @using frontend_manage.Pages.Login
-<link href="css/info/info.css" rel="stylesheet" />
+@using MudBlazor
 
 <ExamNotification />
 
-<div class="dashboard-student-center">
-    <div class="component-thong-tin">
-        <div class="overlap">
-            <!-- Logo trường -->
-            <img src="images/exam/Logo.svg" class="logo" />
-
-            <!-- Thông tin sinh viên -->
-            <div class="student-info-wrapper">
-                <img src="images/exam/ava.jpg" class="avatar" />
-
-                <div class="student-info">
+<MudContainer MaxWidth="MaxWidth.Small" Class="d-flex justify-center align-center" Style="height: 100vh;">
+    <MudCard Class="pa-6" Elevation="3" Style="margin: auto; text-align: center; width: 100%">
+        <!-- Logo -->
+        <MudCardContent Class="d-flex justify-center">
+            <MudImage Src="images/exam/Logo.svg" Width="200" />
+        </MudCardContent>
+        <MudGrid>
+            <MudItem xs="4">
+                <MudCardHeader>
+                    <MudAvatar Size="Size.Large" Icon="@Icons.Material.Filled.Person" Color="Color.Primary" Style="width: 120px; height: 120px; border-radius: 50%;" />
+                </MudCardHeader>
+            </MudItem>
+            <MudItem xs="8">
+                <MudCardContent Style="padding-bottom:0">
                     @if (studentInfo != null)
                     {
-                        <div class="id">Mã số sinh viên: @studentInfo.StudentCode</div>
-                        <div class="name">Họ và tên: @($"{studentInfo.LastName} {studentInfo.FirstName}")</div>
+                        <MudText Style="margin-bottom: 2%" Align="Align.Left" Typo="Typo.subtitle1">Mã số sinh viên: @studentInfo.StudentCode</MudText>
+                        <MudText Style="margin-bottom: 2%" Align="Align.Left" Typo="Typo.subtitle1">Họ và tên: @studentInfo.LastName @studentInfo.FirstName</MudText>
+                        <MudText Style="margin-bottom: 2%" Align="Align.Left" Typo="Typo.subtitle1">Thời gian hiện tại: @currentTime</MudText>
                     }
-                    <div class="time">Thời gian hiện tại: @currentTime</div>
-                    <button class="button-sign-out" @onclick="Logout">
-                        <span><span>&#x2190;</span> ĐĂNG XUẤT</span>
-                    </button>
-                </div>
-            </div>
+                </MudCardContent>
+            </MudItem>
+        </MudGrid>
+        <MudCardActions Style="display: flex; justify-content: center;">
+            <MudButton Variant="Variant.Outlined" Size="Size.Small" StartIcon="@Icons.Material.Filled.Logout" Color="Color.Error" OnClick="Logout">Đăng xuất</MudButton>
+        </MudCardActions>
 
-            <!-- Exam Sessions Cards inside the same component-thong-tin -->
-            <div style="margin-top: 2rem;">
-                <h4>Danh sách ca thi của bạn</h4>
-                @if (examSessions == null)
-                {
-                    <div>Đang tải dữ liệu ca thi...</div>
-                }
-                else if (examSessions.Count == 0)
-                {
-                    <div>Bạn chưa có ca thi nào.</div>
-                }
-                else
-                {
-                    <div class="exam-session-list">
-                        @foreach (var session in examSessions)
-                        {
-                            <div class="exam-session-card">
-                                <div class="exam-session-title">@session.SubjectName</div>
-                                <div class="exam-session-details">
-                                    <span>Phòng: @session.RoomName</span>
-                                    <span>Thời lượng: @session.Duration phút</span>
-                                    <span>Bắt đầu: @session.StartTime.ToString("HH:mm dd/MM/yyyy")</span>
-                                </div>
-                            </div>
-                        }
-                    </div>
-                }
-            </div>
-        </div>
-    </div>
-</div>
+        <MudDivider Class="my-3" />
+        <MudCardContent>
+            <MudText Typo="Typo.subtitle1" Style="font-weight:bold">Danh sách ca thi của bạn</MudText>
+            @if (examSessions == null)
+            {
+                <MudProgressCircular Indeterminate Color="Color.Primary" />
+                <MudText>Đang tải dữ liệu ca thi...</MudText>
+            }
+            else if (examSessions.Count == 0)
+            {
+                <MudAlert Severity="Severity.Info" Variant="Variant.Filled">Bạn chưa có ca thi nào.</MudAlert>
+            }
+            else
+            {
+                <MudList T="object" Dense="true">
+                    @foreach (var session in examSessions)
+                    {
+                        <MudListItem T="object">
+                            <MudText Typo="Typo.subtitle2"><b>@session.SubjectName</b></MudText>
+                            <MudText>Phòng: <b>@session.RoomName</b> | Thời lượng: <b>@session.Duration phút</b> | Bắt đầu: <b>@(session.StartTime.ToString("HH:mm dd/MM/yyyy"))</b></MudText>
+                        </MudListItem>
+                    }
+                </MudList>
+            }
+        </MudCardContent>
+    </MudCard>
+</MudContainer>
 
+@code {
+    // ... giữ nguyên code-behind, không thay đổi logic ...
+}

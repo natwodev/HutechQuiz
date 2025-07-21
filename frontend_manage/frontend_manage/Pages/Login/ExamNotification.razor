@@ -3,7 +3,7 @@
 
 <div class="alert alert-info" role="alert" style="position:fixed; top:10px; right:10px;" hidden="@(!showNotification)">
     <strong>@message</strong><br />
-    Giờ thi: @examTime.ToString("HH:mm dd/MM/yyyy")
+    Giờ thi: @(examTime.Hour >= 24 ? "23:59" : examTime.ToString("HH:mm")) @examTime.ToString("dd/MM/yyyy")
 </div>
 
 @code {
