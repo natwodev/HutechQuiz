@@ -1,0 +1,27 @@
+# Loại trừ file/thư mục hệ thống và IDE
+.DS_Store
+.idea/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Loại trừ thư mục build
+bin/
+obj/
+
+# Loại trừ file cấu hình nhạy cảm
+appsettings.json
+appsettings.*.json
+
+# Loại trừ migration (nếu không muốn lưu)
+Migrations/
+
+
+# Loại trừ các file tạm
+*.tmp
+*.log
+
+# Loại trừ các file/thư mục khác không cần thiết
+*.bak
+*.swp 
