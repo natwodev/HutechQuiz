@@ -7,6 +7,7 @@ using System.Net.Http.Json;
 using FrontEnd.DTOs;
 using frontend_manage.Pages.Login;
 using Microsoft.JSInterop;
+using System.Collections.Generic;
 
 namespace frontend_manage.Pages.Login
 {
@@ -24,6 +25,7 @@ namespace frontend_manage.Pages.Login
         private string currentTime = DateTime.Now.ToString("hh:mm:ss tt");
         private Timer? timer;
         private StudentInfoDto? studentInfo;
+        private List<ExamSessionDto>? examSessions;
 
         protected override async Task OnInitializedAsync()
         {
@@ -43,10 +45,14 @@ namespace frontend_manage.Pages.Login
                 {
                     studentInfo = null;
                 }
+
+                // Fetch exam sessions
+                examSessions = await InfoApi.GetStudentExamSessionsAsync();
             }
             catch
             {
                 studentInfo = null;
+                examSessions = null;
             }
             currentTime = DateTime.Now.ToString("hh:mm:ss tt");
             timer = new Timer(UpdateTime, null, 0, 1000);

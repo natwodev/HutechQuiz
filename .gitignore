@@ -11,17 +11,28 @@ bin/
 obj/
 
 # Loại trừ file cấu hình nhạy cảm
-appsettings.json
-appsettings.*.json
+# appsettings.json
+# appsettings.*.json
 
 # Loại trừ migration (nếu không muốn lưu)
-Migrations/
+# Migrations/
 
+# Loại trừ file dữ liệu, media, nén
+# *.png
+# *.jpg
+# *.jpeg
+# *.gif
+# *.zip
+# *.rar
+# *.7z
+# *.xls
+# *.xlsx
+# *.csv
 
 # Loại trừ các file tạm
-*.tmp
-*.log
+# *.tmp
+# *.log
 
 # Loại trừ các file/thư mục khác không cần thiết
-*.bak
-*.swp 
+# *.bak
+# *.swp 

@@ -1968,7 +1968,6 @@
 /Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/mhzlxdmsx0-ixuefgmj0s.gz
 /Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/cv4rqvqzrv-463tcebgvh.gz
 /Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/wzz905sugd-0duwr5eyv4.gz
-/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/vejettb00s-l9tgecbi73.gz
 /Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/0zkbeflu79-2pg9xfhjrj.gz
 /Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/9d5d2gjh0b-cvyvfav92u.gz
 /Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/v89hwlzijw-5nonlgv8dy.gz
@@ -2264,10 +2263,11 @@
 /Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/i0ck0n24f1-h1gc7obt0j.gz
 /Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/c1yb4dpuks-j2y3j59j12.gz
 /Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/e3q2mhjxrr-fe9u1w2puz.gz
-/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/bin/Debug/net9.0/wwwroot/_framework/frontend_manage.5ckyik96i5.pdb
-/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/bin/Debug/net9.0/wwwroot/_framework/frontend_manage.vksh2crkpf.wasm
-/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/bin/Debug/net9.0/wwwroot/_framework/frontend_manage.vksh2crkpf.wasm.gz
-/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/bin/Debug/net9.0/wwwroot/_framework/frontend_manage.5ckyik96i5.pdb.gz
-/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/0hm0583o52-vksh2crkpf.gz
-/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/2f7ezuk8ra-5ckyik96i5.gz
-/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/yodah3lpl2-nqy7xtbks1.gz
+/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/bin/Debug/net9.0/wwwroot/_framework/frontend_manage.gtg1v8jwws.pdb
+/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/bin/Debug/net9.0/wwwroot/_framework/frontend_manage.3s4cra7p2g.wasm
+/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/bin/Debug/net9.0/wwwroot/_framework/frontend_manage.3s4cra7p2g.wasm.gz
+/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/bin/Debug/net9.0/wwwroot/_framework/frontend_manage.gtg1v8jwws.pdb.gz
+/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/0hm0583o52-3s4cra7p2g.gz
+/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/2f7ezuk8ra-gtg1v8jwws.gz
+/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/yodah3lpl2-8sspuu9os9.gz
+/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/obj/Debug/net9.0/compressed/vejettb00s-92043nmzwv.gz

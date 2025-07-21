@@ -77,6 +77,10 @@
       "PackagePath": "staticwebassets/css/monitor.css"
     },
     {
+      "Id": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/wwwroot/images/Home_Page2.jpg",
+      "PackagePath": "staticwebassets/images/Home_Page2.jpg"
+    },
+    {
       "Id": "/Users/nguyenhuynhnam/RiderProjects/HutechQuiz/frontend_manage/frontend_manage/wwwroot/images/admin/home/exam_monitor.png",
       "PackagePath": "staticwebassets/images/admin/home/exam_monitor.png"
     },

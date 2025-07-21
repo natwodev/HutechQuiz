@@ -28,6 +28,35 @@
                     </button>
                 </div>
             </div>
+
+            <!-- Exam Sessions Cards inside the same component-thong-tin -->
+            <div style="margin-top: 2rem;">
+                <h4>Danh sách ca thi của bạn</h4>
+                @if (examSessions == null)
+                {
+                    <div>Đang tải dữ liệu ca thi...</div>
+                }
+                else if (examSessions.Count == 0)
+                {
+                    <div>Bạn chưa có ca thi nào.</div>
+                }
+                else
+                {
+                    <div class="exam-session-list">
+                        @foreach (var session in examSessions)
+                        {
+                            <div class="exam-session-card">
+                                <div class="exam-session-title">@session.SubjectName</div>
+                                <div class="exam-session-details">
+                                    <span>Phòng: @session.RoomName</span>
+                                    <span>Thời lượng: @session.Duration phút</span>
+                                    <span>Bắt đầu: @session.StartTime.ToString("HH:mm dd/MM/yyyy")</span>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
         </div>
     </div>
 </div>

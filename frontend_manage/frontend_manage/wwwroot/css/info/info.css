@@ -9,25 +9,25 @@ body {
 }
 
 .dashboard-student-center {
-    width: 100vw;
+    position: relative;
     min-height: 100vh;
+    background: url('/images/Home_Page2.jpg') no-repeat center center fixed;
+    background-size: cover;
+    z-index: 1;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: #ededed;
 }
 
 .component-thong-tin {
     background: #fff;
     border-radius: 16px;
-    box-shadow: 0 4px 24px rgba(0,0,0,0.12);
-    padding: 20px 18px 20px 18px;
+    box-shadow: 0 4px 32px rgba(0,0,0,0.10);
+    padding: 2.5rem 2.5rem 2rem 2.5rem;
     max-width: 520px;
-    width: 98vw;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 18px;
+    width: 100%;
+    margin: 2rem auto;
+    z-index: 2;
 }
 
 .logo {
@@ -114,6 +114,66 @@ body {
     background: #f11d1d;
 }
 
+.exam-session-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.exam-session-card {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    padding: 1.2rem 1.5rem;
+    min-width: 240px;
+    max-width: 320px;
+    flex: 1 1 260px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    transition: box-shadow 0.2s;
+}
+.exam-session-card:hover {
+    box-shadow: 0 4px 16px rgba(0,107,179,0.15);
+}
+.exam-session-title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #006bb3;
+    margin-bottom: 0.3rem;
+}
+.exam-session-card div {
+    font-size: 0.98rem;
+    color: #222;
+}
+.exam-session-details {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    font-size: 0.92rem;
+    color: #555;
+    margin-top: 0.2rem;
+    align-items: center;
+}
+.exam-session-details span {
+    white-space: nowrap;
+}
+@media (max-width: 700px) {
+    .exam-session-list {
+        flex-direction: column;
+        gap: 0.7rem;
+    }
+    .exam-session-card {
+        max-width: 100%;
+        min-width: 0;
+    }
+    .component-thong-tin {
+        padding: 1.2rem 0.5rem 1rem 0.5rem;
+        max-width: 98vw;
+    }
+}
+
 @media (max-width: 900px) {
     .student-info-wrapper {
         flex-direction: column;
@@ -154,4 +214,14 @@ body {
         padding: 6px 0;
         width: 100%;
     }
+}
+
+.alert {
+    z-index: 10000 !important;
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    left: auto;
+    width: auto;
+    max-width: 90vw;
 }

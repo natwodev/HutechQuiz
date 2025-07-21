@@ -17,4 +17,9 @@ public class InfoApi
     {
         return await _httpClient.GetFromJsonAsync<StudentInfoDto>("api/student/profile");
     }
+
+    public async Task<List<ExamSessionDto>?> GetStudentExamSessionsAsync()
+    {
+        return await _httpClient.GetFromJsonAsync<List<ExamSessionDto>>("api/Student/exam-sessions");
+    }
 }

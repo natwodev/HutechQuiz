@@ -11,6 +11,4 @@ Migrations/
 bin/
 obj/
 
-# Loại trừ các file cấu hình appsettings (thường chứa thông tin nhạy cảm)
-appsettings.json
-appsettings.*.json
+

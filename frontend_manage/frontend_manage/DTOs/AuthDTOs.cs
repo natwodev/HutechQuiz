@@ -33,3 +33,13 @@ public class StudentInfoDto
     public bool? IsDeleted { get; set; }
     public int? Version { get; set; }
 } 
+
+public class ExamSessionDto
+{
+    public int ExamSessionSubjectId { get; set; }
+    public string SubjectName { get; set; }
+    public string RoomName { get; set; }
+    public int Duration { get; set; }
+    public DateTime StartTime { get; set; }
+    public DateTime EndTime { get; set; }
+} 
