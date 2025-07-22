@@ -343,7 +343,7 @@ public class StudentService : IStudentService
         var student = await _repository.GetQueryable().FirstOrDefaultAsync(x => x.StudentCode == studentCode);
         if (student == null) return Enumerable.Empty<StudentExamSessionDto>();
         var sessions = await _studentExamSessionRepository.GetQueryable()
-            .Where(x => x.StudentId == student.StudentId)
+            .Where(x => x.StudentId == student.StudentId && x.IsCompleted == false)
             .Include(x => x.ExamSessionSubject)
                 .ThenInclude(x => x.Subject)
             .Include(x => x.ExamRoom)
