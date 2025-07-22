@@ -62,6 +62,14 @@ public class StudentService : IStudentService
                 ErrorMessage = "Không tìm thấy sinh viên với mã này."
             };
         }
+        if (student.IsLogin)
+        {
+            return new StudentAuthResultDto
+            {
+                IsSuccess = false,
+                ErrorMessage = "Sinh viên đã có phiên đăng nhập."
+            };
+        }
         student.IsLogin = true;
         student.LastLoggedIn = DateTimeHelper.GetVietnamTime();
         await _repository.UpdateAsync(student);
@@ -162,10 +170,10 @@ public class StudentService : IStudentService
         return entities.Count;
     }
 
-    public async Task<int> ImportFromExcelAsync(IFormFile file, string examSessionSubjectCore, int examRoomId)
+    public async Task<StudentImportResultDto> ImportFromExcelAsync(IFormFile file, string examSessionSubjectCore, int examRoomId)
     {
         if (file == null || file.Length == 0)
-            return 0;
+            return new StudentImportResultDto { StudentsAdded = 0, StudentExamSessionsAdded = 0 };
         var userId = _httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
         if (string.IsNullOrEmpty(userId))
             throw new UnauthorizedAccessException("Không thể xác định người dùng tạo sinh viên.");
@@ -204,6 +212,7 @@ public class StudentService : IStudentService
             throw new Exception($"Không tìm thấy ExamSessionSubject với core: {examSessionSubjectCore}");
         int? examRoomIdValue = examRoomId;
         int addedCount = 0;
+        int studentExamSessionAdded = 0;
         foreach (var student in students)
         {
             Student dbStudent;
@@ -239,9 +248,10 @@ public class StudentService : IStudentService
                     Score = 0
                 };
                 await _studentExamSessionRepository.AddAsync(studentExamSession);
+                studentExamSessionAdded++;
             }
         }
-        return addedCount;
+        return new StudentImportResultDto { StudentsAdded = addedCount, StudentExamSessionsAdded = studentExamSessionAdded };
     }
 
     public async Task<Student> UpdateAsync(string id, Student student)

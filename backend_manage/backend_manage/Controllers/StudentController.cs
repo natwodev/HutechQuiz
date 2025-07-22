@@ -36,7 +36,7 @@ public class StudentController : ControllerBase
     public async Task<IActionResult> ImportExcel([FromForm] IFormFile file, [FromForm] string examSessionSubjectCore, [FromForm] int examRoomId)
     {
         var result = await _studentService.ImportFromExcelAsync(file, examSessionSubjectCore, examRoomId);
-        return Ok(new { imported = result });
+        return Ok(new { studentsAdded = result.StudentsAdded, studentExamSessionsAdded = result.StudentExamSessionsAdded });
     }
 
     [HttpGet("by-code/{studentCode}")]

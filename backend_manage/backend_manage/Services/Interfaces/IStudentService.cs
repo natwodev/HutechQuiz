@@ -12,7 +12,7 @@ public interface IStudentService
     Task<bool> DeleteAsync(string id);
     Task<IEnumerable<Student>> AddRangeAsync(IEnumerable<StudentCreateDto> dtos);
     Task<int> BulkImportStudentsAsync(List<StudentCreateDto> students);
-    Task<int> ImportFromExcelAsync(IFormFile file, string examSessionSubjectCore, int examRoomId);
+    Task<StudentImportResultDto> ImportFromExcelAsync(IFormFile file, string examSessionSubjectCore, int examRoomId);
     Task<Student?> GetByStudentCodeAsync(string studentCode);
     Task<ShuffledExamPaperDto> StartExamAsync(string studentCode, int examSessionSubjectId);
     Task<IEnumerable<StudentExamSessionDto>> GetStudentExamSessionsAsync(string studentCode);
