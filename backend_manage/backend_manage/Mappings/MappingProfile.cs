@@ -146,5 +146,11 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.SubjectName, opt => opt.MapFrom(src => src.ExamSessionSubject.Subject.SubjectName))
             .ForMember(dest => dest.StartTime, opt => opt.MapFrom(src => src.StartTime))
             .ForMember(dest => dest.EndTime, opt => opt.MapFrom(src => src.EndTime));
+
+        CreateMap<StudentExamSession, ExamSessionSubjectRoomDto>()
+            .ForMember(dest => dest.ExamSessionSubjectId, opt => opt.MapFrom(src => src.ExamSessionSubjectId))
+            .ForMember(dest => dest.ExamRoomId, opt => opt.MapFrom(src => src.ExamRoomId))
+            .ForMember(dest => dest.RoomName, opt => opt.MapFrom(src => src.ExamRoom.RoomName))
+            .ForMember(dest => dest.SubjectName, opt => opt.MapFrom(src => src.ExamSessionSubject.Subject.SubjectName));
     }
 }

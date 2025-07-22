@@ -12,5 +12,6 @@ namespace backend_manage.Services.Interfaces
         Task<ExamSessionSubjectDto> UpdateAsync(string id, ExamSessionSubjectUpdateDto dto);
         Task<bool> DeleteAsync(string id);
         Task<bool> UpdateOriginalExamPaperIdAsync(int examSessionSubjectId, int originalExamPaperId);
+        Task<IEnumerable<ExamSessionSubjectRoomDto>> GetAllWithRoomsAsync();
     }
 } 

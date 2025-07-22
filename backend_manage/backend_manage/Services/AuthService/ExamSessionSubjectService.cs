@@ -112,5 +112,16 @@ namespace backend_manage.Services.AuthService
             await _repository.UpdateAsync(entity);
             return true;
         }
+
+        public async Task<IEnumerable<ExamSessionSubjectRoomDto>> GetAllWithRoomsAsync()
+        {
+            var studentExamSessions = await _repository.GetQueryable()
+                .SelectMany(x => x.StudentExamSessions)
+                .Include(x => x.ExamRoom)
+                .Include(x => x.ExamSessionSubject)
+                    .ThenInclude(ess => ess.Subject)
+                .ToListAsync();
+            return studentExamSessions.Select(x => _mapper.Map<ExamSessionSubjectRoomDto>(x)).DistinctBy(x => new { x.ExamSessionSubjectId, x.ExamRoomId });
+        }
     }
 } 

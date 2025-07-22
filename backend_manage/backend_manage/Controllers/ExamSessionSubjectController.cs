@@ -63,5 +63,12 @@ namespace backend_manage.Controllers
             if (!success) return NotFound();
             return Ok(new { message = "Cập nhật OriginalExamPaperId thành công." });
         }
+
+        [HttpGet("with-rooms")]
+        public async Task<IActionResult> GetAllWithRooms()
+        {
+            var result = await _service.GetAllWithRoomsAsync();
+            return Ok(result);
+        }
     }
 } 

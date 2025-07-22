@@ -93,10 +93,14 @@ public class StudentController : ControllerBase
     }
 
     [HttpGet("by-exam-room")]
-    public async Task<IActionResult> GetStudentsByExamRoom([FromForm] int examRoomId, [FromForm] int examSessionSubjectId)
+    public async Task<IActionResult> GetStudentsByExamRoom([FromQuery] int examRoomId, [FromQuery] int examSessionSubjectId)
     {
         var result = await _studentService.GetStudentsByExamRoomAsync(examRoomId, examSessionSubjectId);
-        return Ok(result);
+        return Ok(new {
+            students = result,
+            signalrEndpoint = "/notificationHub",
+            groupName = $"room_{examRoomId}"
+        });
     }
 }
 
