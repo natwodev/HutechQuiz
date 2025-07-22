@@ -1,0 +1,64 @@
+@page "/Exam"
+@inject IJSRuntime JSRuntime
+
+<h3>Exam</h3>
+
+@if (examData == null)
+{
+    <p>Không có dữ liệu bài thi.</p>
+}
+else
+{
+    <div>
+        <h4>@examData.SubjectName</h4>
+        <p>Phòng: <b>@examData.RoomName</b></p>
+        <p>Thời lượng: <b>@examData.Duration</b> phút</p>
+        <p>Bắt đầu: <b>@examData.StartTime</b></p>
+        <p>Sinh viên: <b>@examData.Student?.FirstName @examData.Student?.LastName</b> (@examData.Student?.StudentCode)</p>
+    </div>
+}
+
+@code {
+    private ExamData? examData;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var json = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "examData");
+        if (!string.IsNullOrEmpty(json))
+        {
+            examData = System.Text.Json.JsonSerializer.Deserialize<ExamData>(json);
+        }
+        else
+        {
+            // Dữ liệu ảo mặc định nếu không có trong localStorage
+            examData = new ExamData
+            {
+                SubjectName = "Lập trình C#",
+                RoomName = "A101",
+                Duration = 90,
+                StartTime = DateTime.Now.ToString("HH:mm dd/MM/yyyy"),
+                Student = new StudentInfo
+                {
+                    StudentCode = "123456789",
+                    FirstName = "Nguyen",
+                    LastName = "Van A"
+                }
+            };
+        }
+    }
+
+    public class ExamData
+    {
+        public string SubjectName { get; set; }
+        public string RoomName { get; set; }
+        public int Duration { get; set; }
+        public string StartTime { get; set; }
+        public StudentInfo Student { get; set; }
+    }
+    public class StudentInfo
+    {
+        public string StudentCode { get; set; }
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
+    }
+}

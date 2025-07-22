@@ -8,6 +8,7 @@ using FrontEnd.DTOs;
 using frontend_manage.Pages.Login;
 using Microsoft.JSInterop;
 using System.Collections.Generic;
+using System.Text.Json;
 
 namespace frontend_manage.Pages.Login
 {
@@ -75,6 +76,20 @@ namespace frontend_manage.Pages.Login
             await JSRuntime.InvokeVoidAsync("localStorage.removeItem", "studentInfo");
             await JSRuntime.InvokeVoidAsync("localStorage.removeItem", "studentCode");
             Navigation.NavigateTo("/student-login", true);
+        }
+
+        private async Task StartExam(ExamSessionDto session)
+        {
+            // Dữ liệu ảo cho trang Exam
+            var examData = new {
+                SubjectName = session.SubjectName,
+                RoomName = session.RoomName,
+                Duration = session.Duration,
+                StartTime = session.StartTime.ToString("HH:mm dd/MM/yyyy"),
+                Student = studentInfo
+            };
+            await JSRuntime.InvokeVoidAsync("localStorage.setItem", "examData", JsonSerializer.Serialize(examData));
+            Navigation.NavigateTo("/Exam");
         }
     }
 }

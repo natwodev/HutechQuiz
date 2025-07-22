@@ -6,61 +6,71 @@
 
 <ExamNotification />
 
-<MudContainer MaxWidth="MaxWidth.Small" Class="d-flex justify-center align-center" Style="height: 100vh;">
-    <MudCard Class="pa-6" Elevation="3" Style="margin: auto; text-align: center; width: 100%">
-        <!-- Logo -->
-        <MudCardContent Class="d-flex justify-center">
-            <MudImage Src="images/exam/Logo.svg" Width="200" />
-        </MudCardContent>
-        <MudGrid>
-            <MudItem xs="4">
-                <MudCardHeader>
-                    <MudAvatar Size="Size.Large" Icon="@Icons.Material.Filled.Person" Color="Color.Primary" Style="width: 120px; height: 120px; border-radius: 50%;" />
-                </MudCardHeader>
-            </MudItem>
-            <MudItem xs="8">
-                <MudCardContent Style="padding-bottom:0">
-                    @if (studentInfo != null)
-                    {
-                        <MudText Style="margin-bottom: 2%" Align="Align.Left" Typo="Typo.subtitle1">Mã số sinh viên: @studentInfo.StudentCode</MudText>
-                        <MudText Style="margin-bottom: 2%" Align="Align.Left" Typo="Typo.subtitle1">Họ và tên: @studentInfo.LastName @studentInfo.FirstName</MudText>
-                        <MudText Style="margin-bottom: 2%" Align="Align.Left" Typo="Typo.subtitle1">Thời gian hiện tại: @currentTime</MudText>
-                    }
-                </MudCardContent>
-            </MudItem>
-        </MudGrid>
-        <MudCardActions Style="display: flex; justify-content: center;">
-            <MudButton Variant="Variant.Outlined" Size="Size.Small" StartIcon="@Icons.Material.Filled.Logout" Color="Color.Error" OnClick="Logout">Đăng xuất</MudButton>
-        </MudCardActions>
+<div style="position:fixed; inset:0; width:100vw; height:100vh; z-index:-1; background: url('/images/Home_Page2.jpg') no-repeat center center fixed; background-size: cover;"></div>
 
-        <MudDivider Class="my-3" />
-        <MudCardContent>
-            <MudText Typo="Typo.subtitle1" Style="font-weight:bold">Danh sách ca thi của bạn</MudText>
-            @if (examSessions == null)
-            {
-                <MudProgressCircular Indeterminate Color="Color.Primary" />
-                <MudText>Đang tải dữ liệu ca thi...</MudText>
-            }
-            else if (examSessions.Count == 0)
-            {
-                <MudAlert Severity="Severity.Info" Variant="Variant.Filled">Bạn chưa có ca thi nào.</MudAlert>
-            }
-            else
-            {
-                <MudList T="object" Dense="true">
-                    @foreach (var session in examSessions)
+<MudContainer MaxWidth="MaxWidth.False" Style="min-height: 100vh; height: 100vh; margin: 0; padding: 0;">
+    <MudGrid Justify="Justify.Center" AlignItems="AlignItems.Center" Style="min-height: 100vh; height: 100vh; margin: 0;">
+        <MudItem xs="12" sm="8" md="6" lg="4">
+            <MudPaper Elevation="24" Class="pa-8" Style="border-radius: 24px; max-width: 420px; width: 100%; margin: auto; background: white;">
+                <MudStack Spacing="3" AlignItems="AlignItems.Center">
+                    <MudImage Src="images/exam/Logo.svg" Width="250" />
+                    <MudDivider />
+                    <MudText Typo="Typo.h4" Color="Color.Default" Class="mb-2" Style="font-weight:bold;">THÔNG TIN SINH VIÊN</MudText>
+                    <MudText Typo="Typo.body1" StartIcon="@Icons.Material.Filled.Badge">Mã số sinh viên: <b>@studentInfo?.StudentCode</b></MudText>
+                    <MudText Typo="Typo.body1" StartIcon="@Icons.Material.Filled.Person">Họ và tên: <b>@studentInfo?.FirstName @studentInfo?.LastName</b></MudText>
+                    <MudText Typo="Typo.body1" StartIcon="@Icons.Material.Filled.Schedule">Thời gian hiện tại: <b>@currentTime</b></MudText>
+                    <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.Logout" OnClick="Logout" Class="mt-2" Style="border-radius: 20px; min-width: 160px;">
+                        Đăng xuất
+                    </MudButton>
+                    <MudDivider Class="my-4" />
+                    <MudText Typo="Typo.h2" Color="Color.Primary" Class="mb-2">Danh sách ca thi của bạn</MudText>
+                    @if (examSessions == null)
                     {
-                        <MudListItem T="object">
-                            <MudText Typo="Typo.subtitle2"><b>@session.SubjectName</b></MudText>
-                            <MudText>Phòng: <b>@session.RoomName</b> | Thời lượng: <b>@session.Duration phút</b> | Bắt đầu: <b>@(session.StartTime.ToString("HH:mm dd/MM/yyyy"))</b></MudText>
-                        </MudListItem>
+                        <MudProgressCircular Indeterminate Color="Color.Primary" />
+                        <MudText>Đang tải dữ liệu ca thi...</MudText>
                     }
-                </MudList>
-            }
-        </MudCardContent>
-    </MudCard>
+                    else if (examSessions.Count == 0)
+                    {
+                        <MudAlert Severity="Severity.Info" Variant="Variant.Filled">Bạn chưa có ca thi nào.</MudAlert>
+                    }
+                    else
+                    {
+                        <MudList T="object" Dense="true" Style="width: 100%;">
+                            @foreach (var session in examSessions)
+                            {
+                                <MudListItem T="object"
+                                    Style="@GetSessionStyle(session.ExamSessionSubjectId)"
+                                    @onclick="() => selectedExamSessionId = session.ExamSessionSubjectId">
+                                    <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+                                        <div>
+                                            <MudText Typo="Typo.subtitle2" Color="Color.Primary"><b>@session.SubjectName</b></MudText>
+                                            <MudText Typo="Typo.body2">Phòng: <b>@session.RoomName</b></MudText>
+                                            <MudText Typo="Typo.body2">Thời lượng: <b>@session.Duration phút</b></MudText>
+                                            <MudText Typo="Typo.body2">Bắt đầu: <b>@(session.StartTime.ToString("HH:mm dd/MM/yyyy"))</b></MudText>
+                                        </div>
+                                        @if (selectedExamSessionId == session.ExamSessionSubjectId)
+                                        {
+                                            <MudButton Variant="Variant.Filled" Color="Color.Success" Class="mt-2" @onclick="() => StartExam(session)">Bắt đầu thi</MudButton>
+                                        }
+                                    </div>
+                                </MudListItem>
+                            }
+                        </MudList>
+                    }
+                </MudStack>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
 </MudContainer>
 
 @code {
     // ... giữ nguyên code-behind, không thay đổi logic ...
+    private int? selectedExamSessionId = null;
+
+    private string GetSessionStyle(int sessionId)
+    {
+        if (selectedExamSessionId == sessionId)
+            return "cursor:pointer; background-color:#e3f2fd; box-shadow:0 4px 16px rgba(33,150,243,0.15); border-radius:12px;";
+        return "cursor:pointer;";
+    }
 }
