@@ -40,6 +40,7 @@ public class ExamSessionDto
     public string SubjectName { get; set; }
     public string RoomName { get; set; }
     public int Duration { get; set; }
+    public int ExtraMinutes { get; set; }
     public DateTime StartTime { get; set; }
     public DateTime EndTime { get; set; }
 } 

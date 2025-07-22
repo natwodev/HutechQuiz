@@ -39,19 +39,35 @@
                             @foreach (var session in examSessions)
                             {
                                 <MudListItem T="object"
-                                    Style="@GetSessionStyle(session.ExamSessionSubjectId)"
-                                    @onclick="() => selectedExamSessionId = session.ExamSessionSubjectId">
-                                    <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
-                                        <div>
-                                            <MudText Typo="Typo.subtitle2" Color="Color.Primary"><b>@session.SubjectName</b></MudText>
-                                            <MudText Typo="Typo.body2">Phòng: <b>@session.RoomName</b></MudText>
-                                            <MudText Typo="Typo.body2">Thời lượng: <b>@session.Duration phút</b></MudText>
-                                            <MudText Typo="Typo.body2">Bắt đầu: <b>@(session.StartTime.ToString("HH:mm dd/MM/yyyy"))</b></MudText>
+                                             Style="@GetSessionStyle(session.ExamSessionSubjectId)"
+                                             @onclick="() => selectedExamSessionId = session.ExamSessionSubjectId">
+
+                                    <div style="display: flex; justify-content: space-between; width: 100%;">
+                                        <!-- Bên trái: thông tin ca thi (hiển thị dọc) -->
+                                        <div style="display: flex; flex-direction: column; font-size: 0.8rem;">
+                                            <MudText Typo="Typo.caption" Color="Color.Primary"><b>@session.SubjectName</b></MudText>
+                                            <MudText Typo="Typo.caption">Phòng: <b>@session.RoomName</b></MudText>
+                                            <MudText Typo="Typo.caption">Thời lượng: <b>@session.Duration phút</b></MudText>
+                                            <MudText Typo="Typo.caption">Số phút được cộng thêm : <b>@session.ExtraMinutes phút</b></MudText>
+                                            <MudText Typo="Typo.caption">Bắt đầu: <b>@(session.StartTime.ToString("HH:mm dd/MM/yyyy"))</b></MudText>
                                         </div>
+
+                                        <!-- Bên phải: nút Bắt đầu nếu là phiên đã chọn -->
                                         @if (selectedExamSessionId == session.ExamSessionSubjectId)
                                         {
-                                            <MudButton Variant="Variant.Filled" Color="Color.Success" Class="mt-2" @onclick="() => StartExam(session)">Bắt đầu thi</MudButton>
+                                            <MudButton Disabled="@_processing" OnClick="@(() => ProcessSomething(session))" Variant="Variant.Filled" Color="Color.Success" Class="mt-1 px-2 py-1">
+                                                @if (_processing)
+                                                {
+                                                    <MudProgressCircular Size="Size.Small" Indeterminate="true" Color="Color.Inherit" Class="me-1" />
+                                                    <MudText>Đang xử lý...</MudText>
+                                                }
+                                                else
+                                                {
+                                                    <MudText>Bắt đầu thi</MudText>
+                                                }
+                                            </MudButton>
                                         }
+
                                     </div>
                                 </MudListItem>
                             }
@@ -64,13 +80,5 @@
 </MudContainer>
 
 @code {
-    // ... giữ nguyên code-behind, không thay đổi logic ...
-    private int? selectedExamSessionId = null;
-
-    private string GetSessionStyle(int sessionId)
-    {
-        if (selectedExamSessionId == sessionId)
-            return "cursor:pointer; background-color:#e3f2fd; box-shadow:0 4px 16px rgba(33,150,243,0.15); border-radius:12px;";
-        return "cursor:pointer;";
-    }
+    // Đã chuyển toàn bộ logic sang DashboardStudent.razor.cs
 }

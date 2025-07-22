@@ -27,6 +27,8 @@ namespace frontend_manage.Pages.Login
         private Timer? timer;
         private StudentInfoDto? studentInfo;
         private List<ExamSessionDto>? examSessions;
+        private int? selectedExamSessionId = null;
+        private bool _processing = false;
 
         protected override async Task OnInitializedAsync()
         {
@@ -85,11 +87,31 @@ namespace frontend_manage.Pages.Login
                 SubjectName = session.SubjectName,
                 RoomName = session.RoomName,
                 Duration = session.Duration,
+                extraMinutes = session.ExtraMinutes,
                 StartTime = session.StartTime.ToString("HH:mm dd/MM/yyyy"),
                 Student = studentInfo
             };
             await JSRuntime.InvokeVoidAsync("localStorage.setItem", "examData", JsonSerializer.Serialize(examData));
             Navigation.NavigateTo("/Exam");
+        }
+
+        private string GetSessionStyle(int sessionId)
+        {
+            if (selectedExamSessionId == sessionId)
+                return "cursor:pointer; background-color:#e3f2fd; box-shadow:0 4px 16px rgba(33,150,243,0.15); border-radius:12px;";
+            return "cursor:pointer;";
+        }
+
+        private async Task ProcessSomething(ExamSessionDto session)
+        {
+            _processing = true;
+            StateHasChanged(); // cập nhật giao diện ngay khi bắt đầu xử lý
+
+            // Gọi StartExam logic tại đây
+            await StartExam(session);
+
+            _processing = false;
+            StateHasChanged(); // cập nhật lại sau khi xử lý xong
         }
     }
 }

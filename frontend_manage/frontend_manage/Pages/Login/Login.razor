@@ -1,7 +1,6 @@
 @page "/student-login"
 @using frontend_manage.Services
-@inject AuthService AuthService
-@inject NavigationManager Navigation
+
 
 <PageTitle>Đăng nhập Sinh viên</PageTitle>
 
@@ -37,27 +36,5 @@
 </div>
 
 @code {
-    private FrontEnd.DTOs.LoginModelDto loginModel = new();
-    private string? ErrorMessage;
-
-    private async Task HandleLogin()
-    {
-        ErrorMessage = null;
-        var result = await AuthService.LoginStudent(loginModel.UserName, loginModel.Password);
-        if (result.IsSuccess)
-        {
-            Navigation.NavigateTo("/student-dashboard");
-        }
-        else
-        {
-            if (result.ErrorMessage == "Không tìm thấy sinh viên với mã này.")
-            {
-                ErrorMessage = "Không tìm thấy thông tin thí sinh, vui lòng liên hệ cán bộ coi thi";
-            }
-            else
-            {
-                ErrorMessage = result.ErrorMessage;
-            }
-        }
-    }
+    // Đã chuyển toàn bộ logic sang Login.razor.cs
 } 
