@@ -12,6 +12,7 @@ using backend_manage.Hubs;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
 using AutoMapper;
+using Microsoft.AspNetCore.SignalR;
 
 namespace backend_manage.Services.AuthService;
 
@@ -24,6 +25,7 @@ public class StudentService : IStudentService
     private readonly IConfiguration _configuration;
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly IMapper _mapper;
+    private readonly IHubContext<NotificationHub> _hubContext;
     public StudentService(
         IRepository<Student> repository,
         IRepository<StudentExamSession> studentExamSessionRepository,
@@ -31,7 +33,8 @@ public class StudentService : IStudentService
         IRepository<ExamRoom> examRoomRepository,
         IConfiguration configuration,
         IHttpContextAccessor httpContextAccessor,
-        IMapper mapper)
+        IMapper mapper,
+        IHubContext<NotificationHub> hubContext)
     {
         _repository = repository;
         _studentExamSessionRepository = studentExamSessionRepository;
@@ -40,6 +43,7 @@ public class StudentService : IStudentService
         _configuration = configuration;
         _httpContextAccessor = httpContextAccessor;
         _mapper = mapper;
+        _hubContext = hubContext;
     }
 
     public async Task<StudentAuthResultDto> LoginAsync(string studentCode1, string studentCode2)
@@ -62,6 +66,7 @@ public class StudentService : IStudentService
                 ErrorMessage = "Không tìm thấy sinh viên với mã này."
             };
         }
+        /*
         if (student.IsLogin)
         {
             return new StudentAuthResultDto
@@ -69,10 +74,23 @@ public class StudentService : IStudentService
                 IsSuccess = false,
                 ErrorMessage = "Sinh viên đã có phiên đăng nhập."
             };
-        }
+        }*/
+        
         student.IsLogin = true;
         student.LastLoggedIn = DateTimeHelper.GetVietnamTime();
         await _repository.UpdateAsync(student);
+
+        // Gửi realtime trạng thái phòng thi nếu có session
+        var studentExamSession = await _studentExamSessionRepository.GetQueryable()
+            .FirstOrDefaultAsync(x => x.StudentId == student.StudentId);
+        if (studentExamSession != null && studentExamSession.ExamRoomId.HasValue)
+        {
+            var examRoomId = studentExamSession.ExamRoomId.Value;
+            var examSessionSubjectId = studentExamSession.ExamSessionSubjectId;
+            var statusList = await GetStudentsByExamRoomAsync(examRoomId, examSessionSubjectId);
+            await _hubContext.Clients.Group($"room_{examRoomId}")
+                .SendAsync("RoomStatusUpdated", statusList);
+        }
         // Sinh JWT token như cũ, nhưng không có username
         var tokenHandler = new JwtSecurityTokenHandler();
         var key = Encoding.ASCII.GetBytes(_configuration["JWT:key"] ?? "default_secret_key");
@@ -84,7 +102,7 @@ public class StudentService : IStudentService
                 new Claim("studentCode", student.StudentCode),
                 new Claim("role", "Student")
             }),
-            Expires = DateTimeHelper.GetVietnamTime().AddHours(24),
+            Expires = DateTimeHelper.GetVietnamTime().AddDays(7),
             Issuer = _configuration["JWT:Issuer"],
             Audience = _configuration["JWT:Audience"],
             SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
@@ -349,5 +367,16 @@ public class StudentService : IStudentService
             .Include(x => x.ExamRoom)
             .ToListAsync();
         return sessions.Select(x => _mapper.Map<StudentExamSessionDto>(x));
+    }
+
+    public async Task<IEnumerable<StudentExamRoomStatusDto>> GetStudentsByExamRoomAsync(int examRoomId, int examSessionSubjectId)
+    {
+        var sessions = await _studentExamSessionRepository.GetQueryable()
+            .Where(ses => ses.ExamRoomId == examRoomId && ses.ExamSessionSubjectId == examSessionSubjectId)
+            .Include(ses => ses.Student)
+            .Include(ses => ses.ExamSessionSubject)
+                .ThenInclude(ess => ess.Subject)
+            .ToListAsync();
+        return sessions.Select(x => _mapper.Map<StudentExamRoomStatusDto>(x));
     }
 } 

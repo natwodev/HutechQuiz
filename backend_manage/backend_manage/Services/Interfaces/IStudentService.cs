@@ -16,4 +16,5 @@ public interface IStudentService
     Task<Student?> GetByStudentCodeAsync(string studentCode);
     Task<ShuffledExamPaperDto> StartExamAsync(string studentCode, int examSessionSubjectId);
     Task<IEnumerable<StudentExamSessionDto>> GetStudentExamSessionsAsync(string studentCode);
+    Task<IEnumerable<StudentExamRoomStatusDto>> GetStudentsByExamRoomAsync(int examRoomId, int examSessionSubjectId);
 } 

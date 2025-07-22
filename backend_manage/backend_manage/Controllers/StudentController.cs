@@ -91,6 +91,13 @@ public class StudentController : ControllerBase
         var result = await _studentService.GetStudentExamSessionsAsync(studentCode);
         return Ok(result);
     }
+
+    [HttpGet("by-exam-room")]
+    public async Task<IActionResult> GetStudentsByExamRoom([FromForm] int examRoomId, [FromForm] int examSessionSubjectId)
+    {
+        var result = await _studentService.GetStudentsByExamRoomAsync(examRoomId, examSessionSubjectId);
+        return Ok(result);
+    }
 }
 
 

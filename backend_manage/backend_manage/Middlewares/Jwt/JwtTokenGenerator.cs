@@ -33,7 +33,7 @@ namespace backend_manage.Middlewares.Jwt
             var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = new ClaimsIdentity(claims),
-                Expires = DateTimeHelper.GetVietnamTime().AddHours(24),
+                Expires = DateTimeHelper.GetVietnamTime().AddDays(7),
                 Issuer = _configuration["JWT:Issuer"],
                 Audience = _configuration["JWT:Audience"],
                 SigningCredentials = new SigningCredentials(
