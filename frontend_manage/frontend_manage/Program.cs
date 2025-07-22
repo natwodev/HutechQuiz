@@ -1,4 +1,6 @@
+
 using frontend_manage;
+using frontend_manage.Pages.Admin;
 using frontend_manage.Pages.Login;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
@@ -15,6 +17,7 @@ builder.RootComponents.Add<HeadOutlet>("head::after");
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<InfoApi>();
 builder.Services.AddSingleton<NotificationService>();
+builder.Services.AddScoped<Api>();
 
 // Đăng ký AuthHeaderHandler
 builder.Services.AddTransient<AuthHeaderHandler>();
@@ -29,6 +32,8 @@ builder.Services.AddScoped(sp =>
         BaseAddress = new Uri("http://localhost:5163/")
     };
 });
+
+
 
 var app = builder.Build();
 

@@ -1,7 +1,10 @@
 @page "/dashboard"
+@using frontend_manage.DTOs
 @using frontend_manage.Services
+@using frontend_manage.Pages.Admin
 @inject AuthService AuthService
 @inject NavigationManager Navigation
+@inject Api AdminApi
 
 <PageTitle>Dashboard Admin</PageTitle>
 
@@ -18,12 +21,55 @@ else if (!isAdmin)
 else
 {
     <p>Chào mừng Admin!</p>
-    <!-- Nội dung dashboard admin ở đây -->
+    <h3>Danh sách phòng thi của các môn học</h3>
+    @if (isLoading)
+    {
+        <p>Đang tải dữ liệu phòng thi...</p>
+    }
+    else if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger">Lỗi: @errorMessage</div>
+    }
+    else if (examRooms == null || !examRooms.Any())
+    {
+        <p>Không có dữ liệu phòng thi.</p>
+    }
+    else
+    {
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Môn học</th>
+                    <th>Phòng thi</th>
+                  
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var exam in examRooms)
+                {
+                    <tr>
+                        <td>@exam.SubjectName</td>
+                        <td>@exam.RoomName</td>
+                        <td>
+                            <button class="btn btn-primary" @onclick="() => GoToExamRoom(exam.ExamRoomId, exam.ExamSessionSubjectId)">Xem phòng thi</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
 }
 
 @code {
     private bool isAdmin;
     private bool isAdminChecked = false;
+    private bool isLoading = false;
+    private List<ExamSessionSubjectRoomDto>? examRooms;
+    private string? errorMessage;
+    private List<StudentExamRoomStatusDto>? studentsInRoom;
+    private bool isLoadingStudents = false;
+    private string? errorStudentMessage;
 
     protected override async Task OnInitializedAsync()
     {
@@ -33,5 +79,25 @@ else
         {
             Navigation.NavigateTo("/");
         }
+        else
+        {
+            isLoading = true;
+            errorMessage = null;
+            try
+            {
+                examRooms = await AdminApi.GetExamSessionSubjectsWithRoomsAsync();
+            }
+            catch (Exception ex)
+            {
+                errorMessage = ex.Message;
+                examRooms = null;
+            }
+            isLoading = false;
+        }
+    }
+
+    private async Task GoToExamRoom(int examRoomId, int examSessionSubjectId)
+    {
+        Navigation.NavigateTo($"/exam-room-students?examRoomId={examRoomId}&examSessionSubjectId={examSessionSubjectId}");
     }
 } 

@@ -1,0 +1,97 @@
+@page "/exam-room-students"
+@using frontend_manage.DTOs
+@inject frontend_manage.Pages.Admin.Api AdminApi
+@inject NavigationManager Navigation
+@using Microsoft.AspNetCore.Components
+@using Microsoft.AspNetCore.SignalR.Client
+@inject frontend_manage.Services.NotificationService NotificationService
+
+
+@code {
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public int? examRoomId { get; set; }
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public int? examSessionSubjectId { get; set; }
+
+    private List<StudentExamRoomStatusDto>? students;
+    private bool isLoading = true;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (examRoomId == null || examSessionSubjectId == null)
+        {
+            errorMessage = "Không tìm thấy mã phòng thi hoặc mã ca thi.";
+            isLoading = false;
+            return;
+        }
+        await LoadStudents();
+        NotificationService.RoomStatusUpdated += async () => await LoadStudents();
+        await NotificationService.StartAsync();
+        await NotificationService.JoinRoom(examRoomId.Value);
+    }
+
+    private async Task LoadStudents()
+    {
+        isLoading = true;
+        errorMessage = null;
+        try
+        {
+            students = await AdminApi.GetStudentsByExamRoomAsync(examRoomId.Value, examSessionSubjectId.Value);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        isLoading = false;
+        StateHasChanged();
+    }
+}
+
+<h3>Danh sách sinh viên trong phòng thi</h3>
+@if (isLoading)
+{
+    <p>Đang tải dữ liệu...</p>
+}
+else if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="alert alert-danger">@errorMessage</div>
+}
+else if (students == null || !students.Any())
+{
+    <p>Không có sinh viên trong phòng thi này.</p>
+}
+else
+{
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Mã sinh viên</th>
+                <th>Họ</th>
+                <th>Tên</th>
+                <th>Đăng nhập</th>
+                <th>Hoàn thành</th>
+                <th>Môn thi</th>
+                <th>Thời gian bắt đầu</th>
+                <th>Thời gian kết thúc</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var student in students)
+            {
+                <tr>
+                    <td>@student.StudentCode</td>
+                    <td>@student.LastName</td>
+                    <td>@student.FirstName</td>
+                    <td>@(student.IsLogin ? "Có" : "Không")</td>
+                    <td>@(student.IsCompleted ? "Có" : "Không")</td>
+                    <td>@student.SubjectName</td>
+                    <td>@(student.StartTime?.ToString("dd/MM/yyyy HH:mm") ?? "-")</td>
+                    <td>@(student.EndTime?.ToString("dd/MM/yyyy HH:mm") ?? "-")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+} 
