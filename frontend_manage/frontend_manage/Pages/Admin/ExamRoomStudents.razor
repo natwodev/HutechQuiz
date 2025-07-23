@@ -1,59 +1,81 @@
 @page "/exam-room-students"
 @using frontend_manage.DTOs
-@inject frontend_manage.Pages.Admin.Api AdminApi
 @inject NavigationManager Navigation
 @using Microsoft.AspNetCore.Components
-@using Microsoft.AspNetCore.SignalR.Client
-@inject frontend_manage.Services.NotificationService NotificationService
+@inject IJSRuntime JS
 
-
-@code {
-    [Parameter]
-    [SupplyParameterFromQuery]
-    public int? examRoomId { get; set; }
-    [Parameter]
-    [SupplyParameterFromQuery]
-    public int? examSessionSubjectId { get; set; }
-
-    private List<StudentExamRoomStatusDto>? students;
-    private bool isLoading = true;
-    private string? errorMessage;
-
-    protected override async Task OnInitializedAsync()
-    {
-        if (examRoomId == null || examSessionSubjectId == null)
-        {
-            errorMessage = "Không tìm thấy mã phòng thi hoặc mã ca thi.";
-            isLoading = false;
-            return;
-        }
-        await LoadStudents();
-        NotificationService.RoomStatusUpdated += async () => await LoadStudents();
-        await NotificationService.StartAsync();
-        await NotificationService.JoinRoom(examRoomId.Value);
+<style>
+    th.col-id,
+    td.col-id {
+        max-width: 10px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
-    private async Task LoadStudents()
-    {
-        isLoading = true;
-        errorMessage = null;
-        try
-        {
-            students = await AdminApi.GetStudentsByExamRoomAsync(examRoomId.Value, examSessionSubjectId.Value);
-        }
-        catch (Exception ex)
-        {
-            errorMessage = ex.Message;
-        }
-        isLoading = false;
-        StateHasChanged();
+    th.col-name,
+    td.col-name {
+        max-width: 80px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
-}
+
+
+    th.col-status-complete,
+    td.col-status-complete {
+        width: 80px; /* hoặc điều chỉnh số pixel nhỏ hơn nếu muốn */
+        white-space: nowrap;
+        text-align: center;
+    }
+    .status-cell {
+        text-align: center; /* căn giữa theo chiều ngang */
+        vertical-align: middle; /* căn giữa theo chiều dọc nếu cần */
+        width: 60px; /* tuỳ chọn: thu hẹp chiều rộng */
+    }
+    .status-dot {
+        height: 10px;
+        width: 10px;
+        border-radius: 50%;
+        display: inline-block;
+        margin-right: 5px;
+    }
+
+    .status-online {
+        background-color: green;
+    }
+
+    .status-offline {
+        background-color: #ccc;
+    }
+
+    /* Giảm padding và font-size cho các dòng */
+    .table-sm td,
+    .table-sm th {
+        padding-top: 0.25rem;
+        padding-bottom: 0.25rem;
+        font-size: 0.75rem;
+        line-height: 1;
+    }
+
+    /* Tuỳ chọn thêm: thu nhỏ nút reset */
+    .btn-sm {
+        padding: 0.15rem 0.4rem;
+        font-size: 0.7rem;
+        line-height: 1;
+    }
+</style>
+
 
 <h3>Danh sách sinh viên trong phòng thi</h3>
+
 @if (isLoading)
 {
-    <p>Đang tải dữ liệu...</p>
+    <div class="text-center mt-4">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Đang tải...</span>
+        </div>
+    </div>
 }
 else if (!string.IsNullOrEmpty(errorMessage))
 {
@@ -65,33 +87,50 @@ else if (students == null || !students.Any())
 }
 else
 {
-    <table class="table table-bordered">
-        <thead>
-            <tr>
-                <th>Mã sinh viên</th>
-                <th>Họ</th>
-                <th>Tên</th>
-                <th>Đăng nhập</th>
-                <th>Hoàn thành</th>
-                <th>Môn thi</th>
-                <th>Thời gian bắt đầu</th>
-                <th>Thời gian kết thúc</th>
-            </tr>
+    <table class="table table-bordered table-hover table-striped table-sm small">
+        <thead class="table-light">
+        <tr>
+            <th>Mã sinh viên</th>
+            <th>Họ tên</th>
+            <th class="col-status-complete">Đăng nhập</th>
+            <th class="col-status-complete">Hoàn thành</th>
+            <th class="col-status-complete">Thời gian làm</th>
+            <th class="col-status-complete">Thời gian thêm</th>
+            <th>Thời gian làm bài và kết thúc</th> <!-- Gộp -->
+        </tr>
         </thead>
         <tbody>
-            @foreach (var student in students)
-            {
-                <tr>
-                    <td>@student.StudentCode</td>
-                    <td>@student.LastName</td>
-                    <td>@student.FirstName</td>
-                    <td>@(student.IsLogin ? "Có" : "Không")</td>
-                    <td>@(student.IsCompleted ? "Có" : "Không")</td>
-                    <td>@student.SubjectName</td>
-                    <td>@(student.StartTime?.ToString("dd/MM/yyyy HH:mm") ?? "-")</td>
-                    <td>@(student.EndTime?.ToString("dd/MM/yyyy HH:mm") ?? "-")</td>
-                </tr>
-            }
+        @foreach (var student in students)
+        {
+            <tr>
+                <td class="col-id">@student.StudentCode</td>
+                <td class="col-name">@student.FirstName @student.LastName</td>
+                <td class="status-cell">
+                    <span class="status-dot @(student.IsLogin ? "status-online" : "status-offline")"></span>
+                </td>
+                <td class="col-status-complete">@(student.IsCompleted ? "Đã hoàn thành" : "-")</td>
+                <td>@student.Duration phút</td>
+                <td>@student.ExtraMinutes phút</td>
+                <td>
+                    @if (student.StartTime != null || student.EndTime != null)
+                    {
+                        <div style="white-space: nowrap;">
+                            <div><strong>BĐ:</strong> @student.StartTime?.ToString("dd/MM HH:mm")</div>
+                            <div><strong>KT:</strong> @student.EndTime?.ToString("dd/MM HH:mm")</div>
+                        </div>
+                    }
+                    else
+                    {
+                        <span>-</span>
+                    }
+                </td>
+            </tr>
+        }
         </tbody>
+
     </table>
-} 
+}
+
+@code {
+   
+}

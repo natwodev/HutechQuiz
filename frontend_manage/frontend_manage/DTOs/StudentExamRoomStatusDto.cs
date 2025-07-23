@@ -1,5 +1,6 @@
 namespace frontend_manage.DTOs
 {
+
     public class StudentExamRoomStatusDto
     {
         public string StudentCode { get; set; }
@@ -9,6 +10,8 @@ namespace frontend_manage.DTOs
         public bool IsCompleted { get; set; }
         public int? ExamSessionSubjectId { get; set; }
         public string? SubjectName { get; set; }
+        public int Duration { get; set; }
+        public int ExtraMinutes { get; set; }
         public DateTime? StartTime { get; set; }
         public DateTime? EndTime { get; set; }
     }
