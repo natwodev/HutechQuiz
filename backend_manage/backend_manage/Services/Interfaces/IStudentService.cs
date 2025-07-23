@@ -17,4 +17,6 @@ public interface IStudentService
     Task<ShuffledExamPaperDto> StartExamAsync(string studentCode, int examSessionSubjectId);
     Task<IEnumerable<StudentExamSessionDto>> GetStudentExamSessionsAsync(string studentCode);
     Task<IEnumerable<StudentExamRoomStatusDto>> GetStudentsByExamRoomAsync(int examRoomId, int examSessionSubjectId);
+    Task<(bool Success, string Message)> AvtiveLoginAsync(string studentCode, bool isLogin);
+    Task<bool> AddExtraMinutesAsync(string studentCode, int studentExamSessionId, int extraMinutes, string? reasonForExtra);
 } 

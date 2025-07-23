@@ -385,4 +385,59 @@ public class StudentService : IStudentService
             .ToListAsync();
         return sessions.Select(x => _mapper.Map<StudentExamRoomStatusDto>(x));
     }
+    
+    public async Task<bool> AddExtraMinutesAsync(string studentCode, int studentExamSessionId, int extraMinutes, string? reasonForExtra)
+    {
+        // 1. Tìm StudentExamSession cần cập nhật
+        var session = await _studentExamSessionRepository.GetQueryable()
+            .Include(s => s.Student)
+            .FirstOrDefaultAsync(s => s.StudentExamSessionId == studentExamSessionId && s.StudentCode == studentCode);
+
+        if (session == null)
+            throw new Exception("Không tìm thấy phiên thi sinh viên với mã đã cung cấp.");
+
+        // 2. Cập nhật ExtraMinutes và ReasonForExtra
+        session.ExtraMinutes = extraMinutes;
+        session.ReasonForExtra = reasonForExtra;
+
+        // 3. Cập nhật UpdatedAt, UpdatedBy nếu có thông tin từ context
+        var userId = _httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+        session.UpdatedBy = userId;
+        session.UpdatedAt = DateTimeHelper.GetVietnamTime();
+
+        // 4. Lưu vào DB
+        await _studentExamSessionRepository.UpdateAsync(session);
+
+        return true;
+    }
+    
+    public async Task<(bool Success, string Message)> AvtiveLoginAsync(string studentCode, bool isLogin)
+    {
+        var userId = _httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        var student = await _repository.GetQueryable()
+            .FirstOrDefaultAsync(x => x.StudentCode == studentCode);
+
+        if (student == null)
+        {
+            return (false, "Không tìm thấy sinh viên với mã này.");
+        }
+
+        if (student.IsLogin == isLogin)
+        {
+            return (true, "Trạng thái đăng nhập đã đúng, không cần cập nhật.");
+        }
+
+        student.IsLogin = isLogin;
+        student.UpdatedBy = userId;
+        student.UpdatedAt = DateTimeHelper.GetVietnamTime();
+
+        await _repository.UpdateAsync(student);
+
+        return (true, "Cập nhật trạng thái đăng nhập thành công.");
+    }
+
+
+ 
+
 } 

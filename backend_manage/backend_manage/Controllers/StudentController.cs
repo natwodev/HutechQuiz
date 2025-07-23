@@ -102,9 +102,40 @@ public class StudentController : ControllerBase
             groupName = $"room_{examRoomId}"
         });
     }
+    [HttpPost("extra-minutes")]
+    public async Task<IActionResult> AddExtraMinutes([FromBody] AddExtraMinutesDto dto)
+    {
+        try
+        {
+            var success = await _studentService.AddExtraMinutesAsync(dto.StudentCode, dto.StudentExamSessionId, dto.ExtraMinutes, dto.ReasonForExtra);
+            if (success)
+                return Ok(new { message = "Cập nhật thời gian làm bài thêm thành công." });
+            return BadRequest(new { message = "Không thể cập nhật." });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpPost("active-login")]
+    public async Task<IActionResult> ActiveLogin([FromBody] ActiveLoginRequest request)
+    {
+        var (success, message) = await _studentService.AvtiveLoginAsync(request.StudentCode, request.IsLogin);
+
+        if (!success)
+            return NotFound(new { message });
+
+        return Ok(new { message });
+    }
+
 }
 
-
+public class ActiveLoginRequest
+{
+    public string StudentCode { get; set; }
+    public bool IsLogin { get; set; }
+}
 public class LoginRequest
 {
     public string Username { get; set; }
