@@ -2,24 +2,36 @@
 @using frontend_manage.DTOs
 @inject NavigationManager Navigation
 @using Microsoft.AspNetCore.Components
-@inject IJSRuntime JS
 
 <style>
+    /* Cố định cột Mã sinh viên */
     th.col-id,
     td.col-id {
-        max-width: 10px;
+        position: sticky;
+        left: 0;
+        background-color: white;
+        z-index: 2;
+        min-width: 100px;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+        border-right: 1px solid #ccc;
     }
 
+    /* Cố định cột Họ tên – ngay bên phải Mã sinh viên */
     th.col-name,
     td.col-name {
-        max-width: 80px;
+        position: sticky;
+        left: 100px; /* đúng bằng chiều rộng cột "Mã sinh viên" */
+        background-color: white;
+        z-index: 1;
+        min-width: 120px;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+        border-right: 1px solid #ccc;
     }
+
 
 
     th.col-status-complete,
@@ -64,13 +76,62 @@
         font-size: 0.7rem;
         line-height: 1;
     }
+
+    .pagination-wrapper {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 60px;
+        margin-top: 5px; /* giảm khoảng cách với bảng */
+    }
+
+
+    .custom-pagination {
+        display: flex;
+        gap: 4px;
+        flex-wrap: wrap;
+    }
+
+    .custom-pagination button {
+        padding: 4px 10px;
+        border: 1px solid #ccc;
+        background-color: #f9f9f9;
+        color: #333;
+        cursor: pointer;
+        font-size: 14px;
+        border-radius: 4px;
+        transition: background-color 0.2s ease;
+    }
+
+    .custom-pagination button:hover:enabled {
+        background-color: #007bff;
+        color: white;
+        border-color: #007bff;
+    }
+
+    .custom-pagination button.active {
+        background-color: #007bff;
+        color: white;
+        font-weight: bold;
+        border-color: #007bff;
+    }
+
+    .custom-pagination button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
 </style>
 
 
 <h3>Danh sách sinh viên trong phòng thi</h3>
-
+<div class="mb-2">
+    <input class="form-control"
+           placeholder="Tìm kiếm mã sinh viên hoặc họ tên..."
+           @bind:event="oninput" />
+</div>
 @if (isLoading)
 {
+    
     <div class="text-center mt-4">
         <div class="spinner-border text-primary" role="status">
             <span class="visually-hidden">Đang tải...</span>
@@ -86,49 +147,76 @@ else if (students == null || !students.Any())
     <p>Không có sinh viên trong phòng thi này.</p>
 }
 else
-{
-    <table class="table table-bordered table-hover table-striped table-sm small">
-        <thead class="table-light">
-        <tr>
-            <th>Mã sinh viên</th>
-            <th>Họ tên</th>
-            <th class="col-status-complete">Đăng nhập</th>
-            <th class="col-status-complete">Hoàn thành</th>
-            <th class="col-status-complete">Thời gian làm</th>
-            <th class="col-status-complete">Thời gian thêm</th>
-            <th>Thời gian làm bài và kết thúc</th> <!-- Gộp -->
-        </tr>
-        </thead>
-        <tbody>
-        @foreach (var student in students)
-        {
+{ 
+    <div style="display: flex; flex-direction: column; min-height: 500px;">
+    <div style="overflow-x: auto;">
+        <table class="table table-bordered table-hover table-striped table-sm small">
+            <thead class="table-light">
             <tr>
-                <td class="col-id">@student.StudentCode</td>
-                <td class="col-name">@student.FirstName @student.LastName</td>
-                <td class="status-cell">
-                    <span class="status-dot @(student.IsLogin ? "status-online" : "status-offline")"></span>
-                </td>
-                <td class="col-status-complete">@(student.IsCompleted ? "Đã hoàn thành" : "-")</td>
-                <td>@student.Duration phút</td>
-                <td>@student.ExtraMinutes phút</td>
-                <td>
-                    @if (student.StartTime != null || student.EndTime != null)
-                    {
-                        <div style="white-space: nowrap;">
-                            <div><strong>BĐ:</strong> @student.StartTime?.ToString("dd/MM HH:mm")</div>
-                            <div><strong>KT:</strong> @student.EndTime?.ToString("dd/MM HH:mm")</div>
-                        </div>
-                    }
-                    else
-                    {
-                        <span>-</span>
-                    }
-                </td>
+                <th class="col-id">Mã sinh viên</th>
+                <th class="col-name">Họ tên</th>
+                <th class="col-status-complete">Đăng nhập</th>
+                <th class="col-status-complete">Hoàn thành</th>
+                <th class="col-status-complete">Thời gian làm</th>
+                <th class="col-status-complete">Thời gian thêm</th>
+                <th>Thời gian làm bài và kết thúc</th>
             </tr>
-        }
-        </tbody>
+            </thead>
+            <tbody>
+            @foreach (var student in PagedStudents)
+            {
+                <tr>
+                    <td class="col-id">@student.StudentCode</td>
+                    <td class="col-name">@student.FirstName @student.LastName</td>
+                    <td class="status-cell">
+                        <span class="status-dot @(student.IsLogin ? "status-online" : "status-offline")"></span>
+                    </td>
+                    <td class="col-status-complete">@(student.IsCompleted ? "Đã hoàn thành" : "-")</td>
+                    <td>@student.Duration phút</td>
+                    <td>@student.ExtraMinutes phút</td>
+                    <td>
+                        @if (student.StartTime != null || student.EndTime != null)
+                        {
+                            <div style="white-space: nowrap;">
+                                <div><strong>BĐ:</strong> @student.StartTime?.ToString("dd/MM HH:mm")</div>
+                                <div><strong>KT:</strong> @student.EndTime?.ToString("dd/MM HH:mm")</div>
+                            </div>
+                        }
+                        else
+                        {
+                            <span>-</span>
+                        }
+                    </td>
+                </tr>
+            }
+            </tbody>
 
-    </table>
+        </table>
+    </div>
+        <div style="flex: 1; overflow-x: auto;">
+            <!-- bảng sinh viên -->
+            <table class="table table-bordered table-hover table-striped table-sm small">
+                <!-- table head và body giữ nguyên như bạn đang có -->
+            </table>
+        </div>
+
+        @if (totalPages > 1)
+        {
+            <div class="pagination-wrapper">
+                <div class="custom-pagination">
+                    <button @onclick="PrevPage" disabled="@(currentPage == 1)">«</button>
+                    @for (int i = 1; i <= totalPages; i++)
+                    {
+                        <button class="@(i == currentPage ? "active" : "")" @onclick="() => GoToPage(i)">
+                            @i
+                        </button>
+                    }
+                    <button @onclick="NextPage" disabled="@(currentPage == totalPages)">»</button>
+                </div>
+            </div>
+        }
+    </div>
+
 }
 
 @code {

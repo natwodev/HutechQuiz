@@ -70,27 +70,32 @@ namespace frontend_manage.Pages.Admin
             }
             isLoading = false;
         }
+        
 
-        protected async Task ResetLogin(string studentCode)
+        private int currentPage = 1;
+        private int pageSize = 20;
+        private int totalPages => students == null ? 1 : (int)Math.Ceiling((double)students.Count / pageSize);
+
+        private IEnumerable<StudentExamRoomStatusDto> PagedStudents =>
+            students == null ? Enumerable.Empty<StudentExamRoomStatusDto>() 
+                : students.Skip((currentPage - 1) * pageSize).Take(pageSize);
+
+        private void NextPage()
         {
-            try
-            {
-                var result = await AdminApi.ActiveLoginAsync(studentCode, false);
-                await LoadStudents();
-                StateHasChanged();
-            }
-            catch (Exception ex)
-            {
-                // NotificationService.ShowError($"Không thể reset: {ex.Message}");
-            }
+            if (currentPage < totalPages)
+                currentPage++;
         }
-        private async Task ConfirmReset(string studentCode)
+
+        private void PrevPage()
         {
-            bool confirmed = await JS.InvokeAsync<bool>("confirm", new object[] { $"Bạn có chắc chắn muốn reset đăng nhập cho sinh viên {studentCode}?" });
-            if (confirmed)
-            {
-                await ResetLogin(studentCode);
-            }
+            if (currentPage > 1)
+                currentPage--;
+        }
+
+        private void GoToPage(int page)
+        {
+            if (page >= 1 && page <= totalPages)
+                currentPage = page;
         }
 
     }
