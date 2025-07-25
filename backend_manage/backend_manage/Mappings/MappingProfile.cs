@@ -154,5 +154,10 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.ExamRoomId, opt => opt.MapFrom(src => src.ExamRoomId))
             .ForMember(dest => dest.RoomName, opt => opt.MapFrom(src => src.ExamRoom.RoomName))
             .ForMember(dest => dest.SubjectName, opt => opt.MapFrom(src => src.ExamSessionSubject.Subject.SubjectName));
+
+        CreateMap<ExamRoomLecturerAssignment, ExamRoomLecturerAssignmentDto>()
+            .ForMember(dest => dest.RoomName, opt => opt.MapFrom(src => src.ExamRoom.RoomName))
+            .ForMember(dest => dest.SubjectName, opt => opt.MapFrom(src => src.ExamSessionSubject.Subject.SubjectName))
+            .ForMember(dest => dest.LecturerName, opt => opt.MapFrom(src => src.Lecturer.FullName));
     }
 }

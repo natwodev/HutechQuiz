@@ -31,6 +31,8 @@ namespace backend_manage.Configurations
             services.AddScoped<IExamSessionSubjectService, ExamSessionSubjectService>();
             services.AddScoped<IOriginalExamPaperService, OriginalExamPaperService>();
             services.AddScoped<IShuffledExamPaperService, ShuffledExamPaperService>();
+            services.AddScoped<IExamRoomLecturerAssignmentService, ExamRoomLecturerAssignmentService>();
+            
         }
     }
 }
