@@ -12,6 +12,8 @@ namespace backend_manage.DTOs
         public int? CorrectAnswerIndex { get; set; }
         public int? ParentQuestionId { get; set; }
         public int ChapterId { get; set; }
+        public bool CanShuffleQuestion { get; set; }
+        public string? AnswerShuffleInfo { get; set; }
         public List<OriginalExamPaperDetailDto> ChildQuestions { get; set; } = new();
     }
 } 

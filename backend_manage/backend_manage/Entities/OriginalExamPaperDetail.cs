@@ -37,6 +37,15 @@ namespace backend_manage.Entities
         // Khóa ngoại đến câu hỏi cha (nếu có)
         public int? ParentQuestionId { get; set; }
 
+        // Thông tin hoán vị từ XML
+        // Cho phép hoán vị câu hỏi hay không
+        public bool CanShuffleQuestion { get; set; } = true;
+        
+        // Thông tin hoán vị của từng đáp án (JSON format)
+        // Ví dụ: "{\"1\":true,\"2\":false,\"3\":true,\"4\":false}"
+        // Key: vị trí đáp án (1,2,3,4), Value: có thể hoán vị hay không
+        [Column(TypeName = "nvarchar(max)")]
+        public string? AnswerShuffleInfo { get; set; }
 
         // Khóa ngoại liên kết với bảng Chapter
         // Xác định câu hỏi thuộc chương nào
