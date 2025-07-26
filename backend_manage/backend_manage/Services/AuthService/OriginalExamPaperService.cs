@@ -61,6 +61,67 @@ namespace backend_manage.Services.AuthService
         public const string ExtractPassword =
             "649224E2-F0AC-42B1-AD1B-2EAF04E2AC7D-FE602240-7E60-43BF-828D-D6AF38A70429-52572FD1-BB94-45AD-95CF-7B2B5C2E85A6-1B3D4CCF-808E-4ABF-8F9E-73ADF041C78B";
 
+        private async Task<string> ExtractAndReadXmlAsync(IFormFile file, string originalExamPaperCore)
+        {
+            var epzFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "EPZ");
+            var epzFilePath = Path.Combine(epzFolder, $"{originalExamPaperCore}.epz");
+            var zipFilePath = Path.Combine(epzFolder, $"{originalExamPaperCore}.zip");
+            if (File.Exists(epzFilePath) || File.Exists(zipFilePath))
+                throw new Exception($"Đã tồn tại file đề với mã '{originalExamPaperCore}' trong hệ thống.");
+            if (!Directory.Exists(epzFolder))
+                Directory.CreateDirectory(epzFolder);
+            using (var fileStream = new FileStream(epzFilePath, FileMode.Create))
+            {
+                await file.CopyToAsync(fileStream);
+            }
+            if (File.Exists(zipFilePath)) File.Delete(zipFilePath);
+            File.Move(epzFilePath, zipFilePath);
+            var extractFolder = Path.Combine(epzFolder, originalExamPaperCore);
+            if (!Directory.Exists(extractFolder)) Directory.CreateDirectory(extractFolder);
+            using (var zipStream = new FileStream(zipFilePath, FileMode.Open, FileAccess.Read))
+            using (var zipFile = new ICSharpCode.SharpZipLib.Zip.ZipFile(zipStream))
+            {
+                zipFile.Password = ExtractPassword;
+                foreach (ZipEntry entry in zipFile)
+                {
+                    if (!entry.IsFile) continue;
+                    var entryPath = Path.Combine(extractFolder, entry.Name.Replace("\\", Path.DirectorySeparatorChar.ToString()).Replace("/", Path.DirectorySeparatorChar.ToString()));
+                    var entryDir = Path.GetDirectoryName(entryPath);
+                    if (!Directory.Exists(entryDir)) Directory.CreateDirectory(entryDir);
+                    using (var entryStream = zipFile.GetInputStream(entry))
+                    using (var outFileStream = File.Create(entryPath))
+                    {
+                        await entryStream.CopyToAsync(outFileStream);
+                    }
+                }
+            }
+            var xmlFile = Directory.GetFiles(extractFolder, "*.xml", SearchOption.AllDirectories).FirstOrDefault();
+            if (xmlFile == null) throw new Exception("Không tìm thấy file XML trong archive");
+            return await File.ReadAllTextAsync(xmlFile);
+        }
+
+        private async Task<Subject> EnsureSubjectAsync(MonHocDto monHoc, string userId, DateTime now)
+        {
+            var exists = await _subjectRepository.GetQueryable().AnyAsync(s => s.SubjectCore == monHoc.MaSoMonHoc);
+            if (!exists)
+            {
+                var subject = new Subject
+                {
+                    SubjectCore = monHoc.MaSoMonHoc,
+                    SubjectName = monHoc.TenMonHoc,
+                    DepartmentId = null,
+                    CreatedBy = userId,
+                    CreatedAt = now
+                };
+                await _subjectRepository.AddAsync(subject);
+                return subject;
+            }
+            else
+            {
+                return await _subjectRepository.GetQueryable().FirstOrDefaultAsync(s => s.SubjectCore == monHoc.MaSoMonHoc);
+            }
+        }
+
         public async Task ImportFromXmlAsync(IFormFile file, string originalExamPaperCore)
         {
             if (file == null || file.Length == 0)
@@ -68,74 +129,10 @@ namespace backend_manage.Services.AuthService
             if (!file.FileName.EndsWith(".epz", StringComparison.OrdinalIgnoreCase))
                 throw new ArgumentException("File phải có đuôi .epz");
 
-            var epzFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "EPZ");
-            var epzFilePath = Path.Combine(epzFolder, $"{originalExamPaperCore}.epz");
-            var zipFilePath = Path.Combine(epzFolder, $"{originalExamPaperCore}.zip");
-            // Kiểm tra nếu đã tồn tại file .epz hoặc .zip với tên này thì dừng lại
-            if (File.Exists(epzFilePath) || File.Exists(zipFilePath))
-                throw new Exception($"Đã tồn tại file đề với mã '{originalExamPaperCore}' trong hệ thống.");
+            // Tách phần giải nén và đọc XML
+            string xmlContent = await ExtractAndReadXmlAsync(file, originalExamPaperCore);
 
-            // Kiểm tra OriginalExamPaperCore đã tồn tại trong database chưa
-            var existedExamPaper = await _originalExamPaperRepository.GetQueryable()
-                .FirstOrDefaultAsync(x => x.OriginalExamPaperCore == originalExamPaperCore);
-            if (existedExamPaper != null)
-                throw new Exception($"OriginalExamPaperCore '{originalExamPaperCore}' đã tồn tại trong hệ thống.");
-
-            if (!Directory.Exists(epzFolder))
-            {
-                Directory.CreateDirectory(epzFolder);
-            }
-            using (var fileStream = new FileStream(epzFilePath, FileMode.Create))
-            {
-                await file.CopyToAsync(fileStream);
-            }
-
-            // Đổi tên file .epz thành .zip
-            if (File.Exists(zipFilePath))
-            {
-                File.Delete(zipFilePath);
-            }
-            File.Move(epzFilePath, zipFilePath);
-
-            // Giải nén file .zip với password, giữ nguyên cấu trúc thư mục
-            var extractFolder = Path.Combine(epzFolder, originalExamPaperCore);
-            if (!Directory.Exists(extractFolder))
-            {
-                Directory.CreateDirectory(extractFolder);
-            }
-            using (var zipStream = new FileStream(zipFilePath, FileMode.Open, FileAccess.Read))
-                using (var zipFile = new ICSharpCode.SharpZipLib.Zip.ZipFile(zipStream))
-                {
-                zipFile.Password = ExtractPassword;
-                    foreach (ZipEntry entry in zipFile)
-                    {
-                    if (!entry.IsFile) continue;
-                    // Đảm bảo đúng cấu trúc thư mục
-                    var entryPath = Path.Combine(extractFolder, entry.Name.Replace("\\", Path.DirectorySeparatorChar.ToString()).Replace("/", Path.DirectorySeparatorChar.ToString()));
-                    var entryDir = Path.GetDirectoryName(entryPath);
-                    if (!Directory.Exists(entryDir))
-                        {
-                        Directory.CreateDirectory(entryDir);
-                    }
-                            using (var entryStream = zipFile.GetInputStream(entry))
-                    using (var outFileStream = File.Create(entryPath))
-                    {
-                        await entryStream.CopyToAsync(outFileStream);
-                    }
-                }
-            }
-
-            // Đọc file XML đã giải nén từ thư mục extractFolder (bao gồm thư mục con)
-            string xmlContent = null;
-            var xmlFile = Directory.GetFiles(extractFolder, "*.xml", SearchOption.AllDirectories).FirstOrDefault();
-            if (xmlFile != null)
-                            {
-                xmlContent = await File.ReadAllTextAsync(xmlFile);
-                            }
-            if (xmlContent == null)
-                throw new Exception("Không tìm thấy file XML trong archive");
-
-            // Mở lại chức năng xử lý file XML
+            // Deserialize XML
             var serializer = new XmlSerializer(typeof(EPZDto));
             EPZDto epz;
             using (var reader = new StringReader(xmlContent))
@@ -145,32 +142,13 @@ namespace backend_manage.Services.AuthService
 
             var monHoc = epz.MonHoc;
             if (monHoc == null) throw new Exception("XML không hợp lệ: thiếu MonHoc");
-            // Kiểm tra SubjectCore đã tồn tại chưa
-            var exists = await _subjectRepository.GetQueryable().AnyAsync(s => s.SubjectCore == monHoc.MaSoMonHoc);
-            Subject subject = null;
-            var now = DateTimeHelper.GetVietnamTime(); // Avoid duplicate calls
+            var now = DateTimeHelper.GetVietnamTime();
             var userIdForExamPaper = _httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(userIdForExamPaper))
                 throw new UnauthorizedAccessException("Không thể xác định người dùng tạo đề thi gốc.");
-            if (!exists)
-            {
-                if (string.IsNullOrEmpty(userIdForExamPaper))
-                    throw new UnauthorizedAccessException("Không thể xác định người dùng tạo sinh viên.");
-                subject = new Subject
-                {
-                    SubjectCore = monHoc.MaSoMonHoc,
-                    SubjectName = monHoc.TenMonHoc,
-                    DepartmentId = null, // Tạm thời bỏ qua
-                    CreatedBy = userIdForExamPaper,
-                    CreatedAt = now
-                };
-                await _subjectRepository.AddAsync(subject);
-            }
-            else
-            {
-                subject = await _subjectRepository.GetQueryable()
-                    .FirstOrDefaultAsync(s => s.SubjectCore == monHoc.MaSoMonHoc);
-            }
+
+            // Tách phần tạo/lấy Subject
+            var subject = await EnsureSubjectAsync(monHoc, userIdForExamPaper, now);
 
             // Lấy tên file epz (không bao gồm đuôi mở rộng) để làm Title
             var epzFileName = Path.GetFileNameWithoutExtension(file.FileName);
