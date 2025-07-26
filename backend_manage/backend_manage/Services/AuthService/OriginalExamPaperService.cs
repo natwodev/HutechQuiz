@@ -400,15 +400,15 @@ namespace backend_manage.Services.AuthService
                         var shuffleableAnswers = new List<int>();
                         var fixedAnswers = new List<int>();
                         
-                        for (int i = 1; i <= 4; i++)
+                        for (int j = 1; j <= 4; j++)
                         {
-                            if (shuffleInfo.ContainsKey(i.ToString()) && shuffleInfo[i.ToString()])
+                            if (shuffleInfo.ContainsKey(j.ToString()) && shuffleInfo[j.ToString()])
                             {
-                                shuffleableAnswers.Add(i);
+                                shuffleableAnswers.Add(j);
                             }
                             else
                             {
-                                fixedAnswers.Add(i);
+                                fixedAnswers.Add(j);
                             }
                         }
                         

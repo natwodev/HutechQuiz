@@ -43,7 +43,7 @@
           <NoiDung>2</NoiDung>
           <ThuTu>3</ThuTu>
           <LaDapAn>false</LaDapAn>
-          <HoanVi>false</HoanVi>
+          <HoanVi>true</HoanVi>
         </CauTraLoi>
         <CauTraLoi>
           <MaCauTraLoi>10a71201-cf49-4e61-ac1e-7f8defc52877</MaCauTraLoi>
