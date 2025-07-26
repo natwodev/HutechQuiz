@@ -31,14 +31,5 @@ public class NotificationService
         await _hubConnection.StartAsync();
         Console.WriteLine("[SignalR] Đã kết nối tới notificationHub!");
     }
-
-    public async Task JoinRoom(int examRoomId)
-    {
-        if (_hubConnection != null)
-        {
-            await _hubConnection.InvokeAsync("JoinRoom", examRoomId);
-            Console.WriteLine($"[SignalR] Đã join group room_{examRoomId}");
-        }
-    }
 }
 

@@ -63,8 +63,8 @@ namespace backend_manage.Services.AuthService
                 lecturer.UserId = appUser.Id;
                 await _lecturerRepository.UpdateAsync(lecturer);
                 
-                // Có thể gán role "Lecturer" cho user nếu cần
-                // await _userManager.AddToRoleAsync(appUser, "Lecturer");
+                // Gán role "Lecturer" cho user
+                await _userManager.AddToRoleAsync(appUser, "Lecturer");
             }
             else
             {

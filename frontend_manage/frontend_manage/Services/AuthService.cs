@@ -233,4 +233,10 @@ public class AuthService
         var role = await GetUserRoleFromToken();
         return role == "Admin";
     }
+
+    public async Task<bool> IsLecturer()
+    {
+        var role = await GetUserRoleFromToken();
+        return role == "Lecturer";
+    }
 }

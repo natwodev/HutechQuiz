@@ -1,0 +1,196 @@
+@page "/lecturer/dashboard"
+@using frontend_manage.DTOs
+@using frontend_manage.Services
+@using frontend_manage.Pages.Lecturer
+@inject AuthService AuthService
+@inject NavigationManager Navigation
+@inject Api LecturerApi
+
+<PageTitle>Dashboard Giảng viên</PageTitle>
+
+<!-- Header -->
+<div class="bg-primary text-white p-3 mb-4 rounded shadow-sm d-flex justify-content-between align-items-center">
+    <div>
+        <h2 class="mb-0">Dashboard Giảng viên</h2>
+        <small>Quản lý phòng thi và sinh viên</small>
+    </div>
+    <div>
+        <button class="btn btn-outline-light btn-sm" @onclick="Logout">
+            <i class="fas fa-sign-out-alt"></i> Đăng xuất
+        </button>
+    </div>
+</div>
+
+<!-- Nội dung chính -->
+<div class="container-fluid">
+    <!-- Loading -->
+    <div class="text-center text-secondary" hidden="@(!isLoading)">
+        <div class="spinner-border text-primary" role="status"></div>
+        <p class="mt-2">Đang tải dữ liệu...</p>
+    </div>
+
+    <!-- Lỗi -->
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @errorMessage
+            <button type="button" class="btn-close" @onclick="() => errorMessage = null"></button>
+        </div>
+    }
+
+    <!-- Thông báo thành công -->
+    @if (!string.IsNullOrEmpty(successMessage))
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @successMessage
+            <button type="button" class="btn-close" @onclick="() => successMessage = null"></button>
+        </div>
+    }
+
+    <!-- Không có dữ liệu -->
+    @if (!isLoading && (examRooms == null || !examRooms.Any()))
+    {
+        <div class="alert alert-warning">
+            <i class="fas fa-exclamation-triangle"></i>
+            Bạn chưa được phân công phòng thi nào.
+        </div>
+    }
+
+    <!-- Danh sách phòng thi -->
+    @if (!isLoading && examRooms != null && examRooms.Any())
+    {
+        <div class="row">
+            @foreach (var room in examRooms)
+            {
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-header bg-light">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h6 class="mb-0">@room.SubjectName</h6>
+                                <span class="badge @GetStatusBadgeClass(room.ExamStatus)">
+                                    @GetStatusText(room.ExamStatus)
+                                </span>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <h6 class="card-title">@room.RoomName</h6>
+                            <p class="card-text small text-muted">
+                                <i class="fas fa-clock"></i>
+                                @if (room.ExamStartTime.HasValue)
+                                {
+                                    <span>Bắt đầu: @room.ExamStartTime.Value.ToString("dd/MM/yyyy HH:mm")</span>
+                                }
+                                else
+                                {
+                                    <span>Chưa có lịch thi</span>
+                                }
+                            </p>
+                            <p class="card-text small text-muted">
+                                <i class="fas fa-user-tie"></i> @room.LecturerName
+                            </p>
+                        </div>
+                        <div class="card-footer bg-transparent">
+                            <div class="d-grid gap-2">
+                                <button class="btn btn-primary btn-sm" @onclick="() => GoToExamRoom(room.ExamRoomId, room.ExamSessionSubjectId)">
+                                    <i class="fas fa-eye"></i> Xem chi tiết
+                                </button>
+                                @if (room.ExamStatus == "ongoing")
+                                {
+                                    <button class="btn btn-warning btn-sm" @onclick="() => SendNotification(room.ExamRoomId)">
+                                        <i class="fas fa-bell"></i> Gửi thông báo
+                                    </button>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    private bool isLecturer;
+    private bool isLecturerChecked = false;
+    private bool isLoading = false;
+    private List<LecturerExamRoomDto>? examRooms;
+    private string? errorMessage;
+    private string? successMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        isLecturer = await AuthService.IsLecturer();
+        isLecturerChecked = true;
+        if (!isLecturer)
+        {
+            Navigation.NavigateTo("/");
+            return;
+        }
+
+        await LoadExamRooms();
+    }
+
+    private async Task LoadExamRooms()
+    {
+        isLoading = true;
+        errorMessage = null;
+        try
+        {
+            examRooms = await LecturerApi.GetMyExamRoomsAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Lỗi khi tải dữ liệu: {ex.Message}";
+            examRooms = null;
+        }
+        isLoading = false;
+    }
+
+    private async Task GoToExamRoom(int examRoomId, int examSessionSubjectId)
+    {
+        Navigation.NavigateTo($"/lecturer/exam-room?examRoomId={examRoomId}&examSessionSubjectId={examSessionSubjectId}");
+    }
+
+    private async Task SendNotification(int examRoomId)
+    {
+        // Hiển thị modal hoặc prompt để nhập thông báo
+        // Tạm thời sử dụng thông báo mặc định
+        try
+        {
+            var message = await LecturerApi.SendNotificationToRoomAsync(examRoomId, "Thông báo từ giảng viên");
+            successMessage = message;
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Lỗi khi gửi thông báo: {ex.Message}";
+        }
+    }
+
+    private async Task Logout()
+    {
+        await AuthService.Logout();
+        Navigation.NavigateTo("/");
+    }
+
+    private string GetStatusBadgeClass(string status)
+    {
+        return status switch
+        {
+            "pending" => "bg-warning",
+            "ongoing" => "bg-success",
+            "completed" => "bg-secondary",
+            _ => "bg-light"
+        };
+    }
+
+    private string GetStatusText(string status)
+    {
+        return status switch
+        {
+            "pending" => "Chờ thi",
+            "ongoing" => "Đang thi",
+            "completed" => "Đã kết thúc",
+            _ => "Không xác định"
+        };
+    }
+} 

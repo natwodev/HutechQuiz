@@ -1,6 +1,7 @@
 
 using frontend_manage;
 using frontend_manage.Pages.Admin;
+using frontend_manage.Pages.Lecturer;
 using frontend_manage.Pages.Login;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
@@ -18,6 +19,7 @@ builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<InfoApi>();
 builder.Services.AddSingleton<NotificationService>();
 builder.Services.AddScoped<Api>();
+builder.Services.AddScoped<LecturerApi>();
 
 // Đăng ký AuthHeaderHandler
 builder.Services.AddTransient<AuthHeaderHandler>();
