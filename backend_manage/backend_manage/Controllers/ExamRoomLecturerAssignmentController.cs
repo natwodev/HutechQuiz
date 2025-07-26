@@ -1,63 +1,30 @@
 using System.Security.Claims;
-using backend_manage.DTOs;
 using backend_manage.Services.Interfaces;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
 
 namespace backend_manage.Controllers
 {
-    [Route("api/[controller]")]
     [ApiController]
+    [Route("api/[controller]")]
     public class ExamRoomLecturerAssignmentController : ControllerBase
     {
-        private readonly IExamRoomLecturerAssignmentService _examRoomLecturerAssignmentService;
-        public ExamRoomLecturerAssignmentController(IExamRoomLecturerAssignmentService examRoomLecturerAssignmentService)
+        private readonly IExamRoomLecturerAssignmentService _service;
+        public ExamRoomLecturerAssignmentController(IExamRoomLecturerAssignmentService service)
         {
-            _examRoomLecturerAssignmentService = examRoomLecturerAssignmentService;
+            _service = service;
         }
 
-        [HttpGet]
-        [Authorize(Policy = "AdminOnly")]
-        public async Task<IActionResult> GetAll()
+        [HttpGet("my-assignments")]
+        public async Task<IActionResult> GetRoomsByLecturer()
         {
-            var result = await _examRoomLecturerAssignmentService.GetAllAsync();
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized(new { message = "Token không hợp lệ!" });
+
+            var result = await _service.GetByLecturerIdAsync(userId);
             return Ok(result);
         }
 
-        [HttpGet("{id}")]
-        [Authorize(Policy = "AdminOnly")]
-        public async Task<IActionResult> GetById(string id)
-        {
-            var result = await _examRoomLecturerAssignmentService.GetByIdAsync(id);
-            if (result == null) return NotFound();
-            return Ok(result);
-        }
-
-        [HttpPost]
-        [Authorize(Policy = "AdminOnly")]
-        public async Task<IActionResult> Create([FromBody] ExamRoomLecturerAssignmentDto dto)
-        {
-            var result = await _examRoomLecturerAssignmentService.AddAsync(dto);
-            return CreatedAtAction(nameof(GetById), new { id = result.ExamRoomLecturerAssignmentId }, result);
-        }
-
-        [HttpPut("{id}")]
-        [Authorize(Policy = "AdminOnly")]
-        public async Task<IActionResult> Update(string id, [FromBody] ExamRoomLecturerAssignmentDto dto)
-        {
-            var result = await _examRoomLecturerAssignmentService.UpdateAsync(id, dto);
-            if (result == null) return NotFound();
-            return Ok(result);
-        }
-
-        [HttpDelete("{id}")]
-        [Authorize(Policy = "AdminOnly")]
-        public async Task<IActionResult> Delete(string id)
-        {
-            var success = await _examRoomLecturerAssignmentService.DeleteAsync(id);
-            if (!success) return NotFound();
-            return NoContent();
-        }
     }
-} 
+}
