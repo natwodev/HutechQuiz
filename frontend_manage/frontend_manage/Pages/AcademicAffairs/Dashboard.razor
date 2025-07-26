@@ -4,9 +4,102 @@
 <div class="container mt-5">
     <div class="card shadow-sm">
         <div class="card-body">
-            <h2 class="mb-3">Academic Affairs Dashboard</h2>
-            <p>Welcome to the Academic Affairs management page.</p>
-            <!-- Add UI components for Academic Affairs here -->
+            <h2 class="mb-3">Quản lý Phòng đào tạo</h2>
+            <ul class="nav nav-tabs" id="dashboardTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="year-tab" data-bs-toggle="tab" data-bs-target="#year" type="button" role="tab">Năm học</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="semester-tab" data-bs-toggle="tab" data-bs-target="#semester" type="button" role="tab">Học kỳ</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="batch-tab" data-bs-toggle="tab" data-bs-target="#batch" type="button" role="tab">Đợt thi</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="batch-detail-tab" data-bs-toggle="tab" data-bs-target="#batch-detail" type="button" role="tab">Chi tiết đợt thi</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="session-tab" data-bs-toggle="tab" data-bs-target="#session" type="button" role="tab">Ca thi</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="department-tab" data-bs-toggle="tab" data-bs-target="#department" type="button" role="tab">Khoa tham gia ca thi</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="subject-session-tab" data-bs-toggle="tab" data-bs-target="#subject-session" type="button" role="tab">Ca thi môn học</button>
+                </li>
+            </ul>
+            <div class="tab-content mt-3" id="dashboardTabsContent">
+                <div class="tab-pane fade show active" id="year" role="tabpanel">
+                    <h5>Quản lý Năm học</h5>
+                    <button class="btn btn-primary mb-2">Thêm năm học</button>
+                    <table class="table table-bordered">
+                        <thead><tr><th>ID</th><th>Tên năm học</th><th>Thao tác</th></tr></thead>
+                        <tbody>
+                            <tr><td>1</td><td>2023-2024</td><td><button class="btn btn-sm btn-info">Sửa</button> <button class="btn btn-sm btn-danger">Xóa</button></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="tab-pane fade" id="semester" role="tabpanel">
+                    <h5>Quản lý Học kỳ</h5>
+                    <button class="btn btn-primary mb-2">Thêm học kỳ</button>
+                    <table class="table table-bordered">
+                        <thead><tr><th>ID</th><th>Tên học kỳ</th><th>Năm học</th><th>Thao tác</th></tr></thead>
+                        <tbody>
+                            <tr><td>1</td><td>Học kỳ 1</td><td>2023-2024</td><td><button class="btn btn-sm btn-info">Sửa</button> <button class="btn btn-sm btn-danger">Xóa</button></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="tab-pane fade" id="batch" role="tabpanel">
+                    <h5>Quản lý Đợt thi</h5>
+                    <button class="btn btn-primary mb-2">Thêm đợt thi</button>
+                    <table class="table table-bordered">
+                        <thead><tr><th>ID</th><th>Tên đợt thi</th><th>Thao tác</th></tr></thead>
+                        <tbody>
+                            <tr><td>1</td><td>Đợt 1</td><td><button class="btn btn-sm btn-info">Sửa</button> <button class="btn btn-sm btn-danger">Xóa</button></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="tab-pane fade" id="batch-detail" role="tabpanel">
+                    <h5>Quản lý Chi tiết đợt thi</h5>
+                    <button class="btn btn-primary mb-2">Thêm chi tiết đợt thi</button>
+                    <table class="table table-bordered">
+                        <thead><tr><th>ID</th><th>Đợt thi</th><th>Môn học</th><th>Thao tác</th></tr></thead>
+                        <tbody>
+                            <tr><td>1</td><td>Đợt 1</td><td>Toán</td><td><button class="btn btn-sm btn-info">Sửa</button> <button class="btn btn-sm btn-danger">Xóa</button></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="tab-pane fade" id="session" role="tabpanel">
+                    <h5>Quản lý Ca thi</h5>
+                    <button class="btn btn-primary mb-2">Thêm ca thi</button>
+                    <table class="table table-bordered">
+                        <thead><tr><th>ID</th><th>Thời gian</th><th>Thao tác</th></tr></thead>
+                        <tbody>
+                            <tr><td>1</td><td>08:00 - 10:00</td><td><button class="btn btn-sm btn-info">Sửa</button> <button class="btn btn-sm btn-danger">Xóa</button></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="tab-pane fade" id="department" role="tabpanel">
+                    <h5>Quản lý Khoa tham gia ca thi</h5>
+                    <button class="btn btn-primary mb-2">Thêm khoa</button>
+                    <table class="table table-bordered">
+                        <thead><tr><th>ID</th><th>Khoa</th><th>Ca thi</th><th>Thao tác</th></tr></thead>
+                        <tbody>
+                            <tr><td>1</td><td>CNTT</td><td>08:00 - 10:00</td><td><button class="btn btn-sm btn-info">Sửa</button> <button class="btn btn-sm btn-danger">Xóa</button></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="tab-pane fade" id="subject-session" role="tabpanel">
+                    <h5>Quản lý Ca thi môn học</h5>
+                    <button class="btn btn-primary mb-2">Thêm ca thi môn học</button>
+                    <table class="table table-bordered">
+                        <thead><tr><th>ID</th><th>Môn học</th><th>Ca thi</th><th>Thao tác</th></tr></thead>
+                        <tbody>
+                            <tr><td>1</td><td>Toán</td><td>08:00 - 10:00</td><td><button class="btn btn-sm btn-info">Sửa</button> <button class="btn btn-sm btn-danger">Xóa</button></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
 </div> 
