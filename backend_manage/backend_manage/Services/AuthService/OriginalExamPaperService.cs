@@ -79,16 +79,16 @@ namespace backend_manage.Services.AuthService
             var extractFolder = Path.Combine(epzFolder, originalExamPaperCore);
             if (!Directory.Exists(extractFolder)) Directory.CreateDirectory(extractFolder);
             using (var zipStream = new FileStream(zipFilePath, FileMode.Open, FileAccess.Read))
-            using (var zipFile = new ICSharpCode.SharpZipLib.Zip.ZipFile(zipStream))
-            {
-                zipFile.Password = ExtractPassword;
-                foreach (ZipEntry entry in zipFile)
+                using (var zipFile = new ICSharpCode.SharpZipLib.Zip.ZipFile(zipStream))
                 {
+                zipFile.Password = ExtractPassword;
+                    foreach (ZipEntry entry in zipFile)
+                    {
                     if (!entry.IsFile) continue;
                     var entryPath = Path.Combine(extractFolder, entry.Name.Replace("\\", Path.DirectorySeparatorChar.ToString()).Replace("/", Path.DirectorySeparatorChar.ToString()));
                     var entryDir = Path.GetDirectoryName(entryPath);
                     if (!Directory.Exists(entryDir)) Directory.CreateDirectory(entryDir);
-                    using (var entryStream = zipFile.GetInputStream(entry))
+                            using (var entryStream = zipFile.GetInputStream(entry))
                     using (var outFileStream = File.Create(entryPath))
                     {
                         await entryStream.CopyToAsync(outFileStream);
