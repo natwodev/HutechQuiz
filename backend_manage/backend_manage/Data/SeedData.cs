@@ -25,7 +25,7 @@ namespace backend_manage.Data
                 await roleManager.DeleteAsync(role);
             }
 */
-            string[] rolesToSeed = { "Admin", "Student", "Lecturer", "Training", "ExamManager", "ITManager" };
+            string[] rolesToSeed = { "Admin", "Student", "Lecturer", "AcademicAffairs", "ExamManager", "ITManager" };
             foreach (var role in rolesToSeed)
             {
                 if (!await roleManager.RoleExistsAsync(role))
@@ -93,6 +93,43 @@ namespace backend_manage.Data
             else
             {
                 Console.WriteLine("ℹ️ Customer user đã tồn tại.");
+            }
+
+            // Seed các user cho các role còn thiếu
+            var rolesToSeedUser = new[]
+            {
+                new { Role = "Lecturer", Username = "lecturer", FullName = "Giảng viên" },
+                new { Role = "AcademicAffairs", Username = "academicaffairs", FullName = "Phòng đào tạo" },
+                new { Role = "ExamManager", Username = "exammanager", FullName = "Quản lý đợt thi" },
+                new { Role = "ITManager", Username = "itmanager", FullName = "Quản trị CNTT" }
+            };
+            foreach (var item in rolesToSeedUser)
+            {
+                var existUser = await userManager.FindByEmailAsync(item.Username);
+                if (existUser == null)
+                {
+                    var user = new ApplicationUser
+                    {
+                        FullName = item.FullName,
+                        UserName = item.Username,
+                        Email = item.Username,
+                        EmailConfirmed = true
+                    };
+                    var result = await userManager.CreateAsync(user, item.Username);
+                    if (result.Succeeded)
+                    {
+                        await userManager.AddToRoleAsync(user, item.Role);
+                        Console.WriteLine($"✅ User {item.Username} ({item.Role}) đã được tạo.");
+                    }
+                    else
+                    {
+                        Console.WriteLine($"❌ Lỗi tạo user {item.Username}: " + string.Join(", ", result.Errors.Select(e => e.Description)));
+                    }
+                }
+                else
+                {
+                    Console.WriteLine($"ℹ️ User {item.Username} đã tồn tại.");
+                }
             }
 
             // Seed 2 khoa nếu chưa có
