@@ -7,7 +7,6 @@ namespace backend_manage.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
     public class AcademicYearController : ControllerBase
     {
         private readonly IAcademicYearService _academicYearService;
@@ -18,6 +17,7 @@ namespace backend_manage.Controllers
         }
        
         [HttpGet]
+        [Authorize(Policy = "AdminOnly")]
         public async Task<IActionResult> GetAll()
         {
             var result = await _academicYearService.GetAllAsync();
@@ -25,6 +25,7 @@ namespace backend_manage.Controllers
         }
 
         [HttpGet("{id}")]
+        [Authorize(Policy = "AdminOnly")]
         public async Task<IActionResult> GetById(string id)
         {
             var result = await _academicYearService.GetByIdAsync(id);
@@ -34,6 +35,7 @@ namespace backend_manage.Controllers
         
         #region Post Methods 
         [HttpPost]
+        [Authorize(Policy = "AdminOnly")]
         public async Task<IActionResult> Create([FromBody] AcademicYearCreateDto dto)
         {
             var result = await _academicYearService.AddAsync(dto);
@@ -42,6 +44,7 @@ namespace backend_manage.Controllers
         #endregion
 
         [HttpPut("{id}")]
+        [Authorize(Policy = "AdminOnly")]
         public async Task<IActionResult> Update(string id, [FromBody] AcademicYearUpdateDto dto)
         {
             var result = await _academicYearService.UpdateAsync(id, dto);
@@ -50,6 +53,7 @@ namespace backend_manage.Controllers
         }
 
         [HttpDelete("{id}")]
+        [Authorize(Policy = "AdminOnly")]
         public async Task<IActionResult> Delete(string id)
         {
             var success = await _academicYearService.DeleteAsync(id);

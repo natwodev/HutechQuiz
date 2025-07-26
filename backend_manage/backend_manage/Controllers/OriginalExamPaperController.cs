@@ -19,6 +19,7 @@ namespace backend_manage.Controllers
         }
 
         [HttpPost("import-xml")]
+        [Authorize(Policy = "AdminOnly")]
         public async Task<IActionResult> ImportXml([FromForm] IFormFile file,[FromForm] string OriginalExamPaperCore)
         {
             if (file == null || file.Length == 0)
@@ -28,6 +29,7 @@ namespace backend_manage.Controllers
         }
         
         [HttpPost("create-shuffled")]
+        [Authorize(Policy = "AdminOnly")]
         public async Task<IActionResult> CreateShuffled([FromForm] string originalExamPaperCore, [FromForm] int count)
         {
             if (string.IsNullOrWhiteSpace(originalExamPaperCore) || count <= 0)
@@ -37,6 +39,7 @@ namespace backend_manage.Controllers
         }
 
         [HttpGet("{core}/with-details")]
+        [Authorize(Policy = "AdminOnly")]
         public async Task<IActionResult> GetWithDetails(string core)
         {
             var result = await _originalExamPaperService.GetWithDetailsAsync(core);
@@ -44,4 +47,4 @@ namespace backend_manage.Controllers
             return Ok(result);
         }
     }
-} 
+}

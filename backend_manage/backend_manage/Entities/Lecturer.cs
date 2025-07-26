@@ -26,18 +26,6 @@ namespace backend_manage.Entities
         [StringLength(50)]
         public string LastName { get; set; }
 
-        // Tên đăng nhập của giảng viên vào hệ thống
-        [StringLength(50)]
-        public string Username { get; set; }
-
-        // Mật khẩu đăng nhập (đã được mã hóa)
-        [StringLength(100)]
-        public string Password { get; set; }
-
-        // Trạng thái đăng nhập hiện tại của giảng viên
-        // true: đang đăng nhập, false: chưa đăng nhập
-        public bool IsLogin { get; set; } = false;
-
         // Giới tính (true: nam, false: nữ, null: chưa xác định)
         public bool? Gender { get; set; }
 

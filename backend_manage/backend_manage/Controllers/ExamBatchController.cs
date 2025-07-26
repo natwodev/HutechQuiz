@@ -7,17 +7,16 @@ namespace backend_manage.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
     public class ExamBatchController : ControllerBase
     {
         private readonly IExamBatchService _examBatchService;
-
         public ExamBatchController(IExamBatchService examBatchService)
         {
             _examBatchService = examBatchService;
         }
 
         [HttpGet]
+        [Authorize(Policy = "AdminOnly")]
         public async Task<IActionResult> GetAll()
         {
             var result = await _examBatchService.GetAllAsync();
@@ -25,6 +24,7 @@ namespace backend_manage.Controllers
         }
 
         [HttpGet("{id}")]
+        [Authorize(Policy = "AdminOnly")]
         public async Task<IActionResult> GetById(string id)
         {
             var result = await _examBatchService.GetByIdAsync(id);
@@ -33,6 +33,7 @@ namespace backend_manage.Controllers
         }
 
         [HttpPost]
+        [Authorize(Policy = "AdminOnly")]
         public async Task<IActionResult> Create([FromBody] ExamBatchCreateDto dto)
         {
             var result = await _examBatchService.AddAsync(dto);
@@ -40,6 +41,7 @@ namespace backend_manage.Controllers
         }
 
         [HttpPut("{id}")]
+        [Authorize(Policy = "AdminOnly")]
         public async Task<IActionResult> Update(string id, [FromBody] ExamBatchUpdateDto dto)
         {
             var result = await _examBatchService.UpdateAsync(id, dto);
@@ -48,17 +50,10 @@ namespace backend_manage.Controllers
         }
 
         [HttpDelete("{id}")]
+        [Authorize(Policy = "AdminOnly")]
         public async Task<IActionResult> Delete(string id)
         {
             var success = await _examBatchService.DeleteAsync(id);
-            if (!success) return NotFound();
-            return NoContent();
-        }
-
-        [HttpPatch("{id}/toggle-active")]
-        public async Task<IActionResult> ToggleIsActive(string id)
-        {
-            var success = await _examBatchService.ToggleIsActiveAsync(id);
             if (!success) return NotFound();
             return NoContent();
         }

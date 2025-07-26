@@ -8,50 +8,53 @@ namespace backend_manage.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
     public class ExamSessionDepartmentController : ControllerBase
     {
-        private readonly IExamSessionDepartmentService _service;
-
-        public ExamSessionDepartmentController(IExamSessionDepartmentService service)
+        private readonly IExamSessionDepartmentService _examSessionDepartmentService;
+        public ExamSessionDepartmentController(IExamSessionDepartmentService examSessionDepartmentService)
         {
-            _service = service;
+            _examSessionDepartmentService = examSessionDepartmentService;
         }
 
         [HttpGet]
+        [Authorize(Policy = "AdminOnly")]
         public async Task<IActionResult> GetAll()
         {
-            var result = await _service.GetAllAsync();
+            var result = await _examSessionDepartmentService.GetAllAsync();
             return Ok(result);
         }
 
         [HttpGet("{id}")]
+        [Authorize(Policy = "AdminOnly")]
         public async Task<IActionResult> GetById(string id)
         {
-            var result = await _service.GetByIdAsync(id);
+            var result = await _examSessionDepartmentService.GetByIdAsync(id);
             if (result == null) return NotFound();
             return Ok(result);
         }
 
         [HttpPost]
+        [Authorize(Policy = "AdminOnly")]
         public async Task<IActionResult> Create([FromBody] ExamSessionDepartmentCreateDto dto)
         {
-            var result = await _service.AddAsync(dto);
+            var result = await _examSessionDepartmentService.AddAsync(dto);
             return CreatedAtAction(nameof(GetById), new { id = result.ExamSessionDepartmentId }, result);
         }
 
         [HttpPut("{id}")]
+        [Authorize(Policy = "AdminOnly")]
         public async Task<IActionResult> Update(string id, [FromBody] ExamSessionDepartmentUpdateDto dto)
         {
-            var result = await _service.UpdateAsync(id, dto);
+            var result = await _examSessionDepartmentService.UpdateAsync(id, dto);
             if (result == null) return NotFound();
             return Ok(result);
         }
 
         [HttpDelete("{id}")]
+        [Authorize(Policy = "AdminOnly")]
         public async Task<IActionResult> Delete(string id)
         {
-            var success = await _service.DeleteAsync(id);
+            var success = await _examSessionDepartmentService.DeleteAsync(id);
             if (!success) return NotFound();
             return NoContent();
         }

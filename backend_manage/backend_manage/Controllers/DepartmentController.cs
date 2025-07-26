@@ -16,6 +16,7 @@ namespace backend_manage.Controllers
         }
 
         [HttpGet]
+        [Authorize(Policy = "AdminOnly")]
         public async Task<ActionResult<IEnumerable<DepartmentDto>>> GetAll()
         {
             var result = await _departmentService.GetAllAsync();
@@ -23,7 +24,7 @@ namespace backend_manage.Controllers
         }
 
         [HttpGet("{id}")]
-        [Authorize(Policy = "AdminOrLecturer")]
+        [Authorize(Policy = "AdminOnly")]
         public async Task<ActionResult<DepartmentDto>> GetById(string id)
         {
             var result = await _departmentService.GetByIdAsync(id);
