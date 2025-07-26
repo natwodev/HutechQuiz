@@ -3,6 +3,9 @@ using Microsoft.AspNetCore.SignalR;
 using backend_manage.Hubs;
 using System.Threading.Tasks;
 using System;
+using backend_manage.DTOs;
+using backend_manage.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 
 namespace backend_manage.Controllers
 {
@@ -25,6 +28,7 @@ namespace backend_manage.Controllers
         }
 
         [HttpPost("logout-all-students-in-room")]
+        [Authorize(Policy = "AdminOnly")]
         public async Task<IActionResult> LogoutAllStudentsInRoom([FromBody] LogoutAllStudentsDto dto)
         {
             try
@@ -49,6 +53,7 @@ namespace backend_manage.Controllers
         }
 
         [HttpPost("logout-student")]
+        [Authorize(Policy = "AdminOnly")]
         public async Task<IActionResult> LogoutStudent([FromBody] LogoutStudentDto dto)
         {
             try
@@ -94,6 +99,7 @@ namespace backend_manage.Controllers
         }
 
         [HttpPost("send-room-notification")]
+        [Authorize(Policy = "AdminOnly")]
         public async Task<IActionResult> SendRoomNotification([FromBody] RoomNotificationDto dto)
         {
             try

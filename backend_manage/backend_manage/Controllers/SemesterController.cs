@@ -7,17 +7,16 @@ namespace backend_manage.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
     public class SemesterController : ControllerBase
     {
         private readonly ISemesterService _semesterService;
-
         public SemesterController(ISemesterService semesterService)
         {
             _semesterService = semesterService;
         }
 
         [HttpGet]
+        [Authorize(Policy = "AdminOnly")]
         public async Task<IActionResult> GetAll()
         {
             var result = await _semesterService.GetAllAsync();
@@ -25,6 +24,7 @@ namespace backend_manage.Controllers
         }
 
         [HttpGet("{id}")]
+        [Authorize(Policy = "AdminOnly")]
         public async Task<IActionResult> GetById(string id)
         {
             var result = await _semesterService.GetByIdAsync(id);
@@ -33,6 +33,7 @@ namespace backend_manage.Controllers
         }
 
         [HttpPost]
+        [Authorize(Policy = "AdminOnly")]
         public async Task<IActionResult> Create([FromBody] SemesterCreateDto dto)
         {
             var result = await _semesterService.AddAsync(dto);
@@ -40,6 +41,7 @@ namespace backend_manage.Controllers
         }
 
         [HttpPut("{id}")]
+        [Authorize(Policy = "AdminOnly")]
         public async Task<IActionResult> Update(string id, [FromBody] SemesterUpdateDto dto)
         {
             var result = await _semesterService.UpdateAsync(id, dto);
@@ -48,6 +50,7 @@ namespace backend_manage.Controllers
         }
 
         [HttpDelete("{id}")]
+        [Authorize(Policy = "AdminOnly")]
         public async Task<IActionResult> Delete(string id)
         {
             var success = await _semesterService.DeleteAsync(id);

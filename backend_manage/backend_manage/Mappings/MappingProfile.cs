@@ -160,5 +160,10 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.SubjectName, opt => opt.MapFrom(src => src.ExamSessionSubject.Subject.SubjectName))
             .ForMember(dest => dest.LecturerName, opt => opt.MapFrom(src => src.Lecturer.LastName + " " + src.Lecturer.FirstName));
 
+        // Lecturer
+        CreateMap<LecturerCreateDto, Lecturer>();
+        CreateMap<Lecturer, LecturerDto>()
+            .ForMember(dest => dest.DepartmentName, opt => opt.MapFrom(src => src.Department != null ? src.Department.DepartmentName : null));
+
     }
 }

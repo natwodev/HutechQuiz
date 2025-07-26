@@ -7,7 +7,6 @@ namespace backend_manage.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize]
     public class ShuffledExamPaperController : ControllerBase
     {
         private readonly IShuffledExamPaperService _service;
@@ -17,6 +16,7 @@ namespace backend_manage.Controllers
         }
 
         [HttpGet("{core}/with-details")]
+        [Authorize(Policy = "AdminOnly")]
         public async Task<IActionResult> GetWithDetails(string core)
         {
             var result = await _service.GetWithDetailsAsync(core);

@@ -2,6 +2,8 @@ using Microsoft.AspNetCore.Mvc;
 using backend_manage.Services.Interfaces;
 using backend_manage.DTOs;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
+using System.Collections.Generic;
 
 namespace backend_manage.Controllers
 {
@@ -16,21 +18,24 @@ namespace backend_manage.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> AddLecturer([FromBody] LecturerCreateDto dto)
+        [Authorize(Policy = "AdminOnly")]
+        public async Task<ActionResult<LecturerDto>> AddLecturer([FromBody] LecturerCreateDto dto)
         {
             var result = await _lecturerService.AddLecturerAsync(dto);
-            return Ok(result);
+            return CreatedAtAction(nameof(GetByLecturerCode), new { lecturerCode = result.LecturerCode }, result);
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAllLecturers()
+        [Authorize(Policy = "AdminOnly")]
+        public async Task<ActionResult<IEnumerable<LecturerDto>>> GetAllLecturers()
         {
             var result = await _lecturerService.GetAllLecturersAsync();
             return Ok(result);
         }
 
         [HttpGet("{lecturerCode}")]
-        public async Task<IActionResult> GetByLecturerCode(string lecturerCode)
+        [Authorize(Policy = "AdminOnly")]
+        public async Task<ActionResult<LecturerDto>> GetByLecturerCode(string lecturerCode)
         {
             var result = await _lecturerService.GetByLecturerCodeAsync(lecturerCode);
             if (result == null) return NotFound();
