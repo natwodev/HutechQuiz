@@ -155,6 +155,13 @@ namespace backend_manage.Data
                 .HasForeignKey(e => e.LecturerId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            // Lecturer → ApplicationUser
+            builder.Entity<Lecturer>()
+                .HasOne(l => l.ApplicationUser)
+                .WithOne(u => u.Lecturer)
+                .HasForeignKey<Lecturer>(l => l.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
         }
 
     }
