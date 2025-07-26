@@ -303,14 +303,41 @@ public class StudentService : IStudentService
         int examSessionSubjectId = studentExamSession.ExamSessionSubjectId;
         int? shuffledExamPaperId = studentExamSession.ShuffledExamPaperId;
         ShuffledExamPaper shuffledExamPaper = null;
+        ShuffledExamPaperDto paperDto = null;
+        var cache = (IDistributedCache)_httpContextAccessor.HttpContext.RequestServices.GetService(typeof(IDistributedCache));
+
         if (shuffledExamPaperId.HasValue)
         {
-            shuffledExamPaper = await _shuffledExamPaperRepository.GetQueryable()
-                .Where(x => x.ShuffledExamPaperId == shuffledExamPaperId.Value)
-                .Include(x => x.ShuffledExamPaperDetails)
-                .ThenInclude(d => d.OriginalExamPaperDetail)
-                .Include(x => x.OriginalExamPaper)
-                .FirstOrDefaultAsync();
+            // 1. Thử lấy từ Redis trước
+            string cacheKey = $"shuffled_exam_paper:{shuffledExamPaperId.Value}";
+            string cachedPaper = await cache.GetStringAsync(cacheKey);
+            
+            if (!string.IsNullOrEmpty(cachedPaper))
+            {
+                // Lấy được từ Redis
+                paperDto = System.Text.Json.JsonSerializer.Deserialize<ShuffledExamPaperDto>(cachedPaper);
+            }
+            else
+            {
+                // Không có trong Redis, lấy từ database và cache lại
+                shuffledExamPaper = await _shuffledExamPaperRepository.GetQueryable()
+                    .Where(x => x.ShuffledExamPaperId == shuffledExamPaperId.Value)
+                    .Include(x => x.ShuffledExamPaperDetails)
+                    .ThenInclude(d => d.OriginalExamPaperDetail)
+                    .Include(x => x.OriginalExamPaper)
+                    .FirstOrDefaultAsync();
+                
+                if (shuffledExamPaper == null)
+                    throw new Exception("Không tìm thấy đề thi hoán vị.");
+                
+                // Map sang DTO và cache vào Redis
+                paperDto = _mapper.Map<ShuffledExamPaperDto>(shuffledExamPaper);
+                var cacheOptions = new DistributedCacheEntryOptions
+                {
+                    AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(6)
+                };
+                await cache.SetStringAsync(cacheKey, System.Text.Json.JsonSerializer.Serialize(paperDto), cacheOptions);
+            }
         }
         else
         {
@@ -321,46 +348,51 @@ public class StudentService : IStudentService
                 throw new Exception("Không tìm thấy ca thi môn này.");
             if (examSessionSubject.OriginalExamPaperId == null)
                 throw new Exception("Chưa có đề thi gốc cho ca thi này.");
+            
             // Lấy danh sách đề hoán vị từ repository
             var availablePapers = await _shuffledExamPaperRepository.GetQueryable()
                 .Where(p => p.OriginalExamPaperId == examSessionSubject.OriginalExamPaperId && p.IsApproved == true)
                 .ToListAsync();
             if (!availablePapers.Any())
                 throw new Exception("Chưa có đề thi hoán vị đã được phê duyệt cho ca thi này.");
+            
             var random = new Random();
             shuffledExamPaper = availablePapers[random.Next(availablePapers.Count)];
+            
             // Gán mã đề cho sinh viên
             studentExamSession.ShuffledExamPaperId = shuffledExamPaper.ShuffledExamPaperId;
             await _studentExamSessionRepository.UpdateAsync(studentExamSession);
-        }
-
-        // 2. Tìm đề theo mã đề (Redis)
-        var cache = (IDistributedCache)_httpContextAccessor.HttpContext.RequestServices.GetService(typeof(IDistributedCache));
-        string cacheKey = $"shuffled_exam_paper:{shuffledExamPaper.ShuffledExamPaperCore}";
-        string cachedPaper = await cache.GetStringAsync(cacheKey);
-        ShuffledExamPaperDto paperDto = null;
-        if (!string.IsNullOrEmpty(cachedPaper))
-        {
-            paperDto = System.Text.Json.JsonSerializer.Deserialize<ShuffledExamPaperDto>(cachedPaper);
-        }
-        else
-        {
-            var paper = await _shuffledExamPaperRepository.GetQueryable()
-                .Where(x => x.ShuffledExamPaperId == shuffledExamPaper.ShuffledExamPaperId)
-                .Include(x => x.ShuffledExamPaperDetails)
-                .ThenInclude(d => d.OriginalExamPaperDetail)
-                .Include(x => x.OriginalExamPaper)
-                .FirstOrDefaultAsync();
-            if (paper == null)
-                throw new Exception("Không tìm thấy đề thi hoán vị.");
-            // Map sang DTO bằng AutoMapper
-            paperDto = _mapper.Map<ShuffledExamPaperDto>(paper);
-            // Lưu vào Redis
-            var cacheOptions = new DistributedCacheEntryOptions
+            
+            // Lấy đề từ Redis hoặc database
+            string cacheKey = $"shuffled_exam_paper:{shuffledExamPaper.ShuffledExamPaperId}";
+            string cachedPaper = await cache.GetStringAsync(cacheKey);
+            
+            if (!string.IsNullOrEmpty(cachedPaper))
             {
-                AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(6)
-            };
-            await cache.SetStringAsync(cacheKey, System.Text.Json.JsonSerializer.Serialize(paperDto), cacheOptions);
+                // Lấy được từ Redis
+                paperDto = System.Text.Json.JsonSerializer.Deserialize<ShuffledExamPaperDto>(cachedPaper);
+            }
+            else
+            {
+                // Không có trong Redis, lấy từ database và cache lại
+                var paper = await _shuffledExamPaperRepository.GetQueryable()
+                    .Where(x => x.ShuffledExamPaperId == shuffledExamPaper.ShuffledExamPaperId)
+                    .Include(x => x.ShuffledExamPaperDetails)
+                    .ThenInclude(d => d.OriginalExamPaperDetail)
+                    .Include(x => x.OriginalExamPaper)
+                    .FirstOrDefaultAsync();
+                
+                if (paper == null)
+                    throw new Exception("Không tìm thấy đề thi hoán vị.");
+                
+                // Map sang DTO và cache vào Redis
+                paperDto = _mapper.Map<ShuffledExamPaperDto>(paper);
+                var cacheOptions = new DistributedCacheEntryOptions
+                {
+                    AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(6)
+                };
+                await cache.SetStringAsync(cacheKey, System.Text.Json.JsonSerializer.Serialize(paperDto), cacheOptions);
+            }
         }
         // 3. Trả đề về cho frontend
         return paperDto;

@@ -10,6 +10,7 @@ using System;
 using backend_manage.Hubs;
 using Microsoft.AspNetCore.Http;
 using System.Security.Claims;
+using Microsoft.Extensions.Caching.Distributed;
 
 namespace backend_manage.Services.AuthService
 {
@@ -54,6 +55,33 @@ namespace backend_manage.Services.AuthService
             paper.UpdatedBy = userId;
             await _shuffledExamPaperRepository.UpdateAsync(paper);
             return true;
+        }
+
+        public async Task PreloadApprovedPapersToRedisAsync()
+        {
+            var cache = (IDistributedCache)_httpContextAccessor.HttpContext.RequestServices.GetService(typeof(IDistributedCache));
+            
+            // Lấy tất cả đề thi hoán vị đã được phê duyệt
+            var approvedPapers = await _shuffledExamPaperRepository.GetQueryable()
+                .Where(x => x.IsApproved == true)
+                .Include(x => x.ShuffledExamPaperDetails)
+                    .ThenInclude(d => d.OriginalExamPaperDetail)
+                .Include(x => x.OriginalExamPaper)
+                .ToListAsync();
+
+            var cacheOptions = new DistributedCacheEntryOptions
+            {
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(6)
+            };
+
+            foreach (var paper in approvedPapers)
+            {
+                string cacheKey = $"shuffled_exam_paper:{paper.ShuffledExamPaperId}";
+                var paperDto = _mapper.Map<ShuffledExamPaperDto>(paper);
+                var jsonString = System.Text.Json.JsonSerializer.Serialize(paperDto);
+                
+                await cache.SetStringAsync(cacheKey, jsonString, cacheOptions);
+            }
         }
     }
 } 
