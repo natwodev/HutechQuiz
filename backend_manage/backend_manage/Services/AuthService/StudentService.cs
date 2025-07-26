@@ -21,6 +21,7 @@ public class StudentService : IStudentService
     private readonly IRepository<Student> _repository;
     private readonly IRepository<StudentExamSession> _studentExamSessionRepository;
     private readonly IRepository<ExamSessionSubject> _examSessionSubjectRepository;
+    private readonly IRepository<ShuffledExamPaper> _shuffledExamPaperRepository;
     private readonly IRepository<ExamRoom> _examRoomRepository;
     private readonly IConfiguration _configuration;
     private readonly IHttpContextAccessor _httpContextAccessor;
@@ -314,16 +315,15 @@ public class StudentService : IStudentService
         {
             // Lấy ExamSessionSubject và kiểm tra đề gốc
             var examSessionSubject = await _examSessionSubjectRepository.GetQueryable()
-                .Include(x => x.ShuffledExamPapers)
                 .FirstOrDefaultAsync(x => x.ExamSessionSubjectId == examSessionSubjectId);
             if (examSessionSubject == null)
                 throw new Exception("Không tìm thấy ca thi môn này.");
             if (examSessionSubject.OriginalExamPaperId == null)
                 throw new Exception("Chưa có đề thi gốc cho ca thi này.");
-            // Lấy danh sách đề hoán vị theo đề gốc
-            var availablePapers = examSessionSubject.ShuffledExamPapers
+            // Lấy danh sách đề hoán vị từ repository
+            var availablePapers = await _shuffledExamPaperRepository.GetQueryable()
                 .Where(p => p.OriginalExamPaperId == examSessionSubject.OriginalExamPaperId && p.IsApproved == true)
-                .ToList();
+                .ToListAsync();
             if (!availablePapers.Any())
                 throw new Exception("Chưa có đề thi hoán vị đã được phê duyệt cho ca thi này.");
             var random = new Random();
