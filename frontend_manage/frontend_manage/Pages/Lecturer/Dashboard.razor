@@ -123,7 +123,7 @@
         isLecturerChecked = true;
         if (!isLecturer)
         {
-            Navigation.NavigateTo("/");
+            Navigation.NavigateTo("/login");
             return;
         }
 
@@ -169,7 +169,7 @@
     private async Task Logout()
     {
         await AuthService.Logout();
-        Navigation.NavigateTo("/");
+        Navigation.NavigateTo("/login");
     }
 
     private string GetStatusBadgeClass(string status)
