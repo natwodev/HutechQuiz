@@ -1,0 +1,143 @@
+<?xml version="1.0" standalone="yes"?>
+<DeThi>
+  <MonHoc>
+    <MaMonHoc>3ad90310-cc0f-4b4a-9328-237a37ae4eb6</MaMonHoc>
+    <MaSoMonHoc>CMP177</MaSoMonHoc>
+    <TenMonHoc>Lập trình TTBDD</TenMonHoc>
+    <TongSoCauLay>2</TongSoCauLay>
+    <Phan>
+      <MaPhan>828e9f07-59ab-4472-803c-7d6512cf3395</MaPhan>
+      <TenPhan>CHAudio</TenPhan>
+      <NoiDung />
+      <MaMonHoc>3ad90310-cc0f-4b4a-9328-237a37ae4eb6</MaMonHoc>
+      <MaSoPhan>2</MaSoPhan>
+      <MaPhanCha>00000000-0000-0000-0000-000000000000</MaPhanCha>
+      <SoCauLay>2</SoCauLay>
+      <CauHoi>
+        <MaCauHoi>8141f8fd-89be-478b-8692-0a0549fdb962</MaCauHoi>
+        <MaPhan>828e9f07-59ab-4472-803c-7d6512cf3395</MaPhan>
+        <MaSoCauHoi>2</MaSoCauHoi>
+        <NoiDung>
+&lt;p&gt;&lt;audio&gt;Data\Audio\6529febd-3097-4673-bb39-792b73ce8dc9.mp3&lt;/audio&gt;&lt;/p&gt;
+
+&lt;p&gt;(CLO3) What does the man keep in his wallet ENG4?&lt;/p&gt;
+</NoiDung>
+        <HoanVi>false</HoanVi>
+        <SoCauHoiCon>0</SoCauHoiCon>
+        <MaCauHoiCha>00000000-0000-0000-0000-000000000000</MaCauHoiCha>
+        <CauTraLoi>
+          <MaCauTraLoi>c7f7d4db-099f-4beb-a023-ada359de189f</MaCauTraLoi>
+          <MaCauHoi>8141f8fd-89be-478b-8692-0a0549fdb962</MaCauHoi>
+          <NoiDung>sound
+
+.</NoiDung>
+          <ThuTu>1</ThuTu>
+          <LaDapAn>false</LaDapAn>
+          <HoanVi>false</HoanVi>
+        </CauTraLoi>
+        <CauTraLoi>
+          <MaCauTraLoi>d234d9e4-5db7-4966-91a7-e001d1d2b1c4</MaCauTraLoi>
+          <MaCauHoi>8141f8fd-89be-478b-8692-0a0549fdb962</MaCauHoi>
+          <NoiDung>&lt;b&gt;Correct&lt;/b&gt;
+
+.</NoiDung>
+          <ThuTu>2</ThuTu>
+          <LaDapAn>true</LaDapAn>
+          <HoanVi>false</HoanVi>
+        </CauTraLoi>
+        <CauTraLoi>
+          <MaCauTraLoi>49575437-03b0-49dc-84ae-1dcd6478fa2f</MaCauTraLoi>
+          <MaCauHoi>8141f8fd-89be-478b-8692-0a0549fdb962</MaCauHoi>
+          <NoiDung>nouod
+
+.</NoiDung>
+          <ThuTu>3</ThuTu>
+          <LaDapAn>false</LaDapAn>
+          <HoanVi>false</HoanVi>
+        </CauTraLoi>
+        <CauTraLoi>
+          <MaCauTraLoi>9d7cabb3-1dcf-4ae9-8999-e12e16e39689</MaCauTraLoi>
+          <MaCauHoi>8141f8fd-89be-478b-8692-0a0549fdb962</MaCauHoi>
+          <NoiDung>All
+
+
+are
+
+
+correct
+
+.</NoiDung>
+          <ThuTu>4</ThuTu>
+          <LaDapAn>false</LaDapAn>
+          <HoanVi>false</HoanVi>
+        </CauTraLoi>
+      </CauHoi>
+      <CauHoi>
+        <MaCauHoi>300a1eb4-7cf3-4d29-b1a7-33d8a7e7cf7e</MaCauHoi>
+        <MaPhan>828e9f07-59ab-4472-803c-7d6512cf3395</MaPhan>
+        <MaSoCauHoi>1</MaSoCauHoi>
+        <NoiDung>
+&lt;p&gt;&lt;audio&gt;Data\Audio\4ab18c17-8193-43ce-9b4a-5141ae1272ff.mp3&lt;/audio&gt;&lt;/p&gt;
+
+&lt;p&gt;(CLO1) What does the man keep in his wallet ENG3?&lt;/p&gt;
+</NoiDung>
+        <HoanVi>false</HoanVi>
+        <SoCauHoiCon>0</SoCauHoiCon>
+        <MaCauHoiCha>00000000-0000-0000-0000-000000000000</MaCauHoiCha>
+        <CauTraLoi>
+          <MaCauTraLoi>950a7d9b-8a06-4200-a0cb-9b52c9bcd8da</MaCauTraLoi>
+          <MaCauHoi>300a1eb4-7cf3-4d29-b1a7-33d8a7e7cf7e</MaCauHoi>
+          <NoiDung>ID 
+
+card
+
+.</NoiDung>
+          <ThuTu>1</ThuTu>
+          <LaDapAn>false</LaDapAn>
+          <HoanVi>false</HoanVi>
+        </CauTraLoi>
+        <CauTraLoi>
+          <MaCauTraLoi>72ce5d5f-ea54-48ac-9a0c-806f0e9d6415</MaCauTraLoi>
+          <MaCauHoi>300a1eb4-7cf3-4d29-b1a7-33d8a7e7cf7e</MaCauHoi>
+          <NoiDung>&lt;b&gt;Correct&lt;/b&gt;
+
+.
+
+.</NoiDung>
+          <ThuTu>2</ThuTu>
+          <LaDapAn>true</LaDapAn>
+          <HoanVi>false</HoanVi>
+        </CauTraLoi>
+        <CauTraLoi>
+          <MaCauTraLoi>5fb18e87-fedf-49d5-b3e9-6f9840f11bdf</MaCauTraLoi>
+          <MaCauHoi>300a1eb4-7cf3-4d29-b1a7-33d8a7e7cf7e</MaCauHoi>
+          <NoiDung>Credit
+
+
+cards
+
+.</NoiDung>
+          <ThuTu>3</ThuTu>
+          <LaDapAn>false</LaDapAn>
+          <HoanVi>false</HoanVi>
+        </CauTraLoi>
+        <CauTraLoi>
+          <MaCauTraLoi>9419e35a-2470-41e1-94bb-13370a7bf81e</MaCauTraLoi>
+          <MaCauHoi>300a1eb4-7cf3-4d29-b1a7-33d8a7e7cf7e</MaCauHoi>
+          <NoiDung>All
+
+
+are
+
+
+correct
+
+.</NoiDung>
+          <ThuTu>4</ThuTu>
+          <LaDapAn>false</LaDapAn>
+          <HoanVi>false</HoanVi>
+        </CauTraLoi>
+      </CauHoi>
+    </Phan>
+  </MonHoc>
+</DeThi>

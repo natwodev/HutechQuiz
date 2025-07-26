@@ -1,10 +1,15 @@
 @page "/academicaffairs/dashboard"
+@inject frontend_manage.Services.AuthService AuthService
+
 <PageTitle>Academic Affairs Dashboard</PageTitle>
 
 <div class="container mt-5">
     <div class="card shadow-sm">
         <div class="card-body">
-            <h2 class="mb-3">Quản lý Phòng đào tạo</h2>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h2 class="mb-0">Quản lý Phòng đào tạo</h2>
+                <button class="btn btn-outline-danger" @onclick="Logout">Đăng xuất</button>
+            </div>
             <ul class="nav nav-tabs" id="dashboardTabs" role="tablist">
                 <li class="nav-item" role="presentation">
                     <button class="nav-link active" id="year-tab" data-bs-toggle="tab" data-bs-target="#year" type="button" role="tab">Năm học</button>
@@ -33,9 +38,9 @@
                     <h5>Quản lý Năm học</h5>
                     <button class="btn btn-primary mb-2">Thêm năm học</button>
                     <table class="table table-bordered">
-                        <thead><tr><th>ID</th><th>Tên năm học</th><th>Thao tác</th></tr></thead>
+                        <thead><tr><th>ID</th><th>Tên năm học</th><th>Danh sách học kỳ</th><th>Thao tác</th></tr></thead>
                         <tbody>
-                            <tr><td>1</td><td>2023-2024</td><td><button class="btn btn-sm btn-info">Sửa</button> <button class="btn btn-sm btn-danger">Xóa</button></td></tr>
+                            <tr><td>1</td><td>2023-2024</td><td>Học kỳ 1, Học kỳ 2</td><td><button class="btn btn-sm btn-info">Sửa</button> <button class="btn btn-sm btn-danger">Xóa</button></td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -43,9 +48,9 @@
                     <h5>Quản lý Học kỳ</h5>
                     <button class="btn btn-primary mb-2">Thêm học kỳ</button>
                     <table class="table table-bordered">
-                        <thead><tr><th>ID</th><th>Tên học kỳ</th><th>Năm học</th><th>Thao tác</th></tr></thead>
+                        <thead><tr><th>ID</th><th>Tên học kỳ</th><th>ID năm học</th><th>Tên năm học</th><th>Thao tác</th></tr></thead>
                         <tbody>
-                            <tr><td>1</td><td>Học kỳ 1</td><td>2023-2024</td><td><button class="btn btn-sm btn-info">Sửa</button> <button class="btn btn-sm btn-danger">Xóa</button></td></tr>
+                            <tr><td>1</td><td>Học kỳ 1</td><td>1</td><td>2023-2024</td><td><button class="btn btn-sm btn-info">Sửa</button> <button class="btn btn-sm btn-danger">Xóa</button></td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -53,9 +58,9 @@
                     <h5>Quản lý Đợt thi</h5>
                     <button class="btn btn-primary mb-2">Thêm đợt thi</button>
                     <table class="table table-bordered">
-                        <thead><tr><th>ID</th><th>Tên đợt thi</th><th>Thao tác</th></tr></thead>
+                        <thead><tr><th>ID</th><th>Tên đợt thi</th><th>Mô tả</th><th>Ngày bắt đầu</th><th>Ngày kết thúc</th><th>ID học kỳ</th><th>Tên học kỳ</th><th>Đang hoạt động</th><th>Thao tác</th></tr></thead>
                         <tbody>
-                            <tr><td>1</td><td>Đợt 1</td><td><button class="btn btn-sm btn-info">Sửa</button> <button class="btn btn-sm btn-danger">Xóa</button></td></tr>
+                            <tr><td>1</td><td>Đợt 1</td><td>Thi cuối kỳ</td><td>2024-06-01</td><td>2024-06-10</td><td>1</td><td>Học kỳ 1</td><td>Có</td><td><button class="btn btn-sm btn-info">Sửa</button> <button class="btn btn-sm btn-danger">Xóa</button></td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -63,9 +68,9 @@
                     <h5>Quản lý Chi tiết đợt thi</h5>
                     <button class="btn btn-primary mb-2">Thêm chi tiết đợt thi</button>
                     <table class="table table-bordered">
-                        <thead><tr><th>ID</th><th>Đợt thi</th><th>Môn học</th><th>Thao tác</th></tr></thead>
+                        <thead><tr><th>ID</th><th>Tên chi tiết</th><th>ID đợt thi</th><th>Tên đợt thi</th><th>Thao tác</th></tr></thead>
                         <tbody>
-                            <tr><td>1</td><td>Đợt 1</td><td>Toán</td><td><button class="btn btn-sm btn-info">Sửa</button> <button class="btn btn-sm btn-danger">Xóa</button></td></tr>
+                            <tr><td>1</td><td>Chi tiết 1</td><td>1</td><td>Đợt 1</td><td><button class="btn btn-sm btn-info">Sửa</button> <button class="btn btn-sm btn-danger">Xóa</button></td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -73,9 +78,9 @@
                     <h5>Quản lý Ca thi</h5>
                     <button class="btn btn-primary mb-2">Thêm ca thi</button>
                     <table class="table table-bordered">
-                        <thead><tr><th>ID</th><th>Thời gian</th><th>Thao tác</th></tr></thead>
+                        <thead><tr><th>ID</th><th>Tên ca thi</th><th>Bắt đầu</th><th>Kết thúc</th><th>Đang hoạt động</th><th>Đã hoàn thành</th><th>ID chi tiết đợt thi</th><th>Tên chi tiết đợt thi</th><th>Thao tác</th></tr></thead>
                         <tbody>
-                            <tr><td>1</td><td>08:00 - 10:00</td><td><button class="btn btn-sm btn-info">Sửa</button> <button class="btn btn-sm btn-danger">Xóa</button></td></tr>
+                            <tr><td>1</td><td>Ca 1</td><td>2024-06-01 08:00</td><td>2024-06-01 10:00</td><td>Có</td><td>Chưa</td><td>1</td><td>Chi tiết 1</td><td><button class="btn btn-sm btn-info">Sửa</button> <button class="btn btn-sm btn-danger">Xóa</button></td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -83,9 +88,9 @@
                     <h5>Quản lý Khoa tham gia ca thi</h5>
                     <button class="btn btn-primary mb-2">Thêm khoa</button>
                     <table class="table table-bordered">
-                        <thead><tr><th>ID</th><th>Khoa</th><th>Ca thi</th><th>Thao tác</th></tr></thead>
+                        <thead><tr><th>ID</th><th>ID ca thi</th><th>Tên ca thi</th><th>ID khoa</th><th>Tên khoa</th><th>Thao tác</th></tr></thead>
                         <tbody>
-                            <tr><td>1</td><td>CNTT</td><td>08:00 - 10:00</td><td><button class="btn btn-sm btn-info">Sửa</button> <button class="btn btn-sm btn-danger">Xóa</button></td></tr>
+                            <tr><td>1</td><td>1</td><td>Ca 1</td><td>CNTT</td><td>Công nghệ thông tin</td><td><button class="btn btn-sm btn-info">Sửa</button> <button class="btn btn-sm btn-danger">Xóa</button></td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -93,13 +98,20 @@
                     <h5>Quản lý Ca thi môn học</h5>
                     <button class="btn btn-primary mb-2">Thêm ca thi môn học</button>
                     <table class="table table-bordered">
-                        <thead><tr><th>ID</th><th>Môn học</th><th>Ca thi</th><th>Thao tác</th></tr></thead>
+                        <thead><tr><th>ID</th><th>ID khoa-ca thi</th><th>ID môn học</th><th>Tên môn học</th><th>Thời lượng</th><th>ID đề gốc</th><th>Tên đề gốc</th><th>Đã hoàn thành</th><th>Bắt đầu</th><th>Kết thúc</th><th>Mã ca thi môn học</th><th>Thao tác</th></tr></thead>
                         <tbody>
-                            <tr><td>1</td><td>Toán</td><td>08:00 - 10:00</td><td><button class="btn btn-sm btn-info">Sửa</button> <button class="btn btn-sm btn-danger">Xóa</button></td></tr>
+                            <tr><td>1</td><td>1</td><td>101</td><td>Toán</td><td>90</td><td>5</td><td>Đề A</td><td>Chưa</td><td>2024-06-01 08:00</td><td>2024-06-01 10:00</td><td>EXAM-001</td><td><button class="btn btn-sm btn-info">Sửa</button> <button class="btn btn-sm btn-danger">Xóa</button></td></tr>
                         </tbody>
                     </table>
                 </div>
             </div>
         </div>
     </div>
-</div> 
+</div>
+
+@code {
+    private async Task Logout()
+    {
+        await AuthService.Logout();
+    }
+} 

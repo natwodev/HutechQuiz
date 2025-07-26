@@ -72,12 +72,12 @@ public class StudentController : ControllerBase
     }
 
     [HttpPost("start-exam")]
-    public async Task<IActionResult> StartExam([FromForm] int examSessionSubjectId)
+    public async Task<IActionResult> StartExam([FromForm] int studentExamSessionId)
     {
         var studentCode = User.FindFirst("studentCode")?.Value;
         if (string.IsNullOrEmpty(studentCode))
             return Unauthorized(new { message = "Token không hợp lệ!" });
-        var result = await _studentService.StartExamAsync(studentCode, examSessionSubjectId);
+        var result = await _studentService.StartExamAsync(studentCode, studentExamSessionId);
         if (result == null) return BadRequest(new { message = "Không thể bắt đầu làm bài." });
         return Ok(result);
     }

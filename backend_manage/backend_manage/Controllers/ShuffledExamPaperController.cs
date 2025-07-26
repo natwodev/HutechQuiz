@@ -23,5 +23,13 @@ namespace backend_manage.Controllers
             if (result == null) return NotFound();
             return Ok(result);
         }
+
+        [HttpPost("preload-redis")]
+        [Authorize(Policy = "AdminOnly")]
+        public async Task<IActionResult> PreloadToRedis()
+        {
+            await _service.PreloadApprovedPapersToRedisAsync();
+            return Ok(new { message = "Đã tải sẵn tất cả đề thi hoán vị đã phê duyệt vào Redis" });
+        }
     }
 } 

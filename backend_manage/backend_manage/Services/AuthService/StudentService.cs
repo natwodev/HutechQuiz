@@ -21,6 +21,7 @@ public class StudentService : IStudentService
     private readonly IRepository<Student> _repository;
     private readonly IRepository<StudentExamSession> _studentExamSessionRepository;
     private readonly IRepository<ExamSessionSubject> _examSessionSubjectRepository;
+    private readonly IRepository<ShuffledExamPaper> _shuffledExamPaperRepository;
     private readonly IRepository<ExamRoom> _examRoomRepository;
     private readonly IConfiguration _configuration;
     private readonly IHttpContextAccessor _httpContextAccessor;
@@ -30,6 +31,7 @@ public class StudentService : IStudentService
         IRepository<Student> repository,
         IRepository<StudentExamSession> studentExamSessionRepository,
         IRepository<ExamSessionSubject> examSessionSubjectRepository,
+        IRepository<ShuffledExamPaper> shuffledExamPaperRepository,
         IRepository<ExamRoom> examRoomRepository,
         IConfiguration configuration,
         IHttpContextAccessor httpContextAccessor,
@@ -39,6 +41,7 @@ public class StudentService : IStudentService
         _repository = repository;
         _studentExamSessionRepository = studentExamSessionRepository;
         _examSessionSubjectRepository = examSessionSubjectRepository;
+        _shuffledExamPaperRepository = shuffledExamPaperRepository;
         _examRoomRepository = examRoomRepository;
         _configuration = configuration;
         _httpContextAccessor = httpContextAccessor;
@@ -288,75 +291,108 @@ public class StudentService : IStudentService
         return await _repository.DeleteAsync(id);
     }
 
-    public async Task<ShuffledExamPaperDto> StartExamAsync(string studentCode, int examSessionSubjectId)
+    public async Task<ShuffledExamPaperDto> StartExamAsync(string studentCode, int studentExamSessionId)
     {
         // 1. Kiểm tra StudentExamSession đã có mã đề chưa
         var studentExamSession = await _studentExamSessionRepository.GetQueryable()
             .Include(x => x.ShuffledExamPaper)
-            .FirstOrDefaultAsync(x => x.StudentCode == studentCode && x.ExamSessionSubjectId == examSessionSubjectId);
+            .FirstOrDefaultAsync(x => x.StudentCode == studentCode && x.StudentExamSessionId == studentExamSessionId);
         if (studentExamSession == null)
-            throw new Exception("Không tìm thấy phiên thi của sinh viên cho môn này.");
+            throw new Exception("Không tìm thấy phiên thi của sinh viên.");
 
-        // Nếu đã có mã đề, lấy mã đề đó
+        int examSessionSubjectId = studentExamSession.ExamSessionSubjectId;
         int? shuffledExamPaperId = studentExamSession.ShuffledExamPaperId;
         ShuffledExamPaper shuffledExamPaper = null;
+        ShuffledExamPaperDto paperDto = null;
+        var cache = (IDistributedCache)_httpContextAccessor.HttpContext.RequestServices.GetService(typeof(IDistributedCache));
+
         if (shuffledExamPaperId.HasValue)
         {
-            shuffledExamPaper = await _studentExamSessionRepository.GetQueryable()
-                .Where(x => x.StudentExamSessionId == studentExamSession.StudentExamSessionId)
-                .Select(x => x.ShuffledExamPaper)
-                .Include(x => x.ShuffledExamPaperDetails)
-                .ThenInclude(d => d.OriginalExamPaperDetail)
-                .Include(x => x.OriginalExamPaper)
-                .FirstOrDefaultAsync();
+            // 1. Thử lấy từ Redis trước
+            string cacheKey = $"shuffled_exam_paper:{shuffledExamPaperId.Value}";
+            string cachedPaper = await cache.GetStringAsync(cacheKey);
+            
+            if (!string.IsNullOrEmpty(cachedPaper))
+            {
+                // Lấy được từ Redis
+                paperDto = System.Text.Json.JsonSerializer.Deserialize<ShuffledExamPaperDto>(cachedPaper);
+            }
+            else
+            {
+                // Không có trong Redis, lấy từ database và cache lại
+                shuffledExamPaper = await _shuffledExamPaperRepository.GetQueryable()
+                    .Where(x => x.ShuffledExamPaperId == shuffledExamPaperId.Value)
+                    .Include(x => x.ShuffledExamPaperDetails)
+                    .ThenInclude(d => d.OriginalExamPaperDetail)
+                    .Include(x => x.OriginalExamPaper)
+                    .FirstOrDefaultAsync();
+                
+                if (shuffledExamPaper == null)
+                    throw new Exception("Không tìm thấy đề thi hoán vị.");
+                
+                // Map sang DTO và cache vào Redis
+                paperDto = _mapper.Map<ShuffledExamPaperDto>(shuffledExamPaper);
+                var cacheOptions = new DistributedCacheEntryOptions
+                {
+                    AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(6)
+                };
+                await cache.SetStringAsync(cacheKey, System.Text.Json.JsonSerializer.Serialize(paperDto), cacheOptions);
+            }
         }
         else
         {
-            // Nếu chưa có, random 1 mã đề từ ExamSessionSubject
+            // Lấy ExamSessionSubject và kiểm tra đề gốc
             var examSessionSubject = await _examSessionSubjectRepository.GetQueryable()
-                .Include(x => x.ShuffledExamPapers)
                 .FirstOrDefaultAsync(x => x.ExamSessionSubjectId == examSessionSubjectId);
-            if (examSessionSubject == null || examSessionSubject.ShuffledExamPapers == null || !examSessionSubject.ShuffledExamPapers.Any())
-                throw new Exception("Không có đề thi hoán vị cho môn này.");
-            var availablePapers = examSessionSubject.ShuffledExamPapers.Where(p => p.IsApproved == true).ToList();
+            if (examSessionSubject == null)
+                throw new Exception("Không tìm thấy ca thi môn này.");
+            if (examSessionSubject.OriginalExamPaperId == null)
+                throw new Exception("Chưa có đề thi gốc cho ca thi này.");
+            
+            // Lấy danh sách đề hoán vị từ repository
+            var availablePapers = await _shuffledExamPaperRepository.GetQueryable()
+                .Where(p => p.OriginalExamPaperId == examSessionSubject.OriginalExamPaperId && p.IsApproved == true)
+                .ToListAsync();
             if (!availablePapers.Any())
-                throw new Exception("Không có đề thi hoán vị đã được phê duyệt cho môn này.");
+                throw new Exception("Chưa có đề thi hoán vị đã được phê duyệt cho ca thi này.");
+            
             var random = new Random();
             shuffledExamPaper = availablePapers[random.Next(availablePapers.Count)];
+            
             // Gán mã đề cho sinh viên
             studentExamSession.ShuffledExamPaperId = shuffledExamPaper.ShuffledExamPaperId;
             await _studentExamSessionRepository.UpdateAsync(studentExamSession);
-        }
-
-        // 2. Tìm đề theo mã đề (Redis)
-        var cache = (IDistributedCache)_httpContextAccessor.HttpContext.RequestServices.GetService(typeof(IDistributedCache));
-        string cacheKey = $"shuffled_exam_paper:{shuffledExamPaper.ShuffledExamPaperCore}";
-        string cachedPaper = await cache.GetStringAsync(cacheKey);
-        ShuffledExamPaperDto paperDto = null;
-        if (!string.IsNullOrEmpty(cachedPaper))
-        {
-            paperDto = System.Text.Json.JsonSerializer.Deserialize<ShuffledExamPaperDto>(cachedPaper);
-        }
-        else
-        {
-            // Lấy từ DB (bao gồm details)
-            var paper = await _studentExamSessionRepository.GetQueryable()
-                .Where(x => x.ShuffledExamPaperId == shuffledExamPaper.ShuffledExamPaperId)
-                .Select(x => x.ShuffledExamPaper)
-                .Include(x => x.ShuffledExamPaperDetails)
-                .ThenInclude(d => d.OriginalExamPaperDetail)
-                .Include(x => x.OriginalExamPaper)
-                .FirstOrDefaultAsync();
-            if (paper == null)
-                throw new Exception("Không tìm thấy đề thi hoán vị.");
-            // Map sang DTO bằng AutoMapper
-            paperDto = _mapper.Map<ShuffledExamPaperDto>(paper);
-            // Lưu vào Redis
-            var cacheOptions = new DistributedCacheEntryOptions
+            
+            // Lấy đề từ Redis hoặc database
+            string cacheKey = $"shuffled_exam_paper:{shuffledExamPaper.ShuffledExamPaperId}";
+            string cachedPaper = await cache.GetStringAsync(cacheKey);
+            
+            if (!string.IsNullOrEmpty(cachedPaper))
             {
-                AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(6)
-            };
-            await cache.SetStringAsync(cacheKey, System.Text.Json.JsonSerializer.Serialize(paperDto), cacheOptions);
+                // Lấy được từ Redis
+                paperDto = System.Text.Json.JsonSerializer.Deserialize<ShuffledExamPaperDto>(cachedPaper);
+            }
+            else
+            {
+                // Không có trong Redis, lấy từ database và cache lại
+                var paper = await _shuffledExamPaperRepository.GetQueryable()
+                    .Where(x => x.ShuffledExamPaperId == shuffledExamPaper.ShuffledExamPaperId)
+                    .Include(x => x.ShuffledExamPaperDetails)
+                    .ThenInclude(d => d.OriginalExamPaperDetail)
+                    .Include(x => x.OriginalExamPaper)
+                    .FirstOrDefaultAsync();
+                
+                if (paper == null)
+                    throw new Exception("Không tìm thấy đề thi hoán vị.");
+                
+                // Map sang DTO và cache vào Redis
+                paperDto = _mapper.Map<ShuffledExamPaperDto>(paper);
+                var cacheOptions = new DistributedCacheEntryOptions
+                {
+                    AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(6)
+                };
+                await cache.SetStringAsync(cacheKey, System.Text.Json.JsonSerializer.Serialize(paperDto), cacheOptions);
+            }
         }
         // 3. Trả đề về cho frontend
         return paperDto;

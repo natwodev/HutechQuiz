@@ -82,17 +82,8 @@ namespace frontend_manage.Pages.Login
 
         private async Task StartExam(ExamSessionDto session)
         {
-            // Dữ liệu ảo cho trang Exam
-            var examData = new {
-                SubjectName = session.SubjectName,
-                RoomName = session.RoomName,
-                Duration = session.Duration,
-                extraMinutes = session.ExtraMinutes,
-                StartTime = session.StartTime.ToString("HH:mm dd/MM/yyyy"),
-                Student = studentInfo
-            };
-            await JSRuntime.InvokeVoidAsync("localStorage.setItem", "examData", JsonSerializer.Serialize(examData));
-            Navigation.NavigateTo("/Exam");
+            // Chuyển hướng sang trang làm bài thi với examSessionSubjectId
+            Navigation.NavigateTo($"/Exam?examSessionSubjectId={session.ExamSessionSubjectId}");
         }
 
         private string GetSessionStyle(int sessionId)

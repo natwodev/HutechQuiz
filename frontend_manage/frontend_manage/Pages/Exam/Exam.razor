@@ -1,64 +1,69 @@
 @page "/Exam"
 @inject IJSRuntime JSRuntime
+@inject NavigationManager Navigation
+@inject frontend_manage.Pages.Login.InfoApi InfoApi
 
-<h3>Exam</h3>
-
-@if (examData == null)
-{
-    <p>Không có dữ liệu bài thi.</p>
-}
-else
-{
-    <div>
-        <h4>@examData.SubjectName</h4>
-        <p>Phòng: <b>@examData.RoomName</b></p>
-        <p>Thời lượng: <b>@examData.Duration</b> phút</p>
-        <p>Bắt đầu: <b>@examData.StartTime</b></p>
-        <p>Sinh viên: <b>@examData.Student?.FirstName @examData.Student?.LastName</b> (@examData.Student?.StudentCode)</p>
-    </div>
-}
+@using FrontEnd.DTOs
+@using Microsoft.AspNetCore.Components
 
 @code {
-    private ExamData? examData;
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public int? examSessionSubjectId { get; set; }
+
+    private ShuffledExamPaperDto? shuffledExam;
+    private string? errorMessage;
 
     protected override async Task OnInitializedAsync()
     {
-        var json = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "examData");
-        if (!string.IsNullOrEmpty(json))
+        if (examSessionSubjectId == null)
         {
-            examData = System.Text.Json.JsonSerializer.Deserialize<ExamData>(json);
+            errorMessage = "Không tìm thấy thông tin ca thi môn học.";
+            return;
         }
-        else
+        try
         {
-            // Dữ liệu ảo mặc định nếu không có trong localStorage
-            examData = new ExamData
+            shuffledExam = await InfoApi.StartExamAsync(examSessionSubjectId.Value);
+            if (shuffledExam == null)
             {
-                SubjectName = "Lập trình C#",
-                RoomName = "A101",
-                Duration = 90,
-                StartTime = DateTime.Now.ToString("HH:mm dd/MM/yyyy"),
-                Student = new StudentInfo
-                {
-                    StudentCode = "123456789",
-                    FirstName = "Nguyen",
-                    LastName = "Van A"
-                }
-            };
+                errorMessage = "Không thể lấy đề thi hoán vị.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
         }
     }
+}
 
-    public class ExamData
-    {
-        public string SubjectName { get; set; }
-        public string RoomName { get; set; }
-        public int Duration { get; set; }
-        public string StartTime { get; set; }
-        public StudentInfo Student { get; set; }
-    }
-    public class StudentInfo
-    {
-        public string StudentCode { get; set; }
-        public string FirstName { get; set; }
-        public string LastName { get; set; }
-    }
+<h3>Làm bài thi</h3>
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="alert alert-danger">@errorMessage</div>
+}
+else if (shuffledExam == null)
+{
+    <p>Đang tải đề thi...</p>
+}
+else
+{
+    <div class="mb-3">
+        <h4>@shuffledExam.Title (@shuffledExam.ShuffledExamPaperCore)</h4>
+        <p><b>Mã đề:</b> @shuffledExam.ShuffledExamPaperCore</p>
+        <p><b>Trạng thái phê duyệt:</b> @(shuffledExam.IsApproved ? "Đã duyệt" : "Chưa duyệt")</p>
+    </div>
+    <ol>
+        @foreach (var q in shuffledExam.Details.OrderBy(d => d.Order))
+        {
+            <li class="mb-3">
+                <div>@((MarkupString)q.QuestionContent)</div>
+                <div class="mt-2">
+                    <div><input type="radio" name="q@q.ShuffledExamPaperDetailId" /> @((MarkupString)q.Answer1)</div>
+                    <div><input type="radio" name="q@q.ShuffledExamPaperDetailId" /> @((MarkupString)q.Answer2)</div>
+                    <div><input type="radio" name="q@q.ShuffledExamPaperDetailId" /> @((MarkupString)q.Answer3)</div>
+                    <div><input type="radio" name="q@q.ShuffledExamPaperDetailId" /> @((MarkupString)q.Answer4)</div>
+                </div>
+            </li>
+        }
+    </ol>
 }
