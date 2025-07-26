@@ -12,7 +12,7 @@ namespace backend_manage.Data
             var roleManager = serviceProvider.GetRequiredService<RoleManager<IdentityRole>>();
             var userManager = serviceProvider.GetRequiredService<UserManager<ApplicationUser>>();
             var context = serviceProvider.GetRequiredService<ApplicationDbContext>();
-
+/*
             // Xóa user/role Identity
             var users = userManager.Users.ToList();
             foreach (var user in users)
@@ -24,7 +24,7 @@ namespace backend_manage.Data
             {
                 await roleManager.DeleteAsync(role);
             }
-
+*/
             string[] rolesToSeed = { "Admin", "Student", "Lecturer" };
             foreach (var role in rolesToSeed)
             {

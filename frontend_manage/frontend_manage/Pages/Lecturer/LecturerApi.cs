@@ -5,11 +5,11 @@ using frontend_manage.DTOs;
 
 namespace frontend_manage.Pages.Lecturer;
 
-public class Api
+public class LecturerApi
 {
     private readonly HttpClient _httpClient;
     
-    public Api(HttpClient httpClient)
+    public LecturerApi(HttpClient httpClient)
     {
         _httpClient = httpClient;
     }

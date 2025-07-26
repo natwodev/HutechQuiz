@@ -53,7 +53,6 @@ namespace frontend_manage.Pages.Admin
             };
 
             await NotificationService.StartAsync();
-            await NotificationService.JoinRoom(examRoomId.Value);
         }
 
         protected async Task LoadStudents()
