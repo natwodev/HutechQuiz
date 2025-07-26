@@ -19,6 +19,7 @@ using System.Security.Claims;
 using System.Collections.Generic;
 using backend_manage.DTOs;
 using AutoMapper;
+using System.Text.Json;
 
 namespace backend_manage.Services.AuthService
 {
@@ -239,6 +240,22 @@ namespace backend_manage.Services.AuthService
                         {
                             var answers = cauHoi.CauTraLoi?.OrderBy(a => a.ThuTu).ToList() ??
                                           new List<DTOs.EPZ.CauTraLoiDto>();
+                            
+                            // Xử lý thông tin hoán vị từ XML
+                            bool canShuffleQuestion = cauHoi.HoanVi;
+                            
+                            // Tạo thông tin hoán vị đáp án dạng JSON
+                            string answerShuffleInfo = null;
+                            if (answers.Any())
+                            {
+                                var shuffleInfo = new Dictionary<string, bool>();
+                                for (int i = 0; i < answers.Count; i++)
+                                {
+                                    shuffleInfo[(i + 1).ToString()] = answers[i].HoanVi;
+                                }
+                                answerShuffleInfo = JsonSerializer.Serialize(shuffleInfo);
+                            }
+                            
                             var detail = new OriginalExamPaperDetail
                             {
                                 OriginalExamPaperId = originalExamPaper.OriginalExamPaperId,
@@ -252,6 +269,8 @@ namespace backend_manage.Services.AuthService
                                 CorrectAnswerIndex = answers.FindIndex(a => a.LaDapAn) >= 0
                                     ? answers.FindIndex(a => a.LaDapAn) + 1
                                     : null,
+                                CanShuffleQuestion = canShuffleQuestion,
+                                AnswerShuffleInfo = answerShuffleInfo,
                                 CreatedBy = userIdForExamPaper,
                                 CreatedAt = now,
                                 // ParentQuestionId sẽ gán sau khi đã có mapping
@@ -322,23 +341,108 @@ namespace backend_manage.Services.AuthService
                 // Tạo detail cho đề hoán vị này
                 var originalDetails = originalExamPaper.OriginalExamPaperDetails.ToList();
                 var random = new Random();
-                var shuffledQuestions = originalDetails.OrderBy(x => random.Next()).ToList();
+                
+                // Tạo danh sách câu hỏi với thứ tự ban đầu
+                var shuffledQuestions = originalDetails.ToList();
+                
+                // Hoán vị câu hỏi có thể hoán vị với nhau
+                var shuffleableQuestions = shuffledQuestions.Where(q => q.CanShuffleQuestion).ToList();
+                var nonShuffleableQuestions = shuffledQuestions.Where(q => !q.CanShuffleQuestion).ToList();
+                
+                // Hoán vị chỉ những câu hỏi có thể hoán vị
+                var shuffledShuffleableQuestions = shuffleableQuestions.OrderBy(x => random.Next()).ToList();
+                
+                // Tạo lại danh sách với thứ tự đúng
+                shuffledQuestions.Clear();
+                int shuffleableIndex = 0;
+                int nonShuffleableIndex = 0;
+                
+                foreach (var question in originalDetails)
+                {
+                    if (question.CanShuffleQuestion)
+                    {
+                        shuffledQuestions.Add(shuffledShuffleableQuestions[shuffleableIndex++]);
+                    }
+                    else
+                    {
+                        shuffledQuestions.Add(nonShuffleableQuestions[nonShuffleableIndex++]);
+                    }
+                }
+                
                 var answerKeyParts = new List<string>();
                 int order = 1;
                 foreach (var question in shuffledQuestions)
                 {
-                    // Hoán vị vị trí đáp án
-                    var answerIndexes = new List<int> { 1, 2, 3, 4 };
-                    answerIndexes = answerIndexes.OrderBy(x => random.Next()).ToList();
-                    string answerOrder = string.Join("", answerIndexes);
+                    string answerOrder = "1234"; // Mặc định không hoán vị đáp án
+                    List<int> answerIndexes = new List<int> { 1, 2, 3, 4 };
+                    
+                    // Xử lý hoán vị đáp án dựa trên thông tin từ JSON
+                    Dictionary<string, bool> shuffleInfo = null;
+                    
+                    if (!string.IsNullOrEmpty(question.AnswerShuffleInfo))
+                    {
+                        try
+                        {
+                            shuffleInfo = JsonSerializer.Deserialize<Dictionary<string, bool>>(question.AnswerShuffleInfo);
+                        }
+                        catch
+                        {
+                            shuffleInfo = null;
+                        }
+                    }
+                    
+                    // Tạo thứ tự đáp án mới
+                    List<int> newAnswerOrder = new List<int> { 1, 2, 3, 4 };
+                    
+                    if (shuffleInfo != null)
+                    {
+                        // Xác định các vị trí đáp án cố định và có thể hoán vị
+                        var fixedPositions = new List<int>(); // index 1-based
+                        var shuffleablePositions = new List<int>();
+                        for (int j = 1; j <= 4; j++)
+                        {
+                            if (shuffleInfo.ContainsKey(j.ToString()) && shuffleInfo[j.ToString()])
+                                shuffleablePositions.Add(j);
+                            else
+                                fixedPositions.Add(j);
+                        }
+                        // Lấy đáp án có thể hoán vị
+                        var shuffleableAnswers = shuffleablePositions.ToList();
+                        // Xáo trộn các đáp án có thể hoán vị
+                        if (shuffleableAnswers.Count > 1)
+                            shuffleableAnswers = shuffleableAnswers.OrderBy(x => random.Next()).ToList();
+                        // Gán lại thứ tự mới: đáp án cố định giữ nguyên vị trí, đáp án hoán vị gán vào các vị trí còn lại
+                        newAnswerOrder.Clear();
+                        int shuffleIdx = 0;
+                        for (int j = 1; j <= 4; j++)
+                        {
+                            if (fixedPositions.Contains(j))
+                            {
+                                newAnswerOrder.Add(j); // giữ nguyên vị trí
+                            }
+                            else
+                            {
+                                newAnswerOrder.Add(shuffleableAnswers[shuffleIdx++]);
+                            }
+                        }
+                    }
+                    
+                    answerOrder = string.Join("", newAnswerOrder);
+                    answerIndexes = newAnswerOrder;
 
                     string?[] answers = { question.Answer1, question.Answer2, question.Answer3, question.Answer4 };
                     string?[] shuffledAnswers = new string?[4];
+                    
+                    // Tạo đáp án theo thứ tự mới
                     for (int j = 0; j < 4; j++)
                     {
                         shuffledAnswers[j] = answers[answerIndexes[j] - 1];
                     }
-                    int? correctIndex = question.CorrectAnswerIndex.HasValue ? answerIndexes.IndexOf(question.CorrectAnswerIndex.Value) + 1 : (int?)null;
+                    
+                    // Tính toán đáp án đúng mới
+                    int? correctIndex = question.CorrectAnswerIndex.HasValue ? 
+                        answerIndexes.IndexOf(question.CorrectAnswerIndex.Value) + 1 : 
+                        (int?)null;
 
                     // Xác định ký tự đáp án đúng (A/B/C/D)
                     string correctChar = correctIndex.HasValue && correctIndex.Value >= 1 && correctIndex.Value <= 4

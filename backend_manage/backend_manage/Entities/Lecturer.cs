@@ -18,10 +18,6 @@ namespace backend_manage.Entities
         [MaxLength(20)]
         public string LecturerCode { get; set; }
 
-        // Họ tên giảng viên
-        [MaxLength(100)]
-        public string FullName { get; set; }
-
         // Tên của giảng viên
         [StringLength(50)]
         public string FirstName { get; set; }

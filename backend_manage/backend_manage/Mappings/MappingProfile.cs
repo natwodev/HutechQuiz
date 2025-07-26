@@ -158,6 +158,7 @@ public class MappingProfile : Profile
         CreateMap<ExamRoomLecturerAssignment, ExamRoomLecturerAssignmentDto>()
             .ForMember(dest => dest.RoomName, opt => opt.MapFrom(src => src.ExamRoom.RoomName))
             .ForMember(dest => dest.SubjectName, opt => opt.MapFrom(src => src.ExamSessionSubject.Subject.SubjectName))
-            .ForMember(dest => dest.LecturerName, opt => opt.MapFrom(src => src.Lecturer.FullName));
+            .ForMember(dest => dest.LecturerName, opt => opt.MapFrom(src => src.Lecturer.LastName + " " + src.Lecturer.FirstName));
+
     }
 }
