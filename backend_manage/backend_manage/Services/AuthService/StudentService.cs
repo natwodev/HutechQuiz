@@ -31,6 +31,7 @@ public class StudentService : IStudentService
         IRepository<Student> repository,
         IRepository<StudentExamSession> studentExamSessionRepository,
         IRepository<ExamSessionSubject> examSessionSubjectRepository,
+        IRepository<ShuffledExamPaper> shuffledExamPaperRepository,
         IRepository<ExamRoom> examRoomRepository,
         IConfiguration configuration,
         IHttpContextAccessor httpContextAccessor,
@@ -40,6 +41,7 @@ public class StudentService : IStudentService
         _repository = repository;
         _studentExamSessionRepository = studentExamSessionRepository;
         _examSessionSubjectRepository = examSessionSubjectRepository;
+        _shuffledExamPaperRepository = shuffledExamPaperRepository;
         _examRoomRepository = examRoomRepository;
         _configuration = configuration;
         _httpContextAccessor = httpContextAccessor;
