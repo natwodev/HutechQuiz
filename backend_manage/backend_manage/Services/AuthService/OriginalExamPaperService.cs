@@ -396,32 +396,35 @@ namespace backend_manage.Services.AuthService
                     
                     if (shuffleInfo != null)
                     {
-                        // Tách riêng đáp án có thể hoán vị và không thể hoán vị
-                        var shuffleableAnswers = new List<int>();
-                        var fixedAnswers = new List<int>();
-                        
+                        // Xác định các vị trí đáp án cố định và có thể hoán vị
+                        var fixedPositions = new List<int>(); // index 1-based
+                        var shuffleablePositions = new List<int>();
                         for (int j = 1; j <= 4; j++)
                         {
                             if (shuffleInfo.ContainsKey(j.ToString()) && shuffleInfo[j.ToString()])
+                                shuffleablePositions.Add(j);
+                            else
+                                fixedPositions.Add(j);
+                        }
+                        // Lấy đáp án có thể hoán vị
+                        var shuffleableAnswers = shuffleablePositions.ToList();
+                        // Xáo trộn các đáp án có thể hoán vị
+                        if (shuffleableAnswers.Count > 1)
+                            shuffleableAnswers = shuffleableAnswers.OrderBy(x => random.Next()).ToList();
+                        // Gán lại thứ tự mới: đáp án cố định giữ nguyên vị trí, đáp án hoán vị gán vào các vị trí còn lại
+                        newAnswerOrder.Clear();
+                        int shuffleIdx = 0;
+                        for (int j = 1; j <= 4; j++)
+                        {
+                            if (fixedPositions.Contains(j))
                             {
-                                shuffleableAnswers.Add(j);
+                                newAnswerOrder.Add(j); // giữ nguyên vị trí
                             }
                             else
                             {
-                                fixedAnswers.Add(j);
+                                newAnswerOrder.Add(shuffleableAnswers[shuffleIdx++]);
                             }
                         }
-                        
-                        // Hoán vị chỉ những đáp án có thể hoán vị
-                        if (shuffleableAnswers.Count > 1)
-                        {
-                            shuffleableAnswers = shuffleableAnswers.OrderBy(x => random.Next()).ToList();
-                        }
-                        
-                        // Tạo lại thứ tự đáp án: đáp án cố định giữ nguyên vị trí, đáp án có thể hoán vị xếp vào cuối
-                        newAnswerOrder.Clear();
-                        newAnswerOrder.AddRange(fixedAnswers);
-                        newAnswerOrder.AddRange(shuffleableAnswers);
                     }
                     
                     answerOrder = string.Join("", newAnswerOrder);
