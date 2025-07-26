@@ -31,7 +31,7 @@ public class StudentService : IStudentService
         IRepository<Student> repository,
         IRepository<StudentExamSession> studentExamSessionRepository,
         IRepository<ExamSessionSubject> examSessionSubjectRepository,
-        IRepository<ShuffledExamPaper> shuffledExamPaperRepository
+        IRepository<ShuffledExamPaper> shuffledExamPaperRepository,
         IRepository<ExamRoom> examRoomRepository,
         IConfiguration configuration,
         IHttpContextAccessor httpContextAccessor,
@@ -345,10 +345,8 @@ public class StudentService : IStudentService
         }
         else
         {
-            // Lấy từ DB (bao gồm details)
-            var paper = await _studentExamSessionRepository.GetQueryable()
+            var paper = await _shuffledExamPaperRepository.GetQueryable()
                 .Where(x => x.ShuffledExamPaperId == shuffledExamPaper.ShuffledExamPaperId)
-                .Select(x => x.ShuffledExamPaper)
                 .Include(x => x.ShuffledExamPaperDetails)
                 .ThenInclude(d => d.OriginalExamPaperDetail)
                 .Include(x => x.OriginalExamPaper)
