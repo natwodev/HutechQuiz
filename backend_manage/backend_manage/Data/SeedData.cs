@@ -25,7 +25,7 @@ namespace backend_manage.Data
                 await roleManager.DeleteAsync(role);
             }
 */
-            string[] rolesToSeed = { "Admin", "Student", "Lecturer" };
+            string[] rolesToSeed = { "Admin", "Student", "Lecturer", "Training", "ExamManager", "ITManager" };
             foreach (var role in rolesToSeed)
             {
                 if (!await roleManager.RoleExistsAsync(role))
