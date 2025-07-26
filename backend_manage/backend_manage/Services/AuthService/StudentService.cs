@@ -288,16 +288,16 @@ public class StudentService : IStudentService
         return await _repository.DeleteAsync(id);
     }
 
-    public async Task<ShuffledExamPaperDto> StartExamAsync(string studentCode, int examSessionSubjectId)
+    public async Task<ShuffledExamPaperDto> StartExamAsync(string studentCode, int studentExamSessionId)
     {
         // 1. Kiểm tra StudentExamSession đã có mã đề chưa
         var studentExamSession = await _studentExamSessionRepository.GetQueryable()
             .Include(x => x.ShuffledExamPaper)
-            .FirstOrDefaultAsync(x => x.StudentCode == studentCode && x.ExamSessionSubjectId == examSessionSubjectId);
+            .FirstOrDefaultAsync(x => x.StudentCode == studentCode && x.StudentExamSessionId == studentExamSessionId);
         if (studentExamSession == null)
-            throw new Exception("Không tìm thấy phiên thi của sinh viên cho môn này.");
+            throw new Exception("Không tìm thấy phiên thi của sinh viên.");
 
-        // Nếu đã có mã đề, lấy mã đề đó
+        int examSessionSubjectId = studentExamSession.ExamSessionSubjectId;
         int? shuffledExamPaperId = studentExamSession.ShuffledExamPaperId;
         ShuffledExamPaper shuffledExamPaper = null;
         if (shuffledExamPaperId.HasValue)
@@ -312,15 +312,20 @@ public class StudentService : IStudentService
         }
         else
         {
-            // Nếu chưa có, random 1 mã đề từ ExamSessionSubject
+            // Lấy ExamSessionSubject và kiểm tra đề gốc
             var examSessionSubject = await _examSessionSubjectRepository.GetQueryable()
                 .Include(x => x.ShuffledExamPapers)
                 .FirstOrDefaultAsync(x => x.ExamSessionSubjectId == examSessionSubjectId);
-            if (examSessionSubject == null || examSessionSubject.ShuffledExamPapers == null || !examSessionSubject.ShuffledExamPapers.Any())
-                throw new Exception("Không có đề thi hoán vị cho môn này.");
-            var availablePapers = examSessionSubject.ShuffledExamPapers.Where(p => p.IsApproved == true).ToList();
+            if (examSessionSubject == null)
+                throw new Exception("Không tìm thấy ca thi môn này.");
+            if (examSessionSubject.OriginalExamPaperId == null)
+                throw new Exception("Chưa có đề thi gốc cho ca thi này.");
+            // Lấy danh sách đề hoán vị theo đề gốc
+            var availablePapers = examSessionSubject.ShuffledExamPapers
+                .Where(p => p.OriginalExamPaperId == examSessionSubject.OriginalExamPaperId && p.IsApproved == true)
+                .ToList();
             if (!availablePapers.Any())
-                throw new Exception("Không có đề thi hoán vị đã được phê duyệt cho môn này.");
+                throw new Exception("Chưa có đề thi hoán vị đã được phê duyệt cho ca thi này.");
             var random = new Random();
             shuffledExamPaper = availablePapers[random.Next(availablePapers.Count)];
             // Gán mã đề cho sinh viên

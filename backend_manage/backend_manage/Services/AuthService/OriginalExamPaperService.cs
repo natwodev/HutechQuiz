@@ -163,7 +163,8 @@ namespace backend_manage.Services.AuthService
                 CreatedAt = now,
                 DurationMinutes = 0, // TODO: Bổ sung nếu có trường thời gian làm bài trong XML
                 TotalQuestions = monHoc.TongSoCauLay > 0 ? monHoc.TongSoCauLay : 0,
-                OriginalExamPaperCore = originalExamPaperCore // <-- cập nhật ở đây
+                OriginalExamPaperCore = originalExamPaperCore, // <-- cập nhật ở đây
+                IsApproved = true // Đề thi gốc mặc định được duyệt khi thêm mới
             };
             await _originalExamPaperRepository.AddAsync(originalExamPaper);
 
@@ -309,7 +310,7 @@ namespace backend_manage.Services.AuthService
                     OriginalExamPaperId = originalExamPaper.OriginalExamPaperId,
                     ExamSessionSubjectId = null,
                     SubjectId = subjectId,
-                    IsApproved = false,
+                    IsApproved = true, // Đề hoán vị mặc định được duyệt khi tạo mới
                     CreatedBy = userId,
                     CreatedAt = now,
                     TotalUsageCount = 0
