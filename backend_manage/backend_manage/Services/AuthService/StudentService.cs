@@ -31,7 +31,7 @@ public class StudentService : IStudentService
         IRepository<Student> repository,
         IRepository<StudentExamSession> studentExamSessionRepository,
         IRepository<ExamSessionSubject> examSessionSubjectRepository,
-        IRepository<ShuffledExamPaper> shuffledExamPaperRepository,
+        IRepository<ShuffledExamPaper> shuffledExamPaperRepository
         IRepository<ExamRoom> examRoomRepository,
         IConfiguration configuration,
         IHttpContextAccessor httpContextAccessor,
@@ -305,9 +305,8 @@ public class StudentService : IStudentService
         ShuffledExamPaper shuffledExamPaper = null;
         if (shuffledExamPaperId.HasValue)
         {
-            shuffledExamPaper = await _studentExamSessionRepository.GetQueryable()
-                .Where(x => x.StudentExamSessionId == studentExamSession.StudentExamSessionId)
-                .Select(x => x.ShuffledExamPaper)
+            shuffledExamPaper = await _shuffledExamPaperRepository.GetQueryable()
+                .Where(x => x.ShuffledExamPaperId == shuffledExamPaperId.Value)
                 .Include(x => x.ShuffledExamPaperDetails)
                 .ThenInclude(d => d.OriginalExamPaperDetail)
                 .Include(x => x.OriginalExamPaper)
