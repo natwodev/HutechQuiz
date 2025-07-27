@@ -7,6 +7,7 @@ using backend_manage.Mappings;
 using backend_manage.Middlewares.Jwt;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using StackExchange.Redis;
 
 namespace backend_manage.Extensions
 {
@@ -80,10 +81,9 @@ namespace backend_manage.Extensions
             // Đăng ký xác thực JWT (được tách riêng)
             services.ConfigureJwt(configuration);
             
-            services.AddStackExchangeRedisCache(options =>
-            {
-                options.Configuration = "localhost:6379"; // Thay bằng địa chỉ Redis của bạn
-            });
+            // Cấu hình Redis
+            services.AddSingleton<IConnectionMultiplexer>(sp => 
+                ConnectionMultiplexer.Connect(configuration["Redis:ConnectionString"] ?? "localhost:6379"));
 
             //đăng ký tạo policy phân quyền
             services.AddAuthorization(options =>
@@ -95,7 +95,6 @@ namespace backend_manage.Extensions
             services.Configure<IpRateLimitOptions>(configuration.GetSection("RateLimit"));
             services.AddInMemoryRateLimiting();
             services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>();
-
         }
     }
 }

@@ -13,6 +13,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
 using AutoMapper;
 using Microsoft.AspNetCore.SignalR;
+using StackExchange.Redis;
 
 namespace backend_manage.Services.AuthService;
 
@@ -27,6 +28,8 @@ public class StudentService : IStudentService
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly IMapper _mapper;
     private readonly IHubContext<NotificationHub> _hubContext;
+    private readonly IConnectionMultiplexer _redis;
+
     public StudentService(
         IRepository<Student> repository,
         IRepository<StudentExamSession> studentExamSessionRepository,
@@ -36,7 +39,8 @@ public class StudentService : IStudentService
         IConfiguration configuration,
         IHttpContextAccessor httpContextAccessor,
         IMapper mapper,
-        IHubContext<NotificationHub> hubContext)
+        IHubContext<NotificationHub> hubContext,
+        IConnectionMultiplexer redis)
     {
         _repository = repository;
         _studentExamSessionRepository = studentExamSessionRepository;
@@ -47,6 +51,7 @@ public class StudentService : IStudentService
         _httpContextAccessor = httpContextAccessor;
         _mapper = mapper;
         _hubContext = hubContext;
+        _redis = redis;
     }
 
     public async Task<StudentAuthResultDto> LoginAsync(string studentCode1, string studentCode2)
@@ -304,15 +309,15 @@ public class StudentService : IStudentService
         int? shuffledExamPaperId = studentExamSession.ShuffledExamPaperId;
         ShuffledExamPaper shuffledExamPaper = null;
         ShuffledExamPaperDto paperDto = null;
-        var cache = (IDistributedCache)_httpContextAccessor.HttpContext.RequestServices.GetService(typeof(IDistributedCache));
+        var db = _redis.GetDatabase();
 
         if (shuffledExamPaperId.HasValue)
         {
             // 1. Thử lấy từ Redis trước
             string cacheKey = $"shuffled_exam_paper:{shuffledExamPaperId.Value}";
-            string cachedPaper = await cache.GetStringAsync(cacheKey);
+            var cachedPaper = await db.StringGetAsync(cacheKey);
             
-            if (!string.IsNullOrEmpty(cachedPaper))
+            if (!cachedPaper.IsNull)
             {
                 // Lấy được từ Redis
                 paperDto = System.Text.Json.JsonSerializer.Deserialize<ShuffledExamPaperDto>(cachedPaper);
@@ -332,11 +337,9 @@ public class StudentService : IStudentService
                 
                 // Map sang DTO và cache vào Redis
                 paperDto = _mapper.Map<ShuffledExamPaperDto>(shuffledExamPaper);
-                var cacheOptions = new DistributedCacheEntryOptions
-                {
-                    AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(6)
-                };
-                await cache.SetStringAsync(cacheKey, System.Text.Json.JsonSerializer.Serialize(paperDto), cacheOptions);
+                await db.StringSetAsync(cacheKey, 
+                    System.Text.Json.JsonSerializer.Serialize(paperDto),
+                    TimeSpan.FromHours(6));
             }
         }
         else
@@ -365,9 +368,9 @@ public class StudentService : IStudentService
             
             // Lấy đề từ Redis hoặc database
             string cacheKey = $"shuffled_exam_paper:{shuffledExamPaper.ShuffledExamPaperId}";
-            string cachedPaper = await cache.GetStringAsync(cacheKey);
+            var cachedPaper = await db.StringGetAsync(cacheKey);
             
-            if (!string.IsNullOrEmpty(cachedPaper))
+            if (!cachedPaper.IsNull)
             {
                 // Lấy được từ Redis
                 paperDto = System.Text.Json.JsonSerializer.Deserialize<ShuffledExamPaperDto>(cachedPaper);
@@ -387,11 +390,9 @@ public class StudentService : IStudentService
                 
                 // Map sang DTO và cache vào Redis
                 paperDto = _mapper.Map<ShuffledExamPaperDto>(paper);
-                var cacheOptions = new DistributedCacheEntryOptions
-                {
-                    AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(6)
-                };
-                await cache.SetStringAsync(cacheKey, System.Text.Json.JsonSerializer.Serialize(paperDto), cacheOptions);
+                await db.StringSetAsync(cacheKey, 
+                    System.Text.Json.JsonSerializer.Serialize(paperDto),
+                    TimeSpan.FromHours(6));
             }
         }
         // 3. Trả đề về cho frontend
