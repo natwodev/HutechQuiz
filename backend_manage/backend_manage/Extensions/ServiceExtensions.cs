@@ -81,9 +81,21 @@ namespace backend_manage.Extensions
             // Đăng ký xác thực JWT (được tách riêng)
             services.ConfigureJwt(configuration);
             
-            // Cấu hình Redis
-            services.AddSingleton<IConnectionMultiplexer>(sp => 
-                ConnectionMultiplexer.Connect(configuration["Redis:ConnectionString"] ?? "localhost:6379"));
+            // Cấu hình Redis với xử lý lỗi kết nối
+            services.AddSingleton<IConnectionMultiplexer>(sp => {
+                try
+                {
+                    var redisConfig = ConfigurationOptions.Parse(configuration["Redis:ConnectionString"] ?? "localhost:6379");
+                    redisConfig.AbortOnConnectFail = false; // Không dừng ứng dụng khi không kết nối được Redis
+                    return ConnectionMultiplexer.Connect(redisConfig);
+                }
+                catch (Exception ex)
+                {
+                    // Log lỗi nhưng không throw exception
+                    sp.GetService<ILogger<IConnectionMultiplexer>>()?.LogWarning(ex, "Không thể kết nối đến Redis. Ứng dụng sẽ tiếp tục chạy.");
+                    return null;
+                }
+            });
 
             //đăng ký tạo policy phân quyền
             services.AddAuthorization(options =>
