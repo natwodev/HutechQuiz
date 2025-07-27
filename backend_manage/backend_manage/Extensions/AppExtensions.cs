@@ -34,6 +34,21 @@ namespace backend_manage.Extensions
             app.MapHub<NotificationHub>("/notificationHub"); // ✅ SignalR Hub
         }
 
+        public static bool IsRedisConnected(this IConnectionMultiplexer redis, ILogger logger)
+        {
+            try
+            {
+                var db = redis.GetDatabase();
+                // Thử ping để kiểm tra kết nối thực sự
+                return db.Ping().TotalSeconds < 1;
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning(ex, "Redis không khả dụng");
+                return false;
+            }
+        }
+
         public static IConnectionMultiplexer? ConfigureRedis(this IServiceProvider serviceProvider, string connectionString, ILogger logger)
         {
             try
@@ -43,9 +58,18 @@ namespace backend_manage.Extensions
                 
                 logger.LogInformation("Đang kết nối đến Redis server...");
                 var redis = ConnectionMultiplexer.Connect(redisConfig);
-                logger.LogInformation("Kết nối Redis thành công!");
                 
-                return redis;
+                // Kiểm tra kết nối thực sự
+                if (redis.IsRedisConnected(logger))
+                {
+                    logger.LogInformation("Kết nối Redis thành công!");
+                    return redis;
+                }
+                else
+                {
+                    logger.LogWarning("Không thể ping đến Redis server");
+                    return null;
+                }
             }
             catch (RedisConnectionException ex)
             {

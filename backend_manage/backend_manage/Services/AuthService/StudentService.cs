@@ -320,8 +320,12 @@ public class StudentService : IStudentService
         ShuffledExamPaper shuffledExamPaper = null;
         ShuffledExamPaperDto paperDto = null;
 
-        // Kiểm tra Redis có hoạt động không ngay từ đầu
-        bool isRedisAvailable = _redis?.IsConnected == true;
+        // Kiểm tra Redis có hoạt động không ngay từ đầu bằng cách ping
+        bool isRedisAvailable = _redis?.IsRedisConnected(_logger) ?? false;
+        if (!isRedisAvailable)
+        {
+            _logger.LogWarning("Redis không khả dụng, sẽ lấy đề thi từ database");
+        }
         
         if (shuffledExamPaperId.HasValue)
         {
@@ -357,10 +361,6 @@ public class StudentService : IStudentService
                     _logger.LogError(ex, "Lỗi khi truy cập Redis");
                     isRedisAvailable = false; // Đánh dấu Redis không khả dụng nếu có lỗi
                 }
-            }
-            else
-            {
-                _logger.LogWarning("Redis không khả dụng, sẽ lấy đề thi từ database");
             }
 
             // Lấy từ database nếu Redis không khả dụng hoặc không lấy được từ Redis
