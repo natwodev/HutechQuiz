@@ -328,14 +328,25 @@ public class StudentService : IStudentService
             _logger.LogInformation("Đang tìm đề thi từ Redis với key: {CacheKey}", cacheKey);
             
             var cachedPaper = await db.StringGetAsync(cacheKey);
+            _logger.LogDebug("Giá trị từ Redis: {CachedPaper}", cachedPaper.ToString());
             
             if (!cachedPaper.IsNull)
             {
                 _logger.LogInformation("Tìm thấy đề thi trong Redis cho sinh viên {StudentCode}", studentCode);
-                // Lấy được từ Redis
-                paperDto = System.Text.Json.JsonSerializer.Deserialize<ShuffledExamPaperDto>(cachedPaper);
-                _logger.LogInformation("Đã deserialize thành công đề thi từ Redis, mã đề: {ShuffledExamPaperId}", 
-                    paperDto.ShuffledExamPaperId);
+                try 
+                {
+                    // Lấy được từ Redis
+                    paperDto = System.Text.Json.JsonSerializer.Deserialize<ShuffledExamPaperDto>(cachedPaper);
+                    _logger.LogInformation("Đã deserialize thành công đề thi từ Redis, mã đề: {ShuffledExamPaperId}", 
+                        paperDto.ShuffledExamPaperId);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Lỗi khi deserialize đề thi từ Redis");
+                    // Xóa cache lỗi
+                    await db.KeyDeleteAsync(cacheKey);
+                    _logger.LogInformation("Đã xóa cache lỗi với key: {CacheKey}", cacheKey);
+                }
             }
             else
             {
@@ -360,10 +371,17 @@ public class StudentService : IStudentService
                 paperDto = _mapper.Map<ShuffledExamPaperDto>(shuffledExamPaper);
                 _logger.LogInformation("Đang cache đề thi vào Redis, mã đề: {ShuffledExamPaperId}", 
                     shuffledExamPaper.ShuffledExamPaperId);
+
+                var jsonString = System.Text.Json.JsonSerializer.Serialize(paperDto);
+                _logger.LogDebug("JSON string để cache: {JsonString}", jsonString);
                 
                 await db.StringSetAsync(cacheKey, 
-                    System.Text.Json.JsonSerializer.Serialize(paperDto),
+                    jsonString,
                     TimeSpan.FromHours(6));
+
+                // Verify cache
+                var verifyCache = await db.StringGetAsync(cacheKey);
+                _logger.LogDebug("Verify cache - Giá trị sau khi cache: {VerifyCache}", verifyCache.ToString());
                 
                 _logger.LogInformation("Đã cache thành công đề thi vào Redis");
             }
@@ -417,12 +435,24 @@ public class StudentService : IStudentService
             _logger.LogInformation("Đang tìm đề thi từ Redis với key: {CacheKey}", cacheKey);
             
             var cachedPaper = await db.StringGetAsync(cacheKey);
+            _logger.LogDebug("Giá trị từ Redis: {CachedPaper}", cachedPaper.ToString());
             
             if (!cachedPaper.IsNull)
             {
                 _logger.LogInformation("Tìm thấy đề thi trong Redis");
-                // Lấy được từ Redis
-                paperDto = System.Text.Json.JsonSerializer.Deserialize<ShuffledExamPaperDto>(cachedPaper);
+                try 
+                {
+                    // Lấy được từ Redis
+                    paperDto = System.Text.Json.JsonSerializer.Deserialize<ShuffledExamPaperDto>(cachedPaper);
+                    _logger.LogInformation("Đã deserialize thành công đề thi từ Redis");
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Lỗi khi deserialize đề thi từ Redis");
+                    // Xóa cache lỗi
+                    await db.KeyDeleteAsync(cacheKey);
+                    _logger.LogInformation("Đã xóa cache lỗi với key: {CacheKey}", cacheKey);
+                }
             }
             else
             {
@@ -446,9 +476,16 @@ public class StudentService : IStudentService
                 paperDto = _mapper.Map<ShuffledExamPaperDto>(paper);
                 _logger.LogInformation("Đang cache đề thi vào Redis");
                 
+                var jsonString = System.Text.Json.JsonSerializer.Serialize(paperDto);
+                _logger.LogDebug("JSON string để cache: {JsonString}", jsonString);
+                
                 await db.StringSetAsync(cacheKey, 
-                    System.Text.Json.JsonSerializer.Serialize(paperDto),
+                    jsonString,
                     TimeSpan.FromHours(6));
+
+                // Verify cache
+                var verifyCache = await db.StringGetAsync(cacheKey);
+                _logger.LogDebug("Verify cache - Giá trị sau khi cache: {VerifyCache}", verifyCache.ToString());
                 
                 _logger.LogInformation("Đã cache thành công đề thi vào Redis");
             }
