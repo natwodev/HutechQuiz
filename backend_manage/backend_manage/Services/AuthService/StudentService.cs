@@ -12,6 +12,7 @@ using backend_manage.Hubs;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
 using AutoMapper;
+using backend_manage.Extensions;
 using Microsoft.AspNetCore.SignalR;
 using StackExchange.Redis;
 
@@ -319,87 +320,83 @@ public class StudentService : IStudentService
         int? shuffledExamPaperId = studentExamSession.ShuffledExamPaperId;
         ShuffledExamPaper shuffledExamPaper = null;
         ShuffledExamPaperDto paperDto = null;
-        var db = _redis.GetDatabase();
 
+        // Kiểm tra Redis có hoạt động không ngay từ đầu bằng cách ping
+        bool isRedisAvailable = _redis?.IsRedisConnected(_logger) ?? false;
+        if (!isRedisAvailable)
+        {
+            _logger.LogWarning("Redis không khả dụng, sẽ lấy đề thi từ database");
+        }
+        
         if (shuffledExamPaperId.HasValue)
         {
-            // 1. Thử lấy từ Redis trước
-            string cacheKey = $"shuffled_exam_paper:{shuffledExamPaperId.Value}";
-            _logger.LogInformation("Đang tìm đề thi từ Redis với key: {CacheKey}", cacheKey);
-            
-            var cachedPaper = await db.StringGetAsync(cacheKey);
-            
-            if (cachedPaper.HasValue) // Thay đổi từ IsNull sang HasValue
+            // Nếu Redis hoạt động thì thử lấy từ Redis
+            if (isRedisAvailable)
             {
-                var cachedValue = cachedPaper.ToString();
-                _logger.LogDebug("Giá trị từ Redis (length={Length}): {CachedValue}", 
-                    cachedValue?.Length ?? 0, 
-                    cachedValue?.Substring(0, Math.Min(100, cachedValue?.Length ?? 0)));
-                
-                try 
+                try
                 {
-                    paperDto = System.Text.Json.JsonSerializer.Deserialize<ShuffledExamPaperDto>(cachedValue);
-                    _logger.LogInformation("Đã deserialize thành công đề thi từ Redis, mã đề: {ShuffledExamPaperId}, số câu hỏi: {QuestionCount}", 
-                        paperDto.ShuffledExamPaperId,
-                        paperDto.Details?.Count ?? 0);
+                    var db = _redis.GetDatabase();
+                    string cacheKey = $"shuffled_exam_paper:{shuffledExamPaperId.Value}";
+                    _logger.LogInformation("Đang tìm đề thi từ Redis với key: {CacheKey}", cacheKey);
+                    
+                    var cachedPaper = await db.StringGetAsync(cacheKey);
+                    
+                    if (cachedPaper.HasValue)
+                    {
+                        var cachedValue = cachedPaper.ToString();
+                        try 
+                        {
+                            paperDto = System.Text.Json.JsonSerializer.Deserialize<ShuffledExamPaperDto>(cachedValue);
+                            _logger.LogInformation("Đã lấy được đề thi từ Redis");
+                            return paperDto; // Trả về ngay nếu lấy được từ Redis
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError(ex, "Lỗi khi deserialize đề thi từ Redis");
+                            await db.KeyDeleteAsync(cacheKey);
+                        }
+                    }
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Lỗi khi deserialize đề thi từ Redis. Giá trị: {CachedValue}", cachedValue);
-                    // Xóa cache lỗi
-                    await db.KeyDeleteAsync(cacheKey);
-                    _logger.LogInformation("Đã xóa cache lỗi với key: {CacheKey}", cacheKey);
-                    paperDto = null; // Reset để lấy lại từ database
+                    _logger.LogError(ex, "Lỗi khi truy cập Redis");
+                    isRedisAvailable = false; // Đánh dấu Redis không khả dụng nếu có lỗi
                 }
             }
 
-            if (paperDto == null) // Nếu không có trong Redis hoặc deserialize lỗi
+            // Lấy từ database nếu Redis không khả dụng hoặc không lấy được từ Redis
+            _logger.LogInformation("Lấy đề thi từ database");
+            shuffledExamPaper = await _shuffledExamPaperRepository.GetQueryable()
+                .Where(x => x.ShuffledExamPaperId == shuffledExamPaperId.Value)
+                .Include(x => x.ShuffledExamPaperDetails)
+                .ThenInclude(d => d.OriginalExamPaperDetail)
+                .Include(x => x.OriginalExamPaper)
+                .FirstOrDefaultAsync();
+            
+            if (shuffledExamPaper == null)
             {
-                _logger.LogWarning("Không tìm thấy đề thi trong Redis hoặc có lỗi, đang lấy từ database cho sinh viên {StudentCode}", 
-                    studentCode);
-                
-                shuffledExamPaper = await _shuffledExamPaperRepository.GetQueryable()
-                    .Where(x => x.ShuffledExamPaperId == shuffledExamPaperId.Value)
-                    .Include(x => x.ShuffledExamPaperDetails)
-                    .ThenInclude(d => d.OriginalExamPaperDetail)
-                    .Include(x => x.OriginalExamPaper)
-                    .FirstOrDefaultAsync();
-                
-                if (shuffledExamPaper == null)
-                {
-                    _logger.LogError("Không tìm thấy đề thi hoán vị {ShuffledExamPaperId} trong database", 
-                        shuffledExamPaperId.Value);
-                    throw new Exception("Không tìm thấy đề thi hoán vị.");
-                }
-                
-                // Map sang DTO và cache vào Redis
-                paperDto = _mapper.Map<ShuffledExamPaperDto>(shuffledExamPaper);
-                _logger.LogInformation("Đang cache đề thi vào Redis, mã đề: {ShuffledExamPaperId}, số câu hỏi: {QuestionCount}", 
-                    shuffledExamPaper.ShuffledExamPaperId,
-                    paperDto.Details?.Count ?? 0);
+                _logger.LogError("Không tìm thấy đề thi hoán vị {ShuffledExamPaperId} trong database", 
+                    shuffledExamPaperId.Value);
+                throw new Exception("Không tìm thấy đề thi hoán vị.");
+            }
+            
+            paperDto = _mapper.Map<ShuffledExamPaperDto>(shuffledExamPaper);
+            
 
-                var jsonString = System.Text.Json.JsonSerializer.Serialize(paperDto);
-                _logger.LogDebug("JSON string để cache (length={Length}): {JsonPreview}", 
-                    jsonString.Length,
-                    jsonString.Substring(0, Math.Min(100, jsonString.Length)));
-                
-                var setResult = await db.StringSetAsync(cacheKey, 
-                    jsonString,
-                    TimeSpan.FromHours(6));
-                
-                _logger.LogInformation("Kết quả cache vào Redis: {SetResult}", setResult);
-
-                // Verify cache
-                var verifyCache = await db.StringGetAsync(cacheKey);
-                if (verifyCache.HasValue)
+            // Cache lại vào Redis nếu Redis khả dụng
+            if (isRedisAvailable)
+            {
+                try
                 {
-                    _logger.LogDebug("Verify cache - Giá trị sau khi cache (length={Length})", 
-                        verifyCache.ToString().Length);
-                    _logger.LogInformation("Đã cache thành công đề thi vào Redis");
+                    var db = _redis.GetDatabase();
+                    string cacheKey = $"shuffled_exam_paper:{shuffledExamPaperId.Value}";
+                    var jsonString = System.Text.Json.JsonSerializer.Serialize(paperDto);
+                    await db.StringSetAsync(cacheKey, jsonString, TimeSpan.FromHours(6));
+                    _logger.LogInformation("Đã cache đề thi vào Redis");
                 }
-                else
+                catch (Exception ex)
                 {
-                    _logger.LogWarning("Verify cache - Không tìm thấy giá trị sau khi cache!");
+                    _logger.LogError(ex, "Lỗi khi cache đề thi vào Redis");
                 }
             }
         }
@@ -442,85 +439,39 @@ public class StudentService : IStudentService
                 shuffledExamPaper.ShuffledExamPaperId, studentCode);
             
             // Gán mã đề cho sinh viên
+            // Khởi tạo chuỗi đáp án rỗng từ answerKey
+            var emptyAnswers = System.Text.RegularExpressions.Regex.Replace(shuffledExamPaper.AnswerKey, @",[A-D]\)", ",-)");
+            studentExamSession.StudentAnswersString = emptyAnswers;
+            studentExamSession.StartTime = DateTimeHelper.GetVietnamTime();
             studentExamSession.ShuffledExamPaperId = shuffledExamPaper.ShuffledExamPaperId;
             await _studentExamSessionRepository.UpdateAsync(studentExamSession);
             
             _logger.LogInformation("Đã gán đề thi cho sinh viên trong database");
             
-            // Lấy đề từ Redis hoặc database
-            string cacheKey = $"shuffled_exam_paper:{shuffledExamPaper.ShuffledExamPaperId}";
-            _logger.LogInformation("Đang tìm đề thi từ Redis với key: {CacheKey}", cacheKey);
+            // Lấy đề đầy đủ từ database
+            shuffledExamPaper = await _shuffledExamPaperRepository.GetQueryable()
+                .Where(x => x.ShuffledExamPaperId == shuffledExamPaper.ShuffledExamPaperId)
+                .Include(x => x.ShuffledExamPaperDetails)
+                .ThenInclude(d => d.OriginalExamPaperDetail)
+                .Include(x => x.OriginalExamPaper)
+                .FirstOrDefaultAsync();
             
-            var cachedPaper = await db.StringGetAsync(cacheKey);
+            paperDto = _mapper.Map<ShuffledExamPaperDto>(shuffledExamPaper);
             
-            if (cachedPaper.HasValue) // Thay đổi từ IsNull sang HasValue
+            // Cache vào Redis nếu Redis khả dụng
+            if (isRedisAvailable)
             {
-                var cachedValue = cachedPaper.ToString();
-                _logger.LogDebug("Giá trị từ Redis (length={Length}): {CachedValue}", 
-                    cachedValue?.Length ?? 0, 
-                    cachedValue?.Substring(0, Math.Min(100, cachedValue?.Length ?? 0)));
-                
-                try 
+                try
                 {
-                    paperDto = System.Text.Json.JsonSerializer.Deserialize<ShuffledExamPaperDto>(cachedValue);
-                    _logger.LogInformation("Đã deserialize thành công đề thi từ Redis, mã đề: {ShuffledExamPaperId}, số câu hỏi: {QuestionCount}", 
-                        paperDto.ShuffledExamPaperId,
-                        paperDto.Details?.Count ?? 0);
+                    var db = _redis.GetDatabase();
+                    string cacheKey = $"shuffled_exam_paper:{shuffledExamPaper.ShuffledExamPaperId}";
+                    var jsonString = System.Text.Json.JsonSerializer.Serialize(paperDto);
+                    await db.StringSetAsync(cacheKey, jsonString, TimeSpan.FromHours(6));
+                    _logger.LogInformation("Đã cache đề thi vào Redis");
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Lỗi khi deserialize đề thi từ Redis. Giá trị: {CachedValue}", cachedValue);
-                    // Xóa cache lỗi
-                    await db.KeyDeleteAsync(cacheKey);
-                    _logger.LogInformation("Đã xóa cache lỗi với key: {CacheKey}", cacheKey);
-                    paperDto = null; // Reset để lấy lại từ database
-                }
-            }
-
-            if (paperDto == null) // Nếu không có trong Redis hoặc deserialize lỗi
-            {
-                _logger.LogWarning("Không tìm thấy đề thi trong Redis hoặc có lỗi, đang lấy từ database");
-                // Không có trong Redis, lấy từ database và cache lại
-                var paper = await _shuffledExamPaperRepository.GetQueryable()
-                    .Where(x => x.ShuffledExamPaperId == shuffledExamPaper.ShuffledExamPaperId)
-                    .Include(x => x.ShuffledExamPaperDetails)
-                    .ThenInclude(d => d.OriginalExamPaperDetail)
-                    .Include(x => x.OriginalExamPaper)
-                    .FirstOrDefaultAsync();
-                
-                if (paper == null)
-                {
-                    _logger.LogError("Không tìm thấy đề thi hoán vị {ShuffledExamPaperId} trong database", 
-                        shuffledExamPaper.ShuffledExamPaperId);
-                    throw new Exception("Không tìm thấy đề thi hoán vị.");
-                }
-                
-                // Map sang DTO và cache vào Redis
-                paperDto = _mapper.Map<ShuffledExamPaperDto>(paper);
-                _logger.LogInformation("Đang cache đề thi vào Redis");
-                
-                var jsonString = System.Text.Json.JsonSerializer.Serialize(paperDto);
-                _logger.LogDebug("JSON string để cache (length={Length}): {JsonPreview}", 
-                    jsonString.Length,
-                    jsonString.Substring(0, Math.Min(100, jsonString.Length)));
-                
-                var setResult = await db.StringSetAsync(cacheKey, 
-                    jsonString,
-                    TimeSpan.FromHours(6));
-                
-                _logger.LogInformation("Kết quả cache vào Redis: {SetResult}", setResult);
-
-                // Verify cache
-                var verifyCache = await db.StringGetAsync(cacheKey);
-                if (verifyCache.HasValue)
-                {
-                    _logger.LogDebug("Verify cache - Giá trị sau khi cache (length={Length})", 
-                        verifyCache.ToString().Length);
-                    _logger.LogInformation("Đã cache thành công đề thi vào Redis");
-                }
-                else
-                {
-                    _logger.LogWarning("Verify cache - Không tìm thấy giá trị sau khi cache!");
+                    _logger.LogError(ex, "Lỗi khi cache đề thi vào Redis");
                 }
             }
         }

@@ -7,10 +7,13 @@ using backend_manage.Mappings;
 using backend_manage.Middlewares.Jwt;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
 
 namespace backend_manage.Extensions
 {
+    public class RedisLogger { }
+    
     public static class ServiceExtensions
     {
         public static void ConfigureServices(this IServiceCollection services, IConfiguration configuration)
@@ -81,9 +84,12 @@ namespace backend_manage.Extensions
             // Đăng ký xác thực JWT (được tách riêng)
             services.ConfigureJwt(configuration);
             
-            // Cấu hình Redis
-            services.AddSingleton<IConnectionMultiplexer>(sp => 
-                ConnectionMultiplexer.Connect(configuration["Redis:ConnectionString"] ?? "localhost:6379"));
+            // Cấu hình Redis với logging
+            services.AddSingleton<IConnectionMultiplexer>(sp => {
+                var logger = sp.GetRequiredService<ILogger<RedisLogger>>();
+                var connectionString = configuration["Redis:ConnectionString"] ?? "localhost:6379";
+                return sp.ConfigureRedis(connectionString, logger);
+            });
 
             //đăng ký tạo policy phân quyền
             services.AddAuthorization(options =>
