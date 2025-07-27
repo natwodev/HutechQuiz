@@ -1,6 +1,7 @@
 using backend_manage.Extensions;
 using OfficeOpenXml;
 using Serilog;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,6 +14,13 @@ builder.Host.UseSerilog();
 
 // Add services to the container.
 builder.Services.AddOpenApi();
+
+// Thêm logging chi tiết
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
+builder.Logging.AddDebug();
+builder.Logging.AddEventSourceLogger();
+builder.Logging.SetMinimumLevel(LogLevel.Debug);
 
 // Đọc cấu hình từ appsettings.json
 var configuration = builder.Configuration;
