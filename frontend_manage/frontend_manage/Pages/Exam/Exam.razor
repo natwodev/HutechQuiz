@@ -9,21 +9,21 @@
 @code {
     [Parameter]
     [SupplyParameterFromQuery]
-    public int? examSessionSubjectId { get; set; }
+    public int? studentExamSessionId { get; set; }
 
     private ShuffledExamPaperDto? shuffledExam;
     private string? errorMessage;
 
     protected override async Task OnInitializedAsync()
     {
-        if (examSessionSubjectId == null)
+        if (studentExamSessionId == null)
         {
             errorMessage = "Không tìm thấy thông tin ca thi môn học.";
             return;
         }
         try
         {
-            shuffledExam = await InfoApi.StartExamAsync(examSessionSubjectId.Value);
+            shuffledExam = await InfoApi.StartExamAsync(studentExamSessionId.Value);
             if (shuffledExam == null)
             {
                 errorMessage = "Không thể lấy đề thi hoán vị.";

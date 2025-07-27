@@ -82,8 +82,8 @@ namespace frontend_manage.Pages.Login
 
         private async Task StartExam(ExamSessionDto session)
         {
-            // Chuyển hướng sang trang làm bài thi với examSessionSubjectId
-            Navigation.NavigateTo($"/Exam?examSessionSubjectId={session.ExamSessionSubjectId}");
+            // Chuyển hướng sang trang làm bài thi với studentExamSessionId
+            Navigation.NavigateTo($"/Exam?studentExamSessionId={session.StudentExamSessionId}");
         }
 
         private string GetSessionStyle(int sessionId)
