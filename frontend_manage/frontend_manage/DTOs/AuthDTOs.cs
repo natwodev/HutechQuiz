@@ -36,6 +36,7 @@ public class StudentInfoDto
 
 public class ExamSessionDto
 {
+    public int StudentExamSessionId { get; set; }
     public int ExamSessionSubjectId { get; set; }
     public string SubjectName { get; set; }
     public string RoomName { get; set; }
