@@ -10,7 +10,7 @@ using System;
 using backend_manage.Hubs;
 using Microsoft.AspNetCore.Http;
 using System.Security.Claims;
-using Microsoft.Extensions.Caching.Distributed;
+using StackExchange.Redis;
 
 namespace backend_manage.Services.AuthService
 {
@@ -19,11 +19,18 @@ namespace backend_manage.Services.AuthService
         private readonly IRepository<ShuffledExamPaper> _shuffledExamPaperRepository;
         private readonly IMapper _mapper;
         private readonly IHttpContextAccessor _httpContextAccessor;
-        public ShuffledExamPaperService(IRepository<ShuffledExamPaper> shuffledExamPaperRepository, IMapper mapper, IHttpContextAccessor httpContextAccessor)
+        private readonly IConnectionMultiplexer _redis;
+
+        public ShuffledExamPaperService(
+            IRepository<ShuffledExamPaper> shuffledExamPaperRepository,
+            IHttpContextAccessor httpContextAccessor,
+            IMapper mapper,
+            IConnectionMultiplexer redis)
         {
             _shuffledExamPaperRepository = shuffledExamPaperRepository;
-            _mapper = mapper;
             _httpContextAccessor = httpContextAccessor;
+            _mapper = mapper;
+            _redis = redis;
         }
 
         public async Task<ShuffledExamPaperDto> GetWithDetailsAsync(string shuffledExamPaperCore)
@@ -59,7 +66,7 @@ namespace backend_manage.Services.AuthService
 
         public async Task PreloadApprovedPapersToRedisAsync()
         {
-            var cache = (IDistributedCache)_httpContextAccessor.HttpContext.RequestServices.GetService(typeof(IDistributedCache));
+            var db = _redis.GetDatabase();
             
             // Lấy tất cả đề thi hoán vị đã được phê duyệt
             var approvedPapers = await _shuffledExamPaperRepository.GetQueryable()
@@ -69,18 +76,15 @@ namespace backend_manage.Services.AuthService
                 .Include(x => x.OriginalExamPaper)
                 .ToListAsync();
 
-            var cacheOptions = new DistributedCacheEntryOptions
-            {
-                AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(6)
-            };
-
             foreach (var paper in approvedPapers)
             {
-                string cacheKey = $"shuffled_exam_paper:{paper.ShuffledExamPaperId}";
                 var paperDto = _mapper.Map<ShuffledExamPaperDto>(paper);
-                var jsonString = System.Text.Json.JsonSerializer.Serialize(paperDto);
-                
-                await cache.SetStringAsync(cacheKey, jsonString, cacheOptions);
+                string cacheKey = $"shuffled_exam_paper:{paper.ShuffledExamPaperId}";
+                await db.StringSetAsync(
+                    cacheKey,
+                    System.Text.Json.JsonSerializer.Serialize(paperDto),
+                    TimeSpan.FromHours(6)
+                );
             }
         }
     }

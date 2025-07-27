@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Caching.Distributed;
+using StackExchange.Redis;
 
 namespace backend_manage.Authentication
 {
@@ -8,12 +8,12 @@ namespace backend_manage.Authentication
     [ApiController]
     public class MaintenanceController : ControllerBase
     {
-        private readonly IDistributedCache _cache;
+        private readonly IConnectionMultiplexer _redis;
         private readonly IConfiguration _config;
 
-        public MaintenanceController(IDistributedCache cache, IConfiguration config)
+        public MaintenanceController(IConnectionMultiplexer redis, IConfiguration config)
         {
-            _cache = cache;
+            _redis = redis;
             _config = config;
         }
 
@@ -26,22 +26,22 @@ namespace backend_manage.Authentication
             if (key != secretKey)
                 return Forbid("Bạn không có quyền thay đổi chế độ bảo trì.");
 
+            var db = _redis.GetDatabase();
             // Xóa key cũ trong Redis trước khi thiết lập lại giá trị
-            await _cache.RemoveAsync("maintenance_mode");
+            await db.KeyDeleteAsync("maintenance_mode");
 
-            // Dùng StringSet thay vì SetStringAsync
-            await _cache.SetStringAsync("maintenance_mode", enable ? "true" : "false");
+            // Thiết lập giá trị mới
+            await db.StringSetAsync("maintenance_mode", enable ? "true" : "false");
 
             return Ok(new { message = enable ? "Chế độ bảo trì đã được bật." : "Chế độ bảo trì đã được tắt." });
         }
-
-
 
         [HttpGet("maintenance")]
         [Authorize(Policy = "AdminOnly")]
         public async Task<IActionResult> CheckMaintenance()
         {
-            var status = await _cache.GetStringAsync("maintenance_mode");
+            var db = _redis.GetDatabase();
+            var status = await db.StringGetAsync("maintenance_mode");
             return Ok(new { maintenance = status == "true" });
         }
     }

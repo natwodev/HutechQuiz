@@ -1,0 +1,631 @@
+2025-07-27 13:36:41.159 +07:00 [ERR] IDX10720: Unable to create KeyedHashAlgorithm for algorithm 'http://www.w3.org/2001/04/xmldsig-more#hmac-sha256', the key size must be greater than: '256' bits, key has '232' bits. (Parameter 'keyBytes')
+System.ArgumentOutOfRangeException: IDX10720: Unable to create KeyedHashAlgorithm for algorithm 'http://www.w3.org/2001/04/xmldsig-more#hmac-sha256', the key size must be greater than: '256' bits, key has '232' bits. (Parameter 'keyBytes')
+   at Microsoft.IdentityModel.Tokens.CryptoProviderFactory.ValidateKeySize(Byte[] keyBytes, String algorithm, Int32 expectedNumberOfBytes)
+   at Microsoft.IdentityModel.Tokens.CryptoProviderFactory.CreateKeyedHashAlgorithm(Byte[] keyBytes, String algorithm)
+   at Microsoft.IdentityModel.Tokens.SymmetricSignatureProvider.CreateKeyedHashAlgorithm()
+   at Microsoft.IdentityModel.Tokens.DisposableObjectPool`1.CreateInstance()
+   at Microsoft.IdentityModel.Tokens.DisposableObjectPool`1.Allocate()
+   at Microsoft.IdentityModel.Tokens.SymmetricSignatureProvider.GetKeyedHashAlgorithm(Byte[] keyBytes, String algorithm)
+   at Microsoft.IdentityModel.Tokens.SymmetricSignatureProvider.Sign(Byte[] input)
+   at Microsoft.IdentityModel.JsonWebTokens.JwtTokenUtilities.CreateEncodedSignature(String input, SigningCredentials signingCredentials)
+   at System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler.CreateJwtSecurityTokenPrivate(SecurityTokenDescriptor tokenDescriptor)
+   at System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler.CreateToken(SecurityTokenDescriptor tokenDescriptor)
+   at backend_manage.Services.AuthService.StudentService.LoginAsync(String studentCode1, String studentCode2) in /Users/nguyenhuynhnam/RiderProjects/HutechQuiz/backend_manage/backend_manage/Services/AuthService/StudentService.cs:line 127
+   at backend_manage.Controllers.StudentController.Login(LoginRequest request) in /Users/nguyenhuynhnam/RiderProjects/HutechQuiz/backend_manage/backend_manage/Controllers/StudentController.cs:line 31
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.TaskOfIActionResultExecutor.Execute(ActionContext actionContext, IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeActionMethodAsync>g__Logged|12_1(ControllerActionInvoker invoker)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeNextActionFilterAsync>g__Awaited|10_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Rethrow(ActionExecutedContextSealed context)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeInnerFilterAsync>g__Awaited|13_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeFilterPipelineAsync>g__Awaited|20_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Logged|17_1(ResourceInvoker invoker)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Logged|17_1(ResourceInvoker invoker)
+   at AspNetCoreRateLimit.RateLimitMiddleware`1.Invoke(HttpContext context) in C:\Users\User\Documents\Github\AspNetCoreRateLimit\src\AspNetCoreRateLimit\Middleware\RateLimitMiddleware.cs:line 124
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+   at backend_manage.Middlewares.JwtBlacklistMiddleware.Invoke(HttpContext context) in /Users/nguyenhuynhnam/RiderProjects/HutechQuiz/backend_manage/backend_manage/Middlewares/JwtBlacklistMiddleware.cs:line 31
+   at backend_manage.Middlewares.MaintenanceMiddleware.InvokeAsync(HttpContext context) in /Users/nguyenhuynhnam/RiderProjects/HutechQuiz/backend_manage/backend_manage/Middlewares/MaintenanceMiddleware.cs:line 49
+   at backend_manage.Middlewares.ExceptionMiddleware.InvokeAsync(HttpContext context) in /Users/nguyenhuynhnam/RiderProjects/HutechQuiz/backend_manage/backend_manage/Middlewares/ExceptionMiddleware.cs:line 21
+2025-07-27 13:38:11.315 +07:00 [INF] Bắt đầu lấy đề thi cho sinh viên 028, phiên thi 28
+2025-07-27 13:38:11.449 +07:00 [INF] Sinh viên 028 chưa được gán đề thi, đang chọn đề ngẫu nhiên
+2025-07-27 13:38:11.539 +07:00 [INF] Tìm thấy 12 đề thi hoán vị khả dụng
+2025-07-27 13:38:11.539 +07:00 [INF] Đã chọn ngẫu nhiên đề thi 9 cho sinh viên 028
+2025-07-27 13:38:11.670 +07:00 [INF] Đã gán đề thi cho sinh viên trong database
+2025-07-27 13:38:11.670 +07:00 [INF] Đang tìm đề thi từ Redis với key: shuffled_exam_paper:9
+2025-07-27 13:38:11.672 +07:00 [WRN] Không tìm thấy đề thi trong Redis, đang lấy từ database
+2025-07-27 13:38:11.892 +07:00 [INF] Đang cache đề thi vào Redis
+2025-07-27 13:38:11.921 +07:00 [INF] Đã cache thành công đề thi vào Redis
+2025-07-27 13:38:11.922 +07:00 [INF] Hoàn thành quá trình lấy đề thi cho sinh viên 028
+2025-07-27 13:42:38.895 +07:00 [INF] Bắt đầu lấy đề thi cho sinh viên 030, phiên thi 30
+2025-07-27 13:42:39.256 +07:00 [INF] Đang tìm đề thi từ Redis với key: shuffled_exam_paper:8
+2025-07-27 13:42:39.259 +07:00 [WRN] Không tìm thấy đề thi trong Redis, đang lấy từ database cho sinh viên 030
+2025-07-27 13:42:39.983 +07:00 [INF] Đang cache đề thi vào Redis, mã đề: 8
+2025-07-27 13:42:40.034 +07:00 [INF] Đã cache thành công đề thi vào Redis
+2025-07-27 13:42:40.034 +07:00 [INF] Hoàn thành quá trình lấy đề thi cho sinh viên 030
+2025-07-27 13:46:05.752 +07:00 [INF] Bắt đầu lấy đề thi cho sinh viên 030, phiên thi 30
+2025-07-27 13:46:06.183 +07:00 [INF] Đang tìm đề thi từ Redis với key: shuffled_exam_paper:8
+2025-07-27 13:46:06.216 +07:00 [INF] Đã deserialize thành công đề thi từ Redis, mã đề: 8, số câu hỏi: 2
+2025-07-27 13:46:06.216 +07:00 [INF] Hoàn thành quá trình lấy đề thi cho sinh viên 030, mã đề: 8, số câu hỏi: 2
+2025-07-27 13:46:13.417 +07:00 [INF] Bắt đầu lấy đề thi cho sinh viên 030, phiên thi 30
+2025-07-27 13:46:13.443 +07:00 [INF] Đang tìm đề thi từ Redis với key: shuffled_exam_paper:8
+2025-07-27 13:46:13.445 +07:00 [INF] Đã deserialize thành công đề thi từ Redis, mã đề: 8, số câu hỏi: 2
+2025-07-27 13:46:13.445 +07:00 [INF] Hoàn thành quá trình lấy đề thi cho sinh viên 030, mã đề: 8, số câu hỏi: 2
+2025-07-27 13:46:41.194 +07:00 [INF] Bắt đầu lấy đề thi cho sinh viên 030, phiên thi 30
+2025-07-27 13:46:41.220 +07:00 [INF] Đang tìm đề thi từ Redis với key: shuffled_exam_paper:8
+2025-07-27 13:46:41.222 +07:00 [INF] Đã deserialize thành công đề thi từ Redis, mã đề: 8, số câu hỏi: 2
+2025-07-27 13:46:41.223 +07:00 [INF] Hoàn thành quá trình lấy đề thi cho sinh viên 030, mã đề: 8, số câu hỏi: 2
+2025-07-27 13:46:42.123 +07:00 [INF] Bắt đầu lấy đề thi cho sinh viên 030, phiên thi 30
+2025-07-27 13:46:42.150 +07:00 [INF] Đang tìm đề thi từ Redis với key: shuffled_exam_paper:8
+2025-07-27 13:46:42.152 +07:00 [INF] Đã deserialize thành công đề thi từ Redis, mã đề: 8, số câu hỏi: 2
+2025-07-27 13:46:42.152 +07:00 [INF] Hoàn thành quá trình lấy đề thi cho sinh viên 030, mã đề: 8, số câu hỏi: 2
+2025-07-27 13:46:42.736 +07:00 [INF] Bắt đầu lấy đề thi cho sinh viên 030, phiên thi 30
+2025-07-27 13:46:42.766 +07:00 [INF] Đang tìm đề thi từ Redis với key: shuffled_exam_paper:8
+2025-07-27 13:46:42.772 +07:00 [INF] Đã deserialize thành công đề thi từ Redis, mã đề: 8, số câu hỏi: 2
+2025-07-27 13:46:42.773 +07:00 [INF] Hoàn thành quá trình lấy đề thi cho sinh viên 030, mã đề: 8, số câu hỏi: 2
+2025-07-27 13:46:43.366 +07:00 [INF] Bắt đầu lấy đề thi cho sinh viên 030, phiên thi 30
+2025-07-27 13:46:43.389 +07:00 [INF] Đang tìm đề thi từ Redis với key: shuffled_exam_paper:8
+2025-07-27 13:46:43.394 +07:00 [INF] Đã deserialize thành công đề thi từ Redis, mã đề: 8, số câu hỏi: 2
+2025-07-27 13:46:43.394 +07:00 [INF] Hoàn thành quá trình lấy đề thi cho sinh viên 030, mã đề: 8, số câu hỏi: 2
+2025-07-27 13:46:44.055 +07:00 [INF] Bắt đầu lấy đề thi cho sinh viên 030, phiên thi 30
+2025-07-27 13:46:44.081 +07:00 [INF] Đang tìm đề thi từ Redis với key: shuffled_exam_paper:8
+2025-07-27 13:46:44.083 +07:00 [INF] Đã deserialize thành công đề thi từ Redis, mã đề: 8, số câu hỏi: 2
+2025-07-27 13:46:44.083 +07:00 [INF] Hoàn thành quá trình lấy đề thi cho sinh viên 030, mã đề: 8, số câu hỏi: 2
+2025-07-27 13:46:44.690 +07:00 [INF] Bắt đầu lấy đề thi cho sinh viên 030, phiên thi 30
+2025-07-27 13:46:44.718 +07:00 [INF] Đang tìm đề thi từ Redis với key: shuffled_exam_paper:8
+2025-07-27 13:46:44.728 +07:00 [INF] Đã deserialize thành công đề thi từ Redis, mã đề: 8, số câu hỏi: 2
+2025-07-27 13:46:44.728 +07:00 [INF] Hoàn thành quá trình lấy đề thi cho sinh viên 030, mã đề: 8, số câu hỏi: 2
+2025-07-27 13:46:45.773 +07:00 [INF] Bắt đầu lấy đề thi cho sinh viên 030, phiên thi 30
+2025-07-27 13:46:45.813 +07:00 [INF] Đang tìm đề thi từ Redis với key: shuffled_exam_paper:8
+2025-07-27 13:46:45.815 +07:00 [INF] Đã deserialize thành công đề thi từ Redis, mã đề: 8, số câu hỏi: 2
+2025-07-27 13:46:45.815 +07:00 [INF] Hoàn thành quá trình lấy đề thi cho sinh viên 030, mã đề: 8, số câu hỏi: 2
+2025-07-27 13:50:49.338 +07:00 [INF] User profile is available. Using '/Users/nguyenhuynhnam/.aspnet/DataProtection-Keys' as key repository; keys will not be encrypted at rest.
+2025-07-27 13:50:52.302 +07:00 [INF] Executed DbCommand (126ms) [Parameters=[@__normalizedName_0='?' (Size = 256)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [a].[Id], [a].[ConcurrencyStamp], [a].[Name], [a].[NormalizedName]
+FROM [AspNetRoles] AS [a]
+WHERE [a].[NormalizedName] = @__normalizedName_0
+2025-07-27 13:50:52.465 +07:00 [INF] Executed DbCommand (27ms) [Parameters=[@__normalizedName_0='?' (Size = 256)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [a].[Id], [a].[ConcurrencyStamp], [a].[Name], [a].[NormalizedName]
+FROM [AspNetRoles] AS [a]
+WHERE [a].[NormalizedName] = @__normalizedName_0
+2025-07-27 13:50:52.486 +07:00 [INF] Executed DbCommand (20ms) [Parameters=[@__normalizedName_0='?' (Size = 256)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [a].[Id], [a].[ConcurrencyStamp], [a].[Name], [a].[NormalizedName]
+FROM [AspNetRoles] AS [a]
+WHERE [a].[NormalizedName] = @__normalizedName_0
+2025-07-27 13:50:52.508 +07:00 [INF] Executed DbCommand (21ms) [Parameters=[@__normalizedName_0='?' (Size = 256)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [a].[Id], [a].[ConcurrencyStamp], [a].[Name], [a].[NormalizedName]
+FROM [AspNetRoles] AS [a]
+WHERE [a].[NormalizedName] = @__normalizedName_0
+2025-07-27 13:50:52.530 +07:00 [INF] Executed DbCommand (20ms) [Parameters=[@__normalizedName_0='?' (Size = 256)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [a].[Id], [a].[ConcurrencyStamp], [a].[Name], [a].[NormalizedName]
+FROM [AspNetRoles] AS [a]
+WHERE [a].[NormalizedName] = @__normalizedName_0
+2025-07-27 13:50:52.551 +07:00 [INF] Executed DbCommand (20ms) [Parameters=[@__normalizedName_0='?' (Size = 256)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [a].[Id], [a].[ConcurrencyStamp], [a].[Name], [a].[NormalizedName]
+FROM [AspNetRoles] AS [a]
+WHERE [a].[NormalizedName] = @__normalizedName_0
+2025-07-27 13:50:52.591 +07:00 [INF] Executed DbCommand (21ms) [Parameters=[@__normalizedEmail_0='?' (Size = 256)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(2) [a].[Id], [a].[AccessFailedCount], [a].[ConcurrencyStamp], [a].[Email], [a].[EmailConfirmed], [a].[FullName], [a].[LockoutEnabled], [a].[LockoutEnd], [a].[NormalizedEmail], [a].[NormalizedUserName], [a].[PasswordHash], [a].[PhoneNumber], [a].[PhoneNumberConfirmed], [a].[SecurityStamp], [a].[TwoFactorEnabled], [a].[UserName]
+FROM [AspNetUsers] AS [a]
+WHERE [a].[NormalizedEmail] = @__normalizedEmail_0
+2025-07-27 13:50:52.676 +07:00 [INF] Executed DbCommand (20ms) [Parameters=[@__normalizedEmail_0='?' (Size = 256)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(2) [a].[Id], [a].[AccessFailedCount], [a].[ConcurrencyStamp], [a].[Email], [a].[EmailConfirmed], [a].[FullName], [a].[LockoutEnabled], [a].[LockoutEnd], [a].[NormalizedEmail], [a].[NormalizedUserName], [a].[PasswordHash], [a].[PhoneNumber], [a].[PhoneNumberConfirmed], [a].[SecurityStamp], [a].[TwoFactorEnabled], [a].[UserName]
+FROM [AspNetUsers] AS [a]
+WHERE [a].[NormalizedEmail] = @__normalizedEmail_0
+2025-07-27 13:50:52.698 +07:00 [INF] Executed DbCommand (20ms) [Parameters=[@__normalizedEmail_0='?' (Size = 256)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(2) [a].[Id], [a].[AccessFailedCount], [a].[ConcurrencyStamp], [a].[Email], [a].[EmailConfirmed], [a].[FullName], [a].[LockoutEnabled], [a].[LockoutEnd], [a].[NormalizedEmail], [a].[NormalizedUserName], [a].[PasswordHash], [a].[PhoneNumber], [a].[PhoneNumberConfirmed], [a].[SecurityStamp], [a].[TwoFactorEnabled], [a].[UserName]
+FROM [AspNetUsers] AS [a]
+WHERE [a].[NormalizedEmail] = @__normalizedEmail_0
+2025-07-27 13:50:52.727 +07:00 [INF] Executed DbCommand (27ms) [Parameters=[@__normalizedEmail_0='?' (Size = 256)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(2) [a].[Id], [a].[AccessFailedCount], [a].[ConcurrencyStamp], [a].[Email], [a].[EmailConfirmed], [a].[FullName], [a].[LockoutEnabled], [a].[LockoutEnd], [a].[NormalizedEmail], [a].[NormalizedUserName], [a].[PasswordHash], [a].[PhoneNumber], [a].[PhoneNumberConfirmed], [a].[SecurityStamp], [a].[TwoFactorEnabled], [a].[UserName]
+FROM [AspNetUsers] AS [a]
+WHERE [a].[NormalizedEmail] = @__normalizedEmail_0
+2025-07-27 13:50:52.751 +07:00 [INF] Executed DbCommand (22ms) [Parameters=[@__normalizedEmail_0='?' (Size = 256)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(2) [a].[Id], [a].[AccessFailedCount], [a].[ConcurrencyStamp], [a].[Email], [a].[EmailConfirmed], [a].[FullName], [a].[LockoutEnabled], [a].[LockoutEnd], [a].[NormalizedEmail], [a].[NormalizedUserName], [a].[PasswordHash], [a].[PhoneNumber], [a].[PhoneNumberConfirmed], [a].[SecurityStamp], [a].[TwoFactorEnabled], [a].[UserName]
+FROM [AspNetUsers] AS [a]
+WHERE [a].[NormalizedEmail] = @__normalizedEmail_0
+2025-07-27 13:50:52.773 +07:00 [INF] Executed DbCommand (21ms) [Parameters=[@__normalizedEmail_0='?' (Size = 256)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(2) [a].[Id], [a].[AccessFailedCount], [a].[ConcurrencyStamp], [a].[Email], [a].[EmailConfirmed], [a].[FullName], [a].[LockoutEnabled], [a].[LockoutEnd], [a].[NormalizedEmail], [a].[NormalizedUserName], [a].[PasswordHash], [a].[PhoneNumber], [a].[PhoneNumberConfirmed], [a].[SecurityStamp], [a].[TwoFactorEnabled], [a].[UserName]
+FROM [AspNetUsers] AS [a]
+WHERE [a].[NormalizedEmail] = @__normalizedEmail_0
+2025-07-27 13:50:52.831 +07:00 [INF] Executed DbCommand (23ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT CASE
+    WHEN EXISTS (
+        SELECT 1
+        FROM [Departments] AS [d]) THEN CAST(1 AS bit)
+    ELSE CAST(0 AS bit)
+END
+2025-07-27 13:50:52.861 +07:00 [INF] Executed DbCommand (21ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT CASE
+    WHEN EXISTS (
+        SELECT 1
+        FROM [Subjects] AS [s]) THEN CAST(1 AS bit)
+    ELSE CAST(0 AS bit)
+END
+2025-07-27 13:50:52.886 +07:00 [INF] Executed DbCommand (20ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT CASE
+    WHEN EXISTS (
+        SELECT 1
+        FROM [AcademicYears] AS [a]) THEN CAST(1 AS bit)
+    ELSE CAST(0 AS bit)
+END
+2025-07-27 13:50:52.911 +07:00 [INF] Executed DbCommand (20ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT CASE
+    WHEN EXISTS (
+        SELECT 1
+        FROM [ExamRooms] AS [e]) THEN CAST(1 AS bit)
+    ELSE CAST(0 AS bit)
+END
+2025-07-27 13:50:53.288 +07:00 [FTL] Application startup exception
+StackExchange.Redis.RedisConnectionException: It was not possible to connect to the redis server(s). Error connecting right now. To allow this multiplexer to continue retrying until it's able to connect, use abortConnect=false in your connection string or AbortOnConnectFail=false; in your code.
+   at StackExchange.Redis.ConnectionMultiplexer.ConnectImpl(ConfigurationOptions configuration, TextWriter writer, Nullable`1 serverType, EndPointCollection endpoints) in /_/src/StackExchange.Redis/ConnectionMultiplexer.cs:line 689
+   at StackExchange.Redis.ConnectionMultiplexer.Connect(ConfigurationOptions configuration, TextWriter log) in /_/src/StackExchange.Redis/ConnectionMultiplexer.cs:line 661
+   at StackExchange.Redis.ConnectionMultiplexer.Connect(String configuration, TextWriter log) in /_/src/StackExchange.Redis/ConnectionMultiplexer.cs:line 639
+   at backend_manage.Extensions.ServiceExtensions.<>c__DisplayClass0_0.<ConfigureServices>b__4(IServiceProvider sp) in /Users/nguyenhuynhnam/RiderProjects/HutechQuiz/backend_manage/backend_manage/Extensions/ServiceExtensions.cs:line 86
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitRootCache(ServiceCallSite callSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.Resolve(ServiceCallSite callSite, ServiceProviderEngineScope scope)
+   at Microsoft.Extensions.DependencyInjection.ServiceProvider.CreateServiceAccessor(ServiceIdentifier serviceIdentifier)
+   at System.Collections.Concurrent.ConcurrentDictionary`2.GetOrAdd(TKey key, Func`2 valueFactory)
+   at Microsoft.Extensions.DependencyInjection.ServiceProvider.GetService(ServiceIdentifier serviceIdentifier, ServiceProviderEngineScope serviceProviderEngineScope)
+   at Microsoft.Extensions.DependencyInjection.ServiceProvider.GetService(Type serviceType)
+   at Microsoft.Extensions.DependencyInjection.ActivatorUtilities.ConstructorMatcher.CreateInstance(IServiceProvider provider)
+   at Microsoft.Extensions.DependencyInjection.ActivatorUtilities.CreateInstance(IServiceProvider provider, Type instanceType, Object[] parameters)
+   at Microsoft.AspNetCore.Builder.UseMiddlewareExtensions.ReflectionMiddlewareBinder.CreateMiddleware(RequestDelegate next)
+   at Microsoft.AspNetCore.Builder.ApplicationBuilder.Build()
+   at Microsoft.AspNetCore.Builder.ApplicationBuilder.Build()
+   at Microsoft.AspNetCore.Hosting.GenericWebHostService.StartAsync(CancellationToken cancellationToken)
+2025-07-27 13:50:53.337 +07:00 [ERR] Hosting failed to start
+StackExchange.Redis.RedisConnectionException: It was not possible to connect to the redis server(s). Error connecting right now. To allow this multiplexer to continue retrying until it's able to connect, use abortConnect=false in your connection string or AbortOnConnectFail=false; in your code.
+   at StackExchange.Redis.ConnectionMultiplexer.ConnectImpl(ConfigurationOptions configuration, TextWriter writer, Nullable`1 serverType, EndPointCollection endpoints) in /_/src/StackExchange.Redis/ConnectionMultiplexer.cs:line 689
+   at StackExchange.Redis.ConnectionMultiplexer.Connect(ConfigurationOptions configuration, TextWriter log) in /_/src/StackExchange.Redis/ConnectionMultiplexer.cs:line 661
+   at StackExchange.Redis.ConnectionMultiplexer.Connect(String configuration, TextWriter log) in /_/src/StackExchange.Redis/ConnectionMultiplexer.cs:line 639
+   at backend_manage.Extensions.ServiceExtensions.<>c__DisplayClass0_0.<ConfigureServices>b__4(IServiceProvider sp) in /Users/nguyenhuynhnam/RiderProjects/HutechQuiz/backend_manage/backend_manage/Extensions/ServiceExtensions.cs:line 86
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitRootCache(ServiceCallSite callSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.Resolve(ServiceCallSite callSite, ServiceProviderEngineScope scope)
+   at Microsoft.Extensions.DependencyInjection.ServiceProvider.CreateServiceAccessor(ServiceIdentifier serviceIdentifier)
+   at System.Collections.Concurrent.ConcurrentDictionary`2.GetOrAdd(TKey key, Func`2 valueFactory)
+   at Microsoft.Extensions.DependencyInjection.ServiceProvider.GetService(ServiceIdentifier serviceIdentifier, ServiceProviderEngineScope serviceProviderEngineScope)
+   at Microsoft.Extensions.DependencyInjection.ServiceProvider.GetService(Type serviceType)
+   at Microsoft.Extensions.DependencyInjection.ActivatorUtilities.ConstructorMatcher.CreateInstance(IServiceProvider provider)
+   at Microsoft.Extensions.DependencyInjection.ActivatorUtilities.CreateInstance(IServiceProvider provider, Type instanceType, Object[] parameters)
+   at Microsoft.AspNetCore.Builder.UseMiddlewareExtensions.ReflectionMiddlewareBinder.CreateMiddleware(RequestDelegate next)
+   at Microsoft.AspNetCore.Builder.ApplicationBuilder.Build()
+   at Microsoft.AspNetCore.Builder.ApplicationBuilder.Build()
+   at Microsoft.AspNetCore.Hosting.GenericWebHostService.StartAsync(CancellationToken cancellationToken)
+   at Microsoft.Extensions.Hosting.Internal.Host.<StartAsync>b__14_1(IHostedService service, CancellationToken token)
+   at Microsoft.Extensions.Hosting.Internal.Host.ForeachService[T](IEnumerable`1 services, CancellationToken token, Boolean concurrent, Boolean abortOnFirstException, List`1 exceptions, Func`3 operation)
+2025-07-27 13:50:53.353 +07:00 [FTL] Application terminated unexpectedly
+StackExchange.Redis.RedisConnectionException: It was not possible to connect to the redis server(s). Error connecting right now. To allow this multiplexer to continue retrying until it's able to connect, use abortConnect=false in your connection string or AbortOnConnectFail=false; in your code.
+   at StackExchange.Redis.ConnectionMultiplexer.ConnectImpl(ConfigurationOptions configuration, TextWriter writer, Nullable`1 serverType, EndPointCollection endpoints) in /_/src/StackExchange.Redis/ConnectionMultiplexer.cs:line 689
+   at StackExchange.Redis.ConnectionMultiplexer.Connect(ConfigurationOptions configuration, TextWriter log) in /_/src/StackExchange.Redis/ConnectionMultiplexer.cs:line 661
+   at StackExchange.Redis.ConnectionMultiplexer.Connect(String configuration, TextWriter log) in /_/src/StackExchange.Redis/ConnectionMultiplexer.cs:line 639
+   at backend_manage.Extensions.ServiceExtensions.<>c__DisplayClass0_0.<ConfigureServices>b__4(IServiceProvider sp) in /Users/nguyenhuynhnam/RiderProjects/HutechQuiz/backend_manage/backend_manage/Extensions/ServiceExtensions.cs:line 86
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitRootCache(ServiceCallSite callSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.Resolve(ServiceCallSite callSite, ServiceProviderEngineScope scope)
+   at Microsoft.Extensions.DependencyInjection.ServiceProvider.CreateServiceAccessor(ServiceIdentifier serviceIdentifier)
+   at System.Collections.Concurrent.ConcurrentDictionary`2.GetOrAdd(TKey key, Func`2 valueFactory)
+   at Microsoft.Extensions.DependencyInjection.ServiceProvider.GetService(ServiceIdentifier serviceIdentifier, ServiceProviderEngineScope serviceProviderEngineScope)
+   at Microsoft.Extensions.DependencyInjection.ServiceProvider.GetService(Type serviceType)
+   at Microsoft.Extensions.DependencyInjection.ActivatorUtilities.ConstructorMatcher.CreateInstance(IServiceProvider provider)
+   at Microsoft.Extensions.DependencyInjection.ActivatorUtilities.CreateInstance(IServiceProvider provider, Type instanceType, Object[] parameters)
+   at Microsoft.AspNetCore.Builder.UseMiddlewareExtensions.ReflectionMiddlewareBinder.CreateMiddleware(RequestDelegate next)
+   at Microsoft.AspNetCore.Builder.ApplicationBuilder.Build()
+   at Microsoft.AspNetCore.Builder.ApplicationBuilder.Build()
+   at Microsoft.AspNetCore.Hosting.GenericWebHostService.StartAsync(CancellationToken cancellationToken)
+   at Microsoft.Extensions.Hosting.Internal.Host.<StartAsync>b__14_1(IHostedService service, CancellationToken token)
+   at Microsoft.Extensions.Hosting.Internal.Host.ForeachService[T](IEnumerable`1 services, CancellationToken token, Boolean concurrent, Boolean abortOnFirstException, List`1 exceptions, Func`3 operation)
+   at Microsoft.Extensions.Hosting.Internal.Host.StartAsync(CancellationToken cancellationToken)
+   at Microsoft.Extensions.Hosting.HostingAbstractionsHostExtensions.RunAsync(IHost host, CancellationToken token)
+   at Microsoft.Extensions.Hosting.HostingAbstractionsHostExtensions.RunAsync(IHost host, CancellationToken token)
+   at Microsoft.Extensions.Hosting.HostingAbstractionsHostExtensions.Run(IHost host)
+   at Program.<Main>$(String[] args) in /Users/nguyenhuynhnam/RiderProjects/HutechQuiz/backend_manage/backend_manage/Program.cs:line 52
+2025-07-27 13:51:11.509 +07:00 [INF] User profile is available. Using '/Users/nguyenhuynhnam/.aspnet/DataProtection-Keys' as key repository; keys will not be encrypted at rest.
+2025-07-27 13:51:14.002 +07:00 [INF] Executed DbCommand (85ms) [Parameters=[@__normalizedName_0='?' (Size = 256)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [a].[Id], [a].[ConcurrencyStamp], [a].[Name], [a].[NormalizedName]
+FROM [AspNetRoles] AS [a]
+WHERE [a].[NormalizedName] = @__normalizedName_0
+2025-07-27 13:51:14.159 +07:00 [INF] Executed DbCommand (24ms) [Parameters=[@__normalizedName_0='?' (Size = 256)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [a].[Id], [a].[ConcurrencyStamp], [a].[Name], [a].[NormalizedName]
+FROM [AspNetRoles] AS [a]
+WHERE [a].[NormalizedName] = @__normalizedName_0
+2025-07-27 13:51:14.180 +07:00 [INF] Executed DbCommand (20ms) [Parameters=[@__normalizedName_0='?' (Size = 256)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [a].[Id], [a].[ConcurrencyStamp], [a].[Name], [a].[NormalizedName]
+FROM [AspNetRoles] AS [a]
+WHERE [a].[NormalizedName] = @__normalizedName_0
+2025-07-27 13:51:14.201 +07:00 [INF] Executed DbCommand (20ms) [Parameters=[@__normalizedName_0='?' (Size = 256)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [a].[Id], [a].[ConcurrencyStamp], [a].[Name], [a].[NormalizedName]
+FROM [AspNetRoles] AS [a]
+WHERE [a].[NormalizedName] = @__normalizedName_0
+2025-07-27 13:51:14.222 +07:00 [INF] Executed DbCommand (20ms) [Parameters=[@__normalizedName_0='?' (Size = 256)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [a].[Id], [a].[ConcurrencyStamp], [a].[Name], [a].[NormalizedName]
+FROM [AspNetRoles] AS [a]
+WHERE [a].[NormalizedName] = @__normalizedName_0
+2025-07-27 13:51:14.243 +07:00 [INF] Executed DbCommand (20ms) [Parameters=[@__normalizedName_0='?' (Size = 256)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [a].[Id], [a].[ConcurrencyStamp], [a].[Name], [a].[NormalizedName]
+FROM [AspNetRoles] AS [a]
+WHERE [a].[NormalizedName] = @__normalizedName_0
+2025-07-27 13:51:14.279 +07:00 [INF] Executed DbCommand (21ms) [Parameters=[@__normalizedEmail_0='?' (Size = 256)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(2) [a].[Id], [a].[AccessFailedCount], [a].[ConcurrencyStamp], [a].[Email], [a].[EmailConfirmed], [a].[FullName], [a].[LockoutEnabled], [a].[LockoutEnd], [a].[NormalizedEmail], [a].[NormalizedUserName], [a].[PasswordHash], [a].[PhoneNumber], [a].[PhoneNumberConfirmed], [a].[SecurityStamp], [a].[TwoFactorEnabled], [a].[UserName]
+FROM [AspNetUsers] AS [a]
+WHERE [a].[NormalizedEmail] = @__normalizedEmail_0
+2025-07-27 13:51:14.370 +07:00 [INF] Executed DbCommand (21ms) [Parameters=[@__normalizedEmail_0='?' (Size = 256)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(2) [a].[Id], [a].[AccessFailedCount], [a].[ConcurrencyStamp], [a].[Email], [a].[EmailConfirmed], [a].[FullName], [a].[LockoutEnabled], [a].[LockoutEnd], [a].[NormalizedEmail], [a].[NormalizedUserName], [a].[PasswordHash], [a].[PhoneNumber], [a].[PhoneNumberConfirmed], [a].[SecurityStamp], [a].[TwoFactorEnabled], [a].[UserName]
+FROM [AspNetUsers] AS [a]
+WHERE [a].[NormalizedEmail] = @__normalizedEmail_0
+2025-07-27 13:51:14.392 +07:00 [INF] Executed DbCommand (20ms) [Parameters=[@__normalizedEmail_0='?' (Size = 256)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(2) [a].[Id], [a].[AccessFailedCount], [a].[ConcurrencyStamp], [a].[Email], [a].[EmailConfirmed], [a].[FullName], [a].[LockoutEnabled], [a].[LockoutEnd], [a].[NormalizedEmail], [a].[NormalizedUserName], [a].[PasswordHash], [a].[PhoneNumber], [a].[PhoneNumberConfirmed], [a].[SecurityStamp], [a].[TwoFactorEnabled], [a].[UserName]
+FROM [AspNetUsers] AS [a]
+WHERE [a].[NormalizedEmail] = @__normalizedEmail_0
+2025-07-27 13:51:14.415 +07:00 [INF] Executed DbCommand (22ms) [Parameters=[@__normalizedEmail_0='?' (Size = 256)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(2) [a].[Id], [a].[AccessFailedCount], [a].[ConcurrencyStamp], [a].[Email], [a].[EmailConfirmed], [a].[FullName], [a].[LockoutEnabled], [a].[LockoutEnd], [a].[NormalizedEmail], [a].[NormalizedUserName], [a].[PasswordHash], [a].[PhoneNumber], [a].[PhoneNumberConfirmed], [a].[SecurityStamp], [a].[TwoFactorEnabled], [a].[UserName]
+FROM [AspNetUsers] AS [a]
+WHERE [a].[NormalizedEmail] = @__normalizedEmail_0
+2025-07-27 13:51:14.438 +07:00 [INF] Executed DbCommand (21ms) [Parameters=[@__normalizedEmail_0='?' (Size = 256)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(2) [a].[Id], [a].[AccessFailedCount], [a].[ConcurrencyStamp], [a].[Email], [a].[EmailConfirmed], [a].[FullName], [a].[LockoutEnabled], [a].[LockoutEnd], [a].[NormalizedEmail], [a].[NormalizedUserName], [a].[PasswordHash], [a].[PhoneNumber], [a].[PhoneNumberConfirmed], [a].[SecurityStamp], [a].[TwoFactorEnabled], [a].[UserName]
+FROM [AspNetUsers] AS [a]
+WHERE [a].[NormalizedEmail] = @__normalizedEmail_0
+2025-07-27 13:51:14.462 +07:00 [INF] Executed DbCommand (23ms) [Parameters=[@__normalizedEmail_0='?' (Size = 256)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(2) [a].[Id], [a].[AccessFailedCount], [a].[ConcurrencyStamp], [a].[Email], [a].[EmailConfirmed], [a].[FullName], [a].[LockoutEnabled], [a].[LockoutEnd], [a].[NormalizedEmail], [a].[NormalizedUserName], [a].[PasswordHash], [a].[PhoneNumber], [a].[PhoneNumberConfirmed], [a].[SecurityStamp], [a].[TwoFactorEnabled], [a].[UserName]
+FROM [AspNetUsers] AS [a]
+WHERE [a].[NormalizedEmail] = @__normalizedEmail_0
+2025-07-27 13:51:14.523 +07:00 [INF] Executed DbCommand (22ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT CASE
+    WHEN EXISTS (
+        SELECT 1
+        FROM [Departments] AS [d]) THEN CAST(1 AS bit)
+    ELSE CAST(0 AS bit)
+END
+2025-07-27 13:51:14.552 +07:00 [INF] Executed DbCommand (20ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT CASE
+    WHEN EXISTS (
+        SELECT 1
+        FROM [Subjects] AS [s]) THEN CAST(1 AS bit)
+    ELSE CAST(0 AS bit)
+END
+2025-07-27 13:51:14.575 +07:00 [INF] Executed DbCommand (19ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT CASE
+    WHEN EXISTS (
+        SELECT 1
+        FROM [AcademicYears] AS [a]) THEN CAST(1 AS bit)
+    ELSE CAST(0 AS bit)
+END
+2025-07-27 13:51:14.601 +07:00 [INF] Executed DbCommand (20ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT CASE
+    WHEN EXISTS (
+        SELECT 1
+        FROM [ExamRooms] AS [e]) THEN CAST(1 AS bit)
+    ELSE CAST(0 AS bit)
+END
+2025-07-27 13:51:15.162 +07:00 [INF] Now listening on: http://0.0.0.0:5163
+2025-07-27 13:51:15.164 +07:00 [INF] Application started. Press Ctrl+C to shut down.
+2025-07-27 13:51:15.165 +07:00 [INF] Hosting environment: Development
+2025-07-27 13:51:15.165 +07:00 [INF] Content root path: /Users/nguyenhuynhnam/RiderProjects/HutechQuiz/backend_manage/backend_manage
+2025-07-27 13:51:25.685 +07:00 [INF] Request starting HTTP/1.1 POST http://0.0.0.0:5163/api/Student/start-exam - multipart/form-data; boundary=--------------------------725252399697719929665846 177
+2025-07-27 13:51:26.004 +07:00 [INF] Executing endpoint 'backend_manage.Controllers.StudentController.StartExam (backend_manage)'
+2025-07-27 13:51:26.029 +07:00 [INF] Route matched with {action = "StartExam", controller = "Student"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] StartExam(Int32) on controller backend_manage.Controllers.StudentController (backend_manage).
+2025-07-27 13:51:26.381 +07:00 [INF] Executing action method backend_manage.Controllers.StudentController.StartExam (backend_manage) - Validation state: "Valid"
+2025-07-27 13:51:26.390 +07:00 [INF] Bắt đầu lấy đề thi cho sinh viên 030, phiên thi 30
+2025-07-27 13:51:26.582 +07:00 [INF] Executed DbCommand (23ms) [Parameters=[@__studentCode_0='?' (Size = 20), @__studentExamSessionId_1='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [s].[StudentExamSessionId], [s].[CorrectAnswers], [s].[CreatedAt], [s].[CreatedBy], [s].[EndTime], [s].[ExamRoomId], [s].[ExamSessionSubjectId], [s].[ExtraMinutes], [s].[IsCompleted], [s].[IsDeleted], [s].[ReasonForExtra], [s].[Score], [s].[ShuffledExamPaperId], [s].[StartTime], [s].[StudentAnswersString], [s].[StudentCode], [s].[StudentId], [s].[TotalQuestions], [s].[UpdatedAt], [s].[UpdatedBy], [s].[Version], [s0].[ShuffledExamPaperId], [s0].[AnswerKey], [s0].[CreatedAt], [s0].[CreatedBy], [s0].[ExamSessionSubjectId], [s0].[IsApproved], [s0].[IsDeleted], [s0].[OriginalExamPaperId], [s0].[ShuffledExamPaperCore], [s0].[SubjectId], [s0].[Title], [s0].[TotalUsageCount], [s0].[UpdatedAt], [s0].[UpdatedBy], [s0].[Version]
+FROM [StudentExamSessions] AS [s]
+LEFT JOIN [ShuffledExamPapers] AS [s0] ON [s].[ShuffledExamPaperId] = [s0].[ShuffledExamPaperId]
+WHERE [s].[StudentCode] = @__studentCode_0 AND [s].[StudentExamSessionId] = @__studentExamSessionId_1
+2025-07-27 13:51:26.742 +07:00 [INF] Đang tìm đề thi từ Redis với key: shuffled_exam_paper:8
+2025-07-27 13:51:26.749 +07:00 [DBG] Giá trị từ Redis (length=1283): {"ShuffledExamPaperId":8,"ShuffledExamPaperCore":"CNPMNN1HV8","Title":"DETHI-L\u1EADp tr\u00ECnh TTB
+2025-07-27 13:51:26.873 +07:00 [INF] Đã deserialize thành công đề thi từ Redis, mã đề: 8, số câu hỏi: 2
+2025-07-27 13:51:26.874 +07:00 [INF] Hoàn thành quá trình lấy đề thi cho sinh viên 030, mã đề: 8, số câu hỏi: 2
+2025-07-27 13:51:26.897 +07:00 [INF] Executed action method backend_manage.Controllers.StudentController.StartExam (backend_manage), returned result Microsoft.AspNetCore.Mvc.OkObjectResult in 496.7872ms.
+2025-07-27 13:51:26.928 +07:00 [INF] Executing OkObjectResult, writing value of type 'backend_manage.DTOs.ShuffledExamPaperDto'.
+2025-07-27 13:51:26.991 +07:00 [INF] Executed action backend_manage.Controllers.StudentController.StartExam (backend_manage) in 926.1881ms
+2025-07-27 13:51:26.993 +07:00 [INF] Executed endpoint 'backend_manage.Controllers.StudentController.StartExam (backend_manage)'
+2025-07-27 13:51:27.163 +07:00 [INF] Request finished HTTP/1.1 POST http://0.0.0.0:5163/api/Student/start-exam - 200 null application/json; charset=utf-8 1479.9637ms
+2025-07-27 13:52:14.954 +07:00 [INF] Request starting HTTP/1.1 POST http://0.0.0.0:5163/api/Student/start-exam - multipart/form-data; boundary=--------------------------870649950728649232917673 177
+2025-07-27 13:52:14.966 +07:00 [INF] Executing endpoint 'backend_manage.Controllers.StudentController.StartExam (backend_manage)'
+2025-07-27 13:52:14.967 +07:00 [INF] Route matched with {action = "StartExam", controller = "Student"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] StartExam(Int32) on controller backend_manage.Controllers.StudentController (backend_manage).
+2025-07-27 13:52:14.983 +07:00 [INF] Executing action method backend_manage.Controllers.StudentController.StartExam (backend_manage) - Validation state: "Valid"
+2025-07-27 13:52:14.984 +07:00 [INF] Bắt đầu lấy đề thi cho sinh viên 030, phiên thi 30
+2025-07-27 13:52:15.007 +07:00 [INF] Executed DbCommand (21ms) [Parameters=[@__studentCode_0='?' (Size = 20), @__studentExamSessionId_1='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [s].[StudentExamSessionId], [s].[CorrectAnswers], [s].[CreatedAt], [s].[CreatedBy], [s].[EndTime], [s].[ExamRoomId], [s].[ExamSessionSubjectId], [s].[ExtraMinutes], [s].[IsCompleted], [s].[IsDeleted], [s].[ReasonForExtra], [s].[Score], [s].[ShuffledExamPaperId], [s].[StartTime], [s].[StudentAnswersString], [s].[StudentCode], [s].[StudentId], [s].[TotalQuestions], [s].[UpdatedAt], [s].[UpdatedBy], [s].[Version], [s0].[ShuffledExamPaperId], [s0].[AnswerKey], [s0].[CreatedAt], [s0].[CreatedBy], [s0].[ExamSessionSubjectId], [s0].[IsApproved], [s0].[IsDeleted], [s0].[OriginalExamPaperId], [s0].[ShuffledExamPaperCore], [s0].[SubjectId], [s0].[Title], [s0].[TotalUsageCount], [s0].[UpdatedAt], [s0].[UpdatedBy], [s0].[Version]
+FROM [StudentExamSessions] AS [s]
+LEFT JOIN [ShuffledExamPapers] AS [s0] ON [s].[ShuffledExamPaperId] = [s0].[ShuffledExamPaperId]
+WHERE [s].[StudentCode] = @__studentCode_0 AND [s].[StudentExamSessionId] = @__studentExamSessionId_1
+2025-07-27 13:52:15.009 +07:00 [INF] Đang tìm đề thi từ Redis với key: shuffled_exam_paper:8
+2025-07-27 13:52:15.010 +07:00 [DBG] Giá trị từ Redis (length=1283): {"ShuffledExamPaperId":8,"ShuffledExamPaperCore":"CNPMNN1HV8","Title":"DETHI-L\u1EADp tr\u00ECnh TTB
+2025-07-27 13:52:15.011 +07:00 [INF] Đã deserialize thành công đề thi từ Redis, mã đề: 8, số câu hỏi: 2
+2025-07-27 13:52:15.011 +07:00 [INF] Hoàn thành quá trình lấy đề thi cho sinh viên 030, mã đề: 8, số câu hỏi: 2
+2025-07-27 13:52:15.011 +07:00 [INF] Executed action method backend_manage.Controllers.StudentController.StartExam (backend_manage), returned result Microsoft.AspNetCore.Mvc.OkObjectResult in 27.3719ms.
+2025-07-27 13:52:15.012 +07:00 [INF] Executing OkObjectResult, writing value of type 'backend_manage.DTOs.ShuffledExamPaperDto'.
+2025-07-27 13:52:15.013 +07:00 [INF] Executed action backend_manage.Controllers.StudentController.StartExam (backend_manage) in 45.4054ms
+2025-07-27 13:52:15.013 +07:00 [INF] Executed endpoint 'backend_manage.Controllers.StudentController.StartExam (backend_manage)'
+2025-07-27 13:52:15.014 +07:00 [INF] Request finished HTTP/1.1 POST http://0.0.0.0:5163/api/Student/start-exam - 200 null application/json; charset=utf-8 59.5664ms
+2025-07-27 14:10:34.334 +07:00 [INF] Application is shutting down...
+2025-07-27 14:10:48.143 +07:00 [INF] User profile is available. Using '/Users/nguyenhuynhnam/.aspnet/DataProtection-Keys' as key repository; keys will not be encrypted at rest.
+2025-07-27 14:10:51.018 +07:00 [INF] Executed DbCommand (100ms) [Parameters=[@__normalizedName_0='?' (Size = 256)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [a].[Id], [a].[ConcurrencyStamp], [a].[Name], [a].[NormalizedName]
+FROM [AspNetRoles] AS [a]
+WHERE [a].[NormalizedName] = @__normalizedName_0
+2025-07-27 14:10:51.207 +07:00 [INF] Executed DbCommand (31ms) [Parameters=[@__normalizedName_0='?' (Size = 256)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [a].[Id], [a].[ConcurrencyStamp], [a].[Name], [a].[NormalizedName]
+FROM [AspNetRoles] AS [a]
+WHERE [a].[NormalizedName] = @__normalizedName_0
+2025-07-27 14:10:51.230 +07:00 [INF] Executed DbCommand (21ms) [Parameters=[@__normalizedName_0='?' (Size = 256)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [a].[Id], [a].[ConcurrencyStamp], [a].[Name], [a].[NormalizedName]
+FROM [AspNetRoles] AS [a]
+WHERE [a].[NormalizedName] = @__normalizedName_0
+2025-07-27 14:10:51.252 +07:00 [INF] Executed DbCommand (21ms) [Parameters=[@__normalizedName_0='?' (Size = 256)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [a].[Id], [a].[ConcurrencyStamp], [a].[Name], [a].[NormalizedName]
+FROM [AspNetRoles] AS [a]
+WHERE [a].[NormalizedName] = @__normalizedName_0
+2025-07-27 14:10:51.276 +07:00 [INF] Executed DbCommand (22ms) [Parameters=[@__normalizedName_0='?' (Size = 256)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [a].[Id], [a].[ConcurrencyStamp], [a].[Name], [a].[NormalizedName]
+FROM [AspNetRoles] AS [a]
+WHERE [a].[NormalizedName] = @__normalizedName_0
+2025-07-27 14:10:51.297 +07:00 [INF] Executed DbCommand (20ms) [Parameters=[@__normalizedName_0='?' (Size = 256)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [a].[Id], [a].[ConcurrencyStamp], [a].[Name], [a].[NormalizedName]
+FROM [AspNetRoles] AS [a]
+WHERE [a].[NormalizedName] = @__normalizedName_0
+2025-07-27 14:10:51.365 +07:00 [INF] Executed DbCommand (21ms) [Parameters=[@__normalizedEmail_0='?' (Size = 256)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(2) [a].[Id], [a].[AccessFailedCount], [a].[ConcurrencyStamp], [a].[Email], [a].[EmailConfirmed], [a].[FullName], [a].[LockoutEnabled], [a].[LockoutEnd], [a].[NormalizedEmail], [a].[NormalizedUserName], [a].[PasswordHash], [a].[PhoneNumber], [a].[PhoneNumberConfirmed], [a].[SecurityStamp], [a].[TwoFactorEnabled], [a].[UserName]
+FROM [AspNetUsers] AS [a]
+WHERE [a].[NormalizedEmail] = @__normalizedEmail_0
+2025-07-27 14:10:51.506 +07:00 [INF] Executed DbCommand (22ms) [Parameters=[@__normalizedEmail_0='?' (Size = 256)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(2) [a].[Id], [a].[AccessFailedCount], [a].[ConcurrencyStamp], [a].[Email], [a].[EmailConfirmed], [a].[FullName], [a].[LockoutEnabled], [a].[LockoutEnd], [a].[NormalizedEmail], [a].[NormalizedUserName], [a].[PasswordHash], [a].[PhoneNumber], [a].[PhoneNumberConfirmed], [a].[SecurityStamp], [a].[TwoFactorEnabled], [a].[UserName]
+FROM [AspNetUsers] AS [a]
+WHERE [a].[NormalizedEmail] = @__normalizedEmail_0
+2025-07-27 14:10:51.530 +07:00 [INF] Executed DbCommand (23ms) [Parameters=[@__normalizedEmail_0='?' (Size = 256)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(2) [a].[Id], [a].[AccessFailedCount], [a].[ConcurrencyStamp], [a].[Email], [a].[EmailConfirmed], [a].[FullName], [a].[LockoutEnabled], [a].[LockoutEnd], [a].[NormalizedEmail], [a].[NormalizedUserName], [a].[PasswordHash], [a].[PhoneNumber], [a].[PhoneNumberConfirmed], [a].[SecurityStamp], [a].[TwoFactorEnabled], [a].[UserName]
+FROM [AspNetUsers] AS [a]
+WHERE [a].[NormalizedEmail] = @__normalizedEmail_0
+2025-07-27 14:10:51.552 +07:00 [INF] Executed DbCommand (21ms) [Parameters=[@__normalizedEmail_0='?' (Size = 256)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(2) [a].[Id], [a].[AccessFailedCount], [a].[ConcurrencyStamp], [a].[Email], [a].[EmailConfirmed], [a].[FullName], [a].[LockoutEnabled], [a].[LockoutEnd], [a].[NormalizedEmail], [a].[NormalizedUserName], [a].[PasswordHash], [a].[PhoneNumber], [a].[PhoneNumberConfirmed], [a].[SecurityStamp], [a].[TwoFactorEnabled], [a].[UserName]
+FROM [AspNetUsers] AS [a]
+WHERE [a].[NormalizedEmail] = @__normalizedEmail_0
+2025-07-27 14:10:51.579 +07:00 [INF] Executed DbCommand (25ms) [Parameters=[@__normalizedEmail_0='?' (Size = 256)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(2) [a].[Id], [a].[AccessFailedCount], [a].[ConcurrencyStamp], [a].[Email], [a].[EmailConfirmed], [a].[FullName], [a].[LockoutEnabled], [a].[LockoutEnd], [a].[NormalizedEmail], [a].[NormalizedUserName], [a].[PasswordHash], [a].[PhoneNumber], [a].[PhoneNumberConfirmed], [a].[SecurityStamp], [a].[TwoFactorEnabled], [a].[UserName]
+FROM [AspNetUsers] AS [a]
+WHERE [a].[NormalizedEmail] = @__normalizedEmail_0
+2025-07-27 14:10:51.601 +07:00 [INF] Executed DbCommand (21ms) [Parameters=[@__normalizedEmail_0='?' (Size = 256)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(2) [a].[Id], [a].[AccessFailedCount], [a].[ConcurrencyStamp], [a].[Email], [a].[EmailConfirmed], [a].[FullName], [a].[LockoutEnabled], [a].[LockoutEnd], [a].[NormalizedEmail], [a].[NormalizedUserName], [a].[PasswordHash], [a].[PhoneNumber], [a].[PhoneNumberConfirmed], [a].[SecurityStamp], [a].[TwoFactorEnabled], [a].[UserName]
+FROM [AspNetUsers] AS [a]
+WHERE [a].[NormalizedEmail] = @__normalizedEmail_0
+2025-07-27 14:10:51.664 +07:00 [INF] Executed DbCommand (23ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT CASE
+    WHEN EXISTS (
+        SELECT 1
+        FROM [Departments] AS [d]) THEN CAST(1 AS bit)
+    ELSE CAST(0 AS bit)
+END
+2025-07-27 14:10:51.696 +07:00 [INF] Executed DbCommand (20ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT CASE
+    WHEN EXISTS (
+        SELECT 1
+        FROM [Subjects] AS [s]) THEN CAST(1 AS bit)
+    ELSE CAST(0 AS bit)
+END
+2025-07-27 14:10:51.722 +07:00 [INF] Executed DbCommand (21ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT CASE
+    WHEN EXISTS (
+        SELECT 1
+        FROM [AcademicYears] AS [a]) THEN CAST(1 AS bit)
+    ELSE CAST(0 AS bit)
+END
+2025-07-27 14:10:51.747 +07:00 [INF] Executed DbCommand (20ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT CASE
+    WHEN EXISTS (
+        SELECT 1
+        FROM [ExamRooms] AS [e]) THEN CAST(1 AS bit)
+    ELSE CAST(0 AS bit)
+END
+2025-07-27 14:10:52.202 +07:00 [INF] Now listening on: http://0.0.0.0:5163
+2025-07-27 14:10:52.204 +07:00 [INF] Application started. Press Ctrl+C to shut down.
+2025-07-27 14:10:52.204 +07:00 [INF] Hosting environment: Development
+2025-07-27 14:10:52.204 +07:00 [INF] Content root path: /Users/nguyenhuynhnam/RiderProjects/HutechQuiz/backend_manage/backend_manage
+2025-07-27 14:13:09.976 +07:00 [INF] Request starting HTTP/1.1 OPTIONS http://localhost:5163/api/student/login - null null
+2025-07-27 14:13:10.054 +07:00 [INF] CORS policy execution successful.
+2025-07-27 14:13:10.064 +07:00 [INF] Request finished HTTP/1.1 OPTIONS http://localhost:5163/api/student/login - 204 null null 89.9443ms
+2025-07-27 14:13:10.072 +07:00 [INF] Request starting HTTP/1.1 POST http://localhost:5163/api/student/login - application/json; charset=utf-8 35
+2025-07-27 14:13:10.086 +07:00 [INF] CORS policy execution successful.
+2025-07-27 14:13:10.281 +07:00 [INF] Executing endpoint 'backend_manage.Controllers.StudentController.Login (backend_manage)'
+2025-07-27 14:13:10.303 +07:00 [INF] Route matched with {action = "Login", controller = "Student"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] Login(backend_manage.Controllers.LoginRequest) on controller backend_manage.Controllers.StudentController (backend_manage).
+2025-07-27 14:13:10.863 +07:00 [INF] Executing action method backend_manage.Controllers.StudentController.Login (backend_manage) - Validation state: "Valid"
+2025-07-27 14:13:11.038 +07:00 [INF] Executed DbCommand (49ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT [s].[StudentId], [s].[CreatedAt], [s].[CreatedBy], [s].[DateOfBirth], [s].[FirstName], [s].[Gender], [s].[IsDeleted], [s].[IsLogin], [s].[LastLoggedIn], [s].[LastLoggedOut], [s].[LastName], [s].[StudentCode], [s].[UpdatedAt], [s].[UpdatedBy], [s].[Version]
+FROM [Students] AS [s]
+2025-07-27 14:13:11.434 +07:00 [INF] Executed DbCommand (90ms) [Parameters=[@p14='?' (DbType = Int32), @p0='?' (DbType = DateTime2), @p1='?' (Size = 50), @p2='?' (DbType = DateTime2), @p3='?' (Size = 50), @p4='?' (DbType = Boolean), @p5='?' (DbType = Boolean), @p6='?' (DbType = Boolean), @p7='?' (DbType = DateTime2), @p8='?' (DbType = DateTime2), @p9='?' (Size = 50), @p10='?' (Size = 20), @p11='?' (DbType = DateTime2), @p12='?' (Size = 50), @p13='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SET IMPLICIT_TRANSACTIONS OFF;
+SET NOCOUNT ON;
+UPDATE [Students] SET [CreatedAt] = @p0, [CreatedBy] = @p1, [DateOfBirth] = @p2, [FirstName] = @p3, [Gender] = @p4, [IsDeleted] = @p5, [IsLogin] = @p6, [LastLoggedIn] = @p7, [LastLoggedOut] = @p8, [LastName] = @p9, [StudentCode] = @p10, [UpdatedAt] = @p11, [UpdatedBy] = @p12, [Version] = @p13
+OUTPUT 1
+WHERE [StudentId] = @p14;
+2025-07-27 14:13:11.648 +07:00 [INF] Executed DbCommand (164ms) [Parameters=[@__studentCode1_0='?' (Size = 20)], CommandType='"Text"', CommandTimeout='30']
+SELECT [s].[StudentExamSessionId], [s].[CorrectAnswers], [s].[CreatedAt], [s].[CreatedBy], [s].[EndTime], [s].[ExamRoomId], [s].[ExamSessionSubjectId], [s].[ExtraMinutes], [s].[IsCompleted], [s].[IsDeleted], [s].[ReasonForExtra], [s].[Score], [s].[ShuffledExamPaperId], [s].[StartTime], [s].[StudentAnswersString], [s].[StudentCode], [s].[StudentId], [s].[TotalQuestions], [s].[UpdatedAt], [s].[UpdatedBy], [s].[Version]
+FROM [StudentExamSessions] AS [s]
+WHERE [s].[StudentCode] = @__studentCode1_0
+2025-07-27 14:13:11.907 +07:00 [INF] Executed DbCommand (29ms) [Parameters=[@__examRoomId_0='?' (DbType = Int32), @__examSessionSubjectId_1='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT [s].[StudentExamSessionId], [s].[CorrectAnswers], [s].[CreatedAt], [s].[CreatedBy], [s].[EndTime], [s].[ExamRoomId], [s].[ExamSessionSubjectId], [s].[ExtraMinutes], [s].[IsCompleted], [s].[IsDeleted], [s].[ReasonForExtra], [s].[Score], [s].[ShuffledExamPaperId], [s].[StartTime], [s].[StudentAnswersString], [s].[StudentCode], [s].[StudentId], [s].[TotalQuestions], [s].[UpdatedAt], [s].[UpdatedBy], [s].[Version], [s0].[StudentId], [s0].[CreatedAt], [s0].[CreatedBy], [s0].[DateOfBirth], [s0].[FirstName], [s0].[Gender], [s0].[IsDeleted], [s0].[IsLogin], [s0].[LastLoggedIn], [s0].[LastLoggedOut], [s0].[LastName], [s0].[StudentCode], [s0].[UpdatedAt], [s0].[UpdatedBy], [s0].[Version], [e].[ExamSessionSubjectId], [e].[CreatedAt], [e].[CreatedBy], [e].[Duration], [e].[EndTime], [e].[ExamSessionDepartmentId], [e].[ExamSessionSubjectCore], [e].[IsCompleted], [e].[IsDeleted], [e].[OriginalExamPaperId], [e].[StartTime], [e].[SubjectId], [e].[UpdatedAt], [e].[UpdatedBy], [e].[Version], [s1].[SubjectId], [s1].[CreatedAt], [s1].[CreatedBy], [s1].[DepartmentId], [s1].[IsDeleted], [s1].[SubjectCore], [s1].[SubjectName], [s1].[UpdatedAt], [s1].[UpdatedBy], [s1].[Version]
+FROM [StudentExamSessions] AS [s]
+INNER JOIN [Students] AS [s0] ON [s].[StudentId] = [s0].[StudentId]
+INNER JOIN [ExamSessionSubjects] AS [e] ON [s].[ExamSessionSubjectId] = [e].[ExamSessionSubjectId]
+INNER JOIN [Subjects] AS [s1] ON [e].[SubjectId] = [s1].[SubjectId]
+WHERE [s].[ExamRoomId] = @__examRoomId_0 AND [s].[ExamSessionSubjectId] = @__examSessionSubjectId_1
+2025-07-27 14:13:12.138 +07:00 [INF] Executed action method backend_manage.Controllers.StudentController.Login (backend_manage), returned result Microsoft.AspNetCore.Mvc.OkObjectResult in 1250.3371ms.
+2025-07-27 14:13:12.174 +07:00 [INF] Executing OkObjectResult, writing value of type 'backend_manage.DTOs.StudentAuthResultDto'.
+2025-07-27 14:13:12.301 +07:00 [INF] Executed action backend_manage.Controllers.StudentController.Login (backend_manage) in 1990.5246ms
+2025-07-27 14:13:12.302 +07:00 [INF] Executed endpoint 'backend_manage.Controllers.StudentController.Login (backend_manage)'
+2025-07-27 14:13:12.319 +07:00 [INF] Request finished HTTP/1.1 POST http://localhost:5163/api/student/login - 200 null application/json; charset=utf-8 2246.4052ms
+2025-07-27 14:13:12.432 +07:00 [INF] Request starting HTTP/1.1 OPTIONS http://0.0.0.0:5163/notificationHub/negotiate?negotiateVersion=1 - null null
+2025-07-27 14:13:12.434 +07:00 [INF] CORS policy execution successful.
+2025-07-27 14:13:12.435 +07:00 [INF] Request finished HTTP/1.1 OPTIONS http://0.0.0.0:5163/notificationHub/negotiate?negotiateVersion=1 - 204 null null 2.9225ms
+2025-07-27 14:13:12.436 +07:00 [INF] Request starting HTTP/1.1 POST http://0.0.0.0:5163/notificationHub/negotiate?negotiateVersion=1 - null 0
+2025-07-27 14:13:12.437 +07:00 [INF] CORS policy execution successful.
+2025-07-27 14:13:12.439 +07:00 [INF] Executing endpoint '/notificationHub/negotiate'
+2025-07-27 14:13:12.450 +07:00 [INF] Executed endpoint '/notificationHub/negotiate'
+2025-07-27 14:13:12.451 +07:00 [INF] Request finished HTTP/1.1 POST http://0.0.0.0:5163/notificationHub/negotiate?negotiateVersion=1 - 200 316 application/json 14.6428ms
+2025-07-27 14:13:12.680 +07:00 [INF] Request starting HTTP/1.1 OPTIONS http://localhost:5163/api/student/profile - null null
+2025-07-27 14:13:12.680 +07:00 [INF] Request starting HTTP/1.1 GET http://0.0.0.0:5163/notificationHub?id=VFwql4cEy2WRwja4_Kfcig - null null
+2025-07-27 14:13:12.682 +07:00 [INF] CORS policy execution successful.
+2025-07-27 14:13:12.682 +07:00 [INF] CORS policy execution successful.
+2025-07-27 14:13:12.683 +07:00 [INF] Request finished HTTP/1.1 OPTIONS http://localhost:5163/api/student/profile - 204 null null 2.8858ms
+2025-07-27 14:13:12.685 +07:00 [INF] Request starting HTTP/1.1 GET http://localhost:5163/api/student/profile - null null
+2025-07-27 14:13:12.687 +07:00 [INF] CORS policy execution successful.
+2025-07-27 14:13:12.688 +07:00 [INF] Executing endpoint '/notificationHub'
+2025-07-27 14:13:12.690 +07:00 [INF] Executing endpoint 'backend_manage.Controllers.StudentController.GetProfile (backend_manage)'
+2025-07-27 14:13:12.697 +07:00 [INF] Route matched with {action = "GetProfile", controller = "Student"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.ActionResult`1[backend_manage.DTOs.StudentDto]] GetProfile() on controller backend_manage.Controllers.StudentController (backend_manage).
+2025-07-27 14:13:12.773 +07:00 [INF] Executing action method backend_manage.Controllers.StudentController.GetProfile (backend_manage) - Validation state: "Valid"
+2025-07-27 14:13:12.814 +07:00 [INF] Executed DbCommand (25ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT [s].[StudentId], [s].[CreatedAt], [s].[CreatedBy], [s].[DateOfBirth], [s].[FirstName], [s].[Gender], [s].[IsDeleted], [s].[IsLogin], [s].[LastLoggedIn], [s].[LastLoggedOut], [s].[LastName], [s].[StudentCode], [s].[UpdatedAt], [s].[UpdatedBy], [s].[Version]
+FROM [Students] AS [s]
+2025-07-27 14:13:12.820 +07:00 [INF] Executed action method backend_manage.Controllers.StudentController.GetProfile (backend_manage), returned result Microsoft.AspNetCore.Mvc.OkObjectResult in 45.1915ms.
+2025-07-27 14:13:12.821 +07:00 [INF] Executing OkObjectResult, writing value of type 'backend_manage.Entities.Student'.
+2025-07-27 14:13:13.001 +07:00 [INF] Executed action backend_manage.Controllers.StudentController.GetProfile (backend_manage) in 303.7111ms
+2025-07-27 14:13:13.002 +07:00 [INF] Executed endpoint 'backend_manage.Controllers.StudentController.GetProfile (backend_manage)'
+2025-07-27 14:13:13.004 +07:00 [INF] Request finished HTTP/1.1 GET http://localhost:5163/api/student/profile - 200 null application/json; charset=utf-8 318.6846ms
+2025-07-27 14:13:13.061 +07:00 [INF] Request starting HTTP/1.1 OPTIONS http://localhost:5163/api/Student/exam-sessions - null null
+2025-07-27 14:13:13.066 +07:00 [INF] CORS policy execution successful.
+2025-07-27 14:13:13.066 +07:00 [INF] Request finished HTTP/1.1 OPTIONS http://localhost:5163/api/Student/exam-sessions - 204 null null 4.773ms
+2025-07-27 14:13:13.067 +07:00 [INF] Request starting HTTP/1.1 GET http://localhost:5163/api/Student/exam-sessions - null null
+2025-07-27 14:13:13.069 +07:00 [INF] CORS policy execution successful.
+2025-07-27 14:13:13.075 +07:00 [INF] Executing endpoint 'backend_manage.Controllers.StudentController.GetStudentExamSessions (backend_manage)'
+2025-07-27 14:13:13.082 +07:00 [INF] Route matched with {action = "GetStudentExamSessions", controller = "Student"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetStudentExamSessions() on controller backend_manage.Controllers.StudentController (backend_manage).
+2025-07-27 14:13:13.099 +07:00 [INF] Executing action method backend_manage.Controllers.StudentController.GetStudentExamSessions (backend_manage) - Validation state: "Valid"
+2025-07-27 14:13:13.151 +07:00 [INF] Executed DbCommand (30ms) [Parameters=[@__studentCode_0='?' (Size = 20)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [s].[StudentId], [s].[CreatedAt], [s].[CreatedBy], [s].[DateOfBirth], [s].[FirstName], [s].[Gender], [s].[IsDeleted], [s].[IsLogin], [s].[LastLoggedIn], [s].[LastLoggedOut], [s].[LastName], [s].[StudentCode], [s].[UpdatedAt], [s].[UpdatedBy], [s].[Version]
+FROM [Students] AS [s]
+WHERE [s].[StudentCode] = @__studentCode_0
+2025-07-27 14:13:13.267 +07:00 [INF] Executed DbCommand (48ms) [Parameters=[@__student_StudentId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT [s].[StudentExamSessionId], [s].[CorrectAnswers], [s].[CreatedAt], [s].[CreatedBy], [s].[EndTime], [s].[ExamRoomId], [s].[ExamSessionSubjectId], [s].[ExtraMinutes], [s].[IsCompleted], [s].[IsDeleted], [s].[ReasonForExtra], [s].[Score], [s].[ShuffledExamPaperId], [s].[StartTime], [s].[StudentAnswersString], [s].[StudentCode], [s].[StudentId], [s].[TotalQuestions], [s].[UpdatedAt], [s].[UpdatedBy], [s].[Version], [e].[ExamSessionSubjectId], [e].[CreatedAt], [e].[CreatedBy], [e].[Duration], [e].[EndTime], [e].[ExamSessionDepartmentId], [e].[ExamSessionSubjectCore], [e].[IsCompleted], [e].[IsDeleted], [e].[OriginalExamPaperId], [e].[StartTime], [e].[SubjectId], [e].[UpdatedAt], [e].[UpdatedBy], [e].[Version], [s0].[SubjectId], [s0].[CreatedAt], [s0].[CreatedBy], [s0].[DepartmentId], [s0].[IsDeleted], [s0].[SubjectCore], [s0].[SubjectName], [s0].[UpdatedAt], [s0].[UpdatedBy], [s0].[Version], [e0].[ExamRoomId], [e0].[CreatedAt], [e0].[CreatedBy], [e0].[IsDeleted], [e0].[RoomName], [e0].[UpdatedAt], [e0].[UpdatedBy], [e0].[Version]
+FROM [StudentExamSessions] AS [s]
+INNER JOIN [ExamSessionSubjects] AS [e] ON [s].[ExamSessionSubjectId] = [e].[ExamSessionSubjectId]
+INNER JOIN [Subjects] AS [s0] ON [e].[SubjectId] = [s0].[SubjectId]
+LEFT JOIN [ExamRooms] AS [e0] ON [s].[ExamRoomId] = [e0].[ExamRoomId]
+WHERE [s].[StudentId] = @__student_StudentId_0 AND [s].[IsCompleted] = CAST(0 AS bit)
+2025-07-27 14:13:13.325 +07:00 [INF] Executed action method backend_manage.Controllers.StudentController.GetStudentExamSessions (backend_manage), returned result Microsoft.AspNetCore.Mvc.OkObjectResult in 224.8674ms.
+2025-07-27 14:13:13.326 +07:00 [INF] Executing OkObjectResult, writing value of type 'System.Linq.Enumerable+ListSelectIterator`2[[backend_manage.Entities.StudentExamSession, backend_manage, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null],[backend_manage.DTOs.StudentExamSessionDto, backend_manage, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]'.
+2025-07-27 14:13:13.386 +07:00 [INF] Executed action backend_manage.Controllers.StudentController.GetStudentExamSessions (backend_manage) in 301.1289ms
+2025-07-27 14:13:13.386 +07:00 [INF] Executed endpoint 'backend_manage.Controllers.StudentController.GetStudentExamSessions (backend_manage)'
+2025-07-27 14:13:13.387 +07:00 [INF] Request finished HTTP/1.1 GET http://localhost:5163/api/Student/exam-sessions - 200 null application/json; charset=utf-8 319.402ms
+2025-07-27 14:13:39.073 +07:00 [INF] Request starting HTTP/1.1 OPTIONS http://localhost:5163/api/Student/start-exam - null null
+2025-07-27 14:13:39.077 +07:00 [INF] CORS policy execution successful.
+2025-07-27 14:13:39.080 +07:00 [INF] Request finished HTTP/1.1 OPTIONS http://localhost:5163/api/Student/start-exam - 204 null null 6.3866ms
+2025-07-27 14:13:39.081 +07:00 [INF] Request starting HTTP/1.1 POST http://localhost:5163/api/Student/start-exam - multipart/form-data; boundary="64aa2eed-eb61-46f5-bf88-4a2776bbf8a5" 187
+2025-07-27 14:13:39.082 +07:00 [INF] CORS policy execution successful.
+2025-07-27 14:13:39.088 +07:00 [INF] Executing endpoint 'backend_manage.Controllers.StudentController.StartExam (backend_manage)'
+2025-07-27 14:13:39.104 +07:00 [INF] Route matched with {action = "StartExam", controller = "Student"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] StartExam(Int32) on controller backend_manage.Controllers.StudentController (backend_manage).
+2025-07-27 14:13:39.145 +07:00 [INF] Executing action method backend_manage.Controllers.StudentController.StartExam (backend_manage) - Validation state: "Valid"
+2025-07-27 14:13:39.157 +07:00 [INF] Bắt đầu lấy đề thi cho sinh viên 001, phiên thi 1
+2025-07-27 14:13:39.210 +07:00 [INF] Executed DbCommand (22ms) [Parameters=[@__studentCode_0='?' (Size = 20), @__studentExamSessionId_1='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [s].[StudentExamSessionId], [s].[CorrectAnswers], [s].[CreatedAt], [s].[CreatedBy], [s].[EndTime], [s].[ExamRoomId], [s].[ExamSessionSubjectId], [s].[ExtraMinutes], [s].[IsCompleted], [s].[IsDeleted], [s].[ReasonForExtra], [s].[Score], [s].[ShuffledExamPaperId], [s].[StartTime], [s].[StudentAnswersString], [s].[StudentCode], [s].[StudentId], [s].[TotalQuestions], [s].[UpdatedAt], [s].[UpdatedBy], [s].[Version], [s0].[ShuffledExamPaperId], [s0].[AnswerKey], [s0].[CreatedAt], [s0].[CreatedBy], [s0].[ExamSessionSubjectId], [s0].[IsApproved], [s0].[IsDeleted], [s0].[OriginalExamPaperId], [s0].[ShuffledExamPaperCore], [s0].[SubjectId], [s0].[Title], [s0].[TotalUsageCount], [s0].[UpdatedAt], [s0].[UpdatedBy], [s0].[Version]
+FROM [StudentExamSessions] AS [s]
+LEFT JOIN [ShuffledExamPapers] AS [s0] ON [s].[ShuffledExamPaperId] = [s0].[ShuffledExamPaperId]
+WHERE [s].[StudentCode] = @__studentCode_0 AND [s].[StudentExamSessionId] = @__studentExamSessionId_1
+2025-07-27 14:13:39.234 +07:00 [INF] Sinh viên 001 chưa được gán đề thi, đang chọn đề ngẫu nhiên
+2025-07-27 14:13:39.268 +07:00 [INF] Executed DbCommand (21ms) [Parameters=[@__examSessionSubjectId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [e].[ExamSessionSubjectId], [e].[CreatedAt], [e].[CreatedBy], [e].[Duration], [e].[EndTime], [e].[ExamSessionDepartmentId], [e].[ExamSessionSubjectCore], [e].[IsCompleted], [e].[IsDeleted], [e].[OriginalExamPaperId], [e].[StartTime], [e].[SubjectId], [e].[UpdatedAt], [e].[UpdatedBy], [e].[Version]
+FROM [ExamSessionSubjects] AS [e]
+WHERE [e].[ExamSessionSubjectId] = @__examSessionSubjectId_0
+2025-07-27 14:13:39.302 +07:00 [INF] Executed DbCommand (22ms) [Parameters=[@__examSessionSubject_OriginalExamPaperId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT [s].[ShuffledExamPaperId], [s].[AnswerKey], [s].[CreatedAt], [s].[CreatedBy], [s].[ExamSessionSubjectId], [s].[IsApproved], [s].[IsDeleted], [s].[OriginalExamPaperId], [s].[ShuffledExamPaperCore], [s].[SubjectId], [s].[Title], [s].[TotalUsageCount], [s].[UpdatedAt], [s].[UpdatedBy], [s].[Version]
+FROM [ShuffledExamPapers] AS [s]
+WHERE [s].[OriginalExamPaperId] = @__examSessionSubject_OriginalExamPaperId_0 AND [s].[IsApproved] = CAST(1 AS bit)
+2025-07-27 14:13:39.339 +07:00 [INF] Tìm thấy 12 đề thi hoán vị khả dụng
+2025-07-27 14:13:39.339 +07:00 [INF] Đã chọn ngẫu nhiên đề thi 1 cho sinh viên 001
+2025-07-27 14:13:39.482 +07:00 [INF] Executed DbCommand (27ms) [Parameters=[@p20='?' (DbType = Int32), @p0='?' (DbType = Int32), @p1='?' (DbType = DateTime2), @p2='?' (Size = 50), @p3='?' (DbType = DateTime2), @p4='?' (DbType = Int32), @p5='?' (DbType = Int32), @p6='?' (DbType = Int32), @p7='?' (DbType = Boolean), @p8='?' (DbType = Boolean), @p9='?' (Size = 200), @p10='?' (DbType = Double), @p11='?' (DbType = Int32), @p12='?' (DbType = DateTime2), @p13='?' (Size = 4000), @p14='?' (Size = 20), @p15='?' (DbType = Int32), @p16='?' (DbType = Int32), @p17='?' (DbType = DateTime2), @p18='?' (Size = 50), @p19='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SET IMPLICIT_TRANSACTIONS OFF;
+SET NOCOUNT ON;
+UPDATE [StudentExamSessions] SET [CorrectAnswers] = @p0, [CreatedAt] = @p1, [CreatedBy] = @p2, [EndTime] = @p3, [ExamRoomId] = @p4, [ExamSessionSubjectId] = @p5, [ExtraMinutes] = @p6, [IsCompleted] = @p7, [IsDeleted] = @p8, [ReasonForExtra] = @p9, [Score] = @p10, [ShuffledExamPaperId] = @p11, [StartTime] = @p12, [StudentAnswersString] = @p13, [StudentCode] = @p14, [StudentId] = @p15, [TotalQuestions] = @p16, [UpdatedAt] = @p17, [UpdatedBy] = @p18, [Version] = @p19
+OUTPUT 1
+WHERE [StudentExamSessionId] = @p20;
+2025-07-27 14:13:39.485 +07:00 [INF] Đã gán đề thi cho sinh viên trong database
+2025-07-27 14:13:39.485 +07:00 [INF] Đang tìm đề thi từ Redis với key: shuffled_exam_paper:1
+2025-07-27 14:13:39.488 +07:00 [WRN] Không tìm thấy đề thi trong Redis hoặc có lỗi, đang lấy từ database
+2025-07-27 14:13:39.586 +07:00 [INF] Executed DbCommand (25ms) [Parameters=[@__shuffledExamPaper_ShuffledExamPaperId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT [s1].[ShuffledExamPaperId], [s1].[AnswerKey], [s1].[CreatedAt], [s1].[CreatedBy], [s1].[ExamSessionSubjectId], [s1].[IsApproved], [s1].[IsDeleted], [s1].[OriginalExamPaperId], [s1].[ShuffledExamPaperCore], [s1].[SubjectId], [s1].[Title], [s1].[TotalUsageCount], [s1].[UpdatedAt], [s1].[UpdatedBy], [s1].[Version], [s1].[OriginalExamPaperId0], [s2].[ShuffledExamPaperDetailId], [s2].[AnswerOrder], [s2].[CreatedAt], [s2].[CreatedBy], [s2].[IsDeleted], [s2].[Order], [s2].[OriginalExamPaperDetailId], [s2].[ParentQuestionId], [s2].[ShuffledExamPaperId], [s2].[UpdatedAt], [s2].[UpdatedBy], [s2].[Version], [s2].[OriginalExamPaperDetailId0], [s2].[Answer1], [s2].[Answer2], [s2].[Answer3], [s2].[Answer4], [s2].[AnswerShuffleInfo], [s2].[CanShuffleQuestion], [s2].[ChapterId], [s2].[CorrectAnswerIndex], [s2].[CreatedAt0], [s2].[CreatedBy0], [s2].[IsDeleted0], [s2].[Order0], [s2].[OriginalExamPaperId], [s2].[ParentQuestionId0], [s2].[QuestionContent], [s2].[UpdatedAt0], [s2].[UpdatedBy0], [s2].[Version0], [s1].[CreatedAt0], [s1].[CreatedBy0], [s1].[Description], [s1].[DurationMinutes], [s1].[IsApproved0], [s1].[IsDeleted0], [s1].[OriginalExamPaperCore], [s1].[SubjectId0], [s1].[Title0], [s1].[TotalQuestions], [s1].[TotalShuffledPapers], [s1].[UpdatedAt0], [s1].[UpdatedBy0], [s1].[Version0]
+FROM (
+    SELECT TOP(1) [s].[ShuffledExamPaperId], [s].[AnswerKey], [s].[CreatedAt], [s].[CreatedBy], [s].[ExamSessionSubjectId], [s].[IsApproved], [s].[IsDeleted], [s].[OriginalExamPaperId], [s].[ShuffledExamPaperCore], [s].[SubjectId], [s].[Title], [s].[TotalUsageCount], [s].[UpdatedAt], [s].[UpdatedBy], [s].[Version], [o].[OriginalExamPaperId] AS [OriginalExamPaperId0], [o].[CreatedAt] AS [CreatedAt0], [o].[CreatedBy] AS [CreatedBy0], [o].[Description], [o].[DurationMinutes], [o].[IsApproved] AS [IsApproved0], [o].[IsDeleted] AS [IsDeleted0], [o].[OriginalExamPaperCore], [o].[SubjectId] AS [SubjectId0], [o].[Title] AS [Title0], [o].[TotalQuestions], [o].[TotalShuffledPapers], [o].[UpdatedAt] AS [UpdatedAt0], [o].[UpdatedBy] AS [UpdatedBy0], [o].[Version] AS [Version0]
+    FROM [ShuffledExamPapers] AS [s]
+    INNER JOIN [OriginalExamPapers] AS [o] ON [s].[OriginalExamPaperId] = [o].[OriginalExamPaperId]
+    WHERE [s].[ShuffledExamPaperId] = @__shuffledExamPaper_ShuffledExamPaperId_0
+) AS [s1]
+LEFT JOIN (
+    SELECT [s0].[ShuffledExamPaperDetailId], [s0].[AnswerOrder], [s0].[CreatedAt], [s0].[CreatedBy], [s0].[IsDeleted], [s0].[Order], [s0].[OriginalExamPaperDetailId], [s0].[ParentQuestionId], [s0].[ShuffledExamPaperId], [s0].[UpdatedAt], [s0].[UpdatedBy], [s0].[Version], [o0].[OriginalExamPaperDetailId] AS [OriginalExamPaperDetailId0], [o0].[Answer1], [o0].[Answer2], [o0].[Answer3], [o0].[Answer4], [o0].[AnswerShuffleInfo], [o0].[CanShuffleQuestion], [o0].[ChapterId], [o0].[CorrectAnswerIndex], [o0].[CreatedAt] AS [CreatedAt0], [o0].[CreatedBy] AS [CreatedBy0], [o0].[IsDeleted] AS [IsDeleted0], [o0].[Order] AS [Order0], [o0].[OriginalExamPaperId], [o0].[ParentQuestionId] AS [ParentQuestionId0], [o0].[QuestionContent], [o0].[UpdatedAt] AS [UpdatedAt0], [o0].[UpdatedBy] AS [UpdatedBy0], [o0].[Version] AS [Version0]
+    FROM [ShuffledExamPaperDetails] AS [s0]
+    INNER JOIN [OriginalExamPaperDetails] AS [o0] ON [s0].[OriginalExamPaperDetailId] = [o0].[OriginalExamPaperDetailId]
+) AS [s2] ON [s1].[ShuffledExamPaperId] = [s2].[ShuffledExamPaperId]
+ORDER BY [s1].[ShuffledExamPaperId], [s1].[OriginalExamPaperId0], [s2].[ShuffledExamPaperDetailId]
+2025-07-27 14:13:39.720 +07:00 [INF] Đang cache đề thi vào Redis
+2025-07-27 14:13:39.732 +07:00 [DBG] JSON string để cache (length=1281): {"ShuffledExamPaperId":1,"ShuffledExamPaperCore":"CNPMNN1HV1","Title":"DETHI-L\u1EADp tr\u00ECnh TTB
+2025-07-27 14:13:39.740 +07:00 [INF] Kết quả cache vào Redis: true
+2025-07-27 14:13:39.742 +07:00 [DBG] Verify cache - Giá trị sau khi cache (length=1281)
+2025-07-27 14:13:39.742 +07:00 [INF] Đã cache thành công đề thi vào Redis
+2025-07-27 14:13:39.742 +07:00 [INF] Hoàn thành quá trình lấy đề thi cho sinh viên 001, mã đề: 1, số câu hỏi: 2
+2025-07-27 14:13:39.743 +07:00 [INF] Executed action method backend_manage.Controllers.StudentController.StartExam (backend_manage), returned result Microsoft.AspNetCore.Mvc.OkObjectResult in 597.7142ms.
+2025-07-27 14:13:39.743 +07:00 [INF] Executing OkObjectResult, writing value of type 'backend_manage.DTOs.ShuffledExamPaperDto'.
+2025-07-27 14:13:39.745 +07:00 [INF] Executed action backend_manage.Controllers.StudentController.StartExam (backend_manage) in 640.6205ms
+2025-07-27 14:13:39.745 +07:00 [INF] Executed endpoint 'backend_manage.Controllers.StudentController.StartExam (backend_manage)'
+2025-07-27 14:13:39.746 +07:00 [INF] Request finished HTTP/1.1 POST http://localhost:5163/api/Student/start-exam - 200 null application/json; charset=utf-8 665.1749ms
+2025-07-27 14:14:27.572 +07:00 [INF] Executed endpoint '/notificationHub'
+2025-07-27 14:14:27.573 +07:00 [INF] Request finished HTTP/1.1 GET http://0.0.0.0:5163/notificationHub?id=VFwql4cEy2WRwja4_Kfcig - 101 null null 74890.8456ms
+2025-07-27 14:14:28.599 +07:00 [INF] Request starting HTTP/1.1 OPTIONS http://localhost:5163/api/Student/start-exam - null null
+2025-07-27 14:14:28.614 +07:00 [INF] CORS policy execution successful.
+2025-07-27 14:14:28.615 +07:00 [INF] Request finished HTTP/1.1 OPTIONS http://localhost:5163/api/Student/start-exam - 204 null null 15.5171ms
+2025-07-27 14:14:28.616 +07:00 [INF] Request starting HTTP/1.1 POST http://localhost:5163/api/Student/start-exam - multipart/form-data; boundary="f3f2a1ab-c108-4ad9-a532-2c8cc94bd143" 187
+2025-07-27 14:14:28.617 +07:00 [INF] CORS policy execution successful.
+2025-07-27 14:14:28.644 +07:00 [INF] Executing endpoint 'backend_manage.Controllers.StudentController.StartExam (backend_manage)'
+2025-07-27 14:14:28.645 +07:00 [INF] Route matched with {action = "StartExam", controller = "Student"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] StartExam(Int32) on controller backend_manage.Controllers.StudentController (backend_manage).
+2025-07-27 14:14:28.648 +07:00 [INF] Executing action method backend_manage.Controllers.StudentController.StartExam (backend_manage) - Validation state: "Valid"
+2025-07-27 14:14:28.648 +07:00 [INF] Bắt đầu lấy đề thi cho sinh viên 001, phiên thi 2
+2025-07-27 14:14:28.679 +07:00 [INF] Executed DbCommand (27ms) [Parameters=[@__studentCode_0='?' (Size = 20), @__studentExamSessionId_1='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [s].[StudentExamSessionId], [s].[CorrectAnswers], [s].[CreatedAt], [s].[CreatedBy], [s].[EndTime], [s].[ExamRoomId], [s].[ExamSessionSubjectId], [s].[ExtraMinutes], [s].[IsCompleted], [s].[IsDeleted], [s].[ReasonForExtra], [s].[Score], [s].[ShuffledExamPaperId], [s].[StartTime], [s].[StudentAnswersString], [s].[StudentCode], [s].[StudentId], [s].[TotalQuestions], [s].[UpdatedAt], [s].[UpdatedBy], [s].[Version], [s0].[ShuffledExamPaperId], [s0].[AnswerKey], [s0].[CreatedAt], [s0].[CreatedBy], [s0].[ExamSessionSubjectId], [s0].[IsApproved], [s0].[IsDeleted], [s0].[OriginalExamPaperId], [s0].[ShuffledExamPaperCore], [s0].[SubjectId], [s0].[Title], [s0].[TotalUsageCount], [s0].[UpdatedAt], [s0].[UpdatedBy], [s0].[Version]
+FROM [StudentExamSessions] AS [s]
+LEFT JOIN [ShuffledExamPapers] AS [s0] ON [s].[ShuffledExamPaperId] = [s0].[ShuffledExamPaperId]
+WHERE [s].[StudentCode] = @__studentCode_0 AND [s].[StudentExamSessionId] = @__studentExamSessionId_1
+2025-07-27 14:14:28.679 +07:00 [ERR] Không tìm thấy phiên thi của sinh viên 001
+2025-07-27 14:14:28.682 +07:00 [INF] Executed action backend_manage.Controllers.StudentController.StartExam (backend_manage) in 36.9122ms
+2025-07-27 14:14:28.682 +07:00 [INF] Executed endpoint 'backend_manage.Controllers.StudentController.StartExam (backend_manage)'
+2025-07-27 14:14:28.684 +07:00 [ERR] Không tìm thấy phiên thi của sinh viên.
+System.Exception: Không tìm thấy phiên thi của sinh viên.
+   at backend_manage.Services.AuthService.StudentService.StartExamAsync(String studentCode, Int32 studentExamSessionId) in /Users/nguyenhuynhnam/RiderProjects/HutechQuiz/backend_manage/backend_manage/Services/AuthService/StudentService.cs:line 315
+   at backend_manage.Controllers.StudentController.StartExam(Int32 studentExamSessionId) in /Users/nguyenhuynhnam/RiderProjects/HutechQuiz/backend_manage/backend_manage/Controllers/StudentController.cs:line 80
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.TaskOfIActionResultExecutor.Execute(ActionContext actionContext, IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeActionMethodAsync>g__Logged|12_1(ControllerActionInvoker invoker)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeNextActionFilterAsync>g__Awaited|10_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Rethrow(ActionExecutedContextSealed context)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeInnerFilterAsync>g__Awaited|13_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeFilterPipelineAsync>g__Awaited|20_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Logged|17_1(ResourceInvoker invoker)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Logged|17_1(ResourceInvoker invoker)
+   at Microsoft.AspNetCore.Routing.EndpointMiddleware.<Invoke>g__AwaitRequestTask|7_0(Endpoint endpoint, Task requestTask, ILogger logger)
+   at AspNetCoreRateLimit.RateLimitMiddleware`1.Invoke(HttpContext context) in C:\Users\User\Documents\Github\AspNetCoreRateLimit\src\AspNetCoreRateLimit\Middleware\RateLimitMiddleware.cs:line 124
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+   at backend_manage.Middlewares.JwtBlacklistMiddleware.Invoke(HttpContext context) in /Users/nguyenhuynhnam/RiderProjects/HutechQuiz/backend_manage/backend_manage/Middlewares/JwtBlacklistMiddleware.cs:line 31
+   at backend_manage.Middlewares.MaintenanceMiddleware.InvokeAsync(HttpContext context) in /Users/nguyenhuynhnam/RiderProjects/HutechQuiz/backend_manage/backend_manage/Middlewares/MaintenanceMiddleware.cs:line 49
+   at backend_manage.Middlewares.ExceptionMiddleware.InvokeAsync(HttpContext context) in /Users/nguyenhuynhnam/RiderProjects/HutechQuiz/backend_manage/backend_manage/Middlewares/ExceptionMiddleware.cs:line 21
+2025-07-27 14:14:28.719 +07:00 [INF] Request finished HTTP/1.1 POST http://localhost:5163/api/Student/start-exam - 500 null application/json 103.1405ms
+2025-07-27 14:14:30.708 +07:00 [INF] Request starting HTTP/1.1 POST http://localhost:5163/api/Student/start-exam - multipart/form-data; boundary="9390bfde-7574-40b6-83aa-7d1d5135191e" 187
+2025-07-27 14:14:30.710 +07:00 [INF] CORS policy execution successful.
+2025-07-27 14:14:30.713 +07:00 [INF] Executing endpoint 'backend_manage.Controllers.StudentController.StartExam (backend_manage)'
+2025-07-27 14:14:30.714 +07:00 [INF] Route matched with {action = "StartExam", controller = "Student"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] StartExam(Int32) on controller backend_manage.Controllers.StudentController (backend_manage).
+2025-07-27 14:14:30.718 +07:00 [INF] Executing action method backend_manage.Controllers.StudentController.StartExam (backend_manage) - Validation state: "Valid"
+2025-07-27 14:14:30.718 +07:00 [INF] Bắt đầu lấy đề thi cho sinh viên 001, phiên thi 1
+2025-07-27 14:14:30.741 +07:00 [INF] Executed DbCommand (22ms) [Parameters=[@__studentCode_0='?' (Size = 20), @__studentExamSessionId_1='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [s].[StudentExamSessionId], [s].[CorrectAnswers], [s].[CreatedAt], [s].[CreatedBy], [s].[EndTime], [s].[ExamRoomId], [s].[ExamSessionSubjectId], [s].[ExtraMinutes], [s].[IsCompleted], [s].[IsDeleted], [s].[ReasonForExtra], [s].[Score], [s].[ShuffledExamPaperId], [s].[StartTime], [s].[StudentAnswersString], [s].[StudentCode], [s].[StudentId], [s].[TotalQuestions], [s].[UpdatedAt], [s].[UpdatedBy], [s].[Version], [s0].[ShuffledExamPaperId], [s0].[AnswerKey], [s0].[CreatedAt], [s0].[CreatedBy], [s0].[ExamSessionSubjectId], [s0].[IsApproved], [s0].[IsDeleted], [s0].[OriginalExamPaperId], [s0].[ShuffledExamPaperCore], [s0].[SubjectId], [s0].[Title], [s0].[TotalUsageCount], [s0].[UpdatedAt], [s0].[UpdatedBy], [s0].[Version]
+FROM [StudentExamSessions] AS [s]
+LEFT JOIN [ShuffledExamPapers] AS [s0] ON [s].[ShuffledExamPaperId] = [s0].[ShuffledExamPaperId]
+WHERE [s].[StudentCode] = @__studentCode_0 AND [s].[StudentExamSessionId] = @__studentExamSessionId_1
+2025-07-27 14:14:30.745 +07:00 [INF] Đang tìm đề thi từ Redis với key: shuffled_exam_paper:1
+2025-07-27 14:14:30.747 +07:00 [DBG] Giá trị từ Redis (length=1281): {"ShuffledExamPaperId":1,"ShuffledExamPaperCore":"CNPMNN1HV1","Title":"DETHI-L\u1EADp tr\u00ECnh TTB
+2025-07-27 14:14:30.753 +07:00 [INF] Đã deserialize thành công đề thi từ Redis, mã đề: 1, số câu hỏi: 2
+2025-07-27 14:14:30.753 +07:00 [INF] Hoàn thành quá trình lấy đề thi cho sinh viên 001, mã đề: 1, số câu hỏi: 2
+2025-07-27 14:14:30.753 +07:00 [INF] Executed action method backend_manage.Controllers.StudentController.StartExam (backend_manage), returned result Microsoft.AspNetCore.Mvc.OkObjectResult in 34.498ms.
+2025-07-27 14:14:30.753 +07:00 [INF] Executing OkObjectResult, writing value of type 'backend_manage.DTOs.ShuffledExamPaperDto'.
+2025-07-27 14:14:30.753 +07:00 [INF] Executed action backend_manage.Controllers.StudentController.StartExam (backend_manage) in 39.4173ms
+2025-07-27 14:14:30.754 +07:00 [INF] Executed endpoint 'backend_manage.Controllers.StudentController.StartExam (backend_manage)'
+2025-07-27 14:14:30.754 +07:00 [INF] Request finished HTTP/1.1 POST http://localhost:5163/api/Student/start-exam - 200 null application/json; charset=utf-8 45.7987ms

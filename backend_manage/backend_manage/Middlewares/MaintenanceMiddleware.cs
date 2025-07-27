@@ -1,36 +1,36 @@
-using Microsoft.Extensions.Caching.Distributed;
+using StackExchange.Redis;
 
 namespace backend_manage.Middlewares;
 
 public class MaintenanceMiddleware
 {
     private readonly RequestDelegate _next;
-    private readonly IDistributedCache _cache;
+    private readonly IConnectionMultiplexer _redis;
     private readonly ILogger<MaintenanceMiddleware> _logger;
 
-    public MaintenanceMiddleware(RequestDelegate next, IDistributedCache cache, ILogger<MaintenanceMiddleware> logger)
+    public MaintenanceMiddleware(RequestDelegate next, IConnectionMultiplexer redis, ILogger<MaintenanceMiddleware> logger)
     {
         _next = next;
-        _cache = cache;
+        _redis = redis;
         _logger = logger;
     }
 
     public async Task InvokeAsync(HttpContext context)
     {
-        string? maintenanceFlag = "false"; // Default is no maintenance
+        string maintenanceFlag = "false"; // Default is no maintenance
 
         try
         {
-            maintenanceFlag = await _cache.GetStringAsync("maintenance_mode");
+            var db = _redis.GetDatabase();
+            var value = await db.StringGetAsync("maintenance_mode");
+            if (!value.IsNull)
+            {
+                maintenanceFlag = value.ToString();
+            }
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error while checking maintenance mode from Redis");
-        }
-
-        if (string.IsNullOrEmpty(maintenanceFlag))
-        {
-            maintenanceFlag = "false"; // Default to false if no value is retrieved
         }
 
         if (maintenanceFlag == "true" && 
