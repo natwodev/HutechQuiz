@@ -12,6 +12,8 @@ using StackExchange.Redis;
 
 namespace backend_manage.Extensions
 {
+    public class RedisLogger { }
+    
     public static class ServiceExtensions
     {
         public static void ConfigureServices(this IServiceCollection services, IConfiguration configuration)
@@ -84,7 +86,7 @@ namespace backend_manage.Extensions
             
             // Cấu hình Redis với logging
             services.AddSingleton<IConnectionMultiplexer>(sp => {
-                var logger = sp.GetRequiredService<ILogger<ServiceExtensions>>();
+                var logger = sp.GetRequiredService<ILogger<RedisLogger>>();
                 var connectionString = configuration["Redis:ConnectionString"] ?? "localhost:6379";
                 return sp.ConfigureRedis(connectionString, logger);
             });
