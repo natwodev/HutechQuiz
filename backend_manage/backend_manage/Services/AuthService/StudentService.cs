@@ -12,6 +12,7 @@ using backend_manage.Hubs;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
 using AutoMapper;
+using backend_manage.Extensions;
 using Microsoft.AspNetCore.SignalR;
 using StackExchange.Redis;
 
@@ -380,12 +381,7 @@ public class StudentService : IStudentService
             }
             
             paperDto = _mapper.Map<ShuffledExamPaperDto>(shuffledExamPaper);
-
-            // Khởi tạo chuỗi đáp án rỗng từ answerKey
-            var emptyAnswers = System.Text.RegularExpressions.Regex.Replace(shuffledExamPaper.AnswerKey, @",[A-D]\)", ",-)");
-            studentExamSession.StudentAnswersString = emptyAnswers;
-            studentExamSession.StartTime = DateTimeHelper.GetVietnamTime();
-            await _studentExamSessionRepository.UpdateAsync(studentExamSession);
+            
 
             // Cache lại vào Redis nếu Redis khả dụng
             if (isRedisAvailable)
@@ -443,6 +439,10 @@ public class StudentService : IStudentService
                 shuffledExamPaper.ShuffledExamPaperId, studentCode);
             
             // Gán mã đề cho sinh viên
+            // Khởi tạo chuỗi đáp án rỗng từ answerKey
+            var emptyAnswers = System.Text.RegularExpressions.Regex.Replace(shuffledExamPaper.AnswerKey, @",[A-D]\)", ",-)");
+            studentExamSession.StudentAnswersString = emptyAnswers;
+            studentExamSession.StartTime = DateTimeHelper.GetVietnamTime();
             studentExamSession.ShuffledExamPaperId = shuffledExamPaper.ShuffledExamPaperId;
             await _studentExamSessionRepository.UpdateAsync(studentExamSession);
             
