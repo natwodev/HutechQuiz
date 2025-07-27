@@ -1,6 +1,8 @@
 using AspNetCoreRateLimit;
 using backend_manage.Middlewares;
 using backend_manage.Hubs;
+using Microsoft.Extensions.Logging;
+using StackExchange.Redis;
 
 namespace backend_manage.Extensions
 {
@@ -30,6 +32,31 @@ namespace backend_manage.Extensions
             app.MapControllers();
 
             app.MapHub<NotificationHub>("/notificationHub"); // ✅ SignalR Hub
+        }
+
+        public static IConnectionMultiplexer? ConfigureRedis(this IServiceProvider serviceProvider, string connectionString, ILogger logger)
+        {
+            try
+            {
+                var redisConfig = ConfigurationOptions.Parse(connectionString);
+                redisConfig.AbortOnConnectFail = false;
+                
+                logger.LogInformation("Đang kết nối đến Redis server...");
+                var redis = ConnectionMultiplexer.Connect(redisConfig);
+                logger.LogInformation("Kết nối Redis thành công!");
+                
+                return redis;
+            }
+            catch (RedisConnectionException ex)
+            {
+                logger.LogError(ex, "⚠️ Không thể kết nối đến Redis server. Chi tiết lỗi: {ErrorMessage}", ex.Message);
+                return null;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "⚠️ Có lỗi xảy ra khi kết nối đến Redis. Chi tiết lỗi: {ErrorMessage}", ex.Message);
+                return null;
+            }
         }
     }
 }
