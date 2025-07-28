@@ -766,7 +766,7 @@ public class StudentService : IStudentService
                 StudentAnswersString: newAnswersString
             ));
 
-            _rabbitMQService.PublishExamSubmission(examSubmissionMessage);
+            _rabbitMQService.PublishMessage("exam_submission_queue", examSubmissionMessage);
 
             // Xóa student answers khỏi Redis vì đã nộp bài
             // await db.KeyDeleteAsync(studentAnswerKey); tạm thời giữ lại để debug

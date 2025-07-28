@@ -1,6 +1,4 @@
-using System;
-
-namespace backend_manage.DTOs
+namespace backend_manage.Messages
 {
     public class ExamSubmissionMessage
     {

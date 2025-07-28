@@ -50,8 +50,8 @@ try
     ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
 
     // Start RabbitMQ consumer
-    var rabbitMQService = app.Services.GetRequiredService<IRabbitMQService>();
-    rabbitMQService.StartConsuming();
+    var rabbitMQConsumer = app.Services.GetRequiredService<RabbitMQConsumer>();
+    rabbitMQConsumer.StartConsuming();
 
     app.Run();
 }
