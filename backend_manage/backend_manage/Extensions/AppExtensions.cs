@@ -27,7 +27,7 @@ namespace backend_manage.Extensions
 
             // app.UseStaticFiles(); // Bật nếu có phục vụ file tĩnh (ảnh, js...)
 
-            app.UseIpRateLimiting();
+            // app.UseIpRateLimiting(); // Tắt rate limiting
 
             app.MapControllers();
 

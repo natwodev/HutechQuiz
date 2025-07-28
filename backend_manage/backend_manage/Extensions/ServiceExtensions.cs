@@ -98,9 +98,9 @@ namespace backend_manage.Extensions
             });
             
             services.AddMemoryCache();
-            services.Configure<IpRateLimitOptions>(configuration.GetSection("RateLimit"));
-            services.AddInMemoryRateLimiting();
-            services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>();
+            // services.Configure<IpRateLimitOptions>(configuration.GetSection("RateLimit")); // Tắt rate limiting
+            // services.AddInMemoryRateLimiting(); // Tắt rate limiting
+            // services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>(); // Tắt rate limiting
         }
     }
 }
