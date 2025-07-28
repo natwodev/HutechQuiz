@@ -18,10 +18,14 @@ namespace backend_manage.Controllers;
 public class StudentController : ControllerBase
 {
     private readonly IStudentService _studentService;
+    private readonly ILogger<StudentAnswerController> _logger;
 
-    public StudentController(IStudentService studentService)
+    public StudentAnswerController(
+        IStudentService studentService,
+        ILogger<StudentAnswerController> logger)
     {
         _studentService = studentService;
+        _logger = logger;
     }
 
 
@@ -127,6 +131,32 @@ public class StudentController : ControllerBase
             return NotFound(new { message });
 
         return Ok(new { message });
+    }
+
+     [HttpPost("save")]
+    public async Task<IActionResult> SaveAnswer([FromBody] SaveAnswerDto dto)
+    {
+        try
+        {
+            var result = await _studentService.SaveStudentAnswerAsync(
+                dto.StudentCode,
+                dto.ShuffledExamPaperId,
+                dto.Index,
+                dto.Answer
+            );
+
+            if (!result.Success)
+            {
+                return BadRequest(new { message = result.Message });
+            }
+
+            return Ok(new { message = result.Message });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Lỗi khi lưu đáp án của sinh viên");
+            return StatusCode(500, new { message = "Có lỗi xảy ra khi lưu đáp án" });
+        }
     }
 
 }

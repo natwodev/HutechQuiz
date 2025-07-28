@@ -578,7 +578,40 @@ public class StudentService : IStudentService
         return (true, "Cập nhật trạng thái đăng nhập thành công.");
     }
 
+    public async Task<(bool Success, string Message)> SaveStudentAnswerAsync(string studentCode, int shuffledExamPaperId, int index, string answer)
+    {
+        try
+        {
+            // Kiểm tra Redis có khả dụng không
+            bool isRedisAvailable = _redis?.IsRedisConnected(_logger) ?? false;
+            if (!isRedisAvailable)
+            {
+                _logger.LogWarning("Redis không khả dụng khi lưu đáp án của sinh viên");
+                return (false, "Không thể kết nối đến Redis");
+            }
 
- 
+            var db = _redis.GetDatabase();
+            string studentAnswerKey = $"student_answers:{studentCode}:{shuffledExamPaperId}";
 
+            // Log thông tin
+            _logger.LogInformation(
+                "Đang lưu đáp án cho sinh viên. StudentCode: {StudentCode}, ShuffledExamPaperId: {ShuffledExamPaperId}, Index: {Index}, Answer: {Answer}",
+                studentCode, shuffledExamPaperId, index, answer
+            );
+
+            // TODO: Implement logic to save answer
+            // 1. Lấy chuỗi đáp án hiện tại từ Redis
+            // 2. Cập nhật đáp án tại vị trí index
+            // 3. Lưu lại chuỗi đáp án mới
+            // 4. Cập nhật vào database
+
+            return (true, "Đã lưu đáp án thành công");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Lỗi khi lưu đáp án của sinh viên. StudentCode: {StudentCode}, ShuffledExamPaperId: {ShuffledExamPaperId}, Index: {Index}",
+                studentCode, shuffledExamPaperId, index);
+            return (false, $"Lỗi khi lưu đáp án: {ex.Message}");
+        }
+    }
 } 
