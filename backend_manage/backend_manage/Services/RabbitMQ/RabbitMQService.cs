@@ -37,8 +37,7 @@ namespace backend_manage.Services.RabbitMQ
                     HostName = configuration["RabbitMQ:HostName"] ?? "localhost",
                     UserName = configuration["RabbitMQ:UserName"] ?? "guest",
                     Password = configuration["RabbitMQ:Password"] ?? "guest",
-                    Port = configuration["RabbitMQ:Port"] != null ? int.Parse(configuration["RabbitMQ:Port"]) : 5672,
-                    DispatchConsumersAsync = true // Cho phép xử lý async
+                    Port = configuration["RabbitMQ:Port"] != null ? int.Parse(configuration["RabbitMQ:Port"]) : 5672
                 };
 
                 _connection = factory.CreateConnection();
@@ -81,7 +80,7 @@ namespace backend_manage.Services.RabbitMQ
                 properties.ContentType = "application/json";
 
                 _channel.BasicPublish(
-                    exchange: "",
+                    exchange: string.Empty,
                     routingKey: _queueName,
                     basicProperties: properties,
                     body: body
@@ -100,11 +99,11 @@ namespace backend_manage.Services.RabbitMQ
         {
             try
             {
-                var consumer = new AsyncEventingBasicConsumer(_channel);
+                var consumer = new EventingBasicConsumer(_channel);
 
-                consumer.Received += async (model, ea) =>
+                consumer.Received += (sender, ea) =>
                 {
-                    string message = null;
+                    var message = string.Empty;
                     try
                     {
                         message = Encoding.UTF8.GetString(ea.Body.ToArray());
@@ -114,8 +113,8 @@ namespace backend_manage.Services.RabbitMQ
                         {
                             var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
-                            var studentExamSession = await dbContext.StudentExamSessions
-                                .FirstOrDefaultAsync(x => x.StudentCode == examSubmission.StudentCode
+                            var studentExamSession = dbContext.StudentExamSessions
+                                .FirstOrDefault(x => x.StudentCode == examSubmission.StudentCode
                                     && x.ShuffledExamPaperId == examSubmission.ShuffledExamPaperId);
 
                             if (studentExamSession != null)
@@ -127,7 +126,7 @@ namespace backend_manage.Services.RabbitMQ
                                 studentExamSession.EndTime = examSubmission.EndTime;
                                 studentExamSession.StudentAnswersString = examSubmission.StudentAnswersString;
 
-                                await dbContext.SaveChangesAsync();
+                                dbContext.SaveChanges();
                                 _logger.LogInformation("Exam submission processed successfully: {Message}", message);
                                 
                                 // Xác nhận đã xử lý message thành công
@@ -172,9 +171,15 @@ namespace backend_manage.Services.RabbitMQ
         {
             try
             {
-                _channel?.Close();
+                if (_channel?.IsOpen ?? false)
+                {
+                    _channel.Close();
+                }
+                if (_connection?.IsOpen ?? false)
+                {
+                    _connection.Close();
+                }
                 _channel?.Dispose();
-                _connection?.Close();
                 _connection?.Dispose();
             }
             catch (Exception ex)
