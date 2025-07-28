@@ -9,7 +9,7 @@ namespace backend_manage.Data
     {
         public static async Task InitializeAsync(IServiceProvider serviceProvider)
         {
-            var logger = serviceProvider.GetRequiredService<ILogger<SeedData>>();
+            var logger = serviceProvider.GetRequiredService<ILogger<ApplicationDbContext>>();
             var roleManager = serviceProvider.GetRequiredService<RoleManager<IdentityRole>>();
             var userManager = serviceProvider.GetRequiredService<UserManager<ApplicationUser>>();
             var context = serviceProvider.GetRequiredService<ApplicationDbContext>();

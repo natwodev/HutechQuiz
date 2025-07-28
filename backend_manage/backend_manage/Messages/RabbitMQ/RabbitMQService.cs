@@ -12,12 +12,12 @@ namespace backend_manage.Messages.RabbitMQ
         private readonly IConnection _connection;
         private readonly IModel _channel;
         private readonly ILogger<RabbitMqService> _logger;
-        private readonly Dictionary<string, List<object>> _consumers;
+        private readonly Dictionary<string, List<(EventingBasicConsumer Consumer, string ConsumerTag)>> _consumers;
 
         public RabbitMqService(IConfiguration configuration, ILogger<RabbitMqService> logger)
         {
             _logger = logger;
-            _consumers = new Dictionary<string, List<object>>();
+            _consumers = new Dictionary<string, List<(EventingBasicConsumer Consumer, string ConsumerTag)>>();
 
             try
             {
@@ -177,17 +177,18 @@ namespace backend_manage.Messages.RabbitMQ
                     }
                 };
 
+                if (!_consumers.ContainsKey(queueName))
+                {
+                    _consumers[queueName] = new List<(EventingBasicConsumer Consumer, string ConsumerTag)>();
+                }
+                
                 var consumerTag = _channel.BasicConsume(
                     queue: queueName,
                     autoAck: false,
                     consumer: consumer
                 );
-
-                if (!_consumers.ContainsKey(queueName))
-                {
-                    _consumers[queueName] = new List<object>();
-                }
-                _consumers[queueName].Add(consumer);
+                
+                _consumers[queueName].Add((consumer, consumerTag));
 
                 _logger.LogInformation("Bắt đầu consumer thứ {ConsumerCount} cho queue: {QueueName}", _consumers[queueName].Count, queueName);
             }
@@ -257,13 +258,13 @@ namespace backend_manage.Messages.RabbitMQ
                 // Đóng tất cả consumers
                 foreach (var queueConsumers in _consumers.Values)
                 {
-                    foreach (var consumer in queueConsumers)
+                    foreach (var (consumer, consumerTag) in queueConsumers)
                     {
-                        if (consumer is EventingBasicConsumer basicConsumer)
+                        if (!string.IsNullOrEmpty(consumerTag))
                         {
                             try
                             {
-                                _channel.BasicCancel(basicConsumer.ConsumerTag);
+                                _channel.BasicCancel(consumerTag);
                             }
                             catch (Exception ex)
                             {
