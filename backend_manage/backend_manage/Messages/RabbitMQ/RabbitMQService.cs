@@ -81,30 +81,45 @@ namespace backend_manage.Messages.RabbitMQ
 
                 var consumer = new EventingBasicConsumer(_channel);
                 var messageBatch = new List<(T message, ulong deliveryTag)>();
+                var batchLock = new object();
                 var batchTimer = new Timer(_ => ProcessBatch(), null, timerInterval, timerInterval);
 
                 void ProcessBatch()
                 {
-                    if (messageBatch.Count > 0)
+                    lock (batchLock)
                     {
-                        try
+                        if (messageBatch.Count > 0)
                         {
-                            foreach (var (message, deliveryTag) in messageBatch)
+                            try
                             {
-                                onMessage(message);
-                                _channel.BasicAck(deliveryTag, false);
+                                var batchToProcess = new List<(T message, ulong deliveryTag)>(messageBatch);
+                                messageBatch.Clear();
+
+                                foreach (var (message, deliveryTag) in batchToProcess)
+                                {
+                                    try
+                                    {
+                                        onMessage(message);
+                                        if (_channel.IsOpen)
+                                        {
+                                            _channel.BasicAck(deliveryTag, false);
+                                        }
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        _logger.LogError(ex, "Lỗi khi xử lý message với delivery tag {DeliveryTag}", deliveryTag);
+                                        if (_channel.IsOpen)
+                                        {
+                                            _channel.BasicNack(deliveryTag, false, true);
+                                        }
+                                    }
+                                }
+                                _logger.LogInformation("Đã xử lý batch {Count} messages từ queue {QueueName}", batchToProcess.Count, queueName);
                             }
-                            _logger.LogInformation("Đã xử lý batch {Count} messages từ queue {QueueName}", messageBatch.Count, queueName);
-                            messageBatch.Clear();
-                        }
-                        catch (Exception ex)
-                        {
-                            _logger.LogError(ex, "Lỗi khi xử lý batch messages từ queue {QueueName}", queueName);
-                            foreach (var (_, deliveryTag) in messageBatch)
+                            catch (Exception ex)
                             {
-                                _channel.BasicNack(deliveryTag, false, true);
+                                _logger.LogError(ex, "Lỗi khi xử lý batch messages từ queue {QueueName}", queueName);
                             }
-                            messageBatch.Clear();
                         }
                     }
                 }
@@ -117,18 +132,24 @@ namespace backend_manage.Messages.RabbitMQ
                         var message = Encoding.UTF8.GetString(body);
                         var data = JsonConvert.DeserializeObject<T>(message);
 
-                        messageBatch.Add((data, ea.DeliveryTag));
-
-                        // Xử lý ngay nếu đủ batch size
-                        if (messageBatch.Count >= batchSize)
+                        lock (batchLock)
                         {
-                            ProcessBatch();
+                            messageBatch.Add((data, ea.DeliveryTag));
+
+                            // Xử lý ngay nếu đủ batch size
+                            if (messageBatch.Count >= batchSize)
+                            {
+                                ProcessBatch();
+                            }
                         }
                     }
                     catch (Exception ex)
                     {
                         _logger.LogError(ex, "Lỗi khi nhận message từ queue {QueueName}", queueName);
-                        _channel.BasicNack(ea.DeliveryTag, false, true);
+                        if (_channel.IsOpen)
+                        {
+                            _channel.BasicNack(ea.DeliveryTag, false, true);
+                        }
                     }
                 };
 
