@@ -409,28 +409,25 @@ public class StudentService : IStudentService
             // Cache lại vào Redis
             try
             {
-                try
-                {
-                    var db = _redis.GetDatabase();
-                    string cacheKey = $"shuffled_exam_paper:{shuffledExamPaperId.Value}";
-                    string answerKey = $"answer_key:{shuffledExamPaperId.Value}";
-                    
-                    var jsonString = System.Text.Json.JsonSerializer.Serialize(paperDto);
-                    var batch = db.CreateBatch();
-                    
-                    // Thực hiện cache đồng thời
-                    var cacheTask = batch.StringSetAsync(cacheKey, jsonString, TimeSpan.FromHours(6));
-                    var answerKeyTask = batch.StringSetAsync(answerKey, shuffledExamPaper.AnswerKey, TimeSpan.FromHours(6));
-                    
-                    batch.Execute();
-                    await Task.WhenAll(cacheTask, answerKeyTask);
-                    
-                    _logger.LogInformation("Đã cache đề thi và answer key vào Redis");
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Lỗi khi cache đề thi vào Redis");
-                }
+                var db = _redis.GetDatabase();
+                string cacheKey = $"shuffled_exam_paper:{shuffledExamPaperId.Value}";
+                string answerKey = $"answer_key:{shuffledExamPaperId.Value}";
+                
+                var jsonString = System.Text.Json.JsonSerializer.Serialize(paperDto);
+                var batch = db.CreateBatch();
+                
+                // Thực hiện cache đồng thời
+                var cacheTask = batch.StringSetAsync(cacheKey, jsonString, TimeSpan.FromHours(6));
+                var answerKeyTask = batch.StringSetAsync(answerKey, shuffledExamPaper.AnswerKey, TimeSpan.FromHours(6));
+                
+                batch.Execute();
+                await Task.WhenAll(cacheTask, answerKeyTask);
+                
+                _logger.LogInformation("Đã cache đề thi và answer key vào Redis");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi cache đề thi vào Redis");
             }
         }
         else
@@ -508,76 +505,73 @@ public class StudentService : IStudentService
             // Cache vào Redis
             try
             {
-                try
+                var db = _redis.GetDatabase();
+                string cacheKey = $"shuffled_exam_paper:{shuffledExamPaper.ShuffledExamPaperId}";
+                string answerKey = $"answer_key:{shuffledExamPaper.ShuffledExamPaperId}";
+                string studentAnswerKey = $"student_answers:{studentCode}:{shuffledExamPaper.ShuffledExamPaperId}";
+
+                // Kiểm tra sự tồn tại của các key
+                var existTasks = new[]
                 {
-                    var db = _redis.GetDatabase();
-                    string cacheKey = $"shuffled_exam_paper:{shuffledExamPaper.ShuffledExamPaperId}";
-                    string answerKey = $"answer_key:{shuffledExamPaper.ShuffledExamPaperId}";
-                    string studentAnswerKey = $"student_answers:{studentCode}:{shuffledExamPaper.ShuffledExamPaperId}";
+                    db.KeyExistsAsync(cacheKey),
+                    db.KeyExistsAsync(answerKey),
+                    db.KeyExistsAsync(studentAnswerKey)
+                };
+                await Task.WhenAll(existTasks);
 
-                    // Kiểm tra sự tồn tại của các key
-                    var existTasks = new[]
-                    {
-                        db.KeyExistsAsync(cacheKey),
-                        db.KeyExistsAsync(answerKey),
-                        db.KeyExistsAsync(studentAnswerKey)
-                    };
-                    await Task.WhenAll(existTasks);
+                var examExists = await existTasks[0];
+                var answerKeyExists = await existTasks[1];
+                var studentAnswerExists = await existTasks[2];
+                
+                var jsonString = System.Text.Json.JsonSerializer.Serialize(paperDto);
+                var batch = db.CreateBatch();
+                var tasks = new List<Task>();
 
-                    var examExists = await existTasks[0];
-                    var answerKeyExists = await existTasks[1];
-                    var studentAnswerExists = await existTasks[2];
-                    
-                    var jsonString = System.Text.Json.JsonSerializer.Serialize(paperDto);
-                    var batch = db.CreateBatch();
-                    var tasks = new List<Task>();
-
-                    // Chỉ cache những key chưa tồn tại
-                    if (!examExists)
-                    {
-                        _logger.LogInformation("Cache đề thi mới vào Redis");
-                        tasks.Add(batch.StringSetAsync(cacheKey, jsonString, TimeSpan.FromHours(6)));
-                    }
-                    else
-                    {
-                        _logger.LogInformation("Đề thi đã tồn tại trong Redis");
-                    }
-
-                    if (!answerKeyExists)
-                    {
-                        _logger.LogInformation("Cache answer key mới vào Redis");
-                        tasks.Add(batch.StringSetAsync(answerKey, shuffledExamPaper.AnswerKey, TimeSpan.FromHours(6)));
-                    }
-                    else
-                    {
-                        _logger.LogInformation("Answer key đã tồn tại trong Redis");
-                    }
-
-                    if (!studentAnswerExists)
-                    {
-                        _logger.LogInformation("Cache student answers mới vào Redis");
-                        tasks.Add(batch.StringSetAsync(studentAnswerKey, emptyAnswers, TimeSpan.FromHours(6)));
-                    }
-                    else
-                    {
-                        _logger.LogInformation("Student answers đã tồn tại trong Redis");
-                    }
-                    
-                    if (tasks.Any())
-                    {
-                        batch.Execute();
-                        await Task.WhenAll(tasks);
-                        _logger.LogInformation("Đã hoàn thành cache dữ liệu mới vào Redis");
-                    }
-                    else
-                    {
-                        _logger.LogInformation("Không có dữ liệu mới cần cache vào Redis");
-                    }
-                }
-                catch (Exception ex)
+                // Chỉ cache những key chưa tồn tại
+                if (!examExists)
                 {
-                    _logger.LogError(ex, "Lỗi khi cache dữ liệu vào Redis");
+                    _logger.LogInformation("Cache đề thi mới vào Redis");
+                    tasks.Add(batch.StringSetAsync(cacheKey, jsonString, TimeSpan.FromHours(6)));
                 }
+                else
+                {
+                    _logger.LogInformation("Đề thi đã tồn tại trong Redis");
+                }
+
+                if (!answerKeyExists)
+                {
+                    _logger.LogInformation("Cache answer key mới vào Redis");
+                    tasks.Add(batch.StringSetAsync(answerKey, shuffledExamPaper.AnswerKey, TimeSpan.FromHours(6)));
+                }
+                else
+                {
+                    _logger.LogInformation("Answer key đã tồn tại trong Redis");
+                }
+
+                if (!studentAnswerExists)
+                {
+                    _logger.LogInformation("Cache student answers mới vào Redis");
+                    tasks.Add(batch.StringSetAsync(studentAnswerKey, emptyAnswers, TimeSpan.FromHours(6)));
+                }
+                else
+                {
+                    _logger.LogInformation("Student answers đã tồn tại trong Redis");
+                }
+                
+                if (tasks.Any())
+                {
+                    batch.Execute();
+                    await Task.WhenAll(tasks);
+                    _logger.LogInformation("Đã hoàn thành cache dữ liệu mới vào Redis");
+                }
+                else
+                {
+                    _logger.LogInformation("Không có dữ liệu mới cần cache vào Redis");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi cache dữ liệu vào Redis");
             }
         }
 
