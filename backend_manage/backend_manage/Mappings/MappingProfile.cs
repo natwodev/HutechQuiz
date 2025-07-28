@@ -180,11 +180,11 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.StudentAnswersString, opt => opt.MapFrom(src => src.StudentAnswersString));
 
         // Mapping cho StudentAnswerSavedMessage
-        CreateMap<(string StudentCode, int ShuffledExamPaperId, int Index, string Answer, DateTime SavedAt),StudentAnswerSavedMessage>()
+        CreateMap<(string StudentCode, int ShuffledExamPaperId, int Index, string Answer, string NewAnswersString), backend_manage.Messages.RabbitMQ.StudentAnswerSavedMessage>()
             .ForMember(dest => dest.StudentCode, opt => opt.MapFrom(src => src.StudentCode))
             .ForMember(dest => dest.ShuffledExamPaperId, opt => opt.MapFrom(src => src.ShuffledExamPaperId))
             .ForMember(dest => dest.Index, opt => opt.MapFrom(src => src.Index))
             .ForMember(dest => dest.Answer, opt => opt.MapFrom(src => src.Answer))
-            .ForMember(dest => dest.SavedAt, opt => opt.MapFrom(src => src.SavedAt));
+            .ForMember(dest => dest.NewAnswersString, opt => opt.MapFrom(src => src.NewAnswersString));
     }
 }

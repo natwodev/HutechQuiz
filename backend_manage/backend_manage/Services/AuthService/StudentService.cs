@@ -852,7 +852,7 @@ public class StudentService : IStudentService
             
             // Gửi message qua RabbitMQ
             var answerSavedMessage = _mapper.Map<StudentAnswerSavedMessage>(
-                (studentCode, shuffledExamPaperId, index, answer, backend_manage.Hubs.DateTimeHelper.GetVietnamTime())
+                (studentCode, shuffledExamPaperId, index, answer, newAnswersString)
             );
             _rabbitMQService.PublishMessage("student_answer_saved_queue", answerSavedMessage);
             

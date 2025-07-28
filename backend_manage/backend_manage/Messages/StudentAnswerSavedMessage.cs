@@ -8,6 +8,6 @@ namespace backend_manage.Messages.RabbitMQ
         public int ShuffledExamPaperId { get; set; }
         public int Index { get; set; }
         public string Answer { get; set; }
-        public DateTime SavedAt { get; set; }
+        public string NewAnswersString { get; set; }
     }
 }

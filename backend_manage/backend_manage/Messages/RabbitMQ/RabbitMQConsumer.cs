@@ -103,8 +103,9 @@ namespace backend_manage.Messages.RabbitMQ
                 // Cập nhật đáp án trong DB
                 // Lưu ý: Đây chỉ là backup, đáp án chính vẫn ở Redis
                 // Có thể thêm trường AnswerHistory hoặc tạo bảng riêng để lưu lịch sử đáp án
-                studentExamSession.StudentAnswersString = message.Answer; // Hoặc logic phức tạp hơn
-                studentExamSession.UpdatedAt = message.SavedAt;
+                
+                // Sử dụng chuỗi đáp án đã tính sẵn từ service
+                studentExamSession.StudentAnswersString = message.NewAnswersString;
 
                 dbContext.SaveChanges();
 
