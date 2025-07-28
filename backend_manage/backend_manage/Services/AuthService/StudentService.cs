@@ -466,7 +466,7 @@ public class StudentService : IStudentService
             
             _logger.LogInformation("Đã chọn ngẫu nhiên đề thi {ShuffledExamPaperId} cho sinh viên {StudentCode}", 
                 shuffledExamPaper.ShuffledExamPaperId, studentCode);
-
+            
             // Kiểm tra đề đã random có trên Redis chưa
             if (isRedisAvailable)
             {
@@ -499,7 +499,7 @@ public class StudentService : IStudentService
             await _studentExamSessionRepository.UpdateAsync(studentExamSession);
             
             _logger.LogInformation("Đã cập nhật thông tin đề thi và chuỗi đáp án rỗng cho sinh viên trong database");
-
+            
             // Cache vào Redis nếu Redis khả dụng
             if (isRedisAvailable)
             {
@@ -659,6 +659,121 @@ public class StudentService : IStudentService
         return (true, "Cập nhật trạng thái đăng nhập thành công.");
     }
 
+    public async Task<(bool Success, string Message, double? Score)> SubmitExamAsync(SubmitExamDto submitExamDto)
+    {
+        try
+        {
+            // Kiểm tra Redis có khả dụng không
+            bool isRedisAvailable = _redis?.IsRedisConnected(_logger) ?? false;
+            if (!isRedisAvailable)
+            {
+                _logger.LogWarning("Redis không khả dụng khi nộp bài thi");
+                return (false, "Không thể kết nối đến Redis", null);
+            }
+
+            var db = _redis.GetDatabase();
+            
+            // Lấy answer key từ Redis
+            string answerKey = $"answer_key:{submitExamDto.ShuffledExamPaperId}";
+            var answerKeyValue = await db.StringGetAsync(answerKey);
+            
+            if (!answerKeyValue.HasValue)
+            {
+                _logger.LogError("Không tìm thấy đáp án trong Redis");
+                return (false, "Không tìm thấy đáp án", null);
+            }
+
+            // Lấy student answers từ Redis
+            string studentAnswerKey = $"student_answers:{submitExamDto.StudentCode}:{submitExamDto.ShuffledExamPaperId}";
+            var studentAnswers = await db.StringGetAsync(studentAnswerKey);
+            
+            if (!studentAnswers.HasValue)
+            {
+                _logger.LogError("Không tìm thấy bài làm của sinh viên trong Redis");
+                return (false, "Không tìm thấy bài làm của sinh viên", null);
+            }
+
+            // Cập nhật đáp án từ SubmitExamDto vào Redis
+            var currentAnswers = studentAnswers.ToString().Split(';', StringSplitOptions.RemoveEmptyEntries)
+                .Select(a => a.Trim('(', ')').Split(','))
+                .ToDictionary(parts => int.Parse(parts[0]), parts => parts[1]);
+
+            foreach (var answer in submitExamDto.SaveAnswerDtos)
+            {
+                if (currentAnswers.ContainsKey(answer.Index))
+                {
+                    currentAnswers[answer.Index] = answer.Answer;
+                }
+            }
+
+            // Tạo chuỗi đáp án mới
+            var newAnswersString = string.Join(";", currentAnswers.Select(pair => $"({pair.Key},{pair.Value})")) + ";";
+
+            // Lưu lại vào Redis
+            await db.StringSetAsync(studentAnswerKey, newAnswersString, TimeSpan.FromHours(6));
+            _logger.LogInformation("Đã cập nhật đáp án mới vào Redis: {NewAnswers}", newAnswersString);
+
+            // Tìm StudentExamSession
+            var studentExamSession = await _studentExamSessionRepository.GetQueryable()
+                .FirstOrDefaultAsync(x => x.StudentCode == submitExamDto.StudentCode 
+                    && x.ShuffledExamPaperId == submitExamDto.ShuffledExamPaperId);
+
+            if (studentExamSession == null)
+            {
+                _logger.LogError("Không tìm thấy phiên thi của sinh viên trong database");
+                return (false, "Không tìm thấy phiên thi của sinh viên", null);
+            }
+
+            if (studentExamSession.IsCompleted)
+            {
+                _logger.LogWarning("Sinh viên đã nộp bài thi này rồi");
+                return (false, "Bài thi đã được nộp trước đó", null);
+            }
+
+            // Tính điểm
+            string correctAnswers = answerKeyValue.ToString();
+
+            var correctAnswerPairs = correctAnswers.Split(';', StringSplitOptions.RemoveEmptyEntries)
+                .Select(a => a.Trim('(', ')').Split(','))
+                .ToDictionary(parts => int.Parse(parts[0]), parts => parts[1]);
+
+            int correctCount = 0;
+            int totalQuestions = correctAnswerPairs.Count;
+
+            foreach (var pair in correctAnswerPairs)
+            {
+                if (currentAnswers.TryGetValue(pair.Key, out string studentAnswer) 
+                    && studentAnswer == pair.Value)
+                {
+                    correctCount++;
+                }
+            }
+
+            double score = (double)correctCount / totalQuestions * 10;
+
+            // Cập nhật database
+            studentExamSession.Score = score;
+            studentExamSession.IsCompleted = true;
+            studentExamSession.CompletedTime = DateTimeHelper.GetVietnamTime();
+            studentExamSession.StudentAnswersString = newAnswersString;
+            await _studentExamSessionRepository.UpdateAsync(studentExamSession);
+
+            // Xóa student answers khỏi Redis vì đã nộp bài
+            await db.KeyDeleteAsync(studentAnswerKey);
+
+            _logger.LogInformation(
+                "Sinh viên {StudentCode} đã nộp bài thi {ShuffledExamPaperId} với điểm {Score}", 
+                submitExamDto.StudentCode, submitExamDto.ShuffledExamPaperId, score);
+
+            return (true, "Nộp bài thành công", score);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Lỗi khi nộp bài thi của sinh viên {StudentCode}", submitExamDto.StudentCode);
+            return (false, $"Lỗi khi nộp bài: {ex.Message}", null);
+        }
+    }
+
     public async Task<(bool Success, string Message)> SaveStudentAnswerAsync(string studentCode, int shuffledExamPaperId, int index, string answer)
     {
         try
@@ -732,4 +847,7 @@ public class StudentService : IStudentService
             return (false, $"Lỗi khi lưu đáp án: {ex.Message}");
         }
     }
+
+ 
+
 } 

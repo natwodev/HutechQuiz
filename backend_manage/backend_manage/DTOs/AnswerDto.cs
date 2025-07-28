@@ -24,6 +24,14 @@ namespace backend_manage.DTOs
         public bool IsCorrect { get; set; }
     }
 
+    public class SubmitExamDto
+    {
+        public string StudentCode { get; set; }
+        public int ShuffledExamPaperId { get; set; }
+        public List<SaveAnswerDto> SaveAnswerDtos { get; set; }
+    }
+
+
     public class SaveAnswerDto
     {
         [Required]
