@@ -381,7 +381,6 @@ public class StudentService : IStudentService
             }
             
             paperDto = _mapper.Map<ShuffledExamPaperDto>(shuffledExamPaper);
-            
 
             // Cache lại vào Redis nếu Redis khả dụng
             if (isRedisAvailable)
@@ -393,6 +392,12 @@ public class StudentService : IStudentService
                     var jsonString = System.Text.Json.JsonSerializer.Serialize(paperDto);
                     await db.StringSetAsync(cacheKey, jsonString, TimeSpan.FromHours(6));
                     _logger.LogInformation("Đã cache đề thi vào Redis");
+
+                    // Lưu AnswerKey vào Redis
+                    string answerKeyString = shuffledExamPaper.AnswerKey;
+                    string answerKey = $"answer_key:{shuffledExamPaperId.Value}";
+                    await db.StringSetAsync(answerKey, answerKeyString, TimeSpan.FromHours(6));
+                    _logger.LogInformation("Đã lưu AnswerKey vào Redis với key: {AnswerKey}", answerKey);
                 }
                 catch (Exception ex)
                 {
@@ -438,12 +443,9 @@ public class StudentService : IStudentService
             _logger.LogInformation("Đã chọn ngẫu nhiên đề thi {ShuffledExamPaperId} cho sinh viên {StudentCode}", 
                 shuffledExamPaper.ShuffledExamPaperId, studentCode);
             
-            // Gán mã đề cho sinh viên
-            // Khởi tạo chuỗi đáp án rỗng từ answerKey
-            var emptyAnswers = System.Text.RegularExpressions.Regex.Replace(shuffledExamPaper.AnswerKey, @",[A-D]\)", ",-)");
-            studentExamSession.StudentAnswersString = emptyAnswers;
-            studentExamSession.StartTime = DateTimeHelper.GetVietnamTime();
-            studentExamSession.ShuffledExamPaperId = shuffledExamPaper.ShuffledExamPaperId;
+            // Khởi tạo chuỗi đáp án rỗng
+            var emptyAnswers = string.Join(";", Enumerable.Range(1, shuffledExamPaper.AnswerKey.Split(';').Length)
+                .Select(i => $"({i,-)")) + ";";
 
             // Lưu chuỗi đáp án rỗng vào Redis nếu Redis khả dụng
             if (isRedisAvailable)
@@ -452,10 +454,14 @@ public class StudentService : IStudentService
                 {
                     var db = _redis.GetDatabase();
                     string studentAnswerKey = $"student_answers:{studentCode}:{shuffledExamPaper.ShuffledExamPaperId}";
-                    _logger.LogInformation("Đang lưu chuỗi đáp án rỗng vào Redis với key: {StudentAnswerKey}", studentAnswerKey);
-                    
                     await db.StringSetAsync(studentAnswerKey, emptyAnswers, TimeSpan.FromHours(6));
-                    _logger.LogInformation("Đã lưu chuỗi đáp án rỗng vào Redis thành công");
+                    _logger.LogInformation("Đã lưu chuỗi đáp án rỗng vào Redis với key: {StudentAnswerKey}", studentAnswerKey);
+
+                    // Lưu AnswerKey vào Redis
+                    string answerKeyString = shuffledExamPaper.AnswerKey;
+                    string answerKey = $"answer_key:{shuffledExamPaper.ShuffledExamPaperId}";
+                    await db.StringSetAsync(answerKey, answerKeyString, TimeSpan.FromHours(6));
+                    _logger.LogInformation("Đã lưu AnswerKey vào Redis với key: {AnswerKey}", answerKey);
                 }
                 catch (Exception ex)
                 {
@@ -463,6 +469,8 @@ public class StudentService : IStudentService
                 }
             }
 
+            studentExamSession.StartTime = DateTimeHelper.GetVietnamTime();
+            studentExamSession.ShuffledExamPaperId = shuffledExamPaper.ShuffledExamPaperId;
             await _studentExamSessionRepository.UpdateAsync(studentExamSession);
             
             _logger.LogInformation("Đã gán đề thi cho sinh viên trong database");
