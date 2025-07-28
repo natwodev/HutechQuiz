@@ -11,6 +11,7 @@ namespace backend_manage.Messages.RabbitMQ
         private readonly IServiceScopeFactory _serviceScopeFactory;
         private readonly ILogger<RabbitMqConsumer> _logger;
         private const string ExamSubmissionQueue = "exam_submission_queue";
+        private const string StudentAnswerSavedQueue = "student_answer_saved_queue";
 
         public RabbitMqConsumer(
             IRabbitMqService rabbitMQService,
@@ -24,11 +25,14 @@ namespace backend_manage.Messages.RabbitMQ
 
         public void StartConsuming()
         {
-            _rabbitMQService.Subscribe<ExamSubmissionMessage>(ExamSubmissionQueue, ProcessExamSubmission);
-            _logger.LogInformation("Started consuming messages from queue: {QueueName}", ExamSubmissionQueue);
+            _rabbitMQService.Subscribe<ExamSubmissionMessage>(ExamSubmissionQueue, SaveExamResultToDatabase);
+            _logger.LogInformation("Bắt đầu nhận và lưu kết quả bài thi từ queue: {QueueName}", ExamSubmissionQueue);
+            
+            _rabbitMQService.Subscribe<StudentAnswerSavedMessage>(StudentAnswerSavedQueue, ProcessStudentAnswerSaved);
+            _logger.LogInformation("Bắt đầu nhận và xử lý lưu đáp án từ queue: {QueueName}", StudentAnswerSavedQueue);
         }
 
-        private void ProcessExamSubmission(ExamSubmissionMessage message)
+        private void SaveExamResultToDatabase(ExamSubmissionMessage message)
         {
             try
             {
@@ -42,7 +46,7 @@ namespace backend_manage.Messages.RabbitMQ
                 if (studentExamSession == null)
                 {
                     _logger.LogWarning(
-                        "StudentExamSession not found. StudentCode: {StudentCode}, ShuffledExamPaperId: {ShuffledExamPaperId}",
+                        "Không tìm thấy StudentExamSession. StudentCode: {StudentCode}, ShuffledExamPaperId: {ShuffledExamPaperId}",
                         message.StudentCode,
                         message.ShuffledExamPaperId
                     );
@@ -58,14 +62,68 @@ namespace backend_manage.Messages.RabbitMQ
 
                 dbContext.SaveChanges();
                 _logger.LogInformation(
-                    "Exam submission processed successfully. StudentCode: {StudentCode}, Score: {Score}",
+                    "Đã lưu kết quả bài thi vào DB. StudentCode: {StudentCode}, Điểm: {Score}",
                     message.StudentCode,
                     message.Score
                 );
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error processing exam submission message");
+                _logger.LogError(ex, "Lỗi khi lưu kết quả bài thi vào DB");
+                throw;
+            }
+        }
+
+        private void ProcessStudentAnswerSaved(StudentAnswerSavedMessage message)
+        {
+            try
+            {
+                _logger.LogInformation(
+                    "Đã nhận message lưu đáp án. StudentCode: {StudentCode}, ShuffledExamPaperId: {ShuffledExamPaperId}, Index: {Index}, Answer: {Answer}",
+                    message.StudentCode, message.ShuffledExamPaperId, message.Index, message.Answer
+                );
+
+                using var scope = _serviceScopeFactory.CreateScope();
+                var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+                // Tìm StudentExamSession
+                var studentExamSession = dbContext.StudentExamSessions
+                    .FirstOrDefault(x => x.StudentCode == message.StudentCode
+                        && x.ShuffledExamPaperId == message.ShuffledExamPaperId);
+
+                if (studentExamSession == null)
+                {
+                    _logger.LogWarning(
+                        "Không tìm thấy StudentExamSession. StudentCode: {StudentCode}, ShuffledExamPaperId: {ShuffledExamPaperId}",
+                        message.StudentCode, message.ShuffledExamPaperId
+                    );
+                    return;
+                }
+
+                // Cập nhật đáp án trong DB
+                // Lưu ý: Đây chỉ là backup, đáp án chính vẫn ở Redis
+                // Có thể thêm trường AnswerHistory hoặc tạo bảng riêng để lưu lịch sử đáp án
+                studentExamSession.StudentAnswersString = message.Answer; // Hoặc logic phức tạp hơn
+                studentExamSession.UpdatedAt = message.SavedAt;
+
+                dbContext.SaveChanges();
+
+                // Có thể thêm logic xử lý ở đây như:
+                // - Log chi tiết việc lưu đáp án
+                // - Gửi thông báo realtime
+                // - Backup dữ liệu
+                // - Phân tích hành vi sinh viên
+                // - v.v.
+
+                _logger.LogInformation(
+                    "Đã lưu đáp án vào DB thành công. StudentCode: {StudentCode}, Index: {Index}, Answer: {Answer}",
+                    message.StudentCode, message.Index, message.Answer
+                );
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi xử lý message lưu đáp án. StudentCode: {StudentCode}, Index: {Index}",
+                    message.StudentCode, message.Index);
                 throw;
             }
         }

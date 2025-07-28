@@ -32,11 +32,11 @@ namespace backend_manage.Messages.RabbitMQ
                 _connection = factory.CreateConnection();
                 _channel = _connection.CreateModel();
 
-                _logger.LogInformation("RabbitMQ connection established successfully");
+                _logger.LogInformation("Kết nối RabbitMQ thành công");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to establish RabbitMQ connection");
+                _logger.LogError(ex, "Không thể kết nối tới RabbitMQ");
                 throw;
             }
         }
@@ -67,11 +67,11 @@ namespace backend_manage.Messages.RabbitMQ
                     body: body
                 );
 
-                _logger.LogInformation("Message published to queue {QueueName}: {Message}", queueName, json);
+                _logger.LogInformation("Đã gửi message tới queue {QueueName}: {Message}", queueName, json);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error publishing message to queue {QueueName}", queueName);
+                _logger.LogError(ex, "Lỗi khi gửi message tới queue {QueueName}", queueName);
                 throw;
             }
         }
@@ -103,11 +103,11 @@ namespace backend_manage.Messages.RabbitMQ
                         onMessage(data);
 
                         _channel.BasicAck(ea.DeliveryTag, false);
-                        _logger.LogInformation("Message processed from queue {QueueName}: {Message}", queueName, message);
+                        _logger.LogInformation("Đã xử lý message từ queue {QueueName}: {Message}", queueName, message);
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogError(ex, "Error processing message from queue {QueueName}", queueName);
+                        _logger.LogError(ex, "Lỗi khi xử lý message từ queue {QueueName}", queueName);
                         _channel.BasicNack(ea.DeliveryTag, false, true);
                     }
                 };
@@ -120,11 +120,11 @@ namespace backend_manage.Messages.RabbitMQ
 
                 _consumers[queueName] = consumer;
 
-                _logger.LogInformation("Started consuming messages from queue: {QueueName}", queueName);
+                _logger.LogInformation("Bắt đầu nhận message từ queue: {QueueName}", queueName);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error subscribing to queue {QueueName}", queueName);
+                _logger.LogError(ex, "Lỗi khi đăng ký nhận message từ queue {QueueName}", queueName);
                 throw;
             }
         }
@@ -144,11 +144,11 @@ namespace backend_manage.Messages.RabbitMQ
                 _channel?.Dispose();
                 _connection?.Dispose();
 
-                _logger.LogInformation("RabbitMQ connections closed and disposed");
+                _logger.LogInformation("Đã đóng và giải phóng kết nối RabbitMQ");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error disposing RabbitMQ connections");
+                _logger.LogError(ex, "Lỗi khi đóng kết nối RabbitMQ");
             }
         }
     }
