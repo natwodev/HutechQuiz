@@ -32,6 +32,9 @@ namespace backend_manage.Messages.RabbitMQ
                 _connection = factory.CreateConnection();
                 _channel = _connection.CreateModel();
 
+                // Declare tất cả queues một lần khi khởi tạo
+                DeclareQueues();
+
                 _logger.LogInformation("Kết nối RabbitMQ thành công");
             }
             catch (Exception ex)
@@ -45,14 +48,6 @@ namespace backend_manage.Messages.RabbitMQ
         {
             try
             {
-                _channel.QueueDeclare(
-                    queue: queueName,
-                    durable: true,
-                    exclusive: false,
-                    autoDelete: false,
-                    arguments: null
-                );
-
                 var json = JsonConvert.SerializeObject(message);
                 var body = Encoding.UTF8.GetBytes(json);
 
@@ -80,17 +75,39 @@ namespace backend_manage.Messages.RabbitMQ
         {
             try
             {
-                _channel.QueueDeclare(
-                    queue: queueName,
-                    durable: true,
-                    exclusive: false,
-                    autoDelete: false,
-                    arguments: null
-                );
-
-                _channel.BasicQos(0, 1, false);
+                // Cấu hình riêng cho từng loại queue
+                var (prefetchCount, batchSize, timerInterval) = GetQueueConfig(queueName);
+                _channel.BasicQos(0, prefetchCount, false);
 
                 var consumer = new EventingBasicConsumer(_channel);
+                var messageBatch = new List<(T message, ulong deliveryTag)>();
+                var batchTimer = new Timer(_ => ProcessBatch(), null, timerInterval, timerInterval);
+
+                void ProcessBatch()
+                {
+                    if (messageBatch.Count > 0)
+                    {
+                        try
+                        {
+                            foreach (var (message, deliveryTag) in messageBatch)
+                            {
+                                onMessage(message);
+                                _channel.BasicAck(deliveryTag, false);
+                            }
+                            _logger.LogInformation("Đã xử lý batch {Count} messages từ queue {QueueName}", messageBatch.Count, queueName);
+                            messageBatch.Clear();
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError(ex, "Lỗi khi xử lý batch messages từ queue {QueueName}", queueName);
+                            foreach (var (_, deliveryTag) in messageBatch)
+                            {
+                                _channel.BasicNack(deliveryTag, false, true);
+                            }
+                            messageBatch.Clear();
+                        }
+                    }
+                }
 
                 consumer.Received += (sender, ea) =>
                 {
@@ -100,14 +117,17 @@ namespace backend_manage.Messages.RabbitMQ
                         var message = Encoding.UTF8.GetString(body);
                         var data = JsonConvert.DeserializeObject<T>(message);
 
-                        onMessage(data);
+                        messageBatch.Add((data, ea.DeliveryTag));
 
-                        _channel.BasicAck(ea.DeliveryTag, false);
-                        _logger.LogInformation("Đã xử lý message từ queue {QueueName}: {Message}", queueName, message);
+                        // Xử lý ngay nếu đủ batch size
+                        if (messageBatch.Count >= batchSize)
+                        {
+                            ProcessBatch();
+                        }
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogError(ex, "Lỗi khi xử lý message từ queue {QueueName}", queueName);
+                        _logger.LogError(ex, "Lỗi khi nhận message từ queue {QueueName}", queueName);
                         _channel.BasicNack(ea.DeliveryTag, false, true);
                     }
                 };
@@ -127,6 +147,37 @@ namespace backend_manage.Messages.RabbitMQ
                 _logger.LogError(ex, "Lỗi khi đăng ký nhận message từ queue {QueueName}", queueName);
                 throw;
             }
+        }
+
+        private void DeclareQueues()
+        {
+            var queues = new[]
+            {
+                "student_answer_saved_queue",
+                "exam_submission_queue"
+            };
+
+            foreach (var queueName in queues)
+            {
+                _channel.QueueDeclare(
+                    queue: queueName,
+                    durable: true,
+                    exclusive: false,
+                    autoDelete: false,
+                    arguments: null
+                );
+                _logger.LogInformation("Đã declare queue: {QueueName}", queueName);
+            }
+        }
+
+        private (int prefetchCount, int batchSize, TimeSpan timerInterval) GetQueueConfig(string queueName)
+        {
+            return queueName switch
+            {
+                "student_answer_saved_queue" => (20, 10, TimeSpan.FromSeconds(1)), // High throughput cho lưu đáp án
+                "exam_submission_queue" => (10, 5, TimeSpan.FromMilliseconds(500)), // Low latency cho nộp bài
+                _ => (15, 8, TimeSpan.FromSeconds(1)) // Default config
+            };
         }
 
         public void Dispose()
