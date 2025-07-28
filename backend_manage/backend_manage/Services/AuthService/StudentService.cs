@@ -444,6 +444,25 @@ public class StudentService : IStudentService
             studentExamSession.StudentAnswersString = emptyAnswers;
             studentExamSession.StartTime = DateTimeHelper.GetVietnamTime();
             studentExamSession.ShuffledExamPaperId = shuffledExamPaper.ShuffledExamPaperId;
+
+            // Lưu chuỗi đáp án rỗng vào Redis nếu Redis khả dụng
+            if (isRedisAvailable)
+            {
+                try
+                {
+                    var db = _redis.GetDatabase();
+                    string studentAnswerKey = $"student_answers:{studentCode}:{shuffledExamPaper.ShuffledExamPaperId}";
+                    _logger.LogInformation("Đang lưu chuỗi đáp án rỗng vào Redis với key: {StudentAnswerKey}", studentAnswerKey);
+                    
+                    await db.StringSetAsync(studentAnswerKey, emptyAnswers, TimeSpan.FromHours(6));
+                    _logger.LogInformation("Đã lưu chuỗi đáp án rỗng vào Redis thành công");
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Lỗi khi lưu chuỗi đáp án rỗng vào Redis");
+                }
+            }
+
             await _studentExamSessionRepository.UpdateAsync(studentExamSession);
             
             _logger.LogInformation("Đã gán đề thi cho sinh viên trong database");
