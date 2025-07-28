@@ -12,12 +12,12 @@ namespace backend_manage.Messages.RabbitMQ
         private readonly IConnection _connection;
         private readonly IModel _channel;
         private readonly ILogger<RabbitMqService> _logger;
-        private readonly Dictionary<string, object> _consumers;
+        private readonly Dictionary<string, List<object>> _consumers;
 
         public RabbitMqService(IConfiguration configuration, ILogger<RabbitMqService> logger)
         {
             _logger = logger;
-            _consumers = new Dictionary<string, object>();
+            _consumers = new Dictionary<string, List<object>>();
 
             try
             {
@@ -106,20 +106,20 @@ namespace backend_manage.Messages.RabbitMQ
                     {
                         try
                         {
-                            _logger.LogDebug("Đang xử lý message với delivery tag {DeliveryTag}", deliveryTag);
-                            
-                            // Xử lý message async
-                            await Task.Run(() => onMessage(message));
-                            
-                            if (_channel.IsOpen)
-                            {
-                                _channel.BasicAck(deliveryTag, false);
-                                _logger.LogDebug("Đã ack message với delivery tag {DeliveryTag}", deliveryTag);
-                            }
-                            else
-                            {
-                                _logger.LogWarning("Channel đã đóng, không thể ack message {DeliveryTag}", deliveryTag);
-                            }
+                        _logger.LogDebug("Đang xử lý message với delivery tag {DeliveryTag}", deliveryTag);
+                        
+                        // Xử lý message async
+                        await Task.Run(() => onMessage(message));
+                        
+                        if (_channel.IsOpen)
+                        {
+                            _channel.BasicAck(deliveryTag, false);
+                            _logger.LogDebug("Đã xác nhận message với delivery tag {DeliveryTag}", deliveryTag);
+                        }
+                        else
+                        {
+                            _logger.LogWarning("Kênh đã đóng, không thể xác nhận message {DeliveryTag}", deliveryTag);
+                        }
                         }
                         catch (Exception ex)
                         {
@@ -127,11 +127,11 @@ namespace backend_manage.Messages.RabbitMQ
                             if (_channel.IsOpen)
                             {
                                 _channel.BasicNack(deliveryTag, false, true);
-                                _logger.LogDebug("Đã nack message với delivery tag {DeliveryTag}", deliveryTag);
+                                _logger.LogDebug("Đã từ chối message với delivery tag {DeliveryTag}", deliveryTag);
                             }
                             else
                             {
-                                _logger.LogWarning("Channel đã đóng, không thể nack message {DeliveryTag}", deliveryTag);
+                                _logger.LogWarning("Kênh đã đóng, không thể từ chối message {DeliveryTag}", deliveryTag);
                             }
                         }
                     }
@@ -152,7 +152,7 @@ namespace backend_manage.Messages.RabbitMQ
                         lock (batchLock)
                         {
                             messageBatch.Add((data, ea.DeliveryTag));
-                            _logger.LogDebug("Đã thêm message vào batch. Batch size hiện tại: {BatchSize}/{MaxBatchSize}", messageBatch.Count, batchSize);
+                            _logger.LogDebug("Đã thêm message vào batch. Kích thước batch hiện tại: {BatchSize}/{MaxBatchSize}", messageBatch.Count, batchSize);
 
                             // Xử lý ngay khi có message - Không chờ batch
                             if (messageBatch.Count > 0)
@@ -168,11 +168,11 @@ namespace backend_manage.Messages.RabbitMQ
                         if (_channel.IsOpen)
                         {
                             _channel.BasicNack(ea.DeliveryTag, false, true);
-                            _logger.LogDebug("Đã nack message với delivery tag {DeliveryTag} do lỗi", ea.DeliveryTag);
+                            _logger.LogDebug("Đã từ chối message với delivery tag {DeliveryTag} do lỗi", ea.DeliveryTag);
                         }
                         else
                         {
-                            _logger.LogWarning("Channel đã đóng, không thể nack message {DeliveryTag}", ea.DeliveryTag);
+                            _logger.LogWarning("Kênh đã đóng, không thể từ chối message {DeliveryTag}", ea.DeliveryTag);
                         }
                     }
                 };
@@ -183,9 +183,13 @@ namespace backend_manage.Messages.RabbitMQ
                     consumer: consumer
                 );
 
-                _consumers[queueName] = consumer;
+                if (!_consumers.ContainsKey(queueName))
+                {
+                    _consumers[queueName] = new List<object>();
+                }
+                _consumers[queueName].Add(consumer);
 
-                _logger.LogInformation("Bắt đầu nhận message từ queue: {QueueName}", queueName);
+                _logger.LogInformation("Bắt đầu consumer thứ {ConsumerCount} cho queue: {QueueName}", _consumers[queueName].Count, queueName);
             }
             catch (Exception ex)
             {
@@ -211,7 +215,7 @@ namespace backend_manage.Messages.RabbitMQ
                     autoDelete: false,
                     arguments: null
                 );
-                _logger.LogInformation("Đã declare queue: {QueueName}", queueName);
+                _logger.LogInformation("Đã khai báo queue: {QueueName}", queueName);
             }
         }
 
@@ -219,9 +223,9 @@ namespace backend_manage.Messages.RabbitMQ
         {
             return queueName switch
             {
-                "student_answer_saved_queue" => (20, 1, TimeSpan.FromMilliseconds(100)), // Xử lý ngay khi có message
-                "exam_submission_queue" => (10, 1, TimeSpan.FromMilliseconds(50)), // Xử lý ngay lập tức
-                _ => (15, 1, TimeSpan.FromMilliseconds(100)) // Default config - Xử lý ngay
+                "student_answer_saved_queue" => (100, 1, TimeSpan.FromMilliseconds(50)), // Tối ưu cho 2000+ users
+                "exam_submission_queue" => (50, 1, TimeSpan.FromMilliseconds(25)), // Tối ưu cho 2000+ users
+                _ => (75, 1, TimeSpan.FromMilliseconds(50)) // Default config - Tối ưu cho high load
             };
         }
 
@@ -232,17 +236,17 @@ namespace backend_manage.Messages.RabbitMQ
                 if (_channel?.IsOpen ?? false)
                 {
                     var queueInfo = _channel.QueueDeclarePassive(queueName);
-                    _logger.LogInformation("Queue {QueueName} status: Messages={MessageCount}, Consumers={ConsumerCount}", 
-                        queueName, queueInfo.MessageCount, queueInfo.ConsumerCount);
+                                    _logger.LogInformation("Trạng thái queue {QueueName}: Messages={MessageCount}, Consumers={ConsumerCount}", 
+                    queueName, queueInfo.MessageCount, queueInfo.ConsumerCount);
                 }
                 else
                 {
-                    _logger.LogWarning("Channel không mở, không thể kiểm tra queue status");
+                    _logger.LogWarning("Kênh không mở, không thể kiểm tra trạng thái queue");
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Lỗi khi kiểm tra queue status cho {QueueName}", queueName);
+                _logger.LogError(ex, "Lỗi khi kiểm tra trạng thái queue cho {QueueName}", queueName);
             }
         }
 
@@ -250,6 +254,25 @@ namespace backend_manage.Messages.RabbitMQ
         {
             try
             {
+                // Đóng tất cả consumers
+                foreach (var queueConsumers in _consumers.Values)
+                {
+                    foreach (var consumer in queueConsumers)
+                    {
+                        if (consumer is EventingBasicConsumer basicConsumer)
+                        {
+                            try
+                            {
+                                _channel.BasicCancel(basicConsumer.ConsumerTag);
+                            }
+                            catch (Exception ex)
+                            {
+                                _logger.LogWarning(ex, "Lỗi khi đóng consumer");
+                            }
+                        }
+                    }
+                }
+                
                 if (_channel?.IsOpen ?? false)
                 {
                     _channel.Close();

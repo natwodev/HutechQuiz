@@ -109,7 +109,7 @@ public class StudentService : IStudentService
                 var examRoomId = session.ExamRoomId.Value;
                 var examSessionSubjectId = session.ExamSessionSubjectId;
                 var statusList = await GetStudentsByExamRoomAsync(examRoomId, examSessionSubjectId);
-                Console.WriteLine($"[SignalR] Gửi RoomStatusUpdated tới room_{examRoomId} với {statusList.Count()} sinh viên.");
+                _logger.LogInformation("[SignalR] Gửi RoomStatusUpdated tới room_{ExamRoomId} với {StudentCount} sinh viên.", examRoomId, statusList.Count());
                 await _hubContext.Clients.Group($"room_{examRoomId}")
                     .SendAsync("RoomStatusUpdated", statusList);
             }

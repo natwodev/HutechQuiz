@@ -12,6 +12,10 @@ namespace backend_manage.Messages.RabbitMQ
         private readonly ILogger<RabbitMqConsumer> _logger;
         private const string ExamSubmissionQueue = "exam_submission_queue";
         private const string StudentAnswerSavedQueue = "student_answer_saved_queue";
+        
+        // Cấu hình số lượng consumers cho xử lý song song
+        private const int StudentAnswerConsumerCount = 3; // 3 consumers cho lưu đáp án
+        private const int ExamSubmissionConsumerCount = 2; // 2 consumers cho nộp bài
 
         public RabbitMqConsumer(
             IRabbitMqService rabbitMQService,
@@ -25,11 +29,22 @@ namespace backend_manage.Messages.RabbitMQ
 
         public void StartConsuming()
         {
-            _rabbitMQService.Subscribe<ExamSubmissionMessage>(ExamSubmissionQueue, SaveExamResultToDatabase);
-            _logger.LogInformation("Bắt đầu nhận và lưu kết quả bài thi từ queue: {QueueName}", ExamSubmissionQueue);
+            // Tạo nhiều consumers cho student_answer_saved_queue
+            for (int i = 0; i < StudentAnswerConsumerCount; i++)
+            {
+                _rabbitMQService.Subscribe<StudentAnswerSavedMessage>(StudentAnswerSavedQueue, ProcessStudentAnswerSaved);
+                _logger.LogInformation("Bắt đầu consumer {ConsumerId} cho queue: {QueueName}", i + 1, StudentAnswerSavedQueue);
+            }
             
-            _rabbitMQService.Subscribe<StudentAnswerSavedMessage>(StudentAnswerSavedQueue, ProcessStudentAnswerSaved);
-            _logger.LogInformation("Bắt đầu nhận và xử lý lưu đáp án từ queue: {QueueName}", StudentAnswerSavedQueue);
+            // Tạo nhiều consumers cho exam_submission_queue
+            for (int i = 0; i < ExamSubmissionConsumerCount; i++)
+            {
+                _rabbitMQService.Subscribe<ExamSubmissionMessage>(ExamSubmissionQueue, SaveExamResultToDatabase);
+                _logger.LogInformation("Bắt đầu consumer {ConsumerId} cho queue: {QueueName}", i + 1, ExamSubmissionQueue);
+            }
+            
+            _logger.LogInformation("Đã khởi tạo {StudentAnswerCount} consumers cho lưu đáp án và {ExamSubmissionCount} consumers cho nộp bài", 
+                StudentAnswerConsumerCount, ExamSubmissionConsumerCount);
         }
 
         private void SaveExamResultToDatabase(ExamSubmissionMessage message)
