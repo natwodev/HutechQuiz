@@ -7,14 +7,14 @@ using RabbitMQ.Client.Events;
 
 namespace backend_manage.Messages.RabbitMQ
 {
-    public class RabbitMQService : IRabbitMQService, IDisposable
+    public class RabbitMqService : IRabbitMqService, IDisposable
     {
         private readonly IConnection _connection;
         private readonly IModel _channel;
-        private readonly ILogger<RabbitMQService> _logger;
+        private readonly ILogger<RabbitMqService> _logger;
         private readonly Dictionary<string, object> _consumers;
 
-        public RabbitMQService(IConfiguration configuration, ILogger<RabbitMQService> logger)
+        public RabbitMqService(IConfiguration configuration, ILogger<RabbitMqService> logger)
         {
             _logger = logger;
             _consumers = new Dictionary<string, object>();

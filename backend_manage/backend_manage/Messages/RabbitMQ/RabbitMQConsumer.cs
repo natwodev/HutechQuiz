@@ -5,17 +5,17 @@ using Microsoft.Extensions.Logging;
 
 namespace backend_manage.Messages.RabbitMQ
 {
-    public class RabbitMQConsumer
+    public class RabbitMqConsumer
     {
-        private readonly IRabbitMQService _rabbitMQService;
+        private readonly IRabbitMqService _rabbitMQService;
         private readonly IServiceScopeFactory _serviceScopeFactory;
-        private readonly ILogger<RabbitMQConsumer> _logger;
+        private readonly ILogger<RabbitMqConsumer> _logger;
         private const string ExamSubmissionQueue = "exam_submission_queue";
 
-        public RabbitMQConsumer(
-            IRabbitMQService rabbitMQService,
+        public RabbitMqConsumer(
+            IRabbitMqService rabbitMQService,
             IServiceScopeFactory serviceScopeFactory,
-            ILogger<RabbitMQConsumer> logger)
+            ILogger<RabbitMqConsumer> logger)
         {
             _rabbitMQService = rabbitMQService;
             _serviceScopeFactory = serviceScopeFactory;

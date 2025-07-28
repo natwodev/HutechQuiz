@@ -34,8 +34,8 @@ namespace backend_manage.Configurations
             services.AddScoped<IShuffledExamPaperService, ShuffledExamPaperService>();
             services.AddScoped<IExamRoomLecturerAssignmentService, ExamRoomLecturerAssignmentService>();
             services.AddScoped<ILecturerService, LecturerService>();
-            services.AddSingleton<IRabbitMQService, RabbitMQService>();
-            services.AddSingleton<RabbitMQConsumer>();
+            services.AddSingleton<IRabbitMqService, RabbitMqService>();
+            services.AddSingleton<RabbitMqConsumer>();
         }
     }
 }

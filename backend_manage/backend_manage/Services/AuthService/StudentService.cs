@@ -33,7 +33,7 @@ public class StudentService : IStudentService
     private readonly IHubContext<NotificationHub> _hubContext;
     private readonly IConnectionMultiplexer _redis;
     private readonly ILogger<StudentService> _logger;
-    private readonly IRabbitMQService _rabbitMQService;
+    private readonly IRabbitMqService _rabbitMQService;
 
     public StudentService(
         IRepository<Student> repository,
@@ -47,7 +47,7 @@ public class StudentService : IStudentService
         IHubContext<NotificationHub> hubContext,
         IConnectionMultiplexer redis,
         ILogger<StudentService> logger,
-        IRabbitMQService rabbitMQService)
+        IRabbitMqService rabbitMQService)
     {
         _repository = repository;
         _studentExamSessionRepository = studentExamSessionRepository;
