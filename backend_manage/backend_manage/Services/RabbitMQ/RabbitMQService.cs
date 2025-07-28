@@ -1,16 +1,16 @@
 using System;
 using System.Text;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
-using backend_manage.DTOs;
 using backend_manage.Data;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
-using System.Linq;
+using backend_manage.DTOs;
+using backend_manage.Entities;
 
 namespace backend_manage.Services.RabbitMQ
 {
@@ -22,31 +22,43 @@ namespace backend_manage.Services.RabbitMQ
         private readonly IServiceScopeFactory _serviceScopeFactory;
         private readonly ILogger<RabbitMQService> _logger;
 
-        public RabbitMQService(IConfiguration configuration, 
+        public RabbitMQService(
+            IConfiguration configuration,
             IServiceScopeFactory serviceScopeFactory,
             ILogger<RabbitMQService> logger)
         {
             _serviceScopeFactory = serviceScopeFactory;
             _logger = logger;
 
-            var factory = new ConnectionFactory
-            {
-                HostName = configuration["RabbitMQ:HostName"],
-                UserName = configuration["RabbitMQ:UserName"],
-                Password = configuration["RabbitMQ:Password"],
-                Port = int.Parse(configuration["RabbitMQ:Port"])
-            };
-
             try
             {
+                var factory = new ConnectionFactory
+                {
+                    HostName = configuration["RabbitMQ:HostName"] ?? "localhost",
+                    UserName = configuration["RabbitMQ:UserName"] ?? "guest",
+                    Password = configuration["RabbitMQ:Password"] ?? "guest",
+                    Port = configuration["RabbitMQ:Port"] != null ? int.Parse(configuration["RabbitMQ:Port"]) : 5672,
+                    DispatchConsumersAsync = true // Cho phép xử lý async
+                };
+
                 _connection = factory.CreateConnection();
                 _channel = _connection.CreateModel();
 
-                _channel.QueueDeclare(queue: _queueName,
-                                    durable: true,
-                                    exclusive: false,
-                                    autoDelete: false,
-                                    arguments: null);
+                // Đảm bảo queue tồn tại và có các thuộc tính phù hợp
+                _channel.QueueDeclare(
+                    queue: _queueName,
+                    durable: true, // Queue sẽ tồn tại sau khi restart
+                    exclusive: false, // Không chỉ connection này mới được sử dụng
+                    autoDelete: false, // Không tự động xóa khi không còn consumer
+                    arguments: null
+                );
+
+                // Đảm bảo chỉ xử lý một message tại một thời điểm
+                _channel.BasicQos(
+                    prefetchSize: 0, // Không giới hạn kích thước message
+                    prefetchCount: 1, // Chỉ lấy 1 message tại một thời điểm
+                    global: false
+                );
 
                 _logger.LogInformation("RabbitMQ connection established successfully");
             }
@@ -64,12 +76,18 @@ namespace backend_manage.Services.RabbitMQ
                 var json = JsonConvert.SerializeObject(message);
                 var body = Encoding.UTF8.GetBytes(json);
 
-                _channel.BasicPublish(exchange: "",
-                                    routingKey: _queueName,
-                                    basicProperties: null,
-                                    body: body);
+                var properties = _channel.CreateBasicProperties();
+                properties.Persistent = true; // Message sẽ được lưu vào disk
+                properties.ContentType = "application/json";
 
-                _logger.LogInformation("Message published to RabbitMQ successfully");
+                _channel.BasicPublish(
+                    exchange: "",
+                    routingKey: _queueName,
+                    basicProperties: properties,
+                    body: body
+                );
+
+                _logger.LogInformation("Message published to RabbitMQ successfully: {Message}", json);
             }
             catch (Exception ex)
             {
@@ -80,63 +98,89 @@ namespace backend_manage.Services.RabbitMQ
 
         public void StartConsuming()
         {
-            var consumer = new EventingBasicConsumer(_channel);
-            
-            consumer.Received += async (model, ea) =>
+            try
             {
-                try
+                var consumer = new AsyncEventingBasicConsumer(_channel);
+
+                consumer.Received += async (model, ea) =>
                 {
-                    var body = ea.Body.ToArray();
-                    var message = Encoding.UTF8.GetString(body);
-                    var examSubmission = JsonConvert.DeserializeObject<ExamSubmissionMessage>(message);
-
-                    using (var scope = _serviceScopeFactory.CreateScope())
+                    string message = null;
+                    try
                     {
-                        var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-                        
-                        var studentExamSession = await dbContext.StudentExamSessions
-                            .FirstOrDefaultAsync(x => x.StudentCode == examSubmission.StudentCode 
-                                && x.ShuffledExamPaperId == examSubmission.ShuffledExamPaperId);
+                        message = Encoding.UTF8.GetString(ea.Body.ToArray());
+                        var examSubmission = JsonConvert.DeserializeObject<ExamSubmissionMessage>(message);
 
-                        if (studentExamSession != null)
+                        using (var scope = _serviceScopeFactory.CreateScope())
                         {
-                            studentExamSession.Score = examSubmission.Score;
-                            studentExamSession.CorrectAnswers = examSubmission.CorrectAnswers;
-                            studentExamSession.TotalQuestions = examSubmission.TotalQuestions;
-                            studentExamSession.IsCompleted = examSubmission.IsCompleted;
-                            studentExamSession.EndTime = examSubmission.EndTime;
-                            studentExamSession.StudentAnswersString = examSubmission.StudentAnswersString;
+                            var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
-                            await dbContext.SaveChangesAsync();
-                            _logger.LogInformation("Exam submission processed successfully");
-                        }
-                        else
-                        {
-                            _logger.LogWarning("StudentExamSession not found for StudentCode: {StudentCode}, ShuffledExamPaperId: {ShuffledExamPaperId}",
-                                examSubmission.StudentCode, examSubmission.ShuffledExamPaperId);
+                            var studentExamSession = await dbContext.StudentExamSessions
+                                .FirstOrDefaultAsync(x => x.StudentCode == examSubmission.StudentCode
+                                    && x.ShuffledExamPaperId == examSubmission.ShuffledExamPaperId);
+
+                            if (studentExamSession != null)
+                            {
+                                studentExamSession.Score = examSubmission.Score;
+                                studentExamSession.CorrectAnswers = examSubmission.CorrectAnswers;
+                                studentExamSession.TotalQuestions = examSubmission.TotalQuestions;
+                                studentExamSession.IsCompleted = examSubmission.IsCompleted;
+                                studentExamSession.EndTime = examSubmission.EndTime;
+                                studentExamSession.StudentAnswersString = examSubmission.StudentAnswersString;
+
+                                await dbContext.SaveChangesAsync();
+                                _logger.LogInformation("Exam submission processed successfully: {Message}", message);
+                                
+                                // Xác nhận đã xử lý message thành công
+                                _channel.BasicAck(ea.DeliveryTag, false);
+                            }
+                            else
+                            {
+                                _logger.LogWarning(
+                                    "StudentExamSession not found. StudentCode: {StudentCode}, ShuffledExamPaperId: {ShuffledExamPaperId}",
+                                    examSubmission.StudentCode,
+                                    examSubmission.ShuffledExamPaperId
+                                );
+                                // Reject message và không requeue vì không tìm thấy session
+                                _channel.BasicReject(ea.DeliveryTag, false);
+                            }
                         }
                     }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Error processing message: {Message}", message);
+                        // Nếu xử lý lỗi, đẩy message vào queue để xử lý lại sau
+                        _channel.BasicNack(ea.DeliveryTag, false, true);
+                    }
+                };
 
-                    _channel.BasicAck(deliveryTag: ea.DeliveryTag, multiple: false);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Error processing exam submission message");
-                    _channel.BasicNack(deliveryTag: ea.DeliveryTag, multiple: false, requeue: true);
-                }
-            };
+                _channel.BasicConsume(
+                    queue: _queueName,
+                    autoAck: false, // Không tự động xác nhận, phải xác nhận thủ công
+                    consumer: consumer
+                );
 
-            _channel.BasicConsume(queue: _queueName,
-                                autoAck: false,
-                                consumer: consumer);
-
-            _logger.LogInformation("Started consuming messages from RabbitMQ");
+                _logger.LogInformation("Started consuming messages from RabbitMQ queue: {QueueName}", _queueName);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error starting RabbitMQ consumer");
+                throw;
+            }
         }
 
         public void Dispose()
         {
-            _channel?.Dispose();
-            _connection?.Dispose();
+            try
+            {
+                _channel?.Close();
+                _channel?.Dispose();
+                _connection?.Close();
+                _connection?.Dispose();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error disposing RabbitMQ connections");
+            }
         }
     }
 } 
