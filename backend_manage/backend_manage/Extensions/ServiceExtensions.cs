@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
+using StackExchange.Redis.Profiling;
 
 namespace backend_manage.Extensions
 {
@@ -84,11 +85,21 @@ namespace backend_manage.Extensions
             // Đăng ký xác thực JWT (được tách riêng)
             services.ConfigureJwt(configuration);
             
-            // Cấu hình Redis với logging
+            // Cấu hình Redis với logging và timeout cao cho high load
             services.AddSingleton<IConnectionMultiplexer>(sp => {
                 var logger = sp.GetRequiredService<ILogger<RedisLogger>>();
-                var connectionString = configuration["Redis:ConnectionString"] ?? "localhost:6379";
-                return sp.ConfigureRedis(connectionString, logger);
+                var options = ConfigurationOptions.Parse("localhost:6380");
+                options.ConnectRetry = 10;
+                options.ConnectTimeout = 30000;
+                options.SyncTimeout = 30000;
+                options.ResponseTimeout = 30000;
+                options.KeepAlive = 180;
+                options.AbortOnConnectFail = false;
+                options.ConnectRetry = 10;
+                options.ReconnectRetryPolicy = new ExponentialRetry(5);
+                options.ConfigCheckSeconds = 60;
+                logger.LogInformation("Đang kết nối Redis với cấu hình cho high load");
+                return ConnectionMultiplexer.Connect(options);
             });
 
             //đăng ký tạo policy phân quyền

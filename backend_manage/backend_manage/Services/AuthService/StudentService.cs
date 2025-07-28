@@ -383,17 +383,12 @@ public class StudentService : IStudentService
         ShuffledExamPaper shuffledExamPaper = null;
         ShuffledExamPaperDto paperDto = null;
 
-        // Kiểm tra Redis có hoạt động không
-        bool isRedisAvailable = _redis?.IsRedisConnected(_logger) ?? false;
-        if (!isRedisAvailable)
-        {
-            _logger.LogWarning("Redis không khả dụng, sẽ lấy đề thi từ database");
-        }
+        // Luôn thử dùng Redis, nếu lỗi sẽ fallback về database
         
         if (shuffledExamPaperId.HasValue)
         {
-            // Nếu Redis hoạt động thì thử lấy từ Redis
-            if (isRedisAvailable)
+            // Thử lấy từ Redis trước
+            try
             {
                 paperDto = await GetExamFromRedisAsync(shuffledExamPaperId.Value);
                 if (paperDto != null)
@@ -401,14 +396,18 @@ public class StudentService : IStudentService
                     return paperDto;
                 }
             }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Không thể lấy đề thi từ Redis, sẽ lấy từ database");
+            }
 
-            // Lấy từ database nếu Redis không khả dụng hoặc không lấy được từ Redis
+            // Lấy từ database nếu không lấy được từ Redis
             var (examPaper, examPaperDto) = await GetExamFromDatabaseAsync(shuffledExamPaperId.Value);
             shuffledExamPaper = examPaper;
             paperDto = examPaperDto;
 
-            // Cache lại vào Redis nếu Redis khả dụng
-            if (isRedisAvailable)
+            // Cache lại vào Redis
+            try
             {
                 try
                 {
@@ -472,8 +471,8 @@ public class StudentService : IStudentService
             _logger.LogInformation("Đã chọn ngẫu nhiên đề thi {ShuffledExamPaperId} cho sinh viên {StudentCode}", 
                 shuffledExamPaper.ShuffledExamPaperId, studentCode);
             
-            // Kiểm tra đề đã random có trên Redis chưa
-            if (isRedisAvailable)
+            // Thử lấy đề từ Redis trước
+            try
             {
                 paperDto = await GetExamFromRedisAsync(shuffledExamPaper.ShuffledExamPaperId);
                 if (paperDto == null)
@@ -484,9 +483,10 @@ public class StudentService : IStudentService
                     paperDto = examPaperDto;
                 }
             }
-            else
+            catch (Exception ex)
             {
-                // Nếu Redis không khả dụng, lấy từ database
+                _logger.LogWarning(ex, "Không thể lấy đề thi từ Redis, sẽ lấy từ database");
+                // Nếu Redis lỗi, lấy từ database
                 var (examPaper, examPaperDto) = await GetExamFromDatabaseAsync(shuffledExamPaper.ShuffledExamPaperId);
                 shuffledExamPaper = examPaper;
                 paperDto = examPaperDto;
@@ -505,8 +505,8 @@ public class StudentService : IStudentService
             
             _logger.LogInformation("Đã cập nhật thông tin đề thi và chuỗi đáp án rỗng cho sinh viên trong database");
             
-            // Cache vào Redis nếu Redis khả dụng
-            if (isRedisAvailable)
+            // Cache vào Redis
+            try
             {
                 try
                 {
@@ -668,14 +668,6 @@ public class StudentService : IStudentService
     {
         try
         {
-            // Kiểm tra Redis có khả dụng không
-            bool isRedisAvailable = _redis?.IsRedisConnected(_logger) ?? false;
-            if (!isRedisAvailable)
-            {
-                _logger.LogWarning("Redis không khả dụng khi nộp bài thi");
-                return (false, "Không thể kết nối đến Redis", null);
-            }
-
             var db = _redis.GetDatabase();
             
             // Lấy answer key từ Redis
@@ -789,14 +781,6 @@ public class StudentService : IStudentService
     {
         try
         {
-            // Kiểm tra Redis có khả dụng không
-            bool isRedisAvailable = _redis?.IsRedisConnected(_logger) ?? false;
-            if (!isRedisAvailable)
-            {
-                _logger.LogWarning("Redis không khả dụng khi lưu đáp án của sinh viên");
-                return (false, "Không thể kết nối đến Redis");
-            }
-
             var db = _redis.GetDatabase();
             string studentAnswerKey = $"student_answers:{studentCode}:{shuffledExamPaperId}";
 
