@@ -599,12 +599,30 @@ public class StudentService : IStudentService
                 studentCode, shuffledExamPaperId, index, answer
             );
 
-            // TODO: Implement logic to save answer
-            // 1. Lấy chuỗi đáp án hiện tại từ Redis
-            // 2. Cập nhật đáp án tại vị trí index
-            // 3. Lưu lại chuỗi đáp án mới
-            // 4. Cập nhật vào database
+            // Lấy chuỗi đáp án hiện tại từ Redis
+            var currentAnswers = await db.StringGetAsync(studentAnswerKey);
+            
+            if (!currentAnswers.HasValue)
+            {
+                _logger.LogError("Không tìm thấy chuỗi đáp án trong Redis với key: {Key}", studentAnswerKey);
+                return (false, "Không tìm thấy bài thi của sinh viên");
+            }
 
+            string answersString = currentAnswers.ToString();
+            string pattern = $"({index},)[^;]*;"; // Pattern để tìm (index,answer);
+            string replacement = $"({index},{answer});"; // Thay thế bằng đáp án mới
+
+            // Thực hiện thay thế đáp án tại index tương ứng
+            string newAnswersString = System.Text.RegularExpressions.Regex.Replace(
+                answersString,
+                pattern,
+                replacement
+            );
+
+            // Lưu lại vào Redis với thời gian tồn tại 6 giờ
+            await db.StringSetAsync(studentAnswerKey, newAnswersString, TimeSpan.FromHours(6));
+
+            _logger.LogInformation("Đã lưu đáp án thành công vào Redis. Chuỗi đáp án mới: {NewAnswers}", newAnswersString);
             return (true, "Đã lưu đáp án thành công");
         }
         catch (Exception ex)

@@ -18,11 +18,11 @@ namespace backend_manage.Controllers;
 public class StudentController : ControllerBase
 {
     private readonly IStudentService _studentService;
-    private readonly ILogger<StudentAnswerController> _logger;
+    private readonly ILogger<StudentController> _logger;
 
-    public StudentAnswerController(
+    public StudentController(
         IStudentService studentService,
-        ILogger<StudentAnswerController> logger)
+        ILogger<StudentController> logger)
     {
         _studentService = studentService;
         _logger = logger;
