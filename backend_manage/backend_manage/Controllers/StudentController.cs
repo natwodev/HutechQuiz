@@ -138,8 +138,12 @@ public class StudentController : ControllerBase
     {
         try
         {
+            var studentCode = User.FindFirst("studentCode")?.Value;
+            if (string.IsNullOrEmpty(studentCode))
+                return Unauthorized(new { message = "Token không hợp lệ!" });
+
             var result = await _studentService.SaveStudentAnswerAsync(
-                dto.StudentCode,
+                studentCode,
                 dto.ShuffledExamPaperId,
                 dto.Index,
                 dto.Answer

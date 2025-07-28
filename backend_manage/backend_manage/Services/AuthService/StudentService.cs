@@ -609,15 +609,34 @@ public class StudentService : IStudentService
             }
 
             string answersString = currentAnswers.ToString();
-            string pattern = $"({index},)[^;]*;"; // Pattern để tìm (index,answer);
-            string replacement = $"({index},{answer});"; // Thay thế bằng đáp án mới
 
-            // Thực hiện thay thế đáp án tại index tương ứng
-            string newAnswersString = System.Text.RegularExpressions.Regex.Replace(
-                answersString,
-                pattern,
-                replacement
-            );
+            // Tách chuỗi đáp án thành mảng
+            var answerParts = answersString.Split(';', StringSplitOptions.RemoveEmptyEntries);
+            var updatedParts = new List<string>();
+
+            // Cập nhật đáp án tại index tương ứng
+            bool found = false;
+            foreach (var part in answerParts)
+            {
+                if (part.StartsWith($"({index},"))
+                {
+                    updatedParts.Add($"({index},{answer})");
+                    found = true;
+                }
+                else if (!string.IsNullOrWhiteSpace(part))
+                {
+                    updatedParts.Add(part);
+                }
+            }
+
+            // Nếu không tìm thấy index, thêm mới
+            if (!found)
+            {
+                updatedParts.Add($"({index},{answer})");
+            }
+
+            // Tạo chuỗi đáp án mới
+            string newAnswersString = string.Join(";", updatedParts) + ";";
 
             // Lưu lại vào Redis với thời gian tồn tại 6 giờ
             await db.StringSetAsync(studentAnswerKey, newAnswersString, TimeSpan.FromHours(6));
