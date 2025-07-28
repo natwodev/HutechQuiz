@@ -18,10 +18,14 @@ namespace backend_manage.Controllers;
 public class StudentController : ControllerBase
 {
     private readonly IStudentService _studentService;
+    private readonly ILogger<StudentController> _logger;
 
-    public StudentController(IStudentService studentService)
+    public StudentController(
+        IStudentService studentService,
+        ILogger<StudentController> logger)
     {
         _studentService = studentService;
+        _logger = logger;
     }
 
 
@@ -127,6 +131,70 @@ public class StudentController : ControllerBase
             return NotFound(new { message });
 
         return Ok(new { message });
+    }
+
+     [HttpPost("save")]
+    public async Task<IActionResult> SaveAnswer([FromBody] SaveAnswerDto dto)
+    {
+        try
+        {
+            var studentCode = User.FindFirst("studentCode")?.Value;
+            if (string.IsNullOrEmpty(studentCode))
+                return Unauthorized(new { message = "Token không hợp lệ!" });
+
+            var result = await _studentService.SaveStudentAnswerAsync(
+                studentCode,
+                dto.ShuffledExamPaperId,
+                dto.Index,
+                dto.Answer
+            );
+
+            if (!result.Success)
+            {
+                return BadRequest(new { message = result.Message });
+            }
+
+            return Ok(new { message = result.Message });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Lỗi khi lưu đáp án của sinh viên");
+            return StatusCode(500, new { message = "Có lỗi xảy ra khi lưu đáp án" });
+        }
+    }
+
+    [HttpPost("submit-exam")]
+    [Authorize(Roles = "Student")]
+    public async Task<IActionResult> SubmitExam([FromBody] SubmitExamDto submitExamDto)
+    {
+        try
+        {
+            // Lấy studentCode từ token
+            var studentCode = User.FindFirst("studentCode")?.Value;
+            if (string.IsNullOrEmpty(studentCode))
+                return Unauthorized(new { message = "Token không hợp lệ!" });
+
+            // Gán studentCode từ token vào DTO
+            submitExamDto.StudentCode = studentCode;
+
+            var (success, message, score) = await _studentService.SubmitExamAsync(submitExamDto);
+
+            if (!success)
+            {
+                return BadRequest(new { message });
+            }
+
+            return Ok(new { 
+                message,
+                score,
+                submittedAt = DateTimeHelper.GetVietnamTime()
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Lỗi khi nộp bài thi");
+            return StatusCode(500, new { message = "Có lỗi xảy ra khi nộp bài" });
+        }
     }
 
 }

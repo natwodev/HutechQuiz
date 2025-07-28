@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel.DataAnnotations;
 
 namespace backend_manage.DTOs
 {
@@ -21,5 +22,25 @@ namespace backend_manage.DTOs
     {
         public string Content { get; set; }
         public bool IsCorrect { get; set; }
+    }
+
+    public class SubmitExamDto
+    {
+        public string StudentCode { get; set; }
+        public int ShuffledExamPaperId { get; set; }
+        public List<SaveAnswerDto> SaveAnswerDtos { get; set; }
+    }
+
+
+    public class SaveAnswerDto
+    {
+        [Required]
+        public int ShuffledExamPaperId { get; set; }
+
+        [Required]
+        public int Index { get; set; }
+
+        [Required]
+        public string Answer { get; set; }
     }
 } 
