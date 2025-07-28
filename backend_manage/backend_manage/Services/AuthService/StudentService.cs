@@ -659,7 +659,7 @@ public class StudentService : IStudentService
         return (true, "Cập nhật trạng thái đăng nhập thành công.");
     }
 
-    public async Task<(bool Success, string Message, double? Score)> SubmitExamAsync(SubmitExamDto submitExamDto)
+    public async Task<(bool Success, string Message, double? Score)> SubmitExamAsync(string StudentCode,SubmitExamDto submitExamDto)
     {
         try
         {
@@ -684,7 +684,7 @@ public class StudentService : IStudentService
             }
 
             // Lấy student answers từ Redis
-            string studentAnswerKey = $"student_answers:{submitExamDto.StudentCode}:{submitExamDto.ShuffledExamPaperId}";
+            string studentAnswerKey = $"student_answers:{StudentCode}:{submitExamDto.ShuffledExamPaperId}";
             var studentAnswers = await db.StringGetAsync(studentAnswerKey);
             
             if (!studentAnswers.HasValue)
@@ -715,7 +715,7 @@ public class StudentService : IStudentService
 
             // Tìm StudentExamSession
             var studentExamSession = await _studentExamSessionRepository.GetQueryable()
-                .FirstOrDefaultAsync(x => x.StudentCode == submitExamDto.StudentCode 
+                .FirstOrDefaultAsync(x => x.StudentCode == StudentCode 
                     && x.ShuffledExamPaperId == submitExamDto.ShuffledExamPaperId);
 
             if (studentExamSession == null)
@@ -729,7 +729,7 @@ public class StudentService : IStudentService
                 _logger.LogWarning("Sinh viên đã nộp bài thi này rồi");
                 return (false, "Bài thi đã được nộp trước đó", null);
             }
-
+            
             // Tính điểm
             string correctAnswers = answerKeyValue.ToString();
 
@@ -754,7 +754,7 @@ public class StudentService : IStudentService
             // Cập nhật database
             studentExamSession.Score = score;
             studentExamSession.IsCompleted = true;
-            studentExamSession.CompletedTime = DateTimeHelper.GetVietnamTime();
+            studentExamSession.EndTime = DateTimeHelper.GetVietnamTime();
             studentExamSession.StudentAnswersString = newAnswersString;
             await _studentExamSessionRepository.UpdateAsync(studentExamSession);
 
@@ -763,13 +763,13 @@ public class StudentService : IStudentService
 
             _logger.LogInformation(
                 "Sinh viên {StudentCode} đã nộp bài thi {ShuffledExamPaperId} với điểm {Score}", 
-                submitExamDto.StudentCode, submitExamDto.ShuffledExamPaperId, score);
+                StudentCode, submitExamDto.ShuffledExamPaperId, score);
 
             return (true, "Nộp bài thành công", score);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Lỗi khi nộp bài thi của sinh viên {StudentCode}", submitExamDto.StudentCode);
+            _logger.LogError(ex, "Lỗi khi nộp bài thi của sinh viên {StudentCode}", StudentCode);
             return (false, $"Lỗi khi nộp bài: {ex.Message}", null);
         }
     }

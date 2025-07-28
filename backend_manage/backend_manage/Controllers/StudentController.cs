@@ -9,6 +9,7 @@ using OfficeOpenXml;
 using System.IO;
 using System.Linq;
 using System.Security.Claims;
+using backend_manage.Hubs;
 
 namespace backend_manage.Controllers;
 
@@ -173,11 +174,9 @@ public class StudentController : ControllerBase
             var studentCode = User.FindFirst("studentCode")?.Value;
             if (string.IsNullOrEmpty(studentCode))
                 return Unauthorized(new { message = "Token không hợp lệ!" });
+            
 
-            // Gán studentCode từ token vào DTO
-            submitExamDto.StudentCode = studentCode;
-
-            var (success, message, score) = await _studentService.SubmitExamAsync(submitExamDto);
+            var (success, message, score) = await _studentService.SubmitExamAsync(studentCode,submitExamDto);
 
             if (!success)
             {

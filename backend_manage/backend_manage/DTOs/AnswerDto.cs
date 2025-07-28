@@ -26,7 +26,6 @@ namespace backend_manage.DTOs
 
     public class SubmitExamDto
     {
-        public string StudentCode { get; set; }
         public int ShuffledExamPaperId { get; set; }
         public List<SaveAnswerDto> SaveAnswerDtos { get; set; }
     }
