@@ -170,7 +170,7 @@ namespace backend_manage.Messages.RabbitMQ
             }
         }
 
-        private (int prefetchCount, int batchSize, TimeSpan timerInterval) GetQueueConfig(string queueName)
+        private (ushort prefetchCount, int batchSize, TimeSpan timerInterval) GetQueueConfig(string queueName)
         {
             return queueName switch
             {
