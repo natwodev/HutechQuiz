@@ -849,6 +849,18 @@ public class StudentService : IStudentService
             await db.StringSetAsync(studentAnswerKey, newAnswersString, TimeSpan.FromHours(6));
 
             _logger.LogInformation("Đã lưu đáp án thành công vào Redis. Chuỗi đáp án mới: {NewAnswers}", newAnswersString);
+            
+            // Gửi message qua RabbitMQ
+            var answerSavedMessage = new backend_manage.Messages.RabbitMQ.StudentAnswerSavedMessage
+            {
+                StudentCode = studentCode,
+                ShuffledExamPaperId = shuffledExamPaperId,
+                Index = index,
+                Answer = answer,
+                SavedAt = backend_manage.Hubs.DateTimeHelper.GetVietnamTime()
+            };
+            _rabbitMQService.PublishMessage("student_answer_saved_queue", answerSavedMessage);
+            
             return (true, "Đã lưu đáp án thành công");
         }
         catch (Exception ex)
