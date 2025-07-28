@@ -30,7 +30,7 @@ public class MaintenanceMiddleware
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error while checking maintenance mode from Redis");
+            _logger.LogError(ex, "Lỗi khi kiểm tra chế độ bảo trì từ Redis");
         }
 
         if (maintenanceFlag == "true" && 

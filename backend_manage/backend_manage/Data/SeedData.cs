@@ -9,6 +9,7 @@ namespace backend_manage.Data
     {
         public static async Task InitializeAsync(IServiceProvider serviceProvider)
         {
+            var logger = serviceProvider.GetRequiredService<ILogger<ApplicationDbContext>>();
             var roleManager = serviceProvider.GetRequiredService<RoleManager<IdentityRole>>();
             var userManager = serviceProvider.GetRequiredService<UserManager<ApplicationUser>>();
             var context = serviceProvider.GetRequiredService<ApplicationDbContext>();
@@ -53,16 +54,16 @@ namespace backend_manage.Data
                 if (result.Succeeded)
                 {
                     await userManager.AddToRoleAsync(user, "Admin");
-                    Console.WriteLine("✅ Admin user đã được tạo.");
+                    logger.LogInformation("✅ Admin user đã được tạo.");
                 }
                 else
                 {
-                    Console.WriteLine("❌ Lỗi tạo user admin: " + string.Join(", ", result.Errors.Select(e => e.Description)));
+                    logger.LogError("❌ Lỗi tạo user admin: {Errors}", string.Join(", ", result.Errors.Select(e => e.Description)));
                 }
             }
             else
             {
-                Console.WriteLine("ℹ️ Admin user đã tồn tại.");
+                logger.LogInformation("ℹ️ Admin user đã tồn tại.");
             }
             string customerEmail = "2280602015";
             string customerPassword = "2280602015"; 
@@ -83,16 +84,16 @@ namespace backend_manage.Data
                 if (result.Succeeded)
                 {
                     await userManager.AddToRoleAsync(user, "Student");
-                    Console.WriteLine("✅ Customer user đã được tạo.");
+                    logger.LogInformation("✅ Customer user đã được tạo.");
                 }
                 else
                 {
-                    Console.WriteLine("❌ Lỗi tạo user Customer: " + string.Join(", ", result.Errors.Select(e => e.Description)));
+                    logger.LogError("❌ Lỗi tạo user Customer: {Errors}", string.Join(", ", result.Errors.Select(e => e.Description)));
                 }
             }
             else
             {
-                Console.WriteLine("ℹ️ Customer user đã tồn tại.");
+                logger.LogInformation("ℹ️ Customer user đã tồn tại.");
             }
 
             // Seed các user cho các role còn thiếu
@@ -119,16 +120,16 @@ namespace backend_manage.Data
                     if (result.Succeeded)
                     {
                         await userManager.AddToRoleAsync(user, item.Role);
-                        Console.WriteLine($"✅ User {item.Username} ({item.Role}) đã được tạo.");
+                        logger.LogInformation("✅ User {Username} ({Role}) đã được tạo.", item.Username, item.Role);
                     }
                     else
                     {
-                        Console.WriteLine($"❌ Lỗi tạo user {item.Username}: " + string.Join(", ", result.Errors.Select(e => e.Description)));
+                        logger.LogError("❌ Lỗi tạo user {Username}: {Errors}", item.Username, string.Join(", ", result.Errors.Select(e => e.Description)));
                     }
                 }
                 else
                 {
-                    Console.WriteLine($"ℹ️ User {item.Username} đã tồn tại.");
+                    logger.LogInformation("ℹ️ User {Username} đã tồn tại.", item.Username);
                 }
             }
 
@@ -163,7 +164,7 @@ namespace backend_manage.Data
                 };
                 context.Departments.AddRange(departments);
                 await context.SaveChangesAsync();
-                Console.WriteLine("✅ Đã seed 2 khoa CNTT và Kinh tế.");
+                logger.LogInformation("✅ Đã seed 2 khoa CNTT và Kinh tế.");
             }
 
             // Seed 2 môn học nếu chưa có
@@ -199,7 +200,7 @@ namespace backend_manage.Data
                 };
                 context.Subjects.AddRange(subjects);
                 await context.SaveChangesAsync();
-                Console.WriteLine("✅ Đã seed 2 môn học: Lập trình C# và Kinh tế vi mô.");
+                logger.LogInformation("✅ Đã seed 2 môn học: Lập trình C# và Kinh tế vi mô.");
             }
 
             // Seed AcademicYear nếu chưa có
@@ -218,7 +219,7 @@ namespace backend_manage.Data
                 };
                 context.AcademicYears.Add(academicYear);
                 await context.SaveChangesAsync();
-                Console.WriteLine("✅ Đã seed năm học 2025-2026.");
+                logger.LogInformation("✅ Đã seed năm học 2025-2026.");
 
                 // Seed 1 học kỳ cho năm học này
                 var semester = new Semester
@@ -234,7 +235,7 @@ namespace backend_manage.Data
                 };
                 context.Semesters.Add(semester);
                 await context.SaveChangesAsync();
-                Console.WriteLine("✅ Đã seed học kỳ 1A cho năm học 2025-2026.");
+                logger.LogInformation("✅ Đã seed học kỳ 1A cho năm học 2025-2026.");
 
                 // Seed 1 ExamBatch cho học kỳ này
                 var examBatch = new ExamBatch
@@ -255,7 +256,7 @@ namespace backend_manage.Data
                 };
                 context.ExamBatches.Add(examBatch);
                 await context.SaveChangesAsync();
-                Console.WriteLine("✅ Đã seed đợt thi cuối kỳ 1A cho học kỳ 1A.");
+                logger.LogInformation("✅ Đã seed đợt thi cuối kỳ 1A cho học kỳ 1A.");
 
                 // Seed 1 ExamBatchDetail cho ExamBatch này
                 var examBatchDetail = new ExamBatchDetail
@@ -271,7 +272,7 @@ namespace backend_manage.Data
                 };
                 context.ExamBatchDetails.Add(examBatchDetail);
                 await context.SaveChangesAsync();
-                Console.WriteLine("✅ Đã seed ExamBatchDetail 'Lần 1' cho đợt thi cuối kỳ 1A.");
+                logger.LogInformation("✅ Đã seed ExamBatchDetail 'Lần 1' cho đợt thi cuối kỳ 1A.");
 
                 // Seed 1 ExamSession cho ExamBatchDetail này
                 var examSession = new ExamSession
@@ -291,7 +292,7 @@ namespace backend_manage.Data
                 };
                 context.ExamSessions.Add(examSession);
                 await context.SaveChangesAsync();
-                Console.WriteLine("✅ Đã seed ExamSession 'Ca thi 1' cho ExamBatchDetail 'Lần 1'.");
+                logger.LogInformation("✅ Đã seed ExamSession 'Ca thi 1' cho ExamBatchDetail 'Lần 1'.");
 
                 // Seed 2 ExamSessionDepartment cho ExamSession này (CNTT, KINHTE)
                 var examSessionDepartments = new[]
@@ -321,7 +322,7 @@ namespace backend_manage.Data
                 };
                 context.ExamSessionDepartments.AddRange(examSessionDepartments);
                 await context.SaveChangesAsync();
-                Console.WriteLine("✅ Đã seed ExamSessionDepartment cho 2 khoa CNTT và KINHTE.");
+                logger.LogInformation("✅ Đã seed ExamSessionDepartment cho 2 khoa CNTT và KINHTE.");
 
                 // Seed ExamSessionSubject cho mỗi ExamSessionDepartment với môn học tương ứng
                 var cnttSessionDept = examSessionDepartments.FirstOrDefault(x => x.DepartmentId == "CNTT");
@@ -367,12 +368,12 @@ namespace backend_manage.Data
                     };
                     context.ExamSessionSubjects.AddRange(examSessionSubjects);
                     await context.SaveChangesAsync();
-                    Console.WriteLine("✅ Đã seed ExamSessionSubject cho 2 khoa với 2 môn học tương ứng.");
+                    logger.LogInformation("✅ Đã seed ExamSessionSubject cho 2 khoa với 2 môn học tương ứng.");
                 }
             }
             else
             {
-                Console.WriteLine("ℹ️ Đã có dữ liệu năm học.");
+                logger.LogInformation("ℹ️ Đã có dữ liệu năm học.");
             }
 
             // Seed 4 phòng thi nếu chưa có
@@ -388,7 +389,7 @@ namespace backend_manage.Data
                 };
                 context.ExamRooms.AddRange(rooms);
                 await context.SaveChangesAsync();
-                Console.WriteLine("✅ Đã seed 4 phòng thi: A101, A102, B201, B202.");
+                logger.LogInformation("✅ Đã seed 4 phòng thi: A101, A102, B201, B202.");
             }
         }
     }

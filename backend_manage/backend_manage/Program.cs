@@ -2,6 +2,9 @@ using backend_manage.Extensions;
 using OfficeOpenXml;
 using Serilog;
 using Microsoft.EntityFrameworkCore;
+using backend_manage.Messages.RabbitMQ;
+
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -48,6 +51,10 @@ try
     app.ConfigureMiddleware();
 
     ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+
+    // Start RabbitMQ consumer
+    var rabbitMQConsumer = app.Services.GetRequiredService<RabbitMqConsumer>();
+    rabbitMQConsumer.StartConsuming();
 
     app.Run();
 }

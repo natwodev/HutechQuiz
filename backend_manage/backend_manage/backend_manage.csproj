@@ -30,6 +30,7 @@
         <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="9.0.2" />
         <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="8.13.0" />
         <PackageReference Include="QuestPDF" Version="2025.1.7" />
+        <PackageReference Include="RabbitMQ.Client" Version="6.8.1" />
         <PackageReference Include="Serilog.AspNetCore" Version="9.0.0" />
         <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
         <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
@@ -64,6 +65,15 @@
       <_ContentIncludedByDefault Remove="wwwroot\EPZ\CNPM003\9f92ab68-54e9-4efe-af23-6f7f59e68373\9f92ab68-54e9-4efe-af23-6f7f59e68373.xml" />
       <_ContentIncludedByDefault Remove="wwwroot\EPZ\CNPM004\9f92ab68-54e9-4efe-af23-6f7f59e68373\9f92ab68-54e9-4efe-af23-6f7f59e68373.xml" />
       <_ContentIncludedByDefault Remove="wwwroot\EPZ\CNPM002\9f92ab68-54e9-4efe-af23-6f7f59e68373\9f92ab68-54e9-4efe-af23-6f7f59e68373.xml" />
+      <_ContentIncludedByDefault Remove="wwwroot\EPZ\CNPMNN1\31371555-afe8-45ec-b629-7450801efba7\31371555-afe8-45ec-b629-7450801efba7.xml" />
+      <_ContentIncludedByDefault Remove="wwwroot\EPZ\CNPMNN1\31371555-afe8-45ec-b629-7450801efba7\Data\Audio\4ab18c17-8193-43ce-9b4a-5141ae1272ff.mp3" />
+      <_ContentIncludedByDefault Remove="wwwroot\EPZ\CNPMNN1\31371555-afe8-45ec-b629-7450801efba7\Data\Audio\6529febd-3097-4673-bb39-792b73ce8dc9.mp3" />
+      <_ContentIncludedByDefault Remove="wwwroot\EPZ\CNPMNN9\31371555-afe8-45ec-b629-7450801efba7\31371555-afe8-45ec-b629-7450801efba7.xml" />
+      <_ContentIncludedByDefault Remove="wwwroot\EPZ\CNPMNN9\31371555-afe8-45ec-b629-7450801efba7\Data\Audio\4ab18c17-8193-43ce-9b4a-5141ae1272ff.mp3" />
+      <_ContentIncludedByDefault Remove="wwwroot\EPZ\CNPMNN9\31371555-afe8-45ec-b629-7450801efba7\Data\Audio\6529febd-3097-4673-bb39-792b73ce8dc9.mp3" />
+      <_ContentIncludedByDefault Remove="wwwroot\EPZ\CNPMNN11\31371555-afe8-45ec-b629-7450801efba7\31371555-afe8-45ec-b629-7450801efba7.xml" />
+      <_ContentIncludedByDefault Remove="wwwroot\EPZ\CNPMNN11\31371555-afe8-45ec-b629-7450801efba7\Data\Audio\4ab18c17-8193-43ce-9b4a-5141ae1272ff.mp3" />
+      <_ContentIncludedByDefault Remove="wwwroot\EPZ\CNPMNN11\31371555-afe8-45ec-b629-7450801efba7\Data\Audio\6529febd-3097-4673-bb39-792b73ce8dc9.mp3" />
     </ItemGroup>
 
     <ItemGroup>

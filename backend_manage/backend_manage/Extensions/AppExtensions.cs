@@ -27,7 +27,7 @@ namespace backend_manage.Extensions
 
             // app.UseStaticFiles(); // Bật nếu có phục vụ file tĩnh (ảnh, js...)
 
-            app.UseIpRateLimiting();
+            // app.UseIpRateLimiting(); // Tắt rate limiting
 
             app.MapControllers();
 
@@ -38,9 +38,8 @@ namespace backend_manage.Extensions
         {
             try
             {
-                var db = redis.GetDatabase();
-                // Thử ping để kiểm tra kết nối thực sự
-                return db.Ping().TotalSeconds < 1;
+                // Chỉ kiểm tra trạng thái connection, không ping
+                return redis.IsConnected;
             }
             catch (Exception ex)
             {

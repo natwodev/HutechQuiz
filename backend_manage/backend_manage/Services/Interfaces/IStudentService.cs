@@ -20,4 +20,6 @@ public interface IStudentService
     Task<(bool Success, string Message)> AvtiveLoginAsync(string studentCode, bool isLogin);
     Task<bool> AddExtraMinutesAsync(string studentCode, int studentExamSessionId, int extraMinutes, string? reasonForExtra);
     Task<(bool Success, string Message)> SaveStudentAnswerAsync(string studentCode, int shuffledExamPaperId, int index, string answer);
+
+    Task<(bool Success, string Message, double? Score)> SubmitExamAsync(string StudentCode, SubmitExamDto submitExamDto);
 } 
