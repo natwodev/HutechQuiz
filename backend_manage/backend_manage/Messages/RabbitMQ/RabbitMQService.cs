@@ -86,6 +86,8 @@ namespace backend_manage.Messages.RabbitMQ
 
                 async Task ProcessBatchAsync()
                 {
+                    List<(T message, ulong deliveryTag)> batchToProcess;
+                    
                     lock (batchLock)
                     {
                         if (messageBatch.Count == 0)
@@ -94,7 +96,7 @@ namespace backend_manage.Messages.RabbitMQ
                             return;
                         }
 
-                        var batchToProcess = new List<(T message, ulong deliveryTag)>(messageBatch);
+                        batchToProcess = new List<(T message, ulong deliveryTag)>(messageBatch);
                         messageBatch.Clear();
                         _logger.LogInformation("Bắt đầu xử lý batch {Count} messages từ queue {QueueName}", batchToProcess.Count, queueName);
                     }
