@@ -49,6 +49,10 @@ try
 
     ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
 
+    // Start RabbitMQ consumer
+    var rabbitMQService = app.Services.GetRequiredService<IRabbitMQService>();
+    rabbitMQService.StartConsuming();
+
     app.Run();
 }
 catch (Exception ex)

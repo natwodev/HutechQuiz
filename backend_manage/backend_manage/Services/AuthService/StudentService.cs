@@ -15,6 +15,7 @@ using AutoMapper;
 using backend_manage.Extensions;
 using Microsoft.AspNetCore.SignalR;
 using StackExchange.Redis;
+using backend_manage.Messages;
 
 namespace backend_manage.Services.AuthService;
 
@@ -31,6 +32,7 @@ public class StudentService : IStudentService
     private readonly IHubContext<NotificationHub> _hubContext;
     private readonly IConnectionMultiplexer _redis;
     private readonly ILogger<StudentService> _logger;
+    private readonly IRabbitMQService _rabbitMQService;
 
     public StudentService(
         IRepository<Student> repository,
@@ -43,7 +45,8 @@ public class StudentService : IStudentService
         IMapper mapper,
         IHubContext<NotificationHub> hubContext,
         IConnectionMultiplexer redis,
-        ILogger<StudentService> logger)
+        ILogger<StudentService> logger,
+        IRabbitMQService rabbitMQService)
     {
         _repository = repository;
         _studentExamSessionRepository = studentExamSessionRepository;
@@ -56,6 +59,7 @@ public class StudentService : IStudentService
         _hubContext = hubContext;
         _redis = redis;
         _logger = logger;
+        _rabbitMQService = rabbitMQService;
     }
 
     public async Task<StudentAuthResultDto> LoginAsync(string studentCode1, string studentCode2)
@@ -751,15 +755,21 @@ public class StudentService : IStudentService
 
             double score = (double)correctCount / totalQuestions * 10;
 
-            // Cập nhật database
-            studentExamSession.Score = score;
-            studentExamSession.IsCompleted = true;
-            studentExamSession.EndTime = DateTimeHelper.GetVietnamTime();
-            studentExamSession.StudentAnswersString = newAnswersString;
-            await _studentExamSessionRepository.UpdateAsync(studentExamSession);
+            // Map và gửi message qua RabbitMQ
+            var examSubmissionMessage = _mapper.Map<ExamSubmissionMessage>((
+                StudentCode: StudentCode,
+                ShuffledExamPaperId: submitExamDto.ShuffledExamPaperId,
+                Score: score,
+                CorrectAnswers: correctCount,
+                TotalQuestions: totalQuestions,
+                EndTime: DateTimeHelper.GetVietnamTime(),
+                StudentAnswersString: newAnswersString
+            ));
+
+            _rabbitMQService.PublishExamSubmission(examSubmissionMessage);
 
             // Xóa student answers khỏi Redis vì đã nộp bài
-            await db.KeyDeleteAsync(studentAnswerKey);
+            // await db.KeyDeleteAsync(studentAnswerKey); tạm thời giữ lại để debug
 
             _logger.LogInformation(
                 "Sinh viên {StudentCode} đã nộp bài thi {ShuffledExamPaperId} với điểm {Score}", 

@@ -46,8 +46,8 @@ public class StudentExamSession : BaseEntity
 
     // Số câu trả lời đúng của sinh viên
     public int? CorrectAnswers { get; set; }
-
-    // Tổng số câu hỏi trong đề thi
+    
+    // Tổng số câu hỏi trong bài thi
     public int? TotalQuestions { get; set; }
 
     // Điểm số của sinh viên (tính theo phần trăm hoặc thang điểm 10)
