@@ -1,6 +1,8 @@
 using AutoMapper;
 using backend_manage.DTOs;
 using backend_manage.Entities;
+using backend_manage.Messages;
+
 
 namespace backend_manage.Mappings;
 public class MappingProfile : Profile
@@ -167,8 +169,7 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.DepartmentName, opt => opt.MapFrom(src => src.Department != null ? src.Department.DepartmentName : null));
 
         // Mapping cho ExamSubmissionMessage
-        CreateMap<(string StudentCode, int ShuffledExamPaperId, double Score, int CorrectAnswers, 
-            int TotalQuestions, DateTime EndTime, string StudentAnswersString), ExamSubmissionMessage>()
+        CreateMap<(string StudentCode, int ShuffledExamPaperId, double Score, int CorrectAnswers,  int TotalQuestions, DateTime EndTime, string StudentAnswersString), ExamSubmissionMessage>()
             .ForMember(dest => dest.StudentCode, opt => opt.MapFrom(src => src.StudentCode))
             .ForMember(dest => dest.ShuffledExamPaperId, opt => opt.MapFrom(src => src.ShuffledExamPaperId))
             .ForMember(dest => dest.Score, opt => opt.MapFrom(src => src.Score))

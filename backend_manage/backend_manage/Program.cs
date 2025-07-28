@@ -2,6 +2,9 @@ using backend_manage.Extensions;
 using OfficeOpenXml;
 using Serilog;
 using Microsoft.EntityFrameworkCore;
+using backend_manage.Messages.RabbitMQ;
+
+
 
 var builder = WebApplication.CreateBuilder(args);
 

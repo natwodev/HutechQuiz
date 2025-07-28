@@ -16,6 +16,7 @@ using backend_manage.Extensions;
 using Microsoft.AspNetCore.SignalR;
 using StackExchange.Redis;
 using backend_manage.Messages;
+using backend_manage.Messages.RabbitMQ;
 
 namespace backend_manage.Services.AuthService;
 
