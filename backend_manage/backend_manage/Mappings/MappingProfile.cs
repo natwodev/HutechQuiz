@@ -100,7 +100,10 @@ public class MappingProfile : Profile
 
         // ShuffledExamPaper & Detail
         CreateMap<ShuffledExamPaper, ShuffledExamPaperDto>()
-            .ForMember(dest => dest.Details, opt => opt.MapFrom(src => src.ShuffledExamPaperDetails));
+            .ForMember(dest => dest.Details, opt => opt.MapFrom(src => src.ShuffledExamPaperDetails))
+            .ForMember(dest => dest.SubjectName, opt => opt.MapFrom(src => src.Subject.SubjectName))
+            .ForMember(dest => dest.SubjectCode, opt => opt.MapFrom(src => src.Subject.SubjectCore))
+            .ForMember(dest => dest.ExamSessionSubjectId, opt => opt.MapFrom(src => (int?)null));
         CreateMap<ShuffledExamPaperDetail, ShuffledExamPaperDetailDto>()
             .ForMember(dest => dest.QuestionContent, opt => opt.MapFrom(src => src.OriginalExamPaperDetail.QuestionContent))
             .ForMember(dest => dest.Answer1, opt => opt.Ignore())

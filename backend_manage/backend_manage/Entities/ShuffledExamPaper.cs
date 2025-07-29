@@ -26,11 +26,6 @@ public class ShuffledExamPaper : BaseEntity  //đề thi đã được hoán v�
     [ForeignKey("OriginalExamPaper")]
     public int OriginalExamPaperId { get; set; }
     
-    // Khóa ngoại liên kết với bảng ExamSessionSubject
-    // Xác định đề thi hoán vị thuộc môn thi nào trong ca thi nào
-    [ForeignKey("ExamSessionSubject")]
-    public int? ExamSessionSubjectId { get; set; }
-    
     // Khóa ngoại liên kết với bảng Subject
     // Xác định đề thi hoán vị thuộc môn học nào
     [ForeignKey("Subject")]
@@ -48,9 +43,6 @@ public class ShuffledExamPaper : BaseEntity  //đề thi đã được hoán v�
     
     // Navigation property đến entity OriginalExamPaper
     public OriginalExamPaper OriginalExamPaper { get; set; }
-    
-    // Navigation property đến entity ExamSessionSubject
-    public ExamSessionSubject ExamSessionSubject { get; set; }
     
     // Navigation property đến entity Subject
     public Subject Subject { get; set; }
