@@ -227,11 +227,10 @@ namespace backend_manage.Messages.RabbitMQ
                 using var scope = _serviceScopeFactory.CreateScope();
                 var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
                 var redisConn = scope.ServiceProvider.GetService(typeof(StackExchange.Redis.IConnectionMultiplexer)) as StackExchange.Redis.IConnectionMultiplexer;
-                var logger = scope.ServiceProvider.GetRequiredService<ILogger<RabbitMqConsumer>>();
 
                 if (redisConn == null)
                 {
-                    logger.LogError("Không lấy được Redis connection trong ProcessCacheStudentExamSessions");
+                    _logger.LogError("Không lấy được Redis connection trong ProcessCacheStudentExamSessions");
                     return;
                 }
                 var redisDb = redisConn.GetDatabase();
@@ -241,18 +240,40 @@ namespace backend_manage.Messages.RabbitMQ
                     .Where(x => x.StudentCode == studentCode)
                     .ToList();
 
+                int cachedCount = 0;
+                int skippedCount = 0;
+
                 foreach (var session in studentExamSessions)
                 {
-                    // 2. Cache vào Redis
+                    // 2. Kiểm tra xem cache đã tồn tại chưa
                     string sessionCacheKey = $"student_exam_session:{studentCode}:{session.StudentExamSessionId}";
+                    
+                    // Kiểm tra cache có tồn tại và còn hạn không
+                    var existingCache = redisDb.StringGet(sessionCacheKey);
+                    
+                    if (existingCache.HasValue)
+                    {
+                        // Cache đã tồn tại, bỏ qua để tránh ghi đè
+                        skippedCount++;
+                        _logger.LogDebug("Cache đã tồn tại cho session {SessionId}, bỏ qua", session.StudentExamSessionId);
+                        continue;
+                    }
+
+                    // 3. Chỉ cache khi chưa có trong Redis
                     var jsonSession = System.Text.Json.JsonSerializer.Serialize(session);
                     redisDb.StringSet(sessionCacheKey, jsonSession, TimeSpan.FromHours(6));
+                    cachedCount++;
+                    
+                    _logger.LogDebug("Đã cache session {SessionId} cho sinh viên {StudentCode}", 
+                        session.StudentExamSessionId, studentCode);
                 }
-                logger.LogInformation("Đã cache StudentExamSession của sinh viên {StudentCode}", studentCode);
+                
+                _logger.LogInformation("Cache StudentExamSession cho sinh viên {StudentCode}: {CachedCount} session mới, {SkippedCount} session đã có cache", 
+                    studentCode, cachedCount, skippedCount);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Lỗi khi xử lý cache_student_exam_sessions_queue");
+                _logger.LogError(ex, "Lỗi khi xử lý cache_student_exam_sessions_queue cho sinh viên {StudentCode}", message.StudentCode);
             }
         }
     }

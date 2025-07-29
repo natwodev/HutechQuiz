@@ -381,23 +381,65 @@ public class StudentService : IStudentService
         _logger.LogInformation("Bắt đầu lấy đề thi cho sinh viên {StudentCode}, phiên thi {StudentExamSessionId}", 
             studentCode, studentExamSessionId);
 
-        // 1. Kiểm tra StudentExamSession đã có mã đề chưa
-        var studentExamSession = await _studentExamSessionRepository.GetQueryable()
-            .Include(x => x.ShuffledExamPaper)
-            .FirstOrDefaultAsync(x => x.StudentCode == studentCode && x.StudentExamSessionId == studentExamSessionId);
+        // 1. Kiểm tra StudentExamSession trong Redis cache trước
+        var db = _redis.GetDatabase();
+        string sessionCacheKey = $"student_exam_session:{studentCode}:{studentExamSessionId}";
         
-        if (studentExamSession == null)
+        StudentExamSession? studentExamSession = null;
+        int? shuffledExamPaperId = null;
+        int examSessionSubjectId = 0;
+
+        try
         {
-            _logger.LogError("Không tìm thấy phiên thi của sinh viên {StudentCode}", studentCode);
-            throw new Exception("Không tìm thấy phiên thi của sinh viên.");
+            // Thử lấy từ Redis cache trước
+            var cachedSession = await db.StringGetAsync(sessionCacheKey);
+            if (cachedSession.HasValue)
+            {
+                _logger.LogInformation("Tìm thấy StudentExamSession trong Redis cache cho sinh viên {StudentCode}", studentCode);
+                studentExamSession = System.Text.Json.JsonSerializer.Deserialize<StudentExamSession>(cachedSession);
+                shuffledExamPaperId = studentExamSession?.ShuffledExamPaperId;
+                examSessionSubjectId = studentExamSession?.ExamSessionSubjectId ?? 0;
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Lỗi khi đọc StudentExamSession từ Redis cache, sẽ truy vấn database");
         }
 
-        int examSessionSubjectId = studentExamSession.ExamSessionSubjectId;
-        int? shuffledExamPaperId = studentExamSession.ShuffledExamPaperId;
+        // 2. Nếu không có trong cache, truy vấn database
+        if (studentExamSession == null)
+        {
+            _logger.LogInformation("Không tìm thấy StudentExamSession trong cache, truy vấn database");
+            studentExamSession = await _studentExamSessionRepository.GetQueryable()
+                .Include(x => x.ShuffledExamPaper)
+                .FirstOrDefaultAsync(x => x.StudentCode == studentCode && x.StudentExamSessionId == studentExamSessionId);
+            
+            if (studentExamSession == null)
+            {
+                _logger.LogError("Không tìm thấy phiên thi của sinh viên {StudentCode}", studentCode);
+                throw new Exception("Không tìm thấy phiên thi của sinh viên.");
+            }
+
+            // Cache StudentExamSession vào Redis
+            try
+            {
+                var jsonSession = System.Text.Json.JsonSerializer.Serialize(studentExamSession);
+                await db.StringSetAsync(sessionCacheKey, jsonSession, TimeSpan.FromHours(6));
+                _logger.LogInformation("Đã cache StudentExamSession vào Redis cho sinh viên {StudentCode}", studentCode);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Lỗi khi cache StudentExamSession vào Redis");
+            }
+
+            shuffledExamPaperId = studentExamSession.ShuffledExamPaperId;
+            examSessionSubjectId = studentExamSession.ExamSessionSubjectId;
+        }
+
         ShuffledExamPaper shuffledExamPaper = null;
         ShuffledExamPaperDto paperDto = null;
 
-        // Luôn thử dùng Redis, nếu lỗi sẽ fallback về database
+        // 3. Luôn thử dùng Redis cho đề thi, nếu lỗi sẽ fallback về database
         
         if (shuffledExamPaperId.HasValue)
         {
@@ -423,7 +465,6 @@ public class StudentService : IStudentService
             // Cache lại vào Redis
             try
             {
-                var db = _redis.GetDatabase();
                 string cacheKey = $"shuffled_exam_paper:{shuffledExamPaperId.Value}";
                 string answerKey = $"answer_key:{shuffledExamPaperId.Value}";
                 
