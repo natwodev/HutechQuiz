@@ -926,21 +926,35 @@ public class StudentService : IStudentService
                 return (false, validationMessage);
             }
             
-            // Tạo chuỗi đáp án mới cho database
+            // Tạo chuỗi đáp án mới cho database (chỉ để log, không update DB ở đây)
             var newAnswersString = string.Join(";", currentAnswers.Select(pair => $"({pair.Key},{pair.Value})")) + ";";
             
-            // Cập nhật StudentAnswersString trong database mà không tính điểm
-            studentExamSession.StudentAnswersString = newAnswersString;
-            studentExamSession.UpdatedAt = DateTimeHelper.GetVietnamTime();
-            studentExamSession.UpdatedBy = "system"; // hoặc lấy từ context nếu cần
+            // Không cập nhật StudentAnswersString trong database ở đây nữa
+            // studentExamSession.StudentAnswersString = newAnswersString;
+            // studentExamSession.UpdatedAt = DateTimeHelper.GetVietnamTime();
+            // studentExamSession.UpdatedBy = "system"; // hoặc lấy từ context nếu cần
 
-            await _studentExamSessionRepository.UpdateAsync(studentExamSession);
+            // await _studentExamSessionRepository.UpdateAsync(studentExamSession); // Bỏ update DB
+
+            // Gửi message qua RabbitMQ để lưu bài vào DB qua consumer
+            var saveExamMessage = _mapper.Map<ExamSubmissionMessage>(
+                (
+                    StudentCode: StudentCode,
+                    ShuffledExamPaperId: submitExamDto.ShuffledExamPaperId,
+                    Score: (double?)null,
+                    CorrectAnswers: (int?)null,
+                    TotalQuestions: (int?)null,
+                    EndTime: DateTimeHelper.GetVietnamTime(),
+                    StudentAnswersString: newAnswersString
+                )
+            );
+            _rabbitMQService.PublishMessage("save_exam_queue", saveExamMessage);
 
             _logger.LogInformation(
-                "Sinh viên {StudentCode} đã lưu bài thi {ShuffledExamPaperId} thành công", 
+                "Sinh viên {StudentCode} đã lưu bài thi {ShuffledExamPaperId} thành công (Redis + RabbitMQ)", 
                 StudentCode, submitExamDto.ShuffledExamPaperId);
 
-            return (true, "Lưu bài thi thành công");
+            return (true, "Lưu bài thi thành công (Redis + RabbitMQ)");
         }
         catch (Exception ex)
         {
