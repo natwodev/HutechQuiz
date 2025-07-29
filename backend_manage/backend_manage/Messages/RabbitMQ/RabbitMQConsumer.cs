@@ -85,6 +85,23 @@ namespace backend_manage.Messages.RabbitMQ
                 studentExamSession.StudentAnswersString = message.StudentAnswersString;
 
                 dbContext.SaveChanges();
+
+                // Đồng bộ cache IsCompleted vào Redis
+                try
+                {
+                    var redis = new StackExchange.Redis.ConnectionMultiplexer[] { };
+                    if (scope.ServiceProvider.GetService(typeof(StackExchange.Redis.IConnectionMultiplexer)) is StackExchange.Redis.IConnectionMultiplexer redisConn)
+                    {
+                        var redisDb = redisConn.GetDatabase();
+                        var cacheKey = $"student_exam_session_completed:{message.StudentCode}:{message.ShuffledExamPaperId}";
+                        redisDb.StringSet(cacheKey, message.IsCompleted ? "1" : "0", TimeSpan.FromHours(6));
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Lỗi khi đồng bộ cache IsCompleted vào Redis");
+                }
+
                 _logger.LogInformation(
                     "Đã lưu kết quả bài thi vào DB. StudentCode: {StudentCode}, Điểm: {Score}",
                     message.StudentCode,

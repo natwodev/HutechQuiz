@@ -17,6 +17,7 @@ using Microsoft.AspNetCore.SignalR;
 using StackExchange.Redis;
 using backend_manage.Messages;
 using backend_manage.Messages.RabbitMQ;
+using Newtonsoft.Json;
 
 namespace backend_manage.Services.AuthService;
 
@@ -697,27 +698,35 @@ public class StudentService : IStudentService
         return (true, "Cập nhật đáp án thành công", currentAnswers);
     }
 
-    private async Task<(bool Success, string Message, StudentExamSession? StudentExamSession)> ValidateStudentExamSessionAsync(
-        string studentCode, int shuffledExamPaperId)
+    private async Task<(bool Success, string Message)> ValidateStudentExamSessionAsync(string studentCode, int shuffledExamPaperId)
     {
-        // Tìm StudentExamSession
+        var cacheKey = $"student_exam_session_completed:{studentCode}:{shuffledExamPaperId}";
+        var db = _redis.GetDatabase();
+        var cacheValue = await db.StringGetAsync(cacheKey);
+
+        if (cacheValue.HasValue)
+        {
+            if (cacheValue == "1")
+                return (false, "Bài thi đã được nộp trước đó");
+            return (true, "Validation thành công");
+        }
+
+        // Nếu không có trong cache, truy vấn DB
         var studentExamSession = await _studentExamSessionRepository.GetQueryable()
+            .AsNoTracking()
             .FirstOrDefaultAsync(x => x.StudentCode == studentCode 
                 && x.ShuffledExamPaperId == shuffledExamPaperId);
 
         if (studentExamSession == null)
-        {
-            _logger.LogError("Không tìm thấy phiên thi của sinh viên trong database");
-            return (false, "Không tìm thấy phiên thi của sinh viên", null);
-        }
+            return (false, "Không tìm thấy phiên thi của sinh viên");
+
+        // Cache lại trạng thái IsCompleted
+        await db.StringSetAsync(cacheKey, studentExamSession.IsCompleted ? "1" : "0", TimeSpan.FromHours(6));
 
         if (studentExamSession.IsCompleted)
-        {
-            _logger.LogWarning("Sinh viên đã nộp bài thi này rồi");
-            return (false, "Bài thi đã được nộp trước đó", null);
-        }
+            return (false, "Bài thi đã được nộp trước đó");
 
-        return (true, "Validation thành công", studentExamSession);
+        return (true, "Validation thành công");
     }
 
     private async Task<(bool Success, string Message, Dictionary<int, string>? CorrectAnswers)> GetAnswerKeyAsync(int shuffledExamPaperId)
@@ -815,8 +824,7 @@ public class StudentService : IStudentService
             }
 
             // Sử dụng helper method để validate StudentExamSession
-            var (validationSuccess, validationMessage, studentExamSession) = await ValidateStudentExamSessionAsync(
-                StudentCode, submitExamDto.ShuffledExamPaperId);
+            var (validationSuccess, validationMessage, studentExamSession) = await ValidateStudentExamSessionAsync(StudentCode, submitExamDto.ShuffledExamPaperId);
             
             if (!validationSuccess)
             {
