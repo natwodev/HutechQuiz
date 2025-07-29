@@ -706,11 +706,13 @@ public class StudentService : IStudentService
 
         if (cacheValue.HasValue)
         {
+            _logger.LogInformation($"[ValidateStudentExamSessionAsync] Truy vấn trạng thái từ Redis: {{Key}} = {{Value}}", cacheKey, cacheValue);
             if (cacheValue == "1")
                 return (false, "Bài thi đã được nộp trước đó");
             return (true, "Validation thành công");
         }
 
+        _logger.LogInformation($"[ValidateStudentExamSessionAsync] Không có trạng thái trong Redis, truy vấn DB: {{Key}}", cacheKey);
         // Nếu không có trong cache, truy vấn DB
         var studentExamSession = await _studentExamSessionRepository.GetQueryable()
             .AsNoTracking()
@@ -824,7 +826,7 @@ public class StudentService : IStudentService
             }
 
             // Sử dụng helper method để validate StudentExamSession
-            var (validationSuccess, validationMessage, studentExamSession) = await ValidateStudentExamSessionAsync(StudentCode, submitExamDto.ShuffledExamPaperId);
+            var (validationSuccess, validationMessage) = await ValidateStudentExamSessionAsync(StudentCode, submitExamDto.ShuffledExamPaperId);
             
             if (!validationSuccess)
             {
@@ -927,7 +929,7 @@ public class StudentService : IStudentService
             }
 
             // Sử dụng helper method để validate StudentExamSession
-            var (validationSuccess, validationMessage, studentExamSession) = await ValidateStudentExamSessionAsync(
+            var (validationSuccess, validationMessage) = await ValidateStudentExamSessionAsync(
                 StudentCode, submitExamDto.ShuffledExamPaperId);
             
             if (!validationSuccess)
