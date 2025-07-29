@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
+using System.Threading.Tasks;
 
 namespace backend_manage.Messages.RabbitMQ
 {
@@ -71,7 +72,7 @@ namespace backend_manage.Messages.RabbitMQ
             }
         }
 
-        public void Subscribe<T>(string queueName, Action<T> onMessage)
+        public void Subscribe<T>(string queueName, Func<T, Task> onMessage)
         {
             try
             {
@@ -109,7 +110,7 @@ namespace backend_manage.Messages.RabbitMQ
                         _logger.LogDebug("Đang xử lý message với delivery tag {DeliveryTag}", deliveryTag);
                         
                         // Xử lý message async
-                        await Task.Run(() => onMessage(message));
+                        await onMessage(message);
                         
                         if (_channel.IsOpen)
                         {

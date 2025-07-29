@@ -2,6 +2,8 @@ using backend_manage.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using System;
+using System.Threading.Tasks;
 
 namespace backend_manage.Messages.RabbitMQ
 {
@@ -65,7 +67,7 @@ namespace backend_manage.Messages.RabbitMQ
                 StudentAnswerConsumerCount, ExamSubmissionConsumerCount, SaveExamConsumerCount);
         }
 
-        private void ProcessExamSubmission(ExamSubmissionMessage message)
+        private async Task ProcessExamSubmission(ExamSubmissionMessage message)
         {
             try
             {
@@ -142,7 +144,7 @@ namespace backend_manage.Messages.RabbitMQ
             }
         }
 
-        private void ProcessSaveExam(ExamSubmissionMessage message)
+        private async Task ProcessSaveExam(ExamSubmissionMessage message)
         {
             try
             {
@@ -182,7 +184,7 @@ namespace backend_manage.Messages.RabbitMQ
             }
         }
 
-        private void ProcessStudentAnswerSaved(StudentAnswerSavedMessage message)
+        private async Task ProcessStudentAnswerSaved(StudentAnswerSavedMessage message)
         {
             try
             {
@@ -237,7 +239,7 @@ namespace backend_manage.Messages.RabbitMQ
             }
         }
 
-        private void ProcessCacheStudentExamSessions(CacheStudentExamSessionsMessage message)
+        private async Task ProcessCacheStudentExamSessions(CacheStudentExamSessionsMessage message)
         {
             try
             {
