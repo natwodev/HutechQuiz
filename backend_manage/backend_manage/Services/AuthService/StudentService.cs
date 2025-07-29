@@ -742,6 +742,65 @@ public class StudentService : IStudentService
         return (true, "Lấy đáp án thành công", correctAnswerPairs);
     }
 
+    private async Task<(bool Success, string Message, string? NewAnswersString)> UpdateSingleAnswerAsync(
+        string studentCode, int shuffledExamPaperId, int index, string answer)
+    {
+        var db = _redis.GetDatabase();
+        string studentAnswerKey = $"student_answers:{studentCode}:{shuffledExamPaperId}";
+
+        // Log thông tin
+        _logger.LogInformation(
+            "Đang lưu đáp án cho sinh viên. StudentCode: {StudentCode}, ShuffledExamPaperId: {ShuffledExamPaperId}, Index: {Index}, Answer: {Answer}",
+            studentCode, shuffledExamPaperId, index, answer
+        );
+
+        // Lấy chuỗi đáp án hiện tại từ Redis
+        var currentAnswers = await db.StringGetAsync(studentAnswerKey);
+        
+        if (!currentAnswers.HasValue)
+        {
+            _logger.LogError("Không tìm thấy chuỗi đáp án trong Redis với key: {Key}", studentAnswerKey);
+            return (false, "Không tìm thấy bài thi của sinh viên", null);
+        }
+
+        string answersString = currentAnswers.ToString();
+
+        // Tách chuỗi đáp án thành mảng
+        var answerParts = answersString.Split(';', StringSplitOptions.RemoveEmptyEntries);
+        var updatedParts = new List<string>();
+
+        // Cập nhật đáp án tại index tương ứng
+        bool found = false;
+        foreach (var part in answerParts)
+        {
+            if (part.StartsWith($"({index},"))
+            {
+                updatedParts.Add($"({index},{answer})");
+                found = true;
+            }
+            else if (!string.IsNullOrWhiteSpace(part))
+            {
+                updatedParts.Add(part);
+            }
+        }
+
+        // Nếu không tìm thấy index, thêm mới
+        if (!found)
+        {
+            updatedParts.Add($"({index},{answer})");
+        }
+
+        // Tạo chuỗi đáp án mới
+        string newAnswersString = string.Join(";", updatedParts) + ";";
+
+        // Lưu lại vào Redis với thời gian tồn tại 6 giờ
+        await db.StringSetAsync(studentAnswerKey, newAnswersString, TimeSpan.FromHours(6));
+
+        _logger.LogInformation("Đã lưu đáp án thành công vào Redis. Chuỗi đáp án mới: {NewAnswers}", newAnswersString);
+
+        return (true, "Cập nhật đáp án thành công", newAnswersString);
+    }
+
     public async Task<(bool Success, string Message, double? Score)> SubmitExamAsync(string StudentCode,SubmitExamDto submitExamDto)
     {
         try
@@ -820,58 +879,14 @@ public class StudentService : IStudentService
     {
         try
         {
-            var db = _redis.GetDatabase();
-            string studentAnswerKey = $"student_answers:{studentCode}:{shuffledExamPaperId}";
-
-            // Log thông tin
-            _logger.LogInformation(
-                "Đang lưu đáp án cho sinh viên. StudentCode: {StudentCode}, ShuffledExamPaperId: {ShuffledExamPaperId}, Index: {Index}, Answer: {Answer}",
-                studentCode, shuffledExamPaperId, index, answer
-            );
-
-            // Lấy chuỗi đáp án hiện tại từ Redis
-            var currentAnswers = await db.StringGetAsync(studentAnswerKey);
+            // Sử dụng helper method để cập nhật đáp án đơn lẻ
+            var (success, message, newAnswersString) = await UpdateSingleAnswerAsync(
+                studentCode, shuffledExamPaperId, index, answer);
             
-            if (!currentAnswers.HasValue)
+            if (!success)
             {
-                _logger.LogError("Không tìm thấy chuỗi đáp án trong Redis với key: {Key}", studentAnswerKey);
-                return (false, "Không tìm thấy bài thi của sinh viên");
+                return (false, message);
             }
-
-            string answersString = currentAnswers.ToString();
-
-            // Tách chuỗi đáp án thành mảng
-            var answerParts = answersString.Split(';', StringSplitOptions.RemoveEmptyEntries);
-            var updatedParts = new List<string>();
-
-            // Cập nhật đáp án tại index tương ứng
-            bool found = false;
-            foreach (var part in answerParts)
-            {
-                if (part.StartsWith($"({index},"))
-                {
-                    updatedParts.Add($"({index},{answer})");
-                    found = true;
-                }
-                else if (!string.IsNullOrWhiteSpace(part))
-                {
-                    updatedParts.Add(part);
-                }
-            }
-
-            // Nếu không tìm thấy index, thêm mới
-            if (!found)
-            {
-                updatedParts.Add($"({index},{answer})");
-            }
-
-            // Tạo chuỗi đáp án mới
-            string newAnswersString = string.Join(";", updatedParts) + ";";
-
-            // Lưu lại vào Redis với thời gian tồn tại 6 giờ
-            await db.StringSetAsync(studentAnswerKey, newAnswersString, TimeSpan.FromHours(6));
-
-            _logger.LogInformation("Đã lưu đáp án thành công vào Redis. Chuỗi đáp án mới: {NewAnswers}", newAnswersString);
             
             // Gửi message qua RabbitMQ
             var answerSavedMessage = _mapper.Map<StudentAnswerSavedMessage>(
