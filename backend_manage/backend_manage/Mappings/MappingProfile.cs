@@ -169,13 +169,13 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.DepartmentName, opt => opt.MapFrom(src => src.Department != null ? src.Department.DepartmentName : null));
 
         // Mapping cho ExamSubmissionMessage
-        CreateMap<(string StudentCode, int ShuffledExamPaperId, double Score, int CorrectAnswers,  int TotalQuestions, DateTime EndTime, string StudentAnswersString), ExamSubmissionMessage>()
+        CreateMap<backend_manage.DTOs.ExamSubmissionDto, ExamSubmissionMessage>()
             .ForMember(dest => dest.StudentCode, opt => opt.MapFrom(src => src.StudentCode))
             .ForMember(dest => dest.ShuffledExamPaperId, opt => opt.MapFrom(src => src.ShuffledExamPaperId))
-            .ForMember(dest => dest.Score, opt => opt.MapFrom(src => src.Score))
-            .ForMember(dest => dest.CorrectAnswers, opt => opt.MapFrom(src => src.CorrectAnswers))
-            .ForMember(dest => dest.TotalQuestions, opt => opt.MapFrom(src => src.TotalQuestions))
-            .ForMember(dest => dest.IsCompleted, opt => opt.MapFrom(src => true))
+            .ForMember(dest => dest.Score, opt => opt.MapFrom(src => src.Score ?? 0))
+            .ForMember(dest => dest.CorrectAnswers, opt => opt.MapFrom(src => src.CorrectAnswers ?? 0))
+            .ForMember(dest => dest.TotalQuestions, opt => opt.MapFrom(src => src.TotalQuestions ?? 0))
+            .ForMember(dest => dest.IsCompleted, opt => opt.MapFrom(src => src.Score.HasValue))
             .ForMember(dest => dest.EndTime, opt => opt.MapFrom(src => src.EndTime))
             .ForMember(dest => dest.StudentAnswersString, opt => opt.MapFrom(src => src.StudentAnswersString));
 

@@ -1,5 +1,6 @@
 using System;
 using System.ComponentModel.DataAnnotations;
+using System.Collections.Generic;
 
 namespace backend_manage.DTOs
 {
@@ -41,5 +42,16 @@ namespace backend_manage.DTOs
 
         [Required]
         public string Answer { get; set; }
+    }
+
+    public class ExamSubmissionDto
+    {
+        public string StudentCode { get; set; }
+        public int ShuffledExamPaperId { get; set; }
+        public double? Score { get; set; }
+        public int? CorrectAnswers { get; set; }
+        public int? TotalQuestions { get; set; }
+        public DateTime EndTime { get; set; }
+        public string StudentAnswersString { get; set; }
     }
 } 

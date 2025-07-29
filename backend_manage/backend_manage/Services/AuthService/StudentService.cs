@@ -849,17 +849,18 @@ public class StudentService : IStudentService
             // Tạo chuỗi đáp án mới cho message
             var newAnswersString = string.Join(";", currentAnswers.Select(pair => $"({pair.Key},{pair.Value})")) + ";";
 
-            // Map và gửi message qua RabbitMQ
-            var examSubmissionMessage = _mapper.Map<ExamSubmissionMessage>((
-                StudentCode: StudentCode,
-                ShuffledExamPaperId: submitExamDto.ShuffledExamPaperId,
-                Score: score,
-                CorrectAnswers: correctCount,
-                TotalQuestions: totalQuestions,
-                EndTime: DateTimeHelper.GetVietnamTime(),
-                StudentAnswersString: newAnswersString
-            ));
-
+            // Sử dụng ExamSubmissionDto để map sang ExamSubmissionMessage
+            var examSubmissionDto = new ExamSubmissionDto
+            {
+                StudentCode = StudentCode,
+                ShuffledExamPaperId = submitExamDto.ShuffledExamPaperId,
+                Score = score,
+                CorrectAnswers = correctCount,
+                TotalQuestions = totalQuestions,
+                EndTime = DateTimeHelper.GetVietnamTime(),
+                StudentAnswersString = newAnswersString
+            };
+            var examSubmissionMessage = _mapper.Map<ExamSubmissionMessage>(examSubmissionDto);
             _rabbitMQService.PublishMessage("exam_submission_queue", examSubmissionMessage);
 
             _logger.LogInformation(
@@ -929,25 +930,18 @@ public class StudentService : IStudentService
             // Tạo chuỗi đáp án mới cho database (chỉ để log, không update DB ở đây)
             var newAnswersString = string.Join(";", currentAnswers.Select(pair => $"({pair.Key},{pair.Value})")) + ";";
             
-            // Không cập nhật StudentAnswersString trong database ở đây nữa
-            // studentExamSession.StudentAnswersString = newAnswersString;
-            // studentExamSession.UpdatedAt = DateTimeHelper.GetVietnamTime();
-            // studentExamSession.UpdatedBy = "system"; // hoặc lấy từ context nếu cần
-
-            // await _studentExamSessionRepository.UpdateAsync(studentExamSession); // Bỏ update DB
-
-            // Gửi message qua RabbitMQ để lưu bài vào DB qua consumer
-            var saveExamMessage = _mapper.Map<ExamSubmissionMessage>(
-                (
-                    StudentCode: StudentCode,
-                    ShuffledExamPaperId: submitExamDto.ShuffledExamPaperId,
-                    Score: (double?)null,
-                    CorrectAnswers: (int?)null,
-                    TotalQuestions: (int?)null,
-                    EndTime: DateTimeHelper.GetVietnamTime(),
-                    StudentAnswersString: newAnswersString
-                )
-            );
+            // Sử dụng ExamSubmissionDto để map sang ExamSubmissionMessage
+            var saveExamDto = new ExamSubmissionDto
+            {
+                StudentCode = StudentCode,
+                ShuffledExamPaperId = submitExamDto.ShuffledExamPaperId,
+                Score = null,
+                CorrectAnswers = null,
+                TotalQuestions = null,
+                EndTime = DateTimeHelper.GetVietnamTime(),
+                StudentAnswersString = newAnswersString
+            };
+            var saveExamMessage = _mapper.Map<ExamSubmissionMessage>(saveExamDto);
             _rabbitMQService.PublishMessage("save_exam_queue", saveExamMessage);
 
             _logger.LogInformation(
