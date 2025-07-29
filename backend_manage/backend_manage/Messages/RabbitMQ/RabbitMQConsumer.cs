@@ -15,9 +15,9 @@ namespace backend_manage.Messages.RabbitMQ
         private const string SaveExamQueue = "save_exam_queue";
         
         // Cấu hình số lượng consumers cho xử lý song song
-        private const int StudentAnswerConsumerCount = 4; // 4 consumers cho lưu đáp án
-        private const int ExamSubmissionConsumerCount = 4; // 4 consumers cho nộp bài
-        private const int SaveExamConsumerCount = 4; // 4 consumers cho lưu bài
+        private const int StudentAnswerConsumerCount = 2; // 2 consumers cho lưu đáp án
+        private const int ExamSubmissionConsumerCount = 2; // 2 consumers cho nộp bài
+        private const int SaveExamConsumerCount = 2; // 2 consumers cho lưu bài
 
         public RabbitMqConsumer(
             IRabbitMqService rabbitMQService,
