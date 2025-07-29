@@ -861,7 +861,7 @@ public class StudentService : IStudentService
                 StudentAnswersString = newAnswersString
             };
             var examSubmissionMessage = _mapper.Map<ExamSubmissionMessage>(examSubmissionDto);
-            _rabbitMQService.PublishMessage("exam_submission_queue", examSubmissionMessage);
+            _rabbitMQService.PublishMessage("submit_exam_queue", examSubmissionMessage);
 
             _logger.LogInformation(
                 "Sinh viên {StudentCode} đã nộp bài thi {ShuffledExamPaperId} với điểm {Score}", 
@@ -893,7 +893,7 @@ public class StudentService : IStudentService
             var answerSavedMessage = _mapper.Map<StudentAnswerSavedMessage>(
                 (studentCode, shuffledExamPaperId, index, answer, newAnswersString)
             );
-            _rabbitMQService.PublishMessage("student_answer_saved_queue", answerSavedMessage);
+            _rabbitMQService.PublishMessage("save_answer_queue", answerSavedMessage);
             
             return (true, "Đã lưu đáp án thành công");
         }
@@ -942,6 +942,7 @@ public class StudentService : IStudentService
                 StudentAnswersString = newAnswersString
             };
             var saveExamMessage = _mapper.Map<ExamSubmissionMessage>(saveExamDto);
+            // Gửi message lên queue để lưu toàn bộ bài làm (không phải lưu nháp)
             _rabbitMQService.PublishMessage("save_exam_queue", saveExamMessage);
 
             _logger.LogInformation(

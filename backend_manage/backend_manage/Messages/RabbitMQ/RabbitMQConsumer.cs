@@ -10,12 +10,14 @@ namespace backend_manage.Messages.RabbitMQ
         private readonly IRabbitMqService _rabbitMQService;
         private readonly IServiceScopeFactory _serviceScopeFactory;
         private readonly ILogger<RabbitMqConsumer> _logger;
-        private const string ExamSubmissionQueue = "exam_submission_queue";
-        private const string StudentAnswerSavedQueue = "student_answer_saved_queue";
+        private const string ExamSubmissionQueue = "submit_exam_queue";
+        private const string StudentAnswerSavedQueue = "save_answer_queue";
+        private const string SaveExamQueue = "save_exam_queue";
         
         // Cấu hình số lượng consumers cho xử lý song song
         private const int StudentAnswerConsumerCount = 4; // 4 consumers cho lưu đáp án
         private const int ExamSubmissionConsumerCount = 4; // 4 consumers cho nộp bài
+        private const int SaveExamConsumerCount = 4; // 4 consumers cho lưu bài
 
         public RabbitMqConsumer(
             IRabbitMqService rabbitMQService,
@@ -39,15 +41,22 @@ namespace backend_manage.Messages.RabbitMQ
             // Tạo nhiều consumers cho exam_submission_queue
             for (int i = 0; i < ExamSubmissionConsumerCount; i++)
             {
-                _rabbitMQService.Subscribe<ExamSubmissionMessage>(ExamSubmissionQueue, SaveExamResultToDatabase);
+                _rabbitMQService.Subscribe<ExamSubmissionMessage>(ExamSubmissionQueue, ProcessExamSubmission);
                 _logger.LogInformation("Bắt đầu consumer {ConsumerId} cho queue: {QueueName}", i + 1, ExamSubmissionQueue);
+            }
+            
+            // Tạo nhiều consumers cho save_exam_queue
+            for (int i = 0; i < SaveExamConsumerCount; i++)
+            {
+                _rabbitMQService.Subscribe<ExamSubmissionMessage>(SaveExamQueue, ProcessSaveExam);
+                _logger.LogInformation("Bắt đầu consumer {ConsumerId} cho queue: {QueueName}", i + 1, SaveExamQueue);
             }
             
             _logger.LogInformation("Đã khởi tạo {StudentAnswerCount} consumers cho lưu đáp án và {ExamSubmissionCount} consumers cho nộp bài", 
                 StudentAnswerConsumerCount, ExamSubmissionConsumerCount);
         }
 
-        private void SaveExamResultToDatabase(ExamSubmissionMessage message)
+        private void ProcessExamSubmission(ExamSubmissionMessage message)
         {
             try
             {
@@ -85,6 +94,46 @@ namespace backend_manage.Messages.RabbitMQ
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Lỗi khi lưu kết quả bài thi vào DB");
+                throw;
+            }
+        }
+
+        private void ProcessSaveExam(ExamSubmissionMessage message)
+        {
+            try
+            {
+                using var scope = _serviceScopeFactory.CreateScope();
+                var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+                var studentExamSession = dbContext.StudentExamSessions
+                    .FirstOrDefault(x => x.StudentCode == message.StudentCode
+                        && x.ShuffledExamPaperId == message.ShuffledExamPaperId);
+
+                if (studentExamSession == null)
+                {
+                    _logger.LogWarning(
+                        "Không tìm thấy StudentExamSession (lưu bài). StudentCode: {StudentCode}, ShuffledExamPaperId: {ShuffledExamPaperId}",
+                        message.StudentCode,
+                        message.ShuffledExamPaperId
+                    );
+                    return;
+                }
+
+                // Chỉ cập nhật đáp án và thời gian, không set điểm hoặc trạng thái hoàn thành
+                studentExamSession.StudentAnswersString = message.StudentAnswersString;
+                studentExamSession.EndTime = message.EndTime;
+                // Không cập nhật Score, CorrectAnswers, TotalQuestions, IsCompleted
+
+                dbContext.SaveChanges();
+                _logger.LogInformation(
+                    "Đã lưu bài nháp vào DB. StudentCode: {StudentCode}, ShuffledExamPaperId: {ShuffledExamPaperId}",
+                    message.StudentCode,
+                    message.ShuffledExamPaperId
+                );
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi lưu bài nháp vào DB");
                 throw;
             }
         }
