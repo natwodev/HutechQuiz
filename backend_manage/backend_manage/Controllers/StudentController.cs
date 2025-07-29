@@ -196,6 +196,37 @@ public class StudentController : ControllerBase
         }
     }
 
+    [HttpPost("save-exam")]
+    [Authorize(Roles = "Student")]
+    public async Task<IActionResult> SaveExam([FromBody] SubmitExamDto submitExamDto)
+    {
+        try
+        {
+            // Lấy studentCode từ token
+            var studentCode = User.FindFirst("studentCode")?.Value;
+            if (string.IsNullOrEmpty(studentCode))
+                return Unauthorized(new { message = "Token không hợp lệ!" });
+            
+
+            var (success, message) = await _studentService.SaveExamAsync(studentCode, submitExamDto);
+
+            if (!success)
+            {
+                return BadRequest(new { message });
+            }
+
+            return Ok(new { 
+                message,
+                savedAt = DateTimeHelper.GetVietnamTime()
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Lỗi khi lưu bài thi");
+            return StatusCode(500, new { message = "Có lỗi xảy ra khi lưu bài thi" });
+        }
+    }
+
 }
 
 public class ActiveLoginRequest
