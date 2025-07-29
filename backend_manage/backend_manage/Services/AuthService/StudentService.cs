@@ -637,18 +637,6 @@ public class StudentService : IStudentService
             
             _logger.LogInformation("Đã cập nhật thông tin đề thi và chuỗi đáp án rỗng cho sinh viên trong database");
             
-            // Cập nhật StudentExamSession trong Redis cache
-            try
-            {
-                var jsonSession = System.Text.Json.JsonSerializer.Serialize(studentExamSession);
-                await db.StringSetAsync(sessionCacheKey, jsonSession, TimeSpan.FromHours(6));
-                _logger.LogInformation("Đã cập nhật StudentExamSession trong Redis cache cho sinh viên {StudentCode}", studentCode);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "Lỗi khi cập nhật StudentExamSession trong Redis cache");
-            }
-            
             // Cache vào Redis
             try
             {
