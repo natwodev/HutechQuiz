@@ -18,6 +18,7 @@ using StackExchange.Redis;
 using backend_manage.Messages;
 using backend_manage.Messages.RabbitMQ;
 using Newtonsoft.Json;
+using System.Text.Json;
 
 namespace backend_manage.Services.AuthService;
 
@@ -858,22 +859,26 @@ public class StudentService : IStudentService
         
         foreach (var key in keys)
         {
-            var sessionData = await db.HashGetAllAsync(key);
-            if (sessionData.Any())
+            try
             {
-                var cachedShuffledExamPaperId = sessionData.FirstOrDefault(x => x.Name == "ShuffledExamPaperId").Value;
-                if (cachedShuffledExamPaperId.HasValue && int.Parse(cachedShuffledExamPaperId) == shuffledExamPaperId)
+                // Đọc dữ liệu dưới dạng string (vì được lưu bằng StringSetAsync)
+                var sessionData = await db.StringGetAsync(key);
+                if (sessionData.HasValue)
                 {
-                    // Tìm thấy session trong cache, kiểm tra IsCompleted
-                    var isCompleted = sessionData.FirstOrDefault(x => x.Name == "IsCompleted").Value;
-                    if (isCompleted.HasValue)
+                    var cachedStudentExamSession = System.Text.Json.JsonSerializer.Deserialize<StudentExamSession>(sessionData);
+                    if (cachedStudentExamSession != null && cachedStudentExamSession.ShuffledExamPaperId == shuffledExamPaperId)
                     {
-                        _logger.LogInformation($"[ValidateStudentExamSessionAsync] Truy vấn trạng thái từ cache StudentExamSession: {{Key}} = {{Value}}", key, isCompleted);
-                        if (isCompleted == "True")
+                        _logger.LogInformation($"[ValidateStudentExamSessionAsync] Truy vấn trạng thái từ cache StudentExamSession: {{Key}} = {{IsCompleted}}", key, cachedStudentExamSession.IsCompleted);
+                        if (cachedStudentExamSession.IsCompleted)
                             return (false, "Bài thi đã được nộp trước đó");
                         return (true, "Validation thành công");
                     }
                 }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Lỗi khi đọc StudentExamSession từ Redis cache với key: {Key}", key);
+                continue;
             }
         }
 

@@ -1,8 +1,10 @@
 using backend_manage.Data;
+using backend_manage.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace backend_manage.Messages.RabbitMQ
@@ -110,18 +112,28 @@ namespace backend_manage.Messages.RabbitMQ
                         
                         foreach (var key in keys)
                         {
-                            var sessionData = await redisDb.HashGetAllAsync(key);
-                            if (sessionData.Any())
+                            try
                             {
-                                var cachedShuffledExamPaperId = sessionData.FirstOrDefault(x => x.Name == "ShuffledExamPaperId").Value;
-                                if (cachedShuffledExamPaperId.HasValue && int.Parse(cachedShuffledExamPaperId) == message.ShuffledExamPaperId)
+                                // Đọc dữ liệu dưới dạng string (vì được lưu bằng StringSetAsync)
+                                var sessionData = await redisDb.StringGetAsync(key);
+                                if (sessionData.HasValue)
                                 {
-                                    // Cập nhật IsCompleted trong cache StudentExamSession
-                                    await redisDb.HashSetAsync(key, "IsCompleted", message.IsCompleted.ToString());
-                                    await redisDb.KeyExpireAsync(key, TimeSpan.FromHours(6));
-                                    _logger.LogInformation("Đã cập nhật IsCompleted trong cache StudentExamSession: {Key} = {Value}", key, message.IsCompleted);
-                                    break;
+                                    var cachedStudentExamSession = System.Text.Json.JsonSerializer.Deserialize<StudentExamSession>(sessionData);
+                                    if (cachedStudentExamSession != null && cachedStudentExamSession.ShuffledExamPaperId == message.ShuffledExamPaperId)
+                                    {
+                                        // Cập nhật IsCompleted trong cache StudentExamSession
+                                        cachedStudentExamSession.IsCompleted = message.IsCompleted;
+                                        var updatedSessionData = System.Text.Json.JsonSerializer.Serialize(cachedStudentExamSession);
+                                        await redisDb.StringSetAsync(key, updatedSessionData, TimeSpan.FromHours(6));
+                                        _logger.LogInformation("Đã cập nhật IsCompleted trong cache StudentExamSession: {Key} = {Value}", key, message.IsCompleted);
+                                        break;
+                                    }
                                 }
+                            }
+                            catch (Exception ex)
+                            {
+                                _logger.LogWarning(ex, "Lỗi khi đọc/cập nhật StudentExamSession từ Redis cache với key: {Key}", key);
+                                continue;
                             }
                         }
                     }
