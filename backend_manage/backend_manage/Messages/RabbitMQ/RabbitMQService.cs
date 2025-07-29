@@ -205,7 +205,8 @@ namespace backend_manage.Messages.RabbitMQ
             {
                 "save_answer_queue",
                 "submit_exam_queue",
-                "save_exam_queue"
+                "save_exam_queue",
+                "cache_student_exam_sessions_queue" // Thêm queue mới cho cache StudentExamSession
             };
 
             foreach (var queueName in queues)
@@ -225,9 +226,10 @@ namespace backend_manage.Messages.RabbitMQ
         {
             return queueName switch
             {
-                "save_answer_queue" => (100, 1, TimeSpan.FromMilliseconds(50)), // batchSize=1: mỗi consumer chỉ xử lý 1 message/lần
+                "save_answer_queue" => (100, 1, TimeSpan.FromMilliseconds(50)),
                 "submit_exam_queue" => (30, 1, TimeSpan.FromMilliseconds(25)),
                 "save_exam_queue" => (30, 1, TimeSpan.FromMilliseconds(25)),
+                "cache_student_exam_sessions_queue" => (10, 1, TimeSpan.FromMilliseconds(100)), // cấu hình riêng cho queue cache
                 _ => (75, 1, TimeSpan.FromMilliseconds(50))
             };
         }

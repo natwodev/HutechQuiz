@@ -99,23 +99,14 @@ public class StudentService : IStudentService
         student.LastLoggedIn = DateTimeHelper.GetVietnamTime();
         await _repository.UpdateAsync(student);
 
-        // Gửi realtime trạng thái phòng thi cho tất cả session của sinh viên
-        var studentExamSessions = await _studentExamSessionRepository.GetQueryable()
-            .Where(x => x.StudentCode == studentCode1)
-            .ToListAsync();
+        // Gửi message vào RabbitMQ để worker thực hiện cache StudentExamSession
+        // Định nghĩa DTO ở file riêng, sử dụng khi gửi message vào RabbitMQ
+        var cacheRequest = new CacheStudentExamSessionsMessage { StudentCode = studentCode1 };
+        _rabbitMQService.PublishMessage("cache_student_exam_sessions_queue", cacheRequest);
 
-        foreach (var session in studentExamSessions)
-        {
-            if (session.ExamRoomId != null)
-            {
-                var examRoomId = session.ExamRoomId.Value;
-                var examSessionSubjectId = session.ExamSessionSubjectId;
-                var statusList = await GetStudentsByExamRoomAsync(examRoomId, examSessionSubjectId);
-                _logger.LogInformation("[SignalR] Gửi RoomStatusUpdated tới room_{ExamRoomId} với {StudentCount} sinh viên.", examRoomId, statusList.Count());
-                await _hubContext.Clients.Group($"room_{examRoomId}")
-                    .SendAsync("RoomStatusUpdated", statusList);
-            }
-        }
+        // (Giữ nguyên các đoạn code khác, không truy vấn studentExamSessions và không cache Redis ở đây)
+        // Nếu cần gửi trạng thái phòng thi realtime, có thể cân nhắc chuyển sang worker hoặc giữ lại đoạn này nếu thực sự cần thiết
+
         // Sinh JWT token như cũ, nhưng không có username
         var tokenHandler = new JwtSecurityTokenHandler();
         var key = Encoding.ASCII.GetBytes(_configuration["JWT:key"] ?? "default_secret_key");

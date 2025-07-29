@@ -13,11 +13,13 @@ namespace backend_manage.Messages.RabbitMQ
         private const string ExamSubmissionQueue = "submit_exam_queue";
         private const string StudentAnswerSavedQueue = "save_answer_queue";
         private const string SaveExamQueue = "save_exam_queue";
+        private const string CacheStudentExamSessionsQueue = "cache_student_exam_sessions_queue";
         
         // Cấu hình số lượng consumers cho xử lý song song
         private const int StudentAnswerConsumerCount = 2; // 2 consumers cho lưu đáp án
         private const int ExamSubmissionConsumerCount = 2; // 2 consumers cho nộp bài
         private const int SaveExamConsumerCount = 2; // 2 consumers cho lưu bài
+        private const int CacheStudentExamSessionsConsumerCount = 1; // Số lượng consumer cho queue này
 
         public RabbitMqConsumer(
             IRabbitMqService rabbitMQService,
@@ -50,6 +52,13 @@ namespace backend_manage.Messages.RabbitMQ
             {
                 _rabbitMQService.Subscribe<ExamSubmissionMessage>(SaveExamQueue, ProcessSaveExam);
                 _logger.LogInformation("Bắt đầu consumer {ConsumerId} cho queue: {QueueName}", i + 1, SaveExamQueue);
+            }
+            
+            // Thêm consumer cho cache_student_exam_sessions_queue
+            for (int i = 0; i < CacheStudentExamSessionsConsumerCount; i++)
+            {
+                _rabbitMQService.Subscribe<CacheStudentExamSessionsMessage>(CacheStudentExamSessionsQueue, ProcessCacheStudentExamSessions);
+                _logger.LogInformation("Bắt đầu consumer {ConsumerId} cho queue: {QueueName}", i + 1, CacheStudentExamSessionsQueue);
             }
             
             _logger.LogInformation("Đã khởi tạo {StudentAnswerCount} consumers cho lưu đáp án, {ExamSubmissionCount} consumers cho nộp bài và {SaveExamCount} consumers cho lưu bài", 
@@ -207,6 +216,43 @@ namespace backend_manage.Messages.RabbitMQ
                 _logger.LogError(ex, "Lỗi khi xử lý message lưu đáp án. StudentCode: {StudentCode}, Index: {Index}",
                     message.StudentCode, message.Index);
                 throw;
+            }
+        }
+
+        private void ProcessCacheStudentExamSessions(CacheStudentExamSessionsMessage message)
+        {
+            try
+            {
+                string studentCode = message.StudentCode;
+                using var scope = _serviceScopeFactory.CreateScope();
+                var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+                var redisConn = scope.ServiceProvider.GetService(typeof(StackExchange.Redis.IConnectionMultiplexer)) as StackExchange.Redis.IConnectionMultiplexer;
+                var logger = scope.ServiceProvider.GetRequiredService<ILogger<RabbitMqConsumer>>();
+
+                if (redisConn == null)
+                {
+                    logger.LogError("Không lấy được Redis connection trong ProcessCacheStudentExamSessions");
+                    return;
+                }
+                var redisDb = redisConn.GetDatabase();
+
+                // 1. Truy vấn tất cả phiên thi của sinh viên
+                var studentExamSessions = dbContext.StudentExamSessions
+                    .Where(x => x.StudentCode == studentCode)
+                    .ToList();
+
+                foreach (var session in studentExamSessions)
+                {
+                    // 2. Cache vào Redis
+                    string sessionCacheKey = $"student_exam_session:{studentCode}:{session.StudentExamSessionId}";
+                    var jsonSession = System.Text.Json.JsonSerializer.Serialize(session);
+                    redisDb.StringSet(sessionCacheKey, jsonSession, TimeSpan.FromHours(6));
+                }
+                logger.LogInformation("Đã cache StudentExamSession của sinh viên {StudentCode}", studentCode);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi xử lý cache_student_exam_sessions_queue");
             }
         }
     }
