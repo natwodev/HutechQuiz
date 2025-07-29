@@ -389,6 +389,9 @@ public class StudentService : IStudentService
         int? shuffledExamPaperId = null;
         int examSessionSubjectId = 0;
 
+        ShuffledExamPaper shuffledExamPaper = null;
+        ShuffledExamPaperDto paperDto = null;
+
         try
         {
             // Thử lấy từ Redis cache trước
@@ -399,6 +402,7 @@ public class StudentService : IStudentService
                 studentExamSession = System.Text.Json.JsonSerializer.Deserialize<StudentExamSession>(cachedSession);
                 shuffledExamPaperId = studentExamSession?.ShuffledExamPaperId;
                 examSessionSubjectId = studentExamSession?.ExamSessionSubjectId ?? 0;
+                
                 
                 // Kiểm tra nếu đã có ShuffledExamPaperId thì thử lấy từ Redis
                 if (shuffledExamPaperId.HasValue)
@@ -489,10 +493,7 @@ public class StudentService : IStudentService
                 _logger.LogInformation("StudentExamSession từ database chưa có ShuffledExamPaperId, sẽ random đề thi");
             }
         }
-
-        ShuffledExamPaper shuffledExamPaper = null;
-        ShuffledExamPaperDto paperDto = null;
-
+        
         // 3. Xử lý khi đã có ShuffledExamPaperId (từ cache hoặc database)
         if (shuffledExamPaperId.HasValue)
         {
@@ -569,9 +570,9 @@ public class StudentService : IStudentService
             // Cập nhật ShuffledExamPaperId vào StudentExamSession trong Redis
             try
             {
-                studentExamSession.ShuffledExamPaperId = shuffledExamPaper.ShuffledExamPaperId;
-                var jsonSession = System.Text.Json.JsonSerializer.Serialize(studentExamSession);
-                await db.StringSetAsync(sessionCacheKey, jsonSession, TimeSpan.FromHours(6));
+                // Cập nhật ShuffledExamPaperId riêng lẻ thay vì serialize toàn bộ object
+                await db.HashSetAsync(sessionCacheKey, "ShuffledExamPaperId", shuffledExamPaper.ShuffledExamPaperId.ToString());
+                await db.KeyExpireAsync(sessionCacheKey, TimeSpan.FromHours(6));
                 _logger.LogInformation("Đã cập nhật ShuffledExamPaperId {ShuffledExamPaperId} vào StudentExamSession trong Redis cho sinh viên {StudentCode}", 
                     shuffledExamPaper.ShuffledExamPaperId, studentCode);
             }
@@ -629,7 +630,7 @@ public class StudentService : IStudentService
             // Cache vào Redis
             try
             {
-                var db = _redis.GetDatabase();
+                db = _redis.GetDatabase();
                 string cacheKey = $"shuffled_exam_paper:{shuffledExamPaper.ShuffledExamPaperId}";
                 string answerKey = $"answer_key:{shuffledExamPaper.ShuffledExamPaperId}";
                 string studentAnswerKey = $"student_answers:{studentCode}:{shuffledExamPaper.ShuffledExamPaperId}";
@@ -839,19 +840,34 @@ public class StudentService : IStudentService
     #region ValidateStudentExamSessionAsync
     private async Task<(bool Success, string Message)> ValidateStudentExamSessionAsync(string studentCode, int shuffledExamPaperId)
     {
-        var cacheKey = $"student_exam_session_completed:{studentCode}:{shuffledExamPaperId}";
         var db = _redis.GetDatabase();
-        var cacheValue = await db.StringGetAsync(cacheKey);
-
-        if (cacheValue.HasValue)
+        
+        // Tìm StudentExamSession từ cache với ShuffledExamPaperId cụ thể
+        var sessionCacheKey = $"student_exam_session:{studentCode}:*";
+        var keys = db.Multiplexer.GetServer(db.Multiplexer.GetEndPoints().First()).Keys(pattern: sessionCacheKey);
+        
+        foreach (var key in keys)
         {
-            _logger.LogInformation($"[ValidateStudentExamSessionAsync] Truy vấn trạng thái từ Redis: {{Key}} = {{Value}}", cacheKey, cacheValue);
-            if (cacheValue == "1")
-                return (false, "Bài thi đã được nộp trước đó");
-            return (true, "Validation thành công");
+            var sessionData = await db.HashGetAllAsync(key);
+            if (sessionData.Any())
+            {
+                var cachedShuffledExamPaperId = sessionData.FirstOrDefault(x => x.Name == "ShuffledExamPaperId").Value;
+                if (cachedShuffledExamPaperId.HasValue && int.Parse(cachedShuffledExamPaperId) == shuffledExamPaperId)
+                {
+                    // Tìm thấy session trong cache, kiểm tra IsCompleted
+                    var isCompleted = sessionData.FirstOrDefault(x => x.Name == "IsCompleted").Value;
+                    if (isCompleted.HasValue)
+                    {
+                        _logger.LogInformation($"[ValidateStudentExamSessionAsync] Truy vấn trạng thái từ cache StudentExamSession: {{Key}} = {{Value}}", key, isCompleted);
+                        if (isCompleted == "True")
+                            return (false, "Bài thi đã được nộp trước đó");
+                        return (true, "Validation thành công");
+                    }
+                }
+            }
         }
 
-        _logger.LogInformation($"[ValidateStudentExamSessionAsync] Không có trạng thái trong Redis, truy vấn DB: {{Key}}", cacheKey);
+        _logger.LogInformation($"[ValidateStudentExamSessionAsync] Không có trạng thái trong cache, truy vấn DB");
         // Nếu không có trong cache, truy vấn DB
         var studentExamSession = await _studentExamSessionRepository.GetQueryable()
             .AsNoTracking()
@@ -860,9 +876,6 @@ public class StudentService : IStudentService
 
         if (studentExamSession == null)
             return (false, "Không tìm thấy phiên thi của sinh viên");
-
-        // Cache lại trạng thái IsCompleted
-        await db.StringSetAsync(cacheKey, studentExamSession.IsCompleted ? "1" : "0", TimeSpan.FromHours(6));
 
         if (studentExamSession.IsCompleted)
             return (false, "Bài thi đã được nộp trước đó");

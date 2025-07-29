@@ -95,20 +95,38 @@ namespace backend_manage.Messages.RabbitMQ
 
                 dbContext.SaveChanges();
 
-                // Đồng bộ cache IsCompleted vào Redis
+                // Cập nhật IsCompleted trong cache StudentExamSession
                 try
                 {
-                    var redis = new StackExchange.Redis.ConnectionMultiplexer[] { };
                     if (scope.ServiceProvider.GetService(typeof(StackExchange.Redis.IConnectionMultiplexer)) is StackExchange.Redis.IConnectionMultiplexer redisConn)
                     {
                         var redisDb = redisConn.GetDatabase();
-                        var cacheKey = $"student_exam_session_completed:{message.StudentCode}:{message.ShuffledExamPaperId}";
-                        redisDb.StringSet(cacheKey, message.IsCompleted ? "1" : "0", TimeSpan.FromHours(6));
+                        
+                        // Tìm cache key của StudentExamSession với ShuffledExamPaperId cụ thể
+                        var sessionCacheKey = $"student_exam_session:{message.StudentCode}:*";
+                        var keys = redisDb.Multiplexer.GetServer(redisDb.Multiplexer.GetEndPoints().First()).Keys(pattern: sessionCacheKey);
+                        
+                        foreach (var key in keys)
+                        {
+                            var sessionData = await redisDb.HashGetAllAsync(key);
+                            if (sessionData.Any())
+                            {
+                                var cachedShuffledExamPaperId = sessionData.FirstOrDefault(x => x.Name == "ShuffledExamPaperId").Value;
+                                if (cachedShuffledExamPaperId.HasValue && int.Parse(cachedShuffledExamPaperId) == message.ShuffledExamPaperId)
+                                {
+                                    // Cập nhật IsCompleted trong cache StudentExamSession
+                                    await redisDb.HashSetAsync(key, "IsCompleted", message.IsCompleted.ToString());
+                                    await redisDb.KeyExpireAsync(key, TimeSpan.FromHours(6));
+                                    _logger.LogInformation("Đã cập nhật IsCompleted trong cache StudentExamSession: {Key} = {Value}", key, message.IsCompleted);
+                                    break;
+                                }
+                            }
+                        }
                     }
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Lỗi khi đồng bộ cache IsCompleted vào Redis");
+                    _logger.LogError(ex, "Lỗi khi cập nhật IsCompleted trong cache StudentExamSession");
                 }
 
                 _logger.LogInformation(
