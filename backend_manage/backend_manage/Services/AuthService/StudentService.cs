@@ -826,7 +826,7 @@ public class StudentService : IStudentService
             }
 
             // Sử dụng helper method để validate StudentExamSession
-            var (validationSuccess, validationMessage, studentExamSession) = await ValidateStudentExamSessionAsync(StudentCode, submitExamDto.ShuffledExamPaperId);
+            var (validationSuccess, validationMessage) = await ValidateStudentExamSessionAsync(StudentCode, submitExamDto.ShuffledExamPaperId);
             
             if (!validationSuccess)
             {
@@ -929,7 +929,7 @@ public class StudentService : IStudentService
             }
 
             // Sử dụng helper method để validate StudentExamSession
-            var (validationSuccess, validationMessage, studentExamSession) = await ValidateStudentExamSessionAsync(
+            var (validationSuccess, validationMessage) = await ValidateStudentExamSessionAsync(
                 StudentCode, submitExamDto.ShuffledExamPaperId);
             
             if (!validationSuccess)
