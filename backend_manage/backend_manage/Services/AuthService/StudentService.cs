@@ -570,15 +570,37 @@ public class StudentService : IStudentService
             // Cập nhật ShuffledExamPaperId vào StudentExamSession trong Redis
             try
             {
-                // Cập nhật ShuffledExamPaperId riêng lẻ thay vì serialize toàn bộ object
-                await db.HashSetAsync(sessionCacheKey, "ShuffledExamPaperId", shuffledExamPaper.ShuffledExamPaperId.ToString());
-                await db.KeyExpireAsync(sessionCacheKey, TimeSpan.FromHours(6));
-                _logger.LogInformation("Đã cập nhật ShuffledExamPaperId {ShuffledExamPaperId} vào StudentExamSession trong Redis cho sinh viên {StudentCode}", 
-                    shuffledExamPaper.ShuffledExamPaperId, studentCode);
+                // Lấy dữ liệu hiện tại từ Redis
+                var existingSessionJson = await db.StringGetAsync(sessionCacheKey);
+                if (existingSessionJson.HasValue)
+                {
+                    // Deserialize JSON hiện tại
+                    var existingSession = System.Text.Json.JsonSerializer.Deserialize<StudentExamSession>(existingSessionJson);
+                    if (existingSession != null)
+                    {
+                        // Cập nhật ShuffledExamPaperId
+                        existingSession.ShuffledExamPaperId = shuffledExamPaper.ShuffledExamPaperId;
+                        
+                        // Serialize lại và lưu vào Redis
+                        var updatedSessionJson = System.Text.Json.JsonSerializer.Serialize(existingSession);
+                        await db.StringSetAsync(sessionCacheKey, updatedSessionJson, TimeSpan.FromHours(6));
+                        
+                        _logger.LogInformation("Đã cập nhật ShuffledExamPaperId {ShuffledExamPaperId} vào StudentExamSession trong Redis cho sinh viên {StudentCode}", 
+                            shuffledExamPaper.ShuffledExamPaperId, studentCode);
+                    }
+                    else
+                    {
+                        _logger.LogWarning("Không thể deserialize StudentExamSession từ Redis cho sinh viên {StudentCode}", studentCode);
+                    }
+                }
+                else
+                {
+                    _logger.LogWarning("Không tìm thấy StudentExamSession trong Redis cho sinh viên {StudentCode}", studentCode);
+                }
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "Lỗi khi cập nhật ShuffledExamPaperId vào StudentExamSession trong Redis");
+                _logger.LogWarning(ex, "Lỗi khi cập nhật ShuffledExamPaperId vào StudentExamSession trong Redis cho sinh viên {StudentCode}", studentCode);
             }
             
             // Thử lấy đề từ Redis trước
@@ -611,7 +633,7 @@ public class StudentService : IStudentService
             studentExamSession.StartTime = DateTimeHelper.GetVietnamTime();
             studentExamSession.ShuffledExamPaperId = shuffledExamPaper.ShuffledExamPaperId;
             studentExamSession.StudentAnswersString = emptyAnswers;
-            await _studentExamSessionRepository.UpdateAsync(studentExamSession);
+            await _studentExamSessionRepository.UpdateAsync(studentExamSession); //đợi dùng rabit 
             
             _logger.LogInformation("Đã cập nhật thông tin đề thi và chuỗi đáp án rỗng cho sinh viên trong database");
             
