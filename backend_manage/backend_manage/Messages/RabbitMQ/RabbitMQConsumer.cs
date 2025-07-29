@@ -52,8 +52,8 @@ namespace backend_manage.Messages.RabbitMQ
                 _logger.LogInformation("Bắt đầu consumer {ConsumerId} cho queue: {QueueName}", i + 1, SaveExamQueue);
             }
             
-            _logger.LogInformation("Đã khởi tạo {StudentAnswerCount} consumers cho lưu đáp án và {ExamSubmissionCount} consumers cho nộp bài", 
-                StudentAnswerConsumerCount, ExamSubmissionConsumerCount);
+            _logger.LogInformation("Đã khởi tạo {StudentAnswerCount} consumers cho lưu đáp án, {ExamSubmissionCount} consumers cho nộp bài và {SaveExamCount} consumers cho lưu bài", 
+                StudentAnswerConsumerCount, ExamSubmissionConsumerCount, SaveExamConsumerCount);
         }
 
         private void ProcessExamSubmission(ExamSubmissionMessage message)
