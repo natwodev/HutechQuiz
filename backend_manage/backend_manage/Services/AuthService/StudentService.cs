@@ -369,6 +369,7 @@ public class StudentService : IStudentService
             .Include(x => x.ShuffledExamPaperDetails)
             .ThenInclude(d => d.OriginalExamPaperDetail)
             .Include(x => x.OriginalExamPaper)
+            .Include(x => x.Subject)
             .FirstOrDefaultAsync();
         
         if (shuffledExamPaper == null)
@@ -865,7 +866,7 @@ public class StudentService : IStudentService
             }
 
             // Sử dụng helper method để validate StudentExamSession
-            var (validationSuccess, validationMessage, studentExamSession) = await ValidateStudentExamSessionAsync(StudentCode, submitExamDto.ShuffledExamPaperId);
+            var (validationSuccess, validationMessage) = await ValidateStudentExamSessionAsync(StudentCode, submitExamDto.ShuffledExamPaperId);
             
             if (!validationSuccess)
             {
@@ -972,7 +973,7 @@ public class StudentService : IStudentService
             }
 
             // Sử dụng helper method để validate StudentExamSession
-            var (validationSuccess, validationMessage, studentExamSession) = await ValidateStudentExamSessionAsync(
+            var (validationSuccess, validationMessage) = await ValidateStudentExamSessionAsync(
                 StudentCode, submitExamDto.ShuffledExamPaperId);
             
             if (!validationSuccess)

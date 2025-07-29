@@ -308,7 +308,6 @@ namespace backend_manage.Services.AuthService
                     Title = $"{originalExamPaper.Title} - Hoán vị {nextIndex}",
                     ShuffledExamPaperCore = shuffledExamPaperCore,
                     OriginalExamPaperId = originalExamPaper.OriginalExamPaperId,
-                    ExamSessionSubjectId = null,
                     SubjectId = subjectId,
                     IsApproved = true, // Đề hoán vị mặc định được duyệt khi tạo mới
                     CreatedBy = userId,
