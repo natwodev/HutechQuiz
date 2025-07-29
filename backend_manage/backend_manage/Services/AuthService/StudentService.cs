@@ -64,6 +64,7 @@ public class StudentService : IStudentService
         _rabbitMQService = rabbitMQService;
     }
 
+    #region LoginAsync
     public async Task<StudentAuthResultDto> LoginAsync(string studentCode1, string studentCode2)
     {
         if (studentCode1 != studentCode2)
@@ -149,20 +150,24 @@ public class StudentService : IStudentService
             }
         };
     }
+    #endregion
 
-  
-
+    #region GetAllAsync
     public async Task<IEnumerable<Student>> GetAllAsync()
     {
         return await _repository.GetAllAsync();
     }
+    #endregion
 
+    #region GetByStudentCodeAsync
     public async Task<Student?> GetByStudentCodeAsync(string studentCode)
     {
         var students = await _repository.GetAllAsync();
         return students.FirstOrDefault(s => s.StudentCode == studentCode);
     }
+    #endregion
 
+    #region AddAsync
     public async Task<Student> AddAsync(StudentCreateDto dto)
     {
         var student = new Student
@@ -173,7 +178,9 @@ public class StudentService : IStudentService
         };
         return await _repository.AddAsync(student);
     }
+    #endregion
 
+    #region AddRangeAsync
     public async Task<IEnumerable<Student>> AddRangeAsync(IEnumerable<StudentCreateDto> dtos)
     {
         var students = dtos.Select(dto => new Student
@@ -190,7 +197,9 @@ public class StudentService : IStudentService
         }
         return result;
     }
+    #endregion
 
+    #region BulkImportStudentsAsync
     public async Task<int> BulkImportStudentsAsync(List<StudentCreateDto> students)
     {
         var userId = _httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -211,7 +220,9 @@ public class StudentService : IStudentService
         }
         return entities.Count;
     }
+    #endregion
 
+    #region ImportFromExcelAsync
     public async Task<StudentImportResultDto> ImportFromExcelAsync(IFormFile file, string examSessionSubjectCore, int examRoomId)
     {
         if (file == null || file.Length == 0)
@@ -295,17 +306,23 @@ public class StudentService : IStudentService
         }
         return new StudentImportResultDto { StudentsAdded = addedCount, StudentExamSessionsAdded = studentExamSessionAdded };
     }
+    #endregion
 
+    #region UpdateAsync
     public async Task<Student> UpdateAsync(string id, Student student)
     {
         return await _repository.UpdateAsync(student);
     }
+    #endregion
 
+    #region DeleteAsync
     public async Task<bool> DeleteAsync(string id)
     {
         return await _repository.DeleteAsync(id);
     }
+    #endregion
 
+    #region GetExamFromRedisAsync
     private async Task<ShuffledExamPaperDto> GetExamFromRedisAsync(int shuffledExamPaperId)
     {
         try
@@ -340,7 +357,9 @@ public class StudentService : IStudentService
             return null;
         }
     }
+    #endregion
 
+    #region GetExamFromDatabaseAsync
     private async Task<(ShuffledExamPaper ExamPaper, ShuffledExamPaperDto ExamPaperDto)> GetExamFromDatabaseAsync(int shuffledExamPaperId)
     {
         _logger.LogInformation("Lấy đề thi từ database với ID: {ShuffledExamPaperId}", shuffledExamPaperId);
@@ -362,7 +381,9 @@ public class StudentService : IStudentService
         var paperDto = _mapper.Map<ShuffledExamPaperDto>(shuffledExamPaper);
         return (shuffledExamPaper, paperDto);
     }
+    #endregion
 
+    #region StartExamAsync
     public async Task<ShuffledExamPaperDto> StartExamAsync(string studentCode, int studentExamSessionId)
     {
         _logger.LogInformation("Bắt đầu lấy đề thi cho sinh viên {StudentCode}, phiên thi {StudentExamSessionId}", 
@@ -583,7 +604,9 @@ public class StudentService : IStudentService
             
         return paperDto;
     }
+    #endregion
    
+    #region GetStudentExamSessionsAsync
     public async Task<IEnumerable<StudentExamSessionDto>> GetStudentExamSessionsAsync(string studentCode)
     {
         var student = await _repository.GetQueryable().FirstOrDefaultAsync(x => x.StudentCode == studentCode);
@@ -596,7 +619,9 @@ public class StudentService : IStudentService
             .ToListAsync();
         return sessions.Select(x => _mapper.Map<StudentExamSessionDto>(x));
     }
+    #endregion
 
+    #region GetStudentsByExamRoomAsync
     public async Task<IEnumerable<StudentExamRoomStatusDto>> GetStudentsByExamRoomAsync(int examRoomId, int examSessionSubjectId)
     {
         var sessions = await _studentExamSessionRepository.GetQueryable()
@@ -607,7 +632,9 @@ public class StudentService : IStudentService
             .ToListAsync();
         return sessions.Select(x => _mapper.Map<StudentExamRoomStatusDto>(x));
     }
+    #endregion
     
+    #region AddExtraMinutesAsync
     public async Task<bool> AddExtraMinutesAsync(string studentCode, int studentExamSessionId, int extraMinutes, string? reasonForExtra)
     {
         // 1. Tìm StudentExamSession cần cập nhật
@@ -632,7 +659,9 @@ public class StudentService : IStudentService
 
         return true;
     }
+    #endregion
     
+    #region AvtiveLoginAsync
     public async Task<(bool Success, string Message)> AvtiveLoginAsync(string studentCode, bool isLogin)
     {
         var userId = _httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -658,8 +687,10 @@ public class StudentService : IStudentService
 
         return (true, "Cập nhật trạng thái đăng nhập thành công.");
     }
+    #endregion
 
     // Helper methods để tái sử dụng code
+    #region GetAndUpdateStudentAnswersAsync
     private async Task<(bool Success, string Message, Dictionary<int, string>? CurrentAnswers)> GetAndUpdateStudentAnswersAsync(
         string studentCode, int shuffledExamPaperId, List<SaveAnswerDto> saveAnswerDtos)
     {
@@ -697,7 +728,9 @@ public class StudentService : IStudentService
 
         return (true, "Cập nhật đáp án thành công", currentAnswers);
     }
+    #endregion
 
+    #region ValidateStudentExamSessionAsync
     private async Task<(bool Success, string Message)> ValidateStudentExamSessionAsync(string studentCode, int shuffledExamPaperId)
     {
         var cacheKey = $"student_exam_session_completed:{studentCode}:{shuffledExamPaperId}";
@@ -730,7 +763,9 @@ public class StudentService : IStudentService
 
         return (true, "Validation thành công");
     }
+    #endregion
 
+    #region GetAnswerKeyAsync
     private async Task<(bool Success, string Message, Dictionary<int, string>? CorrectAnswers)> GetAnswerKeyAsync(int shuffledExamPaperId)
     {
         var db = _redis.GetDatabase();
@@ -752,7 +787,9 @@ public class StudentService : IStudentService
 
         return (true, "Lấy đáp án thành công", correctAnswerPairs);
     }
+    #endregion
 
+    #region UpdateSingleAnswerAsync
     private async Task<(bool Success, string Message, string? NewAnswersString)> UpdateSingleAnswerAsync(
         string studentCode, int shuffledExamPaperId, int index, string answer)
     {
@@ -811,7 +848,9 @@ public class StudentService : IStudentService
 
         return (true, "Cập nhật đáp án thành công", newAnswersString);
     }
+    #endregion
 
+    #region SubmitExamAsync
     public async Task<(bool Success, string Message, double? Score)> SubmitExamAsync(string StudentCode,SubmitExamDto submitExamDto)
     {
         try
@@ -885,7 +924,9 @@ public class StudentService : IStudentService
             return (false, $"Lỗi khi nộp bài: {ex.Message}", null);
         }
     }
+    #endregion
 
+    #region SaveStudentAnswerAsync
     public async Task<(bool Success, string Message)> SaveStudentAnswerAsync(string studentCode, int shuffledExamPaperId, int index, string answer)
     {
         try
@@ -914,7 +955,9 @@ public class StudentService : IStudentService
             return (false, $"Lỗi khi lưu đáp án: {ex.Message}");
         }
     }
+    #endregion
 
+    #region SaveExamAsync
     public async Task<(bool Success, string Message)> SaveExamAsync(string StudentCode, SubmitExamDto submitExamDto)
     {
         try
@@ -967,5 +1010,6 @@ public class StudentService : IStudentService
             return (false, $"Lỗi khi lưu bài thi: {ex.Message}");
         }
     }
+    #endregion
 
 } 
