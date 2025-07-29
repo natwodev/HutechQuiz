@@ -22,4 +22,5 @@ public interface IStudentService
     Task<(bool Success, string Message)> SaveStudentAnswerAsync(string studentCode, int shuffledExamPaperId, int index, string answer);
 
     Task<(bool Success, string Message, double? Score)> SubmitExamAsync(string StudentCode, SubmitExamDto submitExamDto);
+    Task<(bool Success, string Message)> SaveExamAsync(string StudentCode, SubmitExamDto submitExamDto);
 } 
