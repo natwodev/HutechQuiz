@@ -227,6 +227,226 @@ public class StudentController : ControllerBase
         }
     }
 
+    #region Redis Cache Endpoints
+    [HttpPost("preload-students-to-redis")]
+    [Authorize(Roles = "Admin,ITManager")]
+    public async Task<IActionResult> PreloadStudentsToRedis()
+    {
+        try
+        {
+            var (success, message, cachedCount) = await _studentService.PreloadStudentsToRedisAsync();
+            
+            if (success)
+            {
+                return Ok(new { success = true, message, cachedCount });
+            }
+            else
+            {
+                return BadRequest(new { success = false, message });
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Lỗi khi tải sinh viên lên Redis cache");
+            return StatusCode(500, new { success = false, message = "Lỗi server khi tải sinh viên lên Redis cache" });
+        }
+    }
+
+    [HttpPost("preload-student-exam-sessions-to-redis")]
+    [Authorize(Roles = "Admin,ITManager")]
+    public async Task<IActionResult> PreloadStudentExamSessionsToRedis()
+    {
+        try
+        {
+            var (success, message, cachedCount) = await _studentService.PreloadStudentExamSessionsToRedisAsync();
+            
+            if (success)
+            {
+                return Ok(new { success = true, message, cachedCount });
+            }
+            else
+            {
+                return BadRequest(new { success = false, message });
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Lỗi khi tải StudentExamSessions lên Redis cache");
+            return StatusCode(500, new { success = false, message = "Lỗi server khi tải StudentExamSessions lên Redis cache" });
+        }
+    }
+
+    [HttpPost("preload-all-data-to-redis")]
+    [Authorize(Roles = "Admin,ITManager")]
+    public async Task<IActionResult> PreloadAllDataToRedis()
+    {
+        try
+        {
+            var (success, message, cachedCounts) = await _studentService.PreloadAllDataToRedisAsync();
+            
+            if (success)
+            {
+                return Ok(new { success = true, message, cachedCounts });
+            }
+            else
+            {
+                return BadRequest(new { success = false, message });
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Lỗi khi tải tất cả dữ liệu lên Redis cache");
+            return StatusCode(500, new { success = false, message = "Lỗi server khi tải dữ liệu lên Redis cache" });
+        }
+    }
+
+    [HttpGet("get-student-from-redis/{studentCode}")]
+    [Authorize(Roles = "Admin,ITManager,Lecturer")]
+    public async Task<IActionResult> GetStudentFromRedis(string studentCode)
+    {
+        try
+        {
+            var student = await _studentService.GetStudentFromRedisAsync(studentCode);
+            
+            if (student != null)
+            {
+                return Ok(new { success = true, student });
+            }
+            else
+            {
+                return NotFound(new { success = false, message = $"Không tìm thấy sinh viên {studentCode} trong Redis cache" });
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Lỗi khi lấy sinh viên {StudentCode} từ Redis cache", studentCode);
+            return StatusCode(500, new { success = false, message = "Lỗi server khi lấy sinh viên từ Redis cache" });
+        }
+    }
+
+    [HttpPut("update-student-in-redis")]
+    [Authorize(Roles = "Admin,ITManager")]
+    public async Task<IActionResult> UpdateStudentInRedis([FromBody] Student student)
+    {
+        try
+        {
+            var success = await _studentService.UpdateStudentInRedisAsync(student);
+            
+            if (success)
+            {
+                return Ok(new { success = true, message = $"Đã cập nhật sinh viên {student.StudentCode} trong Redis cache" });
+            }
+            else
+            {
+                return BadRequest(new { success = false, message = "Lỗi khi cập nhật sinh viên trong Redis cache" });
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Lỗi khi cập nhật sinh viên trong Redis cache");
+            return StatusCode(500, new { success = false, message = "Lỗi server khi cập nhật sinh viên trong Redis cache" });
+        }
+    }
+
+    [HttpDelete("remove-student-from-redis/{studentCode}")]
+    [Authorize(Roles = "Admin,ITManager")]
+    public async Task<IActionResult> RemoveStudentFromRedis(string studentCode)
+    {
+        try
+        {
+            var success = await _studentService.RemoveStudentFromRedisAsync(studentCode);
+            
+            if (success)
+            {
+                return Ok(new { success = true, message = $"Đã xóa sinh viên {studentCode} khỏi Redis cache" });
+            }
+            else
+            {
+                return BadRequest(new { success = false, message = $"Không thể xóa sinh viên {studentCode} khỏi Redis cache" });
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Lỗi khi xóa sinh viên {StudentCode} khỏi Redis cache", studentCode);
+            return StatusCode(500, new { success = false, message = "Lỗi server khi xóa sinh viên khỏi Redis cache" });
+        }
+    }
+    #endregion
+
+    #region Cache Management Endpoints
+    [HttpGet("check-cache-status")]
+    [Authorize(Roles = "Admin,ITManager")]
+    public async Task<IActionResult> CheckCacheStatus()
+    {
+        try
+        {
+            var (success, message, cacheInfo) = await _studentService.CheckCacheStatusAsync();
+            
+            if (success)
+            {
+                return Ok(new { success = true, message, cacheInfo });
+            }
+            else
+            {
+                return BadRequest(new { success = false, message });
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Lỗi khi kiểm tra trạng thái cache");
+            return StatusCode(500, new { success = false, message = "Lỗi server khi kiểm tra trạng thái cache" });
+        }
+    }
+
+    [HttpPost("clear-old-cache")]
+    [Authorize(Roles = "Admin,ITManager")]
+    public async Task<IActionResult> ClearOldCache()
+    {
+        try
+        {
+            var (success, message, deletedCount) = await _studentService.ClearOldCacheAsync();
+            
+            if (success)
+            {
+                return Ok(new { success = true, message, deletedCount });
+            }
+            else
+            {
+                return BadRequest(new { success = false, message });
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Lỗi khi xóa cache cũ");
+            return StatusCode(500, new { success = false, message = "Lỗi server khi xóa cache cũ" });
+        }
+    }
+
+    [HttpPost("refresh-cache")]
+    [Authorize(Roles = "Admin,ITManager")]
+    public async Task<IActionResult> RefreshCache()
+    {
+        try
+        {
+            var (success, message, results) = await _studentService.RefreshCacheAsync();
+            
+            if (success)
+            {
+                return Ok(new { success = true, message, results });
+            }
+            else
+            {
+                return BadRequest(new { success = false, message });
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Lỗi khi refresh cache");
+            return StatusCode(500, new { success = false, message = "Lỗi server khi refresh cache" });
+        }
+    }
+    #endregion
+
 }
 
 public class ActiveLoginRequest

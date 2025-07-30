@@ -1145,6 +1145,497 @@ public class StudentService : IStudentService
     }
     #endregion
 
+    #region PreloadStudentsToRedisAsync
+    public async Task<(bool Success, string Message, int CachedCount)> PreloadStudentsToRedisAsync()
+    {
+        try
+        {
+            _logger.LogInformation("Bắt đầu tải sinh viên lên Redis cache");
+            
+            var db = _redis.GetDatabase();
+            var students = await _repository.GetAllAsync();
+            
+            if (!students.Any())
+            {
+                _logger.LogWarning("Không có sinh viên nào để cache");
+                return (false, "Không có sinh viên nào để cache", 0);
+            }
+            
+            var batch = db.CreateBatch();
+            var cacheTasks = new List<Task>();
+            int cachedCount = 0;
+            int updatedCount = 0;
+            int skippedCount = 0;
+            
+            foreach (var student in students)
+            {
+                try
+                {
+                    // Tạo cache key cho từng sinh viên
+                    string studentCacheKey = $"student:{student.StudentCode}";
+                    
+                    // Kiểm tra xem sinh viên đã tồn tại trong cache chưa
+                    var existingStudent = await db.StringGetAsync(studentCacheKey);
+                    
+                    if (existingStudent.HasValue)
+                    {
+                        try
+                        {
+                            var cachedStudent = System.Text.Json.JsonSerializer.Deserialize<Student>(existingStudent);
+                            
+                            // So sánh version hoặc UpdatedAt để quyết định có cập nhật không
+                            if (cachedStudent != null && 
+                                (cachedStudent.Version < student.Version || 
+                                 cachedStudent.UpdatedAt < student.UpdatedAt))
+                            {
+                                // Cập nhật nếu có thay đổi
+                                var studentJson = System.Text.Json.JsonSerializer.Serialize(student);
+                                var cacheTask = batch.StringSetAsync(studentCacheKey, studentJson, TimeSpan.FromHours(6));
+                                cacheTasks.Add(cacheTask);
+                                updatedCount++;
+                                _logger.LogDebug("Cập nhật sinh viên {StudentCode} trong Redis cache", student.StudentCode);
+                            }
+                            else
+                            {
+                                // Bỏ qua nếu không có thay đổi
+                                skippedCount++;
+                                _logger.LogDebug("Bỏ qua sinh viên {StudentCode} - đã tồn tại và không có thay đổi", student.StudentCode);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogWarning(ex, "Lỗi khi deserialize sinh viên {StudentCode} từ cache, sẽ cập nhật lại", student.StudentCode);
+                            // Nếu lỗi deserialize, cập nhật lại
+                            var studentJson = System.Text.Json.JsonSerializer.Serialize(student);
+                            var cacheTask = batch.StringSetAsync(studentCacheKey, studentJson, TimeSpan.FromHours(6));
+                            cacheTasks.Add(cacheTask);
+                            updatedCount++;
+                        }
+                    }
+                    else
+                    {
+                        // Thêm mới nếu chưa tồn tại
+                        var studentJson = System.Text.Json.JsonSerializer.Serialize(student);
+                        var cacheTask = batch.StringSetAsync(studentCacheKey, studentJson, TimeSpan.FromHours(6));
+                        cacheTasks.Add(cacheTask);
+                        cachedCount++;
+                        _logger.LogDebug("Thêm mới sinh viên {StudentCode} vào Redis cache", student.StudentCode);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Lỗi khi xử lý cache cho sinh viên {StudentCode}", student.StudentCode);
+                }
+            }
+            
+            // Thực hiện batch cache
+            if (cacheTasks.Any())
+            {
+                batch.Execute();
+                await Task.WhenAll(cacheTasks);
+            }
+            
+            var totalProcessed = cachedCount + updatedCount + skippedCount;
+            var message = $"Đã xử lý {totalProcessed} sinh viên: Thêm mới {cachedCount}, Cập nhật {updatedCount}, Bỏ qua {skippedCount}";
+            
+            _logger.LogInformation("Hoàn thành tải sinh viên lên Redis cache. {Message}", message);
+            
+            return (true, message, totalProcessed);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Lỗi khi tải sinh viên lên Redis cache");
+            return (false, $"Lỗi khi tải sinh viên lên Redis cache: {ex.Message}", 0);
+        }
+    }
+    #endregion
+
+    #region GetStudentFromRedisAsync
+    public async Task<Student?> GetStudentFromRedisAsync(string studentCode)
+    {
+        try
+        {
+            var db = _redis.GetDatabase();
+            string studentCacheKey = $"student:{studentCode}";
+            
+            var cachedStudent = await db.StringGetAsync(studentCacheKey);
+            
+            if (cachedStudent.HasValue)
+            {
+                var student = System.Text.Json.JsonSerializer.Deserialize<Student>(cachedStudent);
+                _logger.LogDebug("Đã lấy sinh viên {StudentCode} từ Redis cache", studentCode);
+                return student;
+            }
+            
+            _logger.LogDebug("Không tìm thấy sinh viên {StudentCode} trong Redis cache", studentCode);
+            return null;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Lỗi khi lấy sinh viên {StudentCode} từ Redis cache", studentCode);
+            return null;
+        }
+    }
+    #endregion
+
+    #region UpdateStudentInRedisAsync
+    public async Task<bool> UpdateStudentInRedisAsync(Student student)
+    {
+        try
+        {
+            var db = _redis.GetDatabase();
+            string studentCacheKey = $"student:{student.StudentCode}";
+            
+            var studentJson = System.Text.Json.JsonSerializer.Serialize(student);
+            await db.StringSetAsync(studentCacheKey, studentJson, TimeSpan.FromHours(6));
+            
+            _logger.LogDebug("Đã cập nhật sinh viên {StudentCode} trong Redis cache", student.StudentCode);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Lỗi khi cập nhật sinh viên {StudentCode} trong Redis cache", student.StudentCode);
+            return false;
+        }
+    }
+    #endregion
+
+    #region RemoveStudentFromRedisAsync
+    public async Task<bool> RemoveStudentFromRedisAsync(string studentCode)
+    {
+        try
+        {
+            var db = _redis.GetDatabase();
+            string studentCacheKey = $"student:{studentCode}";
+            
+            var result = await db.KeyDeleteAsync(studentCacheKey);
+            
+            if (result)
+            {
+                _logger.LogDebug("Đã xóa sinh viên {StudentCode} khỏi Redis cache", studentCode);
+            }
+            else
+            {
+                _logger.LogDebug("Không tìm thấy sinh viên {StudentCode} trong Redis cache để xóa", studentCode);
+            }
+            
+            return result;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Lỗi khi xóa sinh viên {StudentCode} khỏi Redis cache", studentCode);
+            return false;
+        }
+    }
+    #endregion
+
+    #region PreloadStudentExamSessionsToRedisAsync
+    public async Task<(bool Success, string Message, int CachedCount)> PreloadStudentExamSessionsToRedisAsync()
+    {
+        try
+        {
+            _logger.LogInformation("Bắt đầu tải StudentExamSessions lên Redis cache");
+            
+            var db = _redis.GetDatabase();
+            var studentExamSessions = await _studentExamSessionRepository.GetAllAsync();
+            
+            if (!studentExamSessions.Any())
+            {
+                _logger.LogWarning("Không có StudentExamSession nào để cache");
+                return (false, "Không có StudentExamSession nào để cache", 0);
+            }
+            
+            var batch = db.CreateBatch();
+            var cacheTasks = new List<Task>();
+            int cachedCount = 0;
+            int updatedCount = 0;
+            int skippedCount = 0;
+            
+            foreach (var session in studentExamSessions)
+            {
+                try
+                {
+                    // Tạo cache key cho từng session
+                    string sessionCacheKey = $"student_exam_session:{session.StudentCode}:{session.StudentExamSessionId}";
+                    
+                    // Kiểm tra xem session đã tồn tại trong cache chưa
+                    var existingSession = await db.StringGetAsync(sessionCacheKey);
+                    
+                    if (existingSession.HasValue)
+                    {
+                        try
+                        {
+                            var cachedSession = System.Text.Json.JsonSerializer.Deserialize<StudentExamSession>(existingSession);
+                            
+                            // So sánh version hoặc UpdatedAt để quyết định có cập nhật không
+                            if (cachedSession != null && 
+                                (cachedSession.Version < session.Version || 
+                                 cachedSession.UpdatedAt < session.UpdatedAt ||
+                                 cachedSession.StudentAnswersString != session.StudentAnswersString ||
+                                 cachedSession.IsCompleted != session.IsCompleted))
+                            {
+                                // Cập nhật nếu có thay đổi
+                                var sessionJson = System.Text.Json.JsonSerializer.Serialize(session);
+                                var cacheTask = batch.StringSetAsync(sessionCacheKey, sessionJson, TimeSpan.FromHours(6));
+                                cacheTasks.Add(cacheTask);
+                                updatedCount++;
+                                _logger.LogDebug("Cập nhật StudentExamSession {StudentCode}:{StudentExamSessionId} trong Redis cache", 
+                                    session.StudentCode, session.StudentExamSessionId);
+                            }
+                            else
+                            {
+                                // Bỏ qua nếu không có thay đổi
+                                skippedCount++;
+                                _logger.LogDebug("Bỏ qua StudentExamSession {StudentCode}:{StudentExamSessionId} - đã tồn tại và không có thay đổi", 
+                                    session.StudentCode, session.StudentExamSessionId);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogWarning(ex, "Lỗi khi deserialize StudentExamSession {StudentCode}:{StudentExamSessionId} từ cache, sẽ cập nhật lại", 
+                                session.StudentCode, session.StudentExamSessionId);
+                            // Nếu lỗi deserialize, cập nhật lại
+                            var sessionJson = System.Text.Json.JsonSerializer.Serialize(session);
+                            var cacheTask = batch.StringSetAsync(sessionCacheKey, sessionJson, TimeSpan.FromHours(6));
+                            cacheTasks.Add(cacheTask);
+                            updatedCount++;
+                        }
+                    }
+                    else
+                    {
+                        // Thêm mới nếu chưa tồn tại
+                        var sessionJson = System.Text.Json.JsonSerializer.Serialize(session);
+                        var cacheTask = batch.StringSetAsync(sessionCacheKey, sessionJson, TimeSpan.FromHours(6));
+                        cacheTasks.Add(cacheTask);
+                        cachedCount++;
+                        _logger.LogDebug("Thêm mới StudentExamSession {StudentCode}:{StudentExamSessionId} vào Redis cache", 
+                            session.StudentCode, session.StudentExamSessionId);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Lỗi khi xử lý cache cho StudentExamSession {StudentCode}:{StudentExamSessionId}", 
+                        session.StudentCode, session.StudentExamSessionId);
+                }
+            }
+            
+            // Thực hiện batch cache
+            if (cacheTasks.Any())
+            {
+                batch.Execute();
+                await Task.WhenAll(cacheTasks);
+            }
+            
+            var totalProcessed = cachedCount + updatedCount + skippedCount;
+            var message = $"Đã xử lý {totalProcessed} StudentExamSession: Thêm mới {cachedCount}, Cập nhật {updatedCount}, Bỏ qua {skippedCount}";
+            
+            _logger.LogInformation("Hoàn thành tải StudentExamSessions lên Redis cache. {Message}", message);
+            
+            return (true, message, totalProcessed);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Lỗi khi tải StudentExamSessions lên Redis cache");
+            return (false, $"Lỗi khi tải StudentExamSessions lên Redis cache: {ex.Message}", 0);
+        }
+    }
+    #endregion
+
+    #region PreloadAllDataToRedisAsync
+    public async Task<(bool Success, string Message, Dictionary<string, int> CachedCounts)> PreloadAllDataToRedisAsync()
+    {
+        try
+        {
+            _logger.LogInformation("Bắt đầu tải tất cả dữ liệu lên Redis cache");
+            
+            var results = new Dictionary<string, int>();
+            
+            // Tải sinh viên
+            var (studentSuccess, studentMessage, studentCount) = await PreloadStudentsToRedisAsync();
+            results["Students"] = studentCount;
+            
+            if (!studentSuccess)
+            {
+                _logger.LogWarning("Lỗi khi tải sinh viên: {Message}", studentMessage);
+            }
+            
+            // Tải StudentExamSessions
+            var (sessionSuccess, sessionMessage, sessionCount) = await PreloadStudentExamSessionsToRedisAsync();
+            results["StudentExamSessions"] = sessionCount;
+            
+            if (!sessionSuccess)
+            {
+                _logger.LogWarning("Lỗi khi tải StudentExamSessions: {Message}", sessionMessage);
+            }
+            
+            var totalSuccess = studentSuccess && sessionSuccess;
+            var totalMessage = $"Tải sinh viên: {studentCount}, Tải StudentExamSessions: {sessionCount}";
+            
+            _logger.LogInformation("Hoàn thành tải dữ liệu lên Redis cache. {Message}", totalMessage);
+            
+            return (totalSuccess, totalMessage, results);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Lỗi khi tải tất cả dữ liệu lên Redis cache");
+            return (false, $"Lỗi khi tải dữ liệu lên Redis cache: {ex.Message}", new Dictionary<string, int>());
+        }
+    }
+    #endregion
+
+    #region CheckCacheStatusAsync
+    public async Task<(bool Success, string Message, Dictionary<string, object> CacheInfo)> CheckCacheStatusAsync()
+    {
+        try
+        {
+            var db = _redis.GetDatabase();
+            var cacheInfo = new Dictionary<string, object>();
+            
+            // Kiểm tra số lượng sinh viên trong cache
+            var studentKeys = db.Multiplexer.GetServer(db.Multiplexer.GetEndPoints().First())
+                .Keys(pattern: "student:*");
+            var studentCount = studentKeys.Count();
+            cacheInfo["StudentCount"] = studentCount;
+            
+            // Kiểm tra số lượng StudentExamSession trong cache
+            var sessionKeys = db.Multiplexer.GetServer(db.Multiplexer.GetEndPoints().First())
+                .Keys(pattern: "student_exam_session:*");
+            var sessionCount = sessionKeys.Count();
+            cacheInfo["SessionCount"] = sessionCount;
+            
+            // Kiểm tra số lượng ShuffledExamPaper trong cache
+            var paperKeys = db.Multiplexer.GetServer(db.Multiplexer.GetEndPoints().First())
+                .Keys(pattern: "shuffled_exam_paper:*");
+            var paperCount = paperKeys.Count();
+            cacheInfo["PaperCount"] = paperCount;
+            
+            // Kiểm tra số lượng Answer Key trong cache
+            var answerKeys = db.Multiplexer.GetServer(db.Multiplexer.GetEndPoints().First())
+                .Keys(pattern: "answer_key:*");
+            var answerCount = answerKeys.Count();
+            cacheInfo["AnswerKeyCount"] = answerCount;
+            
+            // Kiểm tra số lượng Student Answers trong cache
+            var studentAnswerKeys = db.Multiplexer.GetServer(db.Multiplexer.GetEndPoints().First())
+                .Keys(pattern: "student_answers:*");
+            var studentAnswerCount = studentAnswerKeys.Count();
+            cacheInfo["StudentAnswerCount"] = studentAnswerCount;
+            
+            var totalKeys = studentCount + sessionCount + paperCount + answerCount + studentAnswerCount;
+            cacheInfo["TotalKeys"] = totalKeys;
+            
+            var message = $"Cache status: {totalKeys} total keys (Students: {studentCount}, Sessions: {sessionCount}, Papers: {paperCount}, AnswerKeys: {answerCount}, StudentAnswers: {studentAnswerCount})";
+            
+            _logger.LogInformation("Kiểm tra trạng thái cache: {Message}", message);
+            
+            return (true, message, cacheInfo);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Lỗi khi kiểm tra trạng thái cache");
+            return (false, $"Lỗi khi kiểm tra trạng thái cache: {ex.Message}", new Dictionary<string, object>());
+        }
+    }
+    #endregion
+
+    #region ClearOldCacheAsync
+    public async Task<(bool Success, string Message, int DeletedCount)> ClearOldCacheAsync()
+    {
+        try
+        {
+            _logger.LogInformation("Bắt đầu xóa cache cũ");
+            
+            var db = _redis.GetDatabase();
+            var server = db.Multiplexer.GetServer(db.Multiplexer.GetEndPoints().First());
+            int deletedCount = 0;
+            
+            // Xóa các key có TTL sắp hết hạn (dưới 1 giờ)
+            var allKeys = server.Keys(pattern: "*");
+            var keysToDelete = new List<string>();
+            
+            foreach (var key in allKeys)
+            {
+                try
+                {
+                    var ttl = await db.KeyTimeToLiveAsync(key);
+                    if (ttl.HasValue && ttl.Value.TotalHours < 1)
+                    {
+                        keysToDelete.Add(key);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Lỗi khi kiểm tra TTL cho key {Key}", key);
+                }
+            }
+            
+            if (keysToDelete.Any())
+            {
+                var batch = db.CreateBatch();
+                foreach (var key in keysToDelete)
+                {
+                    batch.KeyDeleteAsync(key);
+                    deletedCount++;
+                }
+                batch.Execute();
+                
+                _logger.LogInformation("Đã xóa {DeletedCount} key cache cũ", deletedCount);
+            }
+            else
+            {
+                _logger.LogInformation("Không có cache cũ nào cần xóa");
+            }
+            
+            return (true, $"Đã xóa {deletedCount} key cache cũ", deletedCount);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Lỗi khi xóa cache cũ");
+            return (false, $"Lỗi khi xóa cache cũ: {ex.Message}", 0);
+        }
+    }
+    #endregion
+
+    #region RefreshCacheAsync
+    public async Task<(bool Success, string Message, Dictionary<string, int> Results)> RefreshCacheAsync()
+    {
+        try
+        {
+            _logger.LogInformation("Bắt đầu refresh cache");
+            
+            var results = new Dictionary<string, int>();
+            
+            // Xóa cache cũ trước
+            var (clearSuccess, clearMessage, deletedCount) = await ClearOldCacheAsync();
+            results["DeletedKeys"] = deletedCount;
+            
+            if (!clearSuccess)
+            {
+                _logger.LogWarning("Lỗi khi xóa cache cũ: {Message}", clearMessage);
+            }
+            
+            // Tải lại dữ liệu mới
+            var (loadSuccess, loadMessage, cachedCounts) = await PreloadAllDataToRedisAsync();
+            
+            foreach (var kvp in cachedCounts)
+            {
+                results[kvp.Key] = kvp.Value;
+            }
+            
+            var message = $"Refresh cache hoàn thành. Xóa {deletedCount} key cũ, tải lại {cachedCounts.Values.Sum()} dữ liệu mới";
+            
+            _logger.LogInformation("Hoàn thành refresh cache: {Message}", message);
+            
+            return (loadSuccess, message, results);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Lỗi khi refresh cache");
+            return (false, $"Lỗi khi refresh cache: {ex.Message}", new Dictionary<string, int>());
+        }
+    }
+    #endregion
+
     #region Helper methods for SubmitExamAsync optimization
     private async Task<StudentExamSession?> GetStudentExamSessionFromCacheAsync(IDatabase db, string sessionCacheKey, int shuffledExamPaperId)
     {

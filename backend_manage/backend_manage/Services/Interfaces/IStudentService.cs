@@ -23,4 +23,17 @@ public interface IStudentService
 
     Task<(bool Success, string Message, double? Score)> SubmitExamAsync(string StudentCode, SubmitExamDto submitExamDto);
     Task<(bool Success, string Message)> SaveExamAsync(string StudentCode, SubmitExamDto submitExamDto);
+    
+    // Redis Cache Methods
+    Task<(bool Success, string Message, int CachedCount)> PreloadStudentsToRedisAsync();
+    Task<Student?> GetStudentFromRedisAsync(string studentCode);
+    Task<bool> UpdateStudentInRedisAsync(Student student);
+    Task<bool> RemoveStudentFromRedisAsync(string studentCode);
+    Task<(bool Success, string Message, int CachedCount)> PreloadStudentExamSessionsToRedisAsync();
+    Task<(bool Success, string Message, Dictionary<string, int> CachedCounts)> PreloadAllDataToRedisAsync();
+    
+    // Cache Management Methods
+    Task<(bool Success, string Message, Dictionary<string, object> CacheInfo)> CheckCacheStatusAsync();
+    Task<(bool Success, string Message, int DeletedCount)> ClearOldCacheAsync();
+    Task<(bool Success, string Message, Dictionary<string, int> Results)> RefreshCacheAsync();
 } 
