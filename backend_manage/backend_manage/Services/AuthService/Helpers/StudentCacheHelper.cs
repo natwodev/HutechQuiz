@@ -1,4 +1,5 @@
 using backend_manage.Entities;
+using backend_manage.Repositories.Interfaces;
 using StackExchange.Redis;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
@@ -9,11 +10,16 @@ public class StudentCacheHelper
 {
     private readonly IConnectionMultiplexer _redis;
     private readonly ILogger<StudentCacheHelper> _logger;
+    private readonly IRepository<Student> _studentRepository;
 
-    public StudentCacheHelper(IConnectionMultiplexer redis, ILogger<StudentCacheHelper> logger)
+    public StudentCacheHelper(
+        IConnectionMultiplexer redis, 
+        ILogger<StudentCacheHelper> logger,
+        IRepository<Student> studentRepository)
     {
         _redis = redis;
         _logger = logger;
+        _studentRepository = studentRepository;
     }
 
     public async Task<Student?> GetStudentFromRedisAsync(string studentCode)
@@ -42,12 +48,54 @@ public class StudentCacheHelper
                 }
             }
             
-            _logger.LogDebug("Không tìm thấy sinh viên {StudentCode} trong Redis cache", studentCode);
-            return null;
+            _logger.LogDebug("Không tìm thấy sinh viên {StudentCode} trong Redis cache, kiểm tra database", studentCode);
+            
+            // Fallback về database
+            try
+            {
+                var students = await _studentRepository.GetAllAsync();
+                var dbStudent = students.FirstOrDefault(s => s.StudentCode == studentCode);
+                
+                if (dbStudent != null)
+                {
+                    // Cache lại vào Redis
+                    await UpdateStudentInRedisAsync(dbStudent);
+                    _logger.LogDebug("Đã tìm thấy sinh viên {StudentCode} trong database và cache lại vào Redis", studentCode);
+                    return dbStudent;
+                }
+                else
+                {
+                    _logger.LogDebug("Không tìm thấy sinh viên {StudentCode} trong database", studentCode);
+                    return null;
+                }
+            }
+            catch (Exception dbEx)
+            {
+                _logger.LogError(dbEx, "Lỗi khi truy vấn database cho sinh viên {StudentCode}", studentCode);
+                return null;
+            }
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Lỗi khi lấy sinh viên {StudentCode} từ Redis cache", studentCode);
+            
+            // Fallback về database nếu có lỗi Redis
+            try
+            {
+                var students = await _studentRepository.GetAllAsync();
+                var dbStudent = students.FirstOrDefault(s => s.StudentCode == studentCode);
+                
+                if (dbStudent != null)
+                {
+                    _logger.LogDebug("Đã tìm thấy sinh viên {StudentCode} trong database (fallback)", studentCode);
+                    return dbStudent;
+                }
+            }
+            catch (Exception dbEx)
+            {
+                _logger.LogError(dbEx, "Lỗi khi truy vấn database cho sinh viên {StudentCode} (fallback)", studentCode);
+            }
+            
             return null;
         }
     }
