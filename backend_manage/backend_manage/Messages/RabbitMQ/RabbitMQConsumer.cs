@@ -6,6 +6,8 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Text.Json;
 using System.Threading.Tasks;
+using backend_manage.DTOs;
+using backend_manage.Services.Interfaces;
 
 namespace backend_manage.Messages.RabbitMQ
 {
@@ -17,11 +19,13 @@ namespace backend_manage.Messages.RabbitMQ
         private const string ExamSubmissionQueue = "submit_exam_queue";
         private const string StudentAnswerSavedQueue = "save_answer_queue";
         private const string SaveExamQueue = "save_exam_queue";
+        private const string StudentImportQueue = "student_import_queue";
         
         // Cấu hình số lượng consumers cho xử lý song song
         private const int StudentAnswerConsumerCount = 2; // 2 consumers cho lưu đáp án
         private const int ExamSubmissionConsumerCount = 2; // 2 consumers cho nộp bài
         private const int SaveExamConsumerCount = 2; // 2 consumers cho lưu bài
+        private const int StudentImportConsumerCount = 1; // 1 consumer cho import (vì import nặng)
 
         public RabbitMqConsumer(
             IRabbitMqService rabbitMQService,
@@ -56,8 +60,15 @@ namespace backend_manage.Messages.RabbitMQ
                 _logger.LogInformation("Bắt đầu consumer {ConsumerId} cho queue: {QueueName}", i + 1, SaveExamQueue);
             }
             
-            _logger.LogInformation("Đã khởi tạo {StudentAnswerCount} consumers cho lưu đáp án, {ExamSubmissionCount} consumers cho nộp bài và {SaveExamCount} consumers cho lưu bài", 
-                StudentAnswerConsumerCount, ExamSubmissionConsumerCount, SaveExamConsumerCount);
+            // Tạo consumer cho student_import_queue
+            for (int i = 0; i < StudentImportConsumerCount; i++)
+            {
+                _rabbitMQService.Subscribe<StudentImportMessage>(StudentImportQueue, ProcessStudentImport);
+                _logger.LogInformation("Bắt đầu consumer {ConsumerId} cho queue: {QueueName}", i + 1, StudentImportQueue);
+            }
+            
+            _logger.LogInformation("Đã khởi tạo {StudentAnswerCount} consumers cho lưu đáp án, {ExamSubmissionCount} consumers cho nộp bài, {SaveExamCount} consumers cho lưu bài và {StudentImportCount} consumer cho import", 
+                StudentAnswerConsumerCount, ExamSubmissionConsumerCount, SaveExamConsumerCount, StudentImportConsumerCount);
         }
 
         private async Task ProcessExamSubmission(ExamSubmissionMessage message)
@@ -240,6 +251,70 @@ namespace backend_manage.Messages.RabbitMQ
                 _logger.LogError(ex, "Lỗi khi xử lý message lưu đáp án. StudentCode: {StudentCode}, Index: {Index}",
                     message.StudentCode, message.Index);
                 throw;
+            }
+        }
+
+        private async Task ProcessStudentImport(StudentImportMessage message)
+        {
+            try
+            {
+                _logger.LogInformation("Bắt đầu xử lý import student cho job {JobId}", message.JobId);
+                
+                using var scope = _serviceScopeFactory.CreateScope();
+                var studentService = scope.ServiceProvider.GetRequiredService<IStudentService>();
+                var redis = scope.ServiceProvider.GetRequiredService<StackExchange.Redis.IConnectionMultiplexer>();
+                
+                // 1. Update progress: 10% - Đang đọc file
+                await UpdateImportProgress(redis, message.JobId, 10, "Processing", "Đang đọc file Excel...");
+                
+                // 2. Decode file content từ base64
+                var fileBytes = Convert.FromBase64String(message.FileContent);
+                using var stream = new MemoryStream(fileBytes);
+                
+                // 3. Update progress: 30% - Đang parse dữ liệu
+                await UpdateImportProgress(redis, message.JobId, 30, "Processing", "Đang parse dữ liệu Excel...");
+                
+                // 4. Gọi service import (cần tạo method mới nhận Stream)
+                var result = await studentService.ImportFromExcelStreamAsync(stream, message.ExamSessionSubjectCore, message.ExamRoomId, message.UserId);
+                
+                // 5. Update progress: 100% - Hoàn thành
+                await UpdateImportProgress(redis, message.JobId, 100, "Completed", "Import thành công!", result);
+                
+                _logger.LogInformation("Hoàn thành import student cho job {JobId}. Kết quả: {StudentsAdded} sinh viên, {SessionsAdded} phiên thi", 
+                    message.JobId, result.StudentsAdded, result.StudentExamSessionsAdded);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi xử lý import student cho job {JobId}", message.JobId);
+                
+                using var scope = _serviceScopeFactory.CreateScope();
+                var redis = scope.ServiceProvider.GetRequiredService<StackExchange.Redis.IConnectionMultiplexer>();
+                await UpdateImportProgress(redis, message.JobId, 0, "Failed", $"Lỗi: {ex.Message}");
+            }
+        }
+
+        private async Task UpdateImportProgress(StackExchange.Redis.IConnectionMultiplexer redis, string jobId, int progress, string status, string message, StudentImportResultDto? result = null)
+        {
+            try
+            {
+                var progressData = new StudentImportProgressMessage
+                {
+                    JobId = jobId,
+                    Progress = progress,
+                    Status = status,
+                    Message = message,
+                    Result = result,
+                    UpdatedAt = DateTime.UtcNow
+                };
+                
+                var db = redis.GetDatabase();
+                await db.StringSetAsync($"import_progress:{jobId}", System.Text.Json.JsonSerializer.Serialize(progressData), TimeSpan.FromHours(1));
+                
+                _logger.LogDebug("Đã cập nhật progress cho job {JobId}: {Progress}% - {Status}", jobId, progress, status);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi cập nhật progress cho job {JobId}", jobId);
             }
         }
     }

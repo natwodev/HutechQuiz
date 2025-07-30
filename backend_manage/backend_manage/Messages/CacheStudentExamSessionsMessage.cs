@@ -1,4 +1,4 @@
-namespace backend_manage.Messages.RabbitMQ
+namespace backend_manage.Messages
 {
     public class CacheStudentExamSessionsMessage
     {

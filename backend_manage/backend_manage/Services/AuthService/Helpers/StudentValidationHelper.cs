@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
 using System.Text.Json;
+using backend_manage.Repositories.Interfaces;
 
 namespace backend_manage.Services.AuthService.Helpers;
 

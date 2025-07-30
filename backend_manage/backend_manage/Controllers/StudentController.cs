@@ -10,6 +10,8 @@ using System.IO;
 using System.Linq;
 using System.Security.Claims;
 using backend_manage.Hubs;
+using backend_manage.Messages;
+using StackExchange.Redis;
 
 namespace backend_manage.Controllers;
 
@@ -20,13 +22,16 @@ public class StudentController : ControllerBase
 {
     private readonly IStudentService _studentService;
     private readonly ILogger<StudentController> _logger;
+    private readonly IConnectionMultiplexer _redis;
 
     public StudentController(
         IStudentService studentService,
-        ILogger<StudentController> logger)
+        ILogger<StudentController> logger,
+        IConnectionMultiplexer redis)
     {
         _studentService = studentService;
         _logger = logger;
+        _redis = redis;
     }
 
 
@@ -41,7 +46,35 @@ public class StudentController : ControllerBase
     public async Task<IActionResult> ImportExcel([FromForm] IFormFile file, [FromForm] string examSessionSubjectCore, [FromForm] int examRoomId)
     {
         var result = await _studentService.ImportFromExcelAsync(file, examSessionSubjectCore, examRoomId);
-        return Ok(new { studentsAdded = result.StudentsAdded, studentExamSessionsAdded = result.StudentExamSessionsAdded });
+        return Ok(new { 
+            studentsAdded = result.StudentsAdded, 
+            studentExamSessionsAdded = result.StudentExamSessionsAdded,
+            jobId = result.JobId,
+            message = "Import đã được gửi vào queue. Sử dụng jobId để theo dõi tiến trình."
+        });
+    }
+
+    [HttpGet("import-progress/{jobId}")]
+    public async Task<IActionResult> GetImportProgress(string jobId)
+    {
+        try
+        {
+            var db = _redis.GetDatabase();
+            var progressData = await db.StringGetAsync($"import_progress:{jobId}");
+            
+            if (!progressData.HasValue)
+            {
+                return NotFound(new { message = "Không tìm thấy job import với ID này" });
+            }
+            
+            var progress = System.Text.Json.JsonSerializer.Deserialize<StudentImportProgressMessage>(progressData);
+            return Ok(progress);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Lỗi khi lấy progress cho job {JobId}", jobId);
+            return StatusCode(500, new { message = "Lỗi server khi lấy progress" });
+        }
     }
 
     [HttpGet("by-code/{studentCode}")]

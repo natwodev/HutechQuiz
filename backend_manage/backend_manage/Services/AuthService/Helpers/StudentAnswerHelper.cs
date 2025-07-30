@@ -4,6 +4,8 @@ using StackExchange.Redis;
 using Microsoft.Extensions.Logging;
 using AutoMapper;
 using backend_manage.Extensions;
+using backend_manage.Hubs;
+using backend_manage.Messages.RabbitMQ;
 
 namespace backend_manage.Services.AuthService.Helpers;
 

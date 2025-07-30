@@ -42,6 +42,8 @@ namespace backend_manage.Configurations
             services.AddScoped<ExamPaperHelper>();
             services.AddScoped<StudentAnswerHelper>();
             services.AddScoped<StudentValidationHelper>();
+            services.AddScoped<StudentImportHelper>();
+
             
             services.AddSingleton<IRabbitMqService, RabbitMqService>();
             services.AddSingleton<RabbitMqConsumer>();

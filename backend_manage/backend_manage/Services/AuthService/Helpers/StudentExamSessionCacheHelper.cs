@@ -6,6 +6,8 @@ using StackExchange.Redis;
 using Microsoft.Extensions.Logging;
 using AutoMapper;
 using System.Text.Json;
+using System.Linq;
+using backend_manage.Repositories.Interfaces;
 
 namespace backend_manage.Services.AuthService.Helpers;
 
@@ -15,6 +17,8 @@ public class StudentExamSessionCacheHelper
     private readonly ILogger<StudentExamSessionCacheHelper> _logger;
     private readonly IRepository<ExamSessionSubject> _examSessionSubjectRepository;
     private readonly IRepository<ExamRoom> _examRoomRepository;
+    private readonly IRepository<StudentExamSession> _studentExamSessionRepository;
+    private readonly IRepository<Student> _studentRepository;
     private readonly IMapper _mapper;
 
     public StudentExamSessionCacheHelper(
@@ -22,12 +26,16 @@ public class StudentExamSessionCacheHelper
         ILogger<StudentExamSessionCacheHelper> logger,
         IRepository<ExamSessionSubject> examSessionSubjectRepository,
         IRepository<ExamRoom> examRoomRepository,
+        IRepository<StudentExamSession> studentExamSessionRepository,
+        IRepository<Student> studentRepository,
         IMapper mapper)
     {
         _redis = redis;
         _logger = logger;
         _examSessionSubjectRepository = examSessionSubjectRepository;
         _examRoomRepository = examRoomRepository;
+        _studentExamSessionRepository = studentExamSessionRepository;
+        _studentRepository = studentRepository;
         _mapper = mapper;
     }
 
@@ -81,9 +89,42 @@ public class StudentExamSessionCacheHelper
                     result.Add(sessionDto);
                 }
                 
+                _logger.LogDebug("Đã lấy {Count} phiên thi từ Redis cache cho sinh viên {StudentCode}", 
+                    result.Count, studentCode);
                 return result;
             }
             
+            // Nếu không có trong Redis cache, lấy từ database
+            _logger.LogDebug("Không tìm thấy phiên thi trong Redis cache cho sinh viên {StudentCode}, kiểm tra database", studentCode);
+            
+            var student = await _studentRepository.GetQueryable().FirstOrDefaultAsync(x => x.StudentCode == studentCode);
+            if (student == null) 
+            {
+                _logger.LogWarning("Không tìm thấy sinh viên với mã {StudentCode}", studentCode);
+                return null;
+            }
+            
+            var sessions = await _studentExamSessionRepository.GetQueryable()
+                .Where(x => x.StudentId == student.StudentId && x.IsCompleted == false)
+                .Include(x => x.ExamSessionSubject)
+                    .ThenInclude(x => x.Subject)
+                .Include(x => x.ExamRoom)
+                .ToListAsync();
+            
+            if (sessions.Any())
+            {
+                // Cache lại vào Redis
+                await CacheStudentExamSessionsForStudentAsync(studentCode, sessions);
+                
+                // Convert sang DTO
+                var result = sessions.Select(x => _mapper.Map<StudentExamSessionDto>(x)).ToList();
+                
+                _logger.LogDebug("Đã lấy {Count} phiên thi từ database và cache lại cho sinh viên {StudentCode}", 
+                    result.Count, studentCode);
+                return result;
+            }
+            
+            _logger.LogDebug("Không tìm thấy phiên thi nào cho sinh viên {StudentCode}", studentCode);
             return null;
         }
         catch (Exception ex)
@@ -278,6 +319,74 @@ public class StudentExamSessionCacheHelper
         
         return null;
     }
+
+  public async Task<StudentExamSessionCacheDto?> GetStudentExamSessionFromCacheAsync(string studentCode, int studentExamSessionId)
+    {
+        try
+        {
+            var db = _redis.GetDatabase();
+            string sessionCacheKey = $"student_exam_session:{studentCode}:{studentExamSessionId}";
+            
+            var sessionData = await db.StringGetAsync(sessionCacheKey);
+            if (sessionData.HasValue)
+            {
+                try
+                {
+                    var cachedSession = JsonSerializer.Deserialize<StudentExamSessionCacheDto>(sessionData);
+                    if (cachedSession != null)
+                    {
+                        _logger.LogDebug("Đã tìm thấy StudentExamSession trong cache: {StudentCode}:{StudentExamSessionId}", 
+                            studentCode, studentExamSessionId);
+                        return cachedSession;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Lỗi khi deserialize StudentExamSession từ cache với key: {Key}", sessionCacheKey);
+                }
+            }
+            
+            _logger.LogDebug("Không tìm thấy StudentExamSession trong cache: {StudentCode}:{StudentExamSessionId}, tìm trong database", 
+                studentCode, studentExamSessionId);
+            
+            // Tìm trong database nếu không có trong cache
+            var student = await _studentRepository.GetQueryable().FirstOrDefaultAsync(x => x.StudentCode == studentCode);
+            if (student == null)
+            {
+                _logger.LogWarning("Không tìm thấy sinh viên với mã {StudentCode}", studentCode);
+                return null;
+            }
+            
+            var session = await _studentExamSessionRepository.GetQueryable()
+                .Where(x => x.StudentId == student.StudentId && x.StudentExamSessionId == studentExamSessionId)
+                .Include(x => x.ExamSessionSubject)
+                    .ThenInclude(x => x.Subject)
+                .Include(x => x.ExamRoom)
+                .FirstOrDefaultAsync();
+            
+            if (session != null)
+            {
+                // Cache lại vào Redis
+                var cacheDto = await ConvertToCacheDtoAsync(session);
+                var sessionJson = JsonSerializer.Serialize(cacheDto);
+                await db.StringSetAsync(sessionCacheKey, sessionJson, TimeSpan.FromHours(6));
+                
+                _logger.LogDebug("Đã tìm thấy StudentExamSession trong database và cache lại: {StudentCode}:{StudentExamSessionId}", 
+                    studentCode, studentExamSessionId);
+                return cacheDto;
+            }
+            
+            _logger.LogDebug("Không tìm thấy StudentExamSession trong database: {StudentCode}:{StudentExamSessionId}", 
+                studentCode, studentExamSessionId);
+            return null;
+        }
+        catch (Exception ex){
+            _logger.LogError(ex, "Lỗi khi tìm StudentExamSession từ cache và database: {StudentCode}:{StudentExamSessionId}", 
+                studentCode, studentExamSessionId);
+            return null;
+        }
+    }
+    
 
     private async Task<StudentExamSessionCacheDto> ConvertToCacheDtoAsync(StudentExamSession session)
     {

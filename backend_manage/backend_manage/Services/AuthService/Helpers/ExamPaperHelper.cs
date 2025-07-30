@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using StackExchange.Redis;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
+using backend_manage.Repositories.Interfaces;
 
 namespace backend_manage.Services.AuthService.Helpers;
 
@@ -54,6 +55,19 @@ public class ExamPaperHelper
                     _logger.LogError(ex, "Lỗi khi deserialize đề thi từ Redis");
                     await db.KeyDeleteAsync(cacheKey);
                 }
+            }
+            
+            // Nếu không có trong Redis, lấy từ database và cache vào Redis
+            _logger.LogInformation("Không tìm thấy đề thi trong Redis, đang lấy từ database");
+            var (examPaper, examPaperDto) = await GetExamFromDatabaseAsync(shuffledExamPaperId);
+            
+            if (examPaperDto != null)
+            {
+                // Cache vào Redis
+                await CacheExamPaperAsync(shuffledExamPaperId, examPaperDto, examPaper.AnswerKey);
+                _logger.LogInformation("Đã cache đề thi từ database vào Redis");
+                
+                return examPaperDto;
             }
             
             return null;

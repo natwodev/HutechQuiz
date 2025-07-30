@@ -10,8 +10,6 @@ public interface IStudentService
     Task<Student> AddAsync(StudentCreateDto dto);
     Task<Student> UpdateAsync(string id, Student student);
     Task<bool> DeleteAsync(string id);
-    Task<IEnumerable<Student>> AddRangeAsync(IEnumerable<StudentCreateDto> dtos);
-    Task<int> BulkImportStudentsAsync(List<StudentCreateDto> students);
     Task<StudentImportResultDto> ImportFromExcelAsync(IFormFile file, string examSessionSubjectCore, int examRoomId);
     Task<Student?> GetByStudentCodeAsync(string studentCode);
     Task<ShuffledExamPaperDto> StartExamAsync(string studentCode, int studentExamSessionId);
@@ -23,4 +21,7 @@ public interface IStudentService
 
     Task<(bool Success, string Message, double? Score)> SubmitExamAsync(string StudentCode, SubmitExamDto submitExamDto);
     Task<(bool Success, string Message)> SaveExamAsync(string StudentCode, SubmitExamDto submitExamDto);
+
+    Task<StudentImportResultDto> ImportFromExcelStreamAsync(Stream stream, string examSessionSubjectCore,
+        int examRoomId, string userId);
 } 
