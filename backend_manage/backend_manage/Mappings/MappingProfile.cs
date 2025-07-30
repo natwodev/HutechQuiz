@@ -142,6 +142,15 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.EndTime, opt => opt.MapFrom(src => src.ExamSessionSubject.EndTime))
             .ForMember(dest => dest.ExtraMinutes, opt => opt.MapFrom(src => src.ExtraMinutes));
 
+        // Mapping cho StudentExamSessionCacheDto
+        CreateMap<StudentExamSession, StudentExamSessionCacheDto>()
+            .ForMember(dest => dest.SubjectName, opt => opt.MapFrom(src => src.ExamSessionSubject.Subject.SubjectName))
+            .ForMember(dest => dest.RoomName, opt => opt.MapFrom(src => src.ExamRoom.RoomName))
+            .ForMember(dest => dest.Duration, opt => opt.MapFrom(src => src.ExamSessionSubject.Duration));
+
+        // Mapping ngược từ StudentExamSessionCacheDto về StudentExamSession
+        CreateMap<StudentExamSessionCacheDto, StudentExamSession>();
+
         CreateMap<StudentExamSession, StudentExamRoomStatusDto>()
             .ForMember(dest => dest.StudentCode, opt => opt.MapFrom(src => src.Student.StudentCode))
             .ForMember(dest => dest.FirstName, opt => opt.MapFrom(src => src.Student.FirstName))

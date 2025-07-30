@@ -764,13 +764,138 @@ public class StudentService : IStudentService
     #region GetStudentExamSessionsAsync
     public async Task<IEnumerable<StudentExamSessionDto>> GetStudentExamSessionsAsync(string studentCode)
     {
-        var sessions = await _studentExamSessionRepository.GetQueryable()
-            .Where(x => x.StudentId == student.StudentId && x.IsCompleted == false)
-            .Include(x => x.ExamSessionSubject)
-                .ThenInclude(x => x.Subject)
-            .Include(x => x.ExamRoom)
-            .ToListAsync();
-        return sessions.Select(x => _mapper.Map<StudentExamSessionDto>(x));
+        try
+        {
+            // Thử lấy từ Redis cache trước
+            var cachedSessions = await GetStudentExamSessionsFromRedisCacheAsync(studentCode);
+            if (cachedSessions != null && cachedSessions.Any())
+            {
+                _logger.LogDebug("Đã lấy {Count} phiên thi từ Redis cache cho sinh viên {StudentCode}", 
+                    cachedSessions.Count(), studentCode);
+                return cachedSessions;
+            }
+            
+            _logger.LogDebug("Không tìm thấy phiên thi trong Redis cache cho sinh viên {StudentCode}, kiểm tra database", studentCode);
+            
+            // Fallback về database
+            var student = await _repository.GetQueryable().FirstOrDefaultAsync(x => x.StudentCode == studentCode);
+            if (student == null) return Enumerable.Empty<StudentExamSessionDto>();
+            
+            var sessions = await _studentExamSessionRepository.GetQueryable()
+                .Where(x => x.StudentId == student.StudentId && x.IsCompleted == false)
+                .Include(x => x.ExamSessionSubject)
+                    .ThenInclude(x => x.Subject)
+                .Include(x => x.ExamRoom)
+                .ToListAsync();
+            
+            // Cache lại vào Redis
+            await CacheStudentExamSessionsForStudentAsync(studentCode, sessions);
+            
+            return sessions.Select(x => _mapper.Map<StudentExamSessionDto>(x));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Lỗi khi lấy phiên thi cho sinh viên {StudentCode}", studentCode);
+            return Enumerable.Empty<StudentExamSessionDto>();
+        }
+    }
+    #endregion
+
+    #region GetStudentExamSessionsFromRedisCacheAsync
+    private async Task<IEnumerable<StudentExamSessionDto>?> GetStudentExamSessionsFromRedisCacheAsync(string studentCode)
+    {
+        try
+        {
+            var db = _redis.GetDatabase();
+            string sessionCacheKey = $"student_exam_session:{studentCode}:*";
+            
+            var keys = db.Multiplexer.GetServer(db.Multiplexer.GetEndPoints().First()).Keys(pattern: sessionCacheKey);
+            var cachedSessions = new List<StudentExamSessionCacheDto>();
+            
+            foreach (var key in keys)
+            {
+                try
+                {
+                    var sessionData = await db.StringGetAsync(key);
+                    if (sessionData.HasValue)
+                    {
+                        var cachedSession = System.Text.Json.JsonSerializer.Deserialize<StudentExamSessionCacheDto>(sessionData);
+                        if (cachedSession != null && !cachedSession.IsCompleted)
+                        {
+                            cachedSessions.Add(cachedSession);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Lỗi khi deserialize session từ Redis cache với key: {Key}", key);
+                }
+            }
+            
+            if (cachedSessions.Any())
+            {
+                // Convert CacheDto sang StudentExamSessionDto
+                var result = new List<StudentExamSessionDto>();
+                foreach (var cachedSession in cachedSessions)
+                {
+                    var sessionDto = new StudentExamSessionDto
+                    {
+                        StudentExamSessionId = cachedSession.StudentExamSessionId,
+                        ExamSessionSubjectId = cachedSession.ExamSessionSubjectId,
+                        SubjectName = cachedSession.SubjectName,
+                        RoomName = cachedSession.RoomName,
+                        Duration = cachedSession.Duration,
+                        ExtraMinutes = cachedSession.ExtraMinutes,
+                        StartTime = cachedSession.StartTime ?? DateTime.MinValue,
+                        EndTime = cachedSession.EndTime ?? DateTime.MinValue
+                    };
+                    result.Add(sessionDto);
+                }
+                
+                return result;
+            }
+            
+            return null;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Lỗi khi lấy phiên thi từ Redis cache cho sinh viên {StudentCode}", studentCode);
+            return null;
+        }
+    }
+    #endregion
+
+    #region CacheStudentExamSessionsForStudentAsync
+    private async Task CacheStudentExamSessionsForStudentAsync(string studentCode, List<StudentExamSession> sessions)
+    {
+        try
+        {
+            var db = _redis.GetDatabase();
+            int cachedCount = 0;
+            
+            foreach (var session in sessions)
+            {
+                try
+                {
+                    string sessionCacheKey = $"student_exam_session:{studentCode}:{session.StudentExamSessionId}";
+                    var cacheDto = await ConvertToCacheDtoAsync(session);
+                    var sessionJson = System.Text.Json.JsonSerializer.Serialize(cacheDto);
+                    await db.StringSetAsync(sessionCacheKey, sessionJson, TimeSpan.FromHours(6));
+                    cachedCount++;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Lỗi khi cache session {SessionId} cho sinh viên {StudentCode}", 
+                        session.StudentExamSessionId, studentCode);
+                }
+            }
+            
+            _logger.LogDebug("Đã cache {CachedCount} phiên thi cho sinh viên {StudentCode}", cachedCount, studentCode);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Lỗi khi cache phiên thi cho sinh viên {StudentCode}", studentCode);
+        }
     }
     #endregion
 
@@ -1443,9 +1568,10 @@ public class StudentService : IStudentService
                                  cachedSession.StudentAnswersString != session.StudentAnswersString ||
                                  cachedSession.IsCompleted != session.IsCompleted))
                             {
-                                // Cập nhật nếu có thay đổi
-                                var sessionJson = System.Text.Json.JsonSerializer.Serialize(session);
-                                var cacheTask = batch.StringSetAsync(sessionCacheKey, sessionJson, TimeSpan.FromHours(6));
+                                                        // Cập nhật nếu có thay đổi
+                        var cacheDto = await ConvertToCacheDtoAsync(session);
+                        var sessionJson = System.Text.Json.JsonSerializer.Serialize(cacheDto);
+                        var cacheTask = batch.StringSetAsync(sessionCacheKey, sessionJson, TimeSpan.FromHours(6));
                                 cacheTasks.Add(cacheTask);
                                 updatedCount++;
                                 _logger.LogDebug("Cập nhật StudentExamSession {StudentCode}:{StudentExamSessionId} trong Redis cache", 
@@ -1464,7 +1590,8 @@ public class StudentService : IStudentService
                             _logger.LogWarning(ex, "Lỗi khi deserialize StudentExamSession {StudentCode}:{StudentExamSessionId} từ cache, sẽ cập nhật lại", 
                                 session.StudentCode, session.StudentExamSessionId);
                             // Nếu lỗi deserialize, cập nhật lại
-                            var sessionJson = System.Text.Json.JsonSerializer.Serialize(session);
+                            var cacheDto = await ConvertToCacheDtoAsync(session);
+                            var sessionJson = System.Text.Json.JsonSerializer.Serialize(cacheDto);
                             var cacheTask = batch.StringSetAsync(sessionCacheKey, sessionJson, TimeSpan.FromHours(6));
                             cacheTasks.Add(cacheTask);
                             updatedCount++;
@@ -1473,7 +1600,8 @@ public class StudentService : IStudentService
                     else
                     {
                         // Thêm mới nếu chưa tồn tại
-                        var sessionJson = System.Text.Json.JsonSerializer.Serialize(session);
+                        var cacheDto = await ConvertToCacheDtoAsync(session);
+                        var sessionJson = System.Text.Json.JsonSerializer.Serialize(cacheDto);
                         var cacheTask = batch.StringSetAsync(sessionCacheKey, sessionJson, TimeSpan.FromHours(6));
                         cacheTasks.Add(cacheTask);
                         cachedCount++;
@@ -1717,10 +1845,25 @@ public class StudentService : IStudentService
                 var sessionData = await db.StringGetAsync(key);
                 if (sessionData.HasValue)
                 {
-                    var cachedSession = System.Text.Json.JsonSerializer.Deserialize<StudentExamSession>(sessionData);
-                    if (cachedSession?.ShuffledExamPaperId == shuffledExamPaperId)
+                    try
                     {
-                        return cachedSession;
+                        // Thử deserialize thành CacheDto trước
+                        var cachedSessionDto = System.Text.Json.JsonSerializer.Deserialize<StudentExamSessionCacheDto>(sessionData);
+                        if (cachedSessionDto?.ShuffledExamPaperId == shuffledExamPaperId)
+                        {
+                            // Sử dụng AutoMapper để convert CacheDto về Entity
+                            var sessionEntity = _mapper.Map<StudentExamSession>(cachedSessionDto);
+                            return sessionEntity;
+                        }
+                    }
+                    catch
+                    {
+                        // Fallback: thử deserialize thành Entity cũ
+                        var cachedSession = System.Text.Json.JsonSerializer.Deserialize<StudentExamSession>(sessionData);
+                        if (cachedSession?.ShuffledExamPaperId == shuffledExamPaperId)
+                        {
+                            return cachedSession;
+                        }
                     }
                 }
             }
@@ -1857,4 +2000,40 @@ public class StudentService : IStudentService
     }
     #endregion
 
+    #region ConvertToCacheDto
+    private async Task<StudentExamSessionCacheDto> ConvertToCacheDtoAsync(StudentExamSession session)
+    {
+        // Sử dụng AutoMapper để map từ Entity sang CacheDto
+        var cacheDto = _mapper.Map<StudentExamSessionCacheDto>(session);
+        
+        // Nếu navigation properties chưa được load, load từ database
+        if (string.IsNullOrEmpty(cacheDto.SubjectName) || cacheDto.Duration == 0)
+        {
+            var examSessionSubject = await _examSessionSubjectRepository.GetQueryable()
+                .Include(ess => ess.Subject)
+                .FirstOrDefaultAsync(ess => ess.ExamSessionSubjectId == session.ExamSessionSubjectId);
+            
+            if (examSessionSubject?.Subject != null)
+            {
+                cacheDto.SubjectName = examSessionSubject.Subject.SubjectName;
+                cacheDto.Duration = examSessionSubject.Duration;
+            }
+        }
+        
+        if (string.IsNullOrEmpty(cacheDto.RoomName) && session.ExamRoomId.HasValue)
+        {
+            var examRoom = await _examRoomRepository.GetQueryable()
+                .FirstOrDefaultAsync(er => er.ExamRoomId == session.ExamRoomId);
+            
+            if (examRoom != null)
+            {
+                cacheDto.RoomName = examRoom.RoomName;
+            }
+        }
+        
+        return cacheDto;
+    }
+    #endregion
+
+} 
 } 
