@@ -1265,9 +1265,9 @@ public class StudentService : IStudentService
             {
                 try
                 {
-                    var student = System.Text.Json.JsonSerializer.Deserialize<Student>(cachedStudent);
+                    var cachedStudentObj = System.Text.Json.JsonSerializer.Deserialize<Student>(cachedStudent);
                     _logger.LogDebug("Đã lấy sinh viên {StudentCode} từ Redis cache", studentCode);
-                    return student;
+                    return cachedStudentObj;
                 }
                 catch (Exception ex)
                 {
@@ -1281,24 +1281,24 @@ public class StudentService : IStudentService
             
             // Nếu không có trong cache, kiểm tra database
             var students = await _repository.GetAllAsync();
-            var student = students.FirstOrDefault(s => s.StudentCode == studentCode);
+            var dbStudent = students.FirstOrDefault(s => s.StudentCode == studentCode);
             
-            if (student != null)
+            if (dbStudent != null)
             {
                 try
                 {
                     // Cache lại vào Redis
-                    var studentJson = System.Text.Json.JsonSerializer.Serialize(student);
+                    var studentJson = System.Text.Json.JsonSerializer.Serialize(dbStudent);
                     await db.StringSetAsync(studentCacheKey, studentJson, TimeSpan.FromHours(6));
                     
                     _logger.LogDebug("Đã tìm thấy sinh viên {StudentCode} trong database và cache lại vào Redis", studentCode);
-                    return student;
+                    return dbStudent;
                 }
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Lỗi khi cache sinh viên {StudentCode} vào Redis", studentCode);
                     // Vẫn trả về student từ database ngay cả khi cache lỗi
-                    return student;
+                    return dbStudent;
                 }
             }
             
