@@ -37,7 +37,7 @@ public class StudentCacheHelper
                 try
                 {
                     var cachedStudentObj = JsonSerializer.Deserialize<Student>(cachedStudent);
-                    _logger.LogDebug("Đã lấy sinh viên {StudentCode} từ Redis cache", studentCode);
+                    _logger.LogInformation("Đã lấy sinh viên {StudentCode} từ Redis cache", studentCode);
                     return cachedStudentObj;
                 }
                 catch (Exception ex)
@@ -48,7 +48,7 @@ public class StudentCacheHelper
                 }
             }
             
-            _logger.LogDebug("Không tìm thấy sinh viên {StudentCode} trong Redis cache, kiểm tra database", studentCode);
+            _logger.LogInformation("Không tìm thấy sinh viên {StudentCode} trong Redis cache, kiểm tra database", studentCode);
             
             // Fallback về database
             try
@@ -60,12 +60,12 @@ public class StudentCacheHelper
                 {
                     // Cache lại vào Redis
                     await UpdateStudentInRedisAsync(dbStudent);
-                    _logger.LogDebug("Đã tìm thấy sinh viên {StudentCode} trong database và cache lại vào Redis", studentCode);
+                    _logger.LogInformation("Đã tìm thấy sinh viên {StudentCode} trong database và cache lại vào Redis", studentCode);
                     return dbStudent;
                 }
                 else
                 {
-                    _logger.LogDebug("Không tìm thấy sinh viên {StudentCode} trong database", studentCode);
+                    _logger.LogInformation("Không tìm thấy sinh viên {StudentCode} trong database", studentCode);
                     return null;
                 }
             }
@@ -87,7 +87,7 @@ public class StudentCacheHelper
                 
                 if (dbStudent != null)
                 {
-                    _logger.LogDebug("Đã tìm thấy sinh viên {StudentCode} trong database (fallback)", studentCode);
+                    _logger.LogInformation("Đã tìm thấy sinh viên {StudentCode} trong database (fallback)", studentCode);
                     return dbStudent;
                 }
             }
