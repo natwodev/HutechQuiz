@@ -998,22 +998,19 @@ public class StudentService : IStudentService
             var db = _redis.GetDatabase();
             
             // Parallel processing: Lấy dữ liệu từ Redis đồng thời
-            var tasks = new[]
-            {
-                db.StringGetAsync(studentAnswerKey),
-                db.StringGetAsync(answerKey),
-                GetStudentExamSessionFromCacheAsync(db, sessionCacheKey, submitExamDto.ShuffledExamPaperId)
-            };
+            Task<RedisValue> studentAnswersTask = db.StringGetAsync(studentAnswerKey);
+            Task<RedisValue> answerKeyTask = db.StringGetAsync(answerKey);
+            Task<StudentExamSession?> sessionTask = GetStudentExamSessionFromCacheAsync(db, sessionCacheKey, submitExamDto.ShuffledExamPaperId);
             
-            await Task.WhenAll(tasks);
+            await Task.WhenAll(studentAnswersTask, answerKeyTask, sessionTask);
             
-            var studentAnswers = await tasks[0];
-            var answerKeyValue = await tasks[1];
-            var cachedSession = await tasks[2];
+            var studentAnswers = await studentAnswersTask;
+            var answerKeyValue = await answerKeyTask;
+            var cachedSession = await sessionTask;
             
             // Validate và lấy dữ liệu song song
-            var validationTask = ValidateStudentExamSessionOptimizedAsync(StudentCode, submitExamDto.ShuffledExamPaperId, cachedSession);
-            var updateAnswersTask = UpdateStudentAnswersOptimizedAsync(studentAnswers, submitExamDto.SaveAnswerDtos, studentAnswerKey, db);
+            Task<(bool Success, string Message)> validationTask = ValidateStudentExamSessionOptimizedAsync(StudentCode, submitExamDto.ShuffledExamPaperId, cachedSession);
+            Task<(bool Success, string Message, Dictionary<int, string>? CurrentAnswers)> updateAnswersTask = UpdateStudentAnswersOptimizedAsync(studentAnswers, submitExamDto.SaveAnswerDtos, studentAnswerKey, db);
             
             await Task.WhenAll(validationTask, updateAnswersTask);
             
@@ -1103,20 +1100,17 @@ public class StudentService : IStudentService
             var db = _redis.GetDatabase();
             
             // Parallel processing: Lấy dữ liệu từ Redis đồng thời
-            var tasks = new[]
-            {
-                db.StringGetAsync(studentAnswerKey),
-                GetStudentExamSessionFromCacheAsync(db, sessionCacheKey, submitExamDto.ShuffledExamPaperId)
-            };
+            Task<RedisValue> studentAnswersTask = db.StringGetAsync(studentAnswerKey);
+            Task<StudentExamSession?> sessionTask = GetStudentExamSessionFromCacheAsync(db, sessionCacheKey, submitExamDto.ShuffledExamPaperId);
             
-            await Task.WhenAll(tasks);
+            await Task.WhenAll(studentAnswersTask, sessionTask);
             
-            var studentAnswers = await tasks[0];
-            var cachedSession = await tasks[1];
+            var studentAnswers = await studentAnswersTask;
+            var cachedSession = await sessionTask;
             
             // Validate và update answers song song
-            var validationTask = ValidateStudentExamSessionOptimizedAsync(StudentCode, submitExamDto.ShuffledExamPaperId, cachedSession);
-            var updateAnswersTask = UpdateStudentAnswersOptimizedAsync(studentAnswers, submitExamDto.SaveAnswerDtos, studentAnswerKey, db);
+            Task<(bool Success, string Message)> validationTask = ValidateStudentExamSessionOptimizedAsync(StudentCode, submitExamDto.ShuffledExamPaperId, cachedSession);
+            Task<(bool Success, string Message, Dictionary<int, string>? CurrentAnswers)> updateAnswersTask = UpdateStudentAnswersOptimizedAsync(studentAnswers, submitExamDto.SaveAnswerDtos, studentAnswerKey, db);
             
             await Task.WhenAll(validationTask, updateAnswersTask);
             
