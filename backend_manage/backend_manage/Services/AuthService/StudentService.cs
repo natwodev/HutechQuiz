@@ -152,8 +152,47 @@ public class StudentService : IStudentService
     #region GetByStudentCodeAsync
     public async Task<Student?> GetByStudentCodeAsync(string studentCode)
     {
-        var students = await _repository.GetAllAsync();
-        return students.FirstOrDefault(s => s.StudentCode == studentCode);
+        try
+        {
+            // Thử lấy từ Redis cache trước
+            var cachedStudent = await GetStudentFromRedisAsync(studentCode);
+            if (cachedStudent != null)
+            {
+                _logger.LogDebug("Đã lấy sinh viên {StudentCode} từ Redis cache", studentCode);
+                return cachedStudent;
+            }
+            
+            _logger.LogDebug("Không tìm thấy sinh viên {StudentCode} trong Redis cache, kiểm tra database", studentCode);
+            
+            // Fallback về database
+            var students = await _repository.GetAllAsync();
+            var dbStudent = students.FirstOrDefault(s => s.StudentCode == studentCode);
+            
+            if (dbStudent != null)
+            {
+                // Cache lại vào Redis
+                await UpdateStudentInRedisAsync(dbStudent);
+                _logger.LogDebug("Đã tìm thấy sinh viên {StudentCode} trong database và cache lại vào Redis", studentCode);
+            }
+            
+            return dbStudent;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Lỗi khi lấy sinh viên {StudentCode} từ cache hoặc database", studentCode);
+            
+            // Fallback về database nếu có lỗi
+            try
+            {
+                var students = await _repository.GetAllAsync();
+                return students.FirstOrDefault(s => s.StudentCode == studentCode);
+            }
+            catch (Exception dbEx)
+            {
+                _logger.LogError(dbEx, "Lỗi khi truy vấn database cho sinh viên {StudentCode}", studentCode);
+                return null;
+            }
+        }
     }
     #endregion
 
@@ -725,8 +764,6 @@ public class StudentService : IStudentService
     #region GetStudentExamSessionsAsync
     public async Task<IEnumerable<StudentExamSessionDto>> GetStudentExamSessionsAsync(string studentCode)
     {
-        var student = await _repository.GetQueryable().FirstOrDefaultAsync(x => x.StudentCode == studentCode);
-        if (student == null) return Enumerable.Empty<StudentExamSessionDto>();
         var sessions = await _studentExamSessionRepository.GetQueryable()
             .Where(x => x.StudentId == student.StudentId && x.IsCompleted == false)
             .Include(x => x.ExamSessionSubject)
