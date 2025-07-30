@@ -1258,16 +1258,51 @@ public class StudentService : IStudentService
             var db = _redis.GetDatabase();
             string studentCacheKey = $"student:{studentCode}";
             
+            // Thử lấy từ Redis cache trước
             var cachedStudent = await db.StringGetAsync(studentCacheKey);
             
             if (cachedStudent.HasValue)
             {
-                var student = System.Text.Json.JsonSerializer.Deserialize<Student>(cachedStudent);
-                _logger.LogDebug("Đã lấy sinh viên {StudentCode} từ Redis cache", studentCode);
-                return student;
+                try
+                {
+                    var student = System.Text.Json.JsonSerializer.Deserialize<Student>(cachedStudent);
+                    _logger.LogDebug("Đã lấy sinh viên {StudentCode} từ Redis cache", studentCode);
+                    return student;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Lỗi khi deserialize sinh viên {StudentCode} từ Redis cache, sẽ kiểm tra database", studentCode);
+                    // Nếu lỗi deserialize, xóa cache và kiểm tra database
+                    await db.KeyDeleteAsync(studentCacheKey);
+                }
             }
             
-            _logger.LogDebug("Không tìm thấy sinh viên {StudentCode} trong Redis cache", studentCode);
+            _logger.LogDebug("Không tìm thấy sinh viên {StudentCode} trong Redis cache, kiểm tra database", studentCode);
+            
+            // Nếu không có trong cache, kiểm tra database
+            var students = await _repository.GetAllAsync();
+            var student = students.FirstOrDefault(s => s.StudentCode == studentCode);
+            
+            if (student != null)
+            {
+                try
+                {
+                    // Cache lại vào Redis
+                    var studentJson = System.Text.Json.JsonSerializer.Serialize(student);
+                    await db.StringSetAsync(studentCacheKey, studentJson, TimeSpan.FromHours(6));
+                    
+                    _logger.LogDebug("Đã tìm thấy sinh viên {StudentCode} trong database và cache lại vào Redis", studentCode);
+                    return student;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Lỗi khi cache sinh viên {StudentCode} vào Redis", studentCode);
+                    // Vẫn trả về student từ database ngay cả khi cache lỗi
+                    return student;
+                }
+            }
+            
+            _logger.LogDebug("Không tìm thấy sinh viên {StudentCode} trong cả Redis cache và database", studentCode);
             return null;
         }
         catch (Exception ex)
