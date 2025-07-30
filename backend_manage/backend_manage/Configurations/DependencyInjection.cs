@@ -3,6 +3,7 @@ using backend_manage.Authentication.Services;
 using backend_manage.Repositories.AuthRepository;
 using backend_manage.Repositories.Interfaces;
 using backend_manage.Services.AuthService;
+using backend_manage.Services.AuthService.Helpers;
 using backend_manage.Services.Interfaces;
 using backend_manage.Messages.RabbitMQ;
 
@@ -34,6 +35,14 @@ namespace backend_manage.Configurations
             services.AddScoped<IShuffledExamPaperService, ShuffledExamPaperService>();
             services.AddScoped<IExamRoomLecturerAssignmentService, ExamRoomLecturerAssignmentService>();
             services.AddScoped<ILecturerService, LecturerService>();
+            
+            // Register Helper Classes
+            services.AddScoped<StudentCacheHelper>();
+            services.AddScoped<StudentExamSessionCacheHelper>();
+            services.AddScoped<ExamPaperHelper>();
+            services.AddScoped<StudentAnswerHelper>();
+            services.AddScoped<StudentValidationHelper>();
+            
             services.AddSingleton<IRabbitMqService, RabbitMqService>();
             services.AddSingleton<RabbitMqConsumer>();
         }
