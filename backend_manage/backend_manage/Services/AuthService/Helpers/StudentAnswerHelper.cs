@@ -116,6 +116,13 @@ public class StudentAnswerHelper
             .Select(a => a.Trim('(', ')').Split(','))
             .ToDictionary(parts => int.Parse(parts[0]), parts => parts[1]);
     }
+
+    public Dictionary<int, string> ParseAnswerKey(string answerKeyString)
+    {
+        return answerKeyString.Split(';', StringSplitOptions.RemoveEmptyEntries)
+            .Select(a => a.Trim('(', ')').Split(','))
+            .ToDictionary(parts => int.Parse(parts[0]), parts => parts[1]);
+    }
     
     public string CreateAnswersString(Dictionary<int, string> answers)
     {

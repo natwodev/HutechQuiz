@@ -798,7 +798,7 @@ public class StudentService : IStudentService
             // Parallel processing: Lấy dữ liệu từ Redis đồng thời
             Task<RedisValue> studentAnswersTask = db.StringGetAsync(studentAnswerKey);
             Task<RedisValue> answerKeyTask = db.StringGetAsync(answerKey);
-            Task<StudentExamSession?> sessionTask = GetStudentExamSessionFromCacheAsync(db, sessionCacheKey, submitExamDto.ShuffledExamPaperId);
+            Task<StudentExamSession?> sessionTask = _validationHelper.GetStudentExamSessionFromCacheAsync(db, sessionCacheKey, submitExamDto.ShuffledExamPaperId);
             
             await Task.WhenAll(studentAnswersTask, answerKeyTask, sessionTask);
             
@@ -832,13 +832,13 @@ public class StudentService : IStudentService
                 return (false, "Không tìm thấy đáp án", null);
             }
             
-            var correctAnswerPairs = ParseAnswerKey(answerKeyValue.ToString());
+            var correctAnswerPairs = _answerHelper.ParseAnswerKey(answerKeyValue.ToString());
             
             // Tính điểm tối ưu
-            var (score, correctCount, totalQuestions) = CalculateScoreOptimized(currentAnswers, correctAnswerPairs);
+            var (score, correctCount, totalQuestions) = _answerHelper.CalculateScoreOptimized(currentAnswers, correctAnswerPairs);
             
             // Tạo message và gửi RabbitMQ
-            var examSubmissionMessage = CreateExamSubmissionMessage(StudentCode, submitExamDto.ShuffledExamPaperId, score, correctCount, totalQuestions, currentAnswers);
+            var examSubmissionMessage = _answerHelper.CreateExamSubmissionMessage(StudentCode, submitExamDto.ShuffledExamPaperId, score, correctCount, totalQuestions, currentAnswers);
             _rabbitMQService.PublishMessage("submit_exam_queue", examSubmissionMessage);
             
             _logger.LogInformation(
