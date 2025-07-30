@@ -77,8 +77,10 @@ public class StudentService : IStudentService
                 ErrorMessage = "Mã sinh viên nhập không khớp."
             };
         }
-        var students = await _repository.GetAllAsync();
-        var student = students.FirstOrDefault(s => s.StudentCode == studentCode1);
+        
+        // Sử dụng GetStudentFromRedisAsync thay vì truy vấn database trực tiếp
+        var student = await GetStudentFromRedisAsync(studentCode1);
+        
         if (student == null)
         {
             return new StudentAuthResultDto
@@ -100,6 +102,9 @@ public class StudentService : IStudentService
         student.IsLogin = true;
         student.LastLoggedIn = DateTimeHelper.GetVietnamTime();
         await _repository.UpdateAsync(student);
+
+        // Cập nhật lại vào Redis cache sau khi thay đổi
+        await UpdateStudentInRedisAsync(student);
 
         // Gửi message vào RabbitMQ để worker thực hiện cache StudentExamSession
         // Định nghĩa DTO ở file riêng, sử dụng khi gửi message vào RabbitMQ
