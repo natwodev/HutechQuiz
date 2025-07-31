@@ -467,14 +467,26 @@ public class StudentExamSessionCacheHelper
             
             if (session != null)
             {
-                // Cache lại vào Redis
-                var cacheDto = await ConvertToCacheDtoAsync(session);
-                var sessionJson = JsonSerializer.Serialize(cacheDto);
-                await db.StringSetAsync(sessionCacheKey, sessionJson, TimeSpan.FromHours(6));
-                
-                _logger.LogDebug("Đã tìm thấy StudentExamSession trong database và cache lại: {StudentCode}:{StudentExamSessionId}", 
-                    studentCode, studentExamSessionId);
-                return cacheDto;
+                // Cache lại vào Redis (nếu Redis khả dụng)
+                try
+                {
+                    var cacheDto = await ConvertToCacheDtoAsync(session);
+                    var sessionJson = JsonSerializer.Serialize(cacheDto);
+                    await db.StringSetAsync(sessionCacheKey, sessionJson, TimeSpan.FromHours(6));
+                    
+                    _logger.LogDebug("Đã tìm thấy StudentExamSession trong database và cache lại: {StudentCode}:{StudentExamSessionId}", 
+                        studentCode, studentExamSessionId);
+                    return cacheDto;
+                }
+                catch (Exception cacheEx)
+                {
+                    _logger.LogWarning(cacheEx, "Không thể cache StudentExamSession do Redis không khả dụng: {StudentCode}:{StudentExamSessionId}", 
+                        studentCode, studentExamSessionId);
+                    
+                    // Vẫn trả về dữ liệu từ database ngay cả khi không cache được
+                    var cacheDto = await ConvertToCacheDtoAsync(session);
+                    return cacheDto;
+                }
             }
             
             _logger.LogDebug("Không tìm thấy StudentExamSession trong database: {StudentCode}:{StudentExamSessionId}", 

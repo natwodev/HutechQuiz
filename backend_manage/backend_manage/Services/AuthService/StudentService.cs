@@ -291,15 +291,55 @@ public class StudentService : IStudentService
 
     private async Task<StudentExamSession> GetAndValidateStudentExamSessionAsync(string studentCode, int studentExamSessionId)
     {
-        var cachedSessionDto = await _sessionCacheHelper.GetStudentExamSessionFromCacheAsync(studentCode, studentExamSessionId);
-        
-        if (cachedSessionDto == null)
+        try
         {
-            _logger.LogError("Không tìm thấy phiên thi của sinh viên {StudentCode}", studentCode);
+            // Thử lấy từ cache trước
+            var cachedSessionDto = await _sessionCacheHelper.GetStudentExamSessionFromCacheAsync(studentCode, studentExamSessionId);
+            
+            if (cachedSessionDto != null)
+            {
+                _logger.LogInformation("Đã tìm thấy phiên thi trong cache cho sinh viên {StudentCode}", studentCode);
+                return _mapper.Map<StudentExamSession>(cachedSessionDto);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Lỗi khi lấy phiên thi từ cache cho sinh viên {StudentCode}, sẽ thử từ database", studentCode);
+        }
+        
+        // Fallback: Lấy trực tiếp từ database nếu cache không khả dụng
+        try
+        {
+            _logger.LogInformation("Thử lấy phiên thi từ database cho sinh viên {StudentCode}", studentCode);
+            
+            var student = await _repository.GetQueryable().FirstOrDefaultAsync(x => x.StudentCode == studentCode);
+            if (student == null)
+            {
+                _logger.LogError("Không tìm thấy sinh viên với mã {StudentCode}", studentCode);
+                throw new Exception("Không tìm thấy sinh viên.");
+            }
+            
+            var session = await _studentExamSessionRepository.GetQueryable()
+                .Where(x => x.StudentId == student.StudentId && x.StudentExamSessionId == studentExamSessionId)
+                .Include(x => x.ExamSessionSubject)
+                    .ThenInclude(x => x.Subject)
+                .Include(x => x.ExamRoom)
+                .FirstOrDefaultAsync();
+            
+            if (session != null)
+            {
+                _logger.LogInformation("Đã tìm thấy phiên thi trong database cho sinh viên {StudentCode}", studentCode);
+                return session;
+            }
+            
+            _logger.LogError("Không tìm thấy phiên thi của sinh viên {StudentCode} trong database", studentCode);
             throw new Exception("Không tìm thấy phiên thi của sinh viên.");
         }
-
-        return _mapper.Map<StudentExamSession>(cachedSessionDto);
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Lỗi khi lấy phiên thi từ database cho sinh viên {StudentCode}", studentCode);
+            throw new Exception("Không tìm thấy phiên thi của sinh viên.");
+        }
     }
 
     private async Task<ShuffledExamPaperDto> GetOrCreateExamPaperAsync(string studentCode, StudentExamSession studentExamSession)

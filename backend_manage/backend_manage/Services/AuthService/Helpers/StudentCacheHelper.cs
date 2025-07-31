@@ -44,7 +44,14 @@ public class StudentCacheHelper
                 {
                     _logger.LogWarning(ex, "Lỗi khi deserialize sinh viên {StudentCode} từ Redis cache, sẽ kiểm tra database", studentCode);
                     // Nếu lỗi deserialize, xóa cache và kiểm tra database
-                    await db.KeyDeleteAsync(studentCacheKey);
+                    try
+                    {
+                        await db.KeyDeleteAsync(studentCacheKey);
+                    }
+                    catch (Exception deleteEx)
+                    {
+                        _logger.LogWarning(deleteEx, "Không thể xóa cache key {Key} do Redis không khả dụng", studentCacheKey);
+                    }
                 }
             }
             
@@ -58,9 +65,17 @@ public class StudentCacheHelper
                 
                 if (dbStudent != null)
                 {
-                    // Cache lại vào Redis
-                    await UpdateStudentInRedisAsync(dbStudent);
-                    _logger.LogInformation("Đã tìm thấy sinh viên {StudentCode} trong database và cache lại vào Redis", studentCode);
+                    // Cache lại vào Redis (nếu Redis khả dụng)
+                    try
+                    {
+                        await UpdateStudentInRedisAsync(dbStudent);
+                        _logger.LogInformation("Đã tìm thấy sinh viên {StudentCode} trong database và cache lại vào Redis", studentCode);
+                    }
+                    catch (Exception cacheEx)
+                    {
+                        _logger.LogWarning(cacheEx, "Không thể cache sinh viên {StudentCode} do Redis không khả dụng", studentCode);
+                    }
+                    
                     return dbStudent;
                 }
                 else
