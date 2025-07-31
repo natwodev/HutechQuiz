@@ -52,9 +52,18 @@ try
 
     ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
 
-    // Start RabbitMQ consumer
-    var rabbitMQConsumer = app.Services.GetRequiredService<RabbitMqConsumer>();
-    rabbitMQConsumer.StartConsuming();
+    // Start RabbitMQ consumer với error handling
+    try
+    {
+        var rabbitMQConsumer = app.Services.GetRequiredService<RabbitMqConsumer>();
+        rabbitMQConsumer.StartConsuming();
+        Log.Information("RabbitMQ consumer đã được khởi động thành công");
+    }
+    catch (Exception ex)
+    {
+        Log.Warning(ex, "Không thể khởi động RabbitMQ consumer, hệ thống sẽ chạy không có message queue");
+        // Không throw exception để app vẫn chạy được
+    }
 
     app.Run();
 }

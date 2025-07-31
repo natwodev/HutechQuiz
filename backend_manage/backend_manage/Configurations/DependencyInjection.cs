@@ -6,6 +6,8 @@ using backend_manage.Services.AuthService;
 using backend_manage.Services.AuthService.Helpers;
 using backend_manage.Services.Interfaces;
 using backend_manage.Messages.RabbitMQ;
+using Microsoft.Extensions.Logging;
+using StackExchange.Redis;
 
 namespace backend_manage.Configurations
 {
@@ -44,9 +46,43 @@ namespace backend_manage.Configurations
             services.AddScoped<StudentValidationHelper>();
             services.AddScoped<StudentImportHelper>();
 
+            // Register RabbitMQ services with fallback
+            services.AddSingleton<IRabbitMqService>(sp =>
+            {
+                var logger = sp.GetRequiredService<ILogger<RabbitMqService>>();
+                var configuration = sp.GetRequiredService<IConfiguration>();
+                
+                try
+                {
+                    var rabbitMqService = new RabbitMqService(configuration, logger);
+                    logger.LogInformation("RabbitMQ service đã được khởi tạo thành công");
+                    return rabbitMqService;
+                }
+                catch (Exception ex)
+                {
+                    logger.LogWarning(ex, "Không thể khởi tạo RabbitMQ service, sẽ sử dụng fallback");
+                    return new RabbitMqFallbackService(logger);
+                }
+            });
             
-            services.AddSingleton<IRabbitMqService, RabbitMqService>();
-            services.AddSingleton<RabbitMqConsumer>();
+            services.AddSingleton<RabbitMqConsumer>(sp =>
+            {
+                var logger = sp.GetRequiredService<ILogger<RabbitMqConsumer>>();
+                var rabbitMqService = sp.GetRequiredService<IRabbitMqService>();
+                var serviceScopeFactory = sp.GetRequiredService<IServiceScopeFactory>();
+                
+                try
+                {
+                    var consumer = new RabbitMqConsumer(rabbitMqService, serviceScopeFactory, logger);
+                    logger.LogInformation("RabbitMQ consumer đã được khởi tạo thành công");
+                    return consumer;
+                }
+                catch (Exception ex)
+                {
+                    logger.LogWarning(ex, "Không thể khởi tạo RabbitMQ consumer, sẽ sử dụng fallback");
+                    return new RabbitMqFallbackConsumer(logger);
+                }
+            });
         }
     }
 }

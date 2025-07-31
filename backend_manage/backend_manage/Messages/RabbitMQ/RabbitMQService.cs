@@ -8,6 +8,88 @@ using System.Threading.Tasks;
 
 namespace backend_manage.Messages.RabbitMQ
 {
+    public interface IRabbitMqService
+    {
+        void PublishMessage<T>(string queueName, T message);
+        void Subscribe<T>(string queueName, Func<T, Task> onMessage);
+        void CheckQueueStatus(string queueName);
+        void Dispose();
+    }
+
+    public class RabbitMqFallbackService : IRabbitMqService
+    {
+        private readonly ILogger _logger;
+        private readonly Dictionary<string, Func<object, Task>> _messageHandlers;
+
+        public RabbitMqFallbackService(ILogger logger)
+        {
+            _logger = logger;
+            _messageHandlers = new Dictionary<string, Func<object, Task>>();
+            _logger.LogWarning("Sử dụng RabbitMQ fallback service - RabbitMQ không khả dụng, sẽ thực hiện tác vụ trực tiếp");
+        }
+
+        public void PublishMessage<T>(string queueName, T message)
+        {
+            _logger.LogWarning("RabbitMQ không khả dụng - thực hiện tác vụ trực tiếp cho queue {QueueName}", queueName);
+            
+            // Thực hiện tác vụ trực tiếp thay vì bỏ qua
+            try
+            {
+                if (_messageHandlers.ContainsKey(queueName))
+                {
+                    _ = Task.Run(async () =>
+                    {
+                        try
+                        {
+                            await _messageHandlers[queueName](message);
+                            _logger.LogInformation("Đã thực hiện tác vụ trực tiếp cho queue {QueueName}", queueName);
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError(ex, "Lỗi khi thực hiện tác vụ trực tiếp cho queue {QueueName}", queueName);
+                        }
+                    });
+                }
+                else
+                {
+                    _logger.LogWarning("Không có handler cho queue {QueueName}, bỏ qua message", queueName);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi xử lý message trực tiếp cho queue {QueueName}", queueName);
+            }
+        }
+
+        public void Subscribe<T>(string queueName, Func<T, Task> onMessage)
+        {
+            _logger.LogInformation("Đăng ký handler trực tiếp cho queue {QueueName}", queueName);
+            
+            // Lưu handler để sử dụng khi publish message
+            _messageHandlers[queueName] = async (message) =>
+            {
+                if (message is T typedMessage)
+                {
+                    await onMessage(typedMessage);
+                }
+                else
+                {
+                    _logger.LogWarning("Message type không khớp cho queue {QueueName}", queueName);
+                }
+            };
+        }
+
+        public void CheckQueueStatus(string queueName)
+        {
+            _logger.LogWarning("RabbitMQ không khả dụng - không thể kiểm tra trạng thái queue {QueueName}", queueName);
+        }
+
+        public void Dispose()
+        {
+            _logger.LogInformation("Dispose RabbitMQ fallback service");
+        }
+    }
+
     public class RabbitMqService : IRabbitMqService, IDisposable
     {
         private readonly IConnection _connection;
