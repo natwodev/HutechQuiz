@@ -209,8 +209,13 @@ public class StudentAnswerHelper
 
     public StudentAnswerSavedMessage CreateAnswerSavedMessage(string studentCode, int shuffledExamPaperId, int index, string answer, string newAnswersString)
     {
-        return _mapper.Map<StudentAnswerSavedMessage>(
-            (studentCode, shuffledExamPaperId, index, answer, newAnswersString)
-        );
+        return new StudentAnswerSavedMessage
+        {
+            StudentCode = studentCode,
+            ShuffledExamPaperId = shuffledExamPaperId,
+            Index = index,
+            Answer = answer,
+            NewAnswersString = newAnswersString
+        };
     }
 } 
