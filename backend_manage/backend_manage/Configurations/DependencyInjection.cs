@@ -47,22 +47,50 @@ namespace backend_manage.Configurations
             services.AddScoped<StudentValidationHelper>();
             services.AddScoped<StudentImportHelper>();
 
-            // Register Redis Service with fallback
-            services.AddScoped<IRedisService>(sp =>
+            // Register Redis Service as Singleton to avoid ping on every request
+            services.AddSingleton<IRedisService>(sp =>
             {
                 try
                 {
                     // Sử dụng IConnectionMultiplexer đã được đăng ký trong ServiceExtensions
                     var redis = sp.GetRequiredService<IConnectionMultiplexer>();
-                    var logger = sp.GetRequiredService<ILogger<RedisService>>();
-                    var redisService = new RedisService(redis, logger);
-                    logger.LogInformation("Redis service đã được khởi tạo thành công");
-                    return redisService;
+                    
+                    // Kiểm tra kết nối Redis chỉ một lần khi khởi tạo
+                    if (redis.IsConnected)
+                    {
+                        var db = redis.GetDatabase();
+                        var pingResult = db.Ping();
+                        
+                        if (pingResult.TotalMilliseconds < 5000)
+                        {
+                            var logger = sp.GetRequiredService<ILogger<RedisService>>();
+                            logger.LogInformation("✅ Redis service đã được khởi tạo thành công - Ping: {PingTime}ms", pingResult.TotalMilliseconds);
+                            return new RedisService(redis, logger);
+                        }
+                        else
+                        {
+                            var logger = sp.GetRequiredService<ILogger<RedisFallbackService>>();
+                            logger.LogWarning("⚠️ Redis ping chậm ({PingTime}ms), sử dụng fallback", pingResult.TotalMilliseconds);
+                            return new RedisFallbackService(logger);
+                        }
+                    }
+                    else
+                    {
+                        var logger = sp.GetRequiredService<ILogger<RedisFallbackService>>();
+                        logger.LogWarning("⚠️ Redis không kết nối, sử dụng fallback");
+                        return new RedisFallbackService(logger);
+                    }
+                }
+                catch (RedisConnectionException ex)
+                {
+                    var logger = sp.GetRequiredService<ILogger<RedisFallbackService>>();
+                    logger.LogWarning("❌ Redis connection exception: {Message}", ex.Message);
+                    return new RedisFallbackService(logger);
                 }
                 catch (Exception ex)
                 {
                     var logger = sp.GetRequiredService<ILogger<RedisFallbackService>>();
-                    logger.LogWarning(ex, "Không thể khởi tạo Redis service, sẽ sử dụng fallback");
+                    logger.LogWarning("❌ Không thể khởi tạo Redis service: {Message}", ex.Message);
                     return new RedisFallbackService(logger);
                 }
             });

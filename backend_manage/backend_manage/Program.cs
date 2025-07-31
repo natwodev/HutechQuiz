@@ -4,6 +4,7 @@ using Serilog;
 using Microsoft.EntityFrameworkCore;
 using backend_manage.Messages.RabbitMQ;
 using backend_manage.Services.AuthService.Helpers;
+using StackExchange.Redis;
 
 
 
@@ -40,6 +41,27 @@ try
     {
         var services = scope.ServiceProvider;
         await backend_manage.Data.SeedData.InitializeAsync(services);
+    }
+
+    // Health check Redis khi khởi động
+    try
+    {
+        using var scope = app.Services.CreateScope();
+        var redisService = scope.ServiceProvider.GetRequiredService<backend_manage.Services.Interfaces.IRedisService>();
+        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+        
+        if (redisService.IsConnected)
+        {
+            logger.LogInformation("✅ Redis health check: Kết nối thành công");
+        }
+        else
+        {
+            logger.LogWarning("⚠️ Redis health check: Không kết nối được, đang sử dụng fallback");
+        }
+    }
+    catch (Exception ex)
+    {
+        Log.Warning(ex, "❌ Redis health check thất bại");
     }
 
     // Configure the HTTP request pipeline.
