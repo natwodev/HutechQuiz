@@ -40,19 +40,6 @@ try
     {
         var services = scope.ServiceProvider;
         await backend_manage.Data.SeedData.InitializeAsync(services);
-        
-        // Preload approved papers vào Redis cache
-        try
-        {
-            var examPaperHelper = services.GetRequiredService<ExamPaperHelper>();
-            await examPaperHelper.PreloadAllApprovedPapersAsync();
-            Log.Information("Đã preload approved papers vào Redis cache thành công");
-        }
-        catch (Exception ex)
-        {
-            Log.Warning(ex, "Không thể preload approved papers vào Redis cache, hệ thống sẽ chạy bình thường");
-            // Không throw exception để app vẫn chạy được
-        }
     }
 
     // Configure the HTTP request pipeline.
