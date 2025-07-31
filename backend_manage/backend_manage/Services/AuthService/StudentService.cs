@@ -372,16 +372,19 @@ public class StudentService : IStudentService
 
     private async Task InitializeNewExamSessionAsync(string studentCode, StudentExamSession studentExamSession, ShuffledExamPaperDto paperDto)
     {
-        // Cập nhật ShuffledExamPaperId vào cache
-        await UpdateExamSessionInCacheAsync(studentCode, studentExamSession, paperDto.ShuffledExamPaperId);
-        
         // Khởi tạo chuỗi đáp án rỗng
         var emptyAnswers = CreateEmptyAnswersString(paperDto);
+        
+        // Cập nhật StudentAnswersString vào StudentExamSession
+        studentExamSession.StudentAnswersString = emptyAnswers;
+        
+        // Cập nhật ShuffledExamPaperId và StudentAnswersString vào cache
+        await UpdateExamSessionInCacheAsync(studentCode, studentExamSession, paperDto.ShuffledExamPaperId);
         
         // Cập nhật database  // sẽ dùng rabit mq để tối ưu 
         await UpdateExamSessionInDatabaseAsync(studentExamSession, paperDto.ShuffledExamPaperId, emptyAnswers);
         
-        // Cache vào Redis
+        // Cache đề thi và answer key vào Redis
         await CacheExamDataAsync(studentCode, paperDto, emptyAnswers);
     }
 
@@ -425,20 +428,17 @@ public class StudentService : IStudentService
             var db = _redis.GetDatabase();
             string cacheKey = $"shuffled_exam_paper:{paperDto.ShuffledExamPaperId}";
             string answerKey = $"answer_key:{paperDto.ShuffledExamPaperId}";
-            string studentAnswerKey = $"student_answers:{studentCode}:{paperDto.ShuffledExamPaperId}";
 
             // Kiểm tra sự tồn tại của các key song song
             var existTasks = new[]
             {
                 db.KeyExistsAsync(cacheKey),
-                db.KeyExistsAsync(answerKey),
-                db.KeyExistsAsync(studentAnswerKey)
+                db.KeyExistsAsync(answerKey)
             };
             await Task.WhenAll(existTasks);
 
             var examExists = await existTasks[0];
             var answerKeyExists = await existTasks[1];
-            var studentAnswerExists = await existTasks[2];
             
             var jsonString = System.Text.Json.JsonSerializer.Serialize(paperDto);
             var batch = db.CreateBatch();
@@ -456,12 +456,6 @@ public class StudentService : IStudentService
                 _logger.LogInformation("Cache answer key mới vào Redis");
                 tasks.Add(batch.StringSetAsync(answerKey, paperDto.AnswerKey, TimeSpan.FromHours(6)));
             }
-
-            if (!studentAnswerExists)
-            {
-                _logger.LogInformation("Cache student answers mới vào Redis");
-                tasks.Add(batch.StringSetAsync(studentAnswerKey, emptyAnswers, TimeSpan.FromHours(6)));
-            }
             
             if (tasks.Any())
             {
@@ -469,6 +463,9 @@ public class StudentService : IStudentService
                 await Task.WhenAll(tasks);
                 _logger.LogInformation("Đã hoàn thành cache dữ liệu mới vào Redis");
             }
+            
+            // Student answers sẽ được cập nhật trong StudentExamSession cache thay vì tạo key riêng
+            _logger.LogInformation("Student answers sẽ được cập nhật trong StudentExamSession cache");
         }
         catch (Exception ex)
         {
@@ -603,27 +600,32 @@ public class StudentService : IStudentService
     {
         try
         {
-            // Tạo cache key để tái sử dụng
-            string studentAnswerKey = $"student_answers:{StudentCode}:{submitExamDto.ShuffledExamPaperId}";
             string answerKey = $"answer_key:{submitExamDto.ShuffledExamPaperId}";
             string sessionCacheKey = $"student_exam_session:{StudentCode}:*";
             
             var db = _redis.GetDatabase();
             
             // Parallel processing: Lấy dữ liệu từ Redis đồng thời
-            Task<RedisValue> studentAnswersTask = db.StringGetAsync(studentAnswerKey);
+            Task<string?> studentAnswersTask = _sessionCacheHelper.GetStudentAnswersFromCacheAsync(StudentCode, submitExamDto.ShuffledExamPaperId);
             Task<RedisValue> answerKeyTask = db.StringGetAsync(answerKey);
             Task<StudentExamSession?> sessionTask = _validationHelper.GetStudentExamSessionFromCacheAsync(db, sessionCacheKey, submitExamDto.ShuffledExamPaperId);
             
             await Task.WhenAll(studentAnswersTask, answerKeyTask, sessionTask);
             
-            var studentAnswers = await studentAnswersTask;
+            var studentAnswersString = await studentAnswersTask;
             var answerKeyValue = await answerKeyTask;
             var cachedSession = await sessionTask;
             
+            if (string.IsNullOrEmpty(studentAnswersString))
+            {
+                _logger.LogError("Không tìm thấy đáp án của sinh viên trong cache");
+                return (false, "Không tìm thấy bài thi của sinh viên", null);
+            }
+            
             // Validate và lấy dữ liệu song song
             Task<(bool Success, string Message)> validationTask = _validationHelper.ValidateStudentExamSessionOptimizedAsync(StudentCode, submitExamDto.ShuffledExamPaperId, cachedSession);
-            Task<(bool Success, string Message, Dictionary<int, string>? CurrentAnswers)> updateAnswersTask = _answerHelper.UpdateStudentAnswersOptimizedAsync(studentAnswers, submitExamDto.SaveAnswerDtos, studentAnswerKey, db);
+            Task<(bool Success, string Message, Dictionary<int, string>? CurrentAnswers)> updateAnswersTask = _answerHelper.UpdateStudentAnswersOptimizedAsync(
+                new RedisValue(studentAnswersString), submitExamDto.SaveAnswerDtos, StudentCode, submitExamDto.ShuffledExamPaperId);
             
             await Task.WhenAll(validationTask, updateAnswersTask);
             
@@ -704,24 +706,29 @@ public class StudentService : IStudentService
     {
         try
         {
-            // Tạo cache key để tái sử dụng
-            string studentAnswerKey = $"student_answers:{StudentCode}:{submitExamDto.ShuffledExamPaperId}";
             string sessionCacheKey = $"student_exam_session:{StudentCode}:*";
             
             var db = _redis.GetDatabase();
             
             // Parallel processing: Lấy dữ liệu từ Redis đồng thời
-            Task<RedisValue> studentAnswersTask = db.StringGetAsync(studentAnswerKey);
+            Task<string?> studentAnswersTask = _sessionCacheHelper.GetStudentAnswersFromCacheAsync(StudentCode, submitExamDto.ShuffledExamPaperId);
             Task<StudentExamSession?> sessionTask = _validationHelper.GetStudentExamSessionFromCacheAsync(db, sessionCacheKey, submitExamDto.ShuffledExamPaperId);
             
             await Task.WhenAll(studentAnswersTask, sessionTask);
             
-            var studentAnswers = await studentAnswersTask;
+            var studentAnswersString = await studentAnswersTask;
             var cachedSession = await sessionTask;
+            
+            if (string.IsNullOrEmpty(studentAnswersString))
+            {
+                _logger.LogError("Không tìm thấy đáp án của sinh viên trong cache");
+                return (false, "Không tìm thấy bài thi của sinh viên");
+            }
             
             // Validate và update answers song song
             Task<(bool Success, string Message)> validationTask = _validationHelper.ValidateStudentExamSessionOptimizedAsync(StudentCode, submitExamDto.ShuffledExamPaperId, cachedSession);
-            Task<(bool Success, string Message, Dictionary<int, string>? CurrentAnswers)> updateAnswersTask = _answerHelper.UpdateStudentAnswersOptimizedAsync(studentAnswers, submitExamDto.SaveAnswerDtos, studentAnswerKey, db);
+            Task<(bool Success, string Message, Dictionary<int, string>? CurrentAnswers)> updateAnswersTask = _answerHelper.UpdateStudentAnswersOptimizedAsync(
+                new RedisValue(studentAnswersString), submitExamDto.SaveAnswerDtos, StudentCode, submitExamDto.ShuffledExamPaperId);
             
             await Task.WhenAll(validationTask, updateAnswersTask);
             
@@ -743,10 +750,10 @@ public class StudentService : IStudentService
             _rabbitMQService.PublishMessage("save_exam_queue", saveExamMessage);
 
             _logger.LogInformation(
-                "Sinh viên {StudentCode} đã lưu bài thi {ShuffledExamPaperId} thành công (Redis + RabbitMQ)", 
+                "Sinh viên {StudentCode} đã lưu bài thi {ShuffledExamPaperId} thành công (Cache + RabbitMQ)", 
                 StudentCode, submitExamDto.ShuffledExamPaperId);
 
-            return (true, "Lưu bài thi thành công (Redis + RabbitMQ)");
+            return (true, "Lưu bài thi thành công (Cache + RabbitMQ)");
         }
         catch (Exception ex)
         {

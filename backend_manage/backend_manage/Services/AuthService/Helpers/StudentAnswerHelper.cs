@@ -14,42 +14,41 @@ public class StudentAnswerHelper
     private readonly IConnectionMultiplexer _redis;
     private readonly ILogger<StudentAnswerHelper> _logger;
     private readonly IMapper _mapper;
+    private readonly StudentExamSessionCacheHelper _sessionCacheHelper;
 
     public StudentAnswerHelper(
         IConnectionMultiplexer redis,
         ILogger<StudentAnswerHelper> logger,
-        IMapper mapper)
+        IMapper mapper,
+        StudentExamSessionCacheHelper sessionCacheHelper)
     {
         _redis = redis;
         _logger = logger;
         _mapper = mapper;
+        _sessionCacheHelper = sessionCacheHelper;
     }
 
     public async Task<(bool Success, string Message, string? NewAnswersString)> UpdateSingleAnswerAsync(
         string studentCode, int shuffledExamPaperId, int index, string answer)
     {
-        var db = _redis.GetDatabase();
-        string studentAnswerKey = $"student_answers:{studentCode}:{shuffledExamPaperId}";
-
         // Log thông tin
         _logger.LogInformation(
             "Đang lưu đáp án cho sinh viên. StudentCode: {StudentCode}, ShuffledExamPaperId: {ShuffledExamPaperId}, Index: {Index}, Answer: {Answer}",
             studentCode, shuffledExamPaperId, index, answer
         );
 
-        // Lấy chuỗi đáp án hiện tại từ Redis
-        var currentAnswers = await db.StringGetAsync(studentAnswerKey);
+        // Lấy chuỗi đáp án hiện tại từ cache
+        var currentAnswersString = await _sessionCacheHelper.GetStudentAnswersFromCacheAsync(studentCode, shuffledExamPaperId);
         
-        if (!currentAnswers.HasValue)
+        if (string.IsNullOrEmpty(currentAnswersString))
         {
-            _logger.LogError("Không tìm thấy chuỗi đáp án trong Redis với key: {Key}", studentAnswerKey);
+            _logger.LogError("Không tìm thấy chuỗi đáp án trong cache cho sinh viên {StudentCode} với ShuffledExamPaperId {ShuffledExamPaperId}", 
+                studentCode, shuffledExamPaperId);
             return (false, "Không tìm thấy bài thi của sinh viên", null);
         }
 
-        string answersString = currentAnswers.ToString();
-
         // Tách chuỗi đáp án thành mảng
-        var answerParts = answersString.Split(';', StringSplitOptions.RemoveEmptyEntries);
+        var answerParts = currentAnswersString.Split(';', StringSplitOptions.RemoveEmptyEntries);
         var updatedParts = new List<string>();
 
         // Cập nhật đáp án tại index tương ứng
@@ -76,20 +75,28 @@ public class StudentAnswerHelper
         // Tạo chuỗi đáp án mới
         string newAnswersString = string.Join(";", updatedParts) + ";";
 
-        // Lưu lại vào Redis với thời gian tồn tại 6 giờ
-        await db.StringSetAsync(studentAnswerKey, newAnswersString, TimeSpan.FromHours(6));
+        // Cập nhật vào cache thay vì tạo key riêng
+        var (success, message) = await _sessionCacheHelper.UpdateStudentAnswersInCacheAsync(
+            studentCode, shuffledExamPaperId, newAnswersString);
 
-        _logger.LogInformation("Đã lưu đáp án thành công vào Redis. Chuỗi đáp án mới: {NewAnswers}", newAnswersString);
-
-        return (true, "Cập nhật đáp án thành công", newAnswersString);
+        if (success)
+        {
+            _logger.LogInformation("Đã lưu đáp án thành công vào cache. Chuỗi đáp án mới: {NewAnswers}", newAnswersString);
+            return (true, "Cập nhật đáp án thành công", newAnswersString);
+        }
+        else
+        {
+            _logger.LogError("Lỗi khi cập nhật đáp án vào cache: {Message}", message);
+            return (false, message, null);
+        }
     }
 
     public async Task<(bool Success, string Message, Dictionary<int, string>? CurrentAnswers)> UpdateStudentAnswersOptimizedAsync(
-        RedisValue studentAnswers, List<SaveAnswerDto> saveAnswerDtos, string studentAnswerKey, IDatabase db)
+        RedisValue studentAnswers, List<SaveAnswerDto> saveAnswerDtos, string studentCode, int shuffledExamPaperId)
     {
         if (!studentAnswers.HasValue)
         {
-            _logger.LogError("Không tìm thấy bài làm của sinh viên trong Redis");
+            _logger.LogError("Không tìm thấy bài làm của sinh viên trong cache");
             return (false, "Không tìm thấy bài làm của sinh viên", null);
         }
         
@@ -106,8 +113,15 @@ public class StudentAnswerHelper
         
         var newAnswersString = CreateAnswersString(currentAnswers);
         
-        // Cache với TTL
-        await db.StringSetAsync(studentAnswerKey, newAnswersString, TimeSpan.FromHours(6));
+        // Cập nhật vào cache thay vì tạo key riêng
+        var (success, message) = await _sessionCacheHelper.UpdateStudentAnswersInCacheAsync(
+            studentCode, shuffledExamPaperId, newAnswersString);
+        
+        if (!success)
+        {
+            _logger.LogError("Lỗi khi cập nhật đáp án vào cache: {Message}", message);
+            return (false, message, null);
+        }
         
         return (true, "Cập nhật đáp án thành công", currentAnswers);
     }

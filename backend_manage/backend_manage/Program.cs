@@ -55,8 +55,8 @@ try
     // Start RabbitMQ consumer với error handling
     try
     {
-        var rabbitMQConsumer = app.Services.GetRequiredService<RabbitMqConsumer>();
-        rabbitMQConsumer.StartConsuming();
+        var rabbitMqConsumer = app.Services.GetRequiredService<IRabbitMqConsumer>();
+        rabbitMqConsumer.StartConsuming();
         Log.Information("RabbitMQ consumer đã được khởi động thành công");
     }
     catch (Exception ex)

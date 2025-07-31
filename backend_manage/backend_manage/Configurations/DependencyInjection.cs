@@ -5,6 +5,7 @@ using backend_manage.Repositories.Interfaces;
 using backend_manage.Services.AuthService;
 using backend_manage.Services.AuthService.Helpers;
 using backend_manage.Services.Interfaces;
+using backend_manage.Services;
 using backend_manage.Messages.RabbitMQ;
 using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
@@ -46,6 +47,26 @@ namespace backend_manage.Configurations
             services.AddScoped<StudentValidationHelper>();
             services.AddScoped<StudentImportHelper>();
 
+            // Register Redis Service with fallback
+            services.AddScoped<IRedisService>(sp =>
+            {
+                try
+                {
+                    // Sử dụng IConnectionMultiplexer đã được đăng ký trong ServiceExtensions
+                    var redis = sp.GetRequiredService<IConnectionMultiplexer>();
+                    var logger = sp.GetRequiredService<ILogger<RedisService>>();
+                    var redisService = new RedisService(redis, logger);
+                    logger.LogInformation("Redis service đã được khởi tạo thành công");
+                    return redisService;
+                }
+                catch (Exception ex)
+                {
+                    var logger = sp.GetRequiredService<ILogger<RedisFallbackService>>();
+                    logger.LogWarning(ex, "Không thể khởi tạo Redis service, sẽ sử dụng fallback");
+                    return new RedisFallbackService(logger);
+                }
+            });
+            
             // Register RabbitMQ services with fallback
             services.AddSingleton<IRabbitMqService>(sp =>
             {
@@ -65,7 +86,7 @@ namespace backend_manage.Configurations
                 }
             });
             
-            services.AddSingleton<RabbitMqConsumer>(sp =>
+            services.AddSingleton<IRabbitMqConsumer>(sp =>
             {
                 var logger = sp.GetRequiredService<ILogger<RabbitMqConsumer>>();
                 var rabbitMqService = sp.GetRequiredService<IRabbitMqService>();
@@ -83,6 +104,7 @@ namespace backend_manage.Configurations
                     return new RabbitMqFallbackConsumer(logger);
                 }
             });
+            
         }
     }
 }

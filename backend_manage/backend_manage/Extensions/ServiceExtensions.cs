@@ -93,14 +93,15 @@ namespace backend_manage.Extensions
                 try
                 {
                     var options = ConfigurationOptions.Parse(redisConnectionString);
-                    options.ConnectRetry = 10;
-                    options.ConnectTimeout = 30000;
-                    options.SyncTimeout = 30000;
-                    options.ResponseTimeout = 30000;
-                    options.KeepAlive = 180;
+                    options.ConnectRetry = 3; // Giảm số lần retry để khởi động nhanh hơn
+                    options.ConnectTimeout = 3000; // Giảm timeout để khởi động nhanh hơn
+                    options.SyncTimeout = 3000;
+                    options.ResponseTimeout = 3000;
+                    options.KeepAlive = 60;
                     options.AbortOnConnectFail = false;
-                    options.ReconnectRetryPolicy = new ExponentialRetry(5);
-                    options.ConfigCheckSeconds = 60;
+                    options.ReconnectRetryPolicy = new ExponentialRetry(3);
+                    options.ConfigCheckSeconds = 30;
+                    options.AsyncTimeout = 3000;
                     
                     logger.LogInformation("Đang kết nối Redis với connection string: {ConnectionString}", redisConnectionString);
                     var redis = ConnectionMultiplexer.Connect(options);
@@ -114,13 +115,13 @@ namespace backend_manage.Extensions
                     else
                     {
                         logger.LogWarning("Redis không khả dụng, sẽ sử dụng fallback");
-                        return CreateRedisFallback(logger);
+                        return CreateRedisFallback(logger, redisConnectionString);
                     }
                 }
                 catch (Exception ex)
                 {
-                    logger.LogError(ex, "Không thể kết nối Redis, sẽ sử dụng fallback");
-                    return CreateRedisFallback(logger);
+                    logger.LogWarning("Không thể kết nối Redis ngay lập tức, sẽ sử dụng fallback và thử kết nối lại sau: {Message}", ex.Message);
+                    return CreateRedisFallback(logger, redisConnectionString);
                 }
             });
 
@@ -136,20 +137,50 @@ namespace backend_manage.Extensions
             // services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>(); // Tắt rate limiting
         }
         
-        private static IConnectionMultiplexer CreateRedisFallback(ILogger logger)
+        private static IConnectionMultiplexer CreateRedisFallback(ILogger logger, string connectionString)
         {
             logger.LogWarning("Tạo Redis fallback - Redis không khả dụng, hệ thống sẽ chạy không có cache");
             
-            // Tạo một connection multiplexer giả để không crash hệ thống
-            // Các service sẽ fallback về database khi Redis không khả dụng
-            var options = ConfigurationOptions.Parse("localhost:6379,abortConnect=false");
-            options.ConnectRetry = 0; // Không retry
-            options.ConnectTimeout = 1000; // Timeout nhanh
-            options.SyncTimeout = 1000;
-            options.ResponseTimeout = 1000;
+            // Tạo một connection multiplexer với cấu hình cho phép kết nối lại
+            var options = ConfigurationOptions.Parse(connectionString);
+            options.ConnectRetry = 0; // Không retry ngay lập tức
+            options.ConnectTimeout = 100; // Timeout rất nhanh
+            options.SyncTimeout = 100;
+            options.ResponseTimeout = 100;
             options.AbortOnConnectFail = false;
+            options.KeepAlive = 0; // Tắt keep-alive
+            options.ReconnectRetryPolicy = new ExponentialRetry(5); // Cho phép reconnect sau này
             
-            return ConnectionMultiplexer.Connect(options);
+            try
+            {
+                var redis = ConnectionMultiplexer.Connect(options);
+                logger.LogInformation("Redis fallback đã được tạo thành công - sẽ tự động kết nối lại khi Redis khả dụng");
+                return redis;
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning("Không thể tạo Redis fallback ngay lập tức: {Message}", ex.Message);
+                
+                // Thử tạo một connection đơn giản hơn
+                try
+                {
+                    var simpleOptions = ConfigurationOptions.Parse("localhost:6380,abortConnect=false");
+                    simpleOptions.ConnectRetry = 0;
+                    simpleOptions.ConnectTimeout = 50;
+                    simpleOptions.SyncTimeout = 50;
+                    simpleOptions.ResponseTimeout = 50;
+                    simpleOptions.AbortOnConnectFail = false;
+                    
+                    var simpleRedis = ConnectionMultiplexer.Connect(simpleOptions);
+                    logger.LogInformation("Redis fallback đơn giản đã được tạo thành công");
+                    return simpleRedis;
+                }
+                catch (Exception simpleEx)
+                {
+                    logger.LogError(simpleEx, "Không thể tạo Redis fallback, hệ thống sẽ chạy không có cache");
+                    throw new InvalidOperationException("Redis không khả dụng và không thể tạo fallback", simpleEx);
+                }
+            }
         }
     }
 }

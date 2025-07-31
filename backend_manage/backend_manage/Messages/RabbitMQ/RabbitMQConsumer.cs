@@ -11,7 +11,7 @@ using backend_manage.Services.Interfaces;
 
 namespace backend_manage.Messages.RabbitMQ
 {
-    public class RabbitMqFallbackConsumer
+    public class RabbitMqFallbackConsumer : IRabbitMqConsumer
     {
         private readonly ILogger _logger;
 
@@ -28,9 +28,9 @@ namespace backend_manage.Messages.RabbitMQ
         }
     }
 
-    public class RabbitMqConsumer
+    public class RabbitMqConsumer : IRabbitMqConsumer
     {
-        private readonly IRabbitMqService _rabbitMQService;
+        private readonly IRabbitMqService _rabbitMqService;
         private readonly IServiceScopeFactory _serviceScopeFactory;
         private readonly ILogger<RabbitMqConsumer> _logger;
         private const string ExamSubmissionQueue = "submit_exam_queue";
@@ -49,7 +49,7 @@ namespace backend_manage.Messages.RabbitMQ
             IServiceScopeFactory serviceScopeFactory,
             ILogger<RabbitMqConsumer> logger)
         {
-            _rabbitMQService = rabbitMQService;
+            _rabbitMqService = rabbitMQService;
             _serviceScopeFactory = serviceScopeFactory;
             _logger = logger;
         }
@@ -61,28 +61,28 @@ namespace backend_manage.Messages.RabbitMQ
                 // Tạo nhiều consumers cho student_answer_saved_queue
                 for (int i = 0; i < StudentAnswerConsumerCount; i++)
                 {
-                    _rabbitMQService.Subscribe<StudentAnswerSavedMessage>(StudentAnswerSavedQueue, ProcessStudentAnswerSaved);
+                    _rabbitMqService.Subscribe<StudentAnswerSavedMessage>(StudentAnswerSavedQueue, ProcessStudentAnswerSaved);
                     _logger.LogInformation("Bắt đầu consumer {ConsumerId} cho queue: {QueueName}", i + 1, StudentAnswerSavedQueue);
                 }
                 
                 // Tạo nhiều consumers cho exam_submission_queue
                 for (int i = 0; i < ExamSubmissionConsumerCount; i++)
                 {
-                    _rabbitMQService.Subscribe<ExamSubmissionMessage>(ExamSubmissionQueue, ProcessExamSubmission);
+                    _rabbitMqService.Subscribe<ExamSubmissionMessage>(ExamSubmissionQueue, ProcessExamSubmission);
                     _logger.LogInformation("Bắt đầu consumer {ConsumerId} cho queue: {QueueName}", i + 1, ExamSubmissionQueue);
                 }
                 
                 // Tạo nhiều consumers cho save_exam_queue
                 for (int i = 0; i < SaveExamConsumerCount; i++)
                 {
-                    _rabbitMQService.Subscribe<ExamSubmissionMessage>(SaveExamQueue, ProcessSaveExam);
+                    _rabbitMqService.Subscribe<ExamSubmissionMessage>(SaveExamQueue, ProcessSaveExam);
                     _logger.LogInformation("Bắt đầu consumer {ConsumerId} cho queue: {QueueName}", i + 1, SaveExamQueue);
                 }
                 
                 // Tạo consumer cho student_import_queue
                 for (int i = 0; i < StudentImportConsumerCount; i++)
                 {
-                    _rabbitMQService.Subscribe<StudentImportMessage>(StudentImportQueue, ProcessStudentImport);
+                    _rabbitMqService.Subscribe<StudentImportMessage>(StudentImportQueue, ProcessStudentImport);
                     _logger.LogInformation("Bắt đầu consumer {ConsumerId} cho queue: {QueueName}", i + 1, StudentImportQueue);
                 }
                 

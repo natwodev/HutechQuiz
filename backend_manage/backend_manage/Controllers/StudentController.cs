@@ -11,7 +11,6 @@ using System.Linq;
 using System.Security.Claims;
 using backend_manage.Hubs;
 using backend_manage.Messages;
-using StackExchange.Redis;
 
 namespace backend_manage.Controllers;
 
@@ -22,16 +21,16 @@ public class StudentController : ControllerBase
 {
     private readonly IStudentService _studentService;
     private readonly ILogger<StudentController> _logger;
-    private readonly IConnectionMultiplexer _redis;
+    private readonly IRedisService _redisService;
 
     public StudentController(
         IStudentService studentService,
         ILogger<StudentController> logger,
-        IConnectionMultiplexer redis)
+        IRedisService redisService)
     {
         _studentService = studentService;
         _logger = logger;
-        _redis = redis;
+        _redisService = redisService;
     }
 
 
@@ -59,10 +58,16 @@ public class StudentController : ControllerBase
     {
         try
         {
-            var db = _redis.GetDatabase();
-            var progressData = await db.StringGetAsync($"import_progress:{jobId}");
+            // Kiểm tra xem Redis có khả dụng không
+            if (!_redisService.IsConnected)
+            {
+                _logger.LogWarning("Redis không khả dụng, không thể lấy progress cho job {JobId}", jobId);
+                return StatusCode(503, new { message = "Hệ thống cache không khả dụng, vui lòng thử lại sau" });
+            }
+
+            var progressData = await _redisService.StringGetAsync($"import_progress:{jobId}");
             
-            if (!progressData.HasValue)
+            if (string.IsNullOrEmpty(progressData))
             {
                 return NotFound(new { message = "Không tìm thấy job import với ID này" });
             }

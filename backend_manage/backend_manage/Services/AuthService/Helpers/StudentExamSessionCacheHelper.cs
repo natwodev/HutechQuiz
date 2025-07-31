@@ -39,6 +39,107 @@ public class StudentExamSessionCacheHelper
         _mapper = mapper;
     }
 
+    /// <summary>
+    /// Cập nhật StudentAnswersString trong cache thay vì tạo key riêng
+    /// </summary>
+    public async Task<(bool Success, string Message)> UpdateStudentAnswersInCacheAsync(
+        string studentCode, int shuffledExamPaperId, string newAnswersString)
+    {
+        try
+        {
+            var db = _redis.GetDatabase();
+            string sessionCacheKey = $"student_exam_session:{studentCode}:*";
+            
+            // Tìm session có ShuffledExamPaperId tương ứng
+            var keys = db.Multiplexer.GetServer(db.Multiplexer.GetEndPoints().First()).Keys(pattern: sessionCacheKey);
+            
+            foreach (var key in keys)
+            {
+                try
+                {
+                    var sessionData = await db.StringGetAsync(key);
+                    if (sessionData.HasValue)
+                    {
+                        var cachedSession = JsonSerializer.Deserialize<StudentExamSessionCacheDto>(sessionData);
+                        if (cachedSession?.ShuffledExamPaperId == shuffledExamPaperId)
+                        {
+                            // Cập nhật StudentAnswersString
+                            cachedSession.StudentAnswersString = newAnswersString;
+                            cachedSession.UpdatedAt = DateTime.UtcNow;
+                            
+                            // Lưu lại vào cache
+                            var updatedSessionJson = JsonSerializer.Serialize(cachedSession);
+                            await db.StringSetAsync(key, updatedSessionJson, TimeSpan.FromHours(6));
+                            
+                            _logger.LogInformation("Đã cập nhật StudentAnswersString trong cache cho session {StudentCode}:{SessionId}. Key: {Key}", 
+                                studentCode, cachedSession.StudentExamSessionId, key);
+                            
+                            return (true, "Cập nhật đáp án thành công");
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Lỗi khi cập nhật session trong cache với key: {Key}", key);
+                }
+            }
+            
+            _logger.LogWarning("Không tìm thấy session với ShuffledExamPaperId {ShuffledExamPaperId} cho sinh viên {StudentCode}", 
+                shuffledExamPaperId, studentCode);
+            return (false, "Không tìm thấy phiên thi");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Lỗi khi cập nhật StudentAnswersString trong cache cho sinh viên {StudentCode}", studentCode);
+            return (false, "Lỗi khi cập nhật đáp án");
+        }
+    }
+
+    /// <summary>
+    /// Lấy StudentAnswersString từ cache
+    /// </summary>
+    public async Task<string?> GetStudentAnswersFromCacheAsync(string studentCode, int shuffledExamPaperId)
+    {
+        try
+        {
+            var db = _redis.GetDatabase();
+            string sessionCacheKey = $"student_exam_session:{studentCode}:*";
+            
+            var keys = db.Multiplexer.GetServer(db.Multiplexer.GetEndPoints().First()).Keys(pattern: sessionCacheKey);
+            
+            foreach (var key in keys)
+            {
+                try
+                {
+                    var sessionData = await db.StringGetAsync(key);
+                    if (sessionData.HasValue)
+                    {
+                        var cachedSession = JsonSerializer.Deserialize<StudentExamSessionCacheDto>(sessionData);
+                        if (cachedSession?.ShuffledExamPaperId == shuffledExamPaperId)
+                        {
+                            _logger.LogDebug("Đã lấy StudentAnswersString từ cache cho session {StudentCode}:{SessionId}", 
+                                studentCode, cachedSession.StudentExamSessionId);
+                            return cachedSession.StudentAnswersString;
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Lỗi khi đọc session từ cache với key: {Key}", key);
+                }
+            }
+            
+            _logger.LogDebug("Không tìm thấy StudentAnswersString trong cache cho sinh viên {StudentCode} với ShuffledExamPaperId {ShuffledExamPaperId}", 
+                studentCode, shuffledExamPaperId);
+            return null;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Lỗi khi lấy StudentAnswersString từ cache cho sinh viên {StudentCode}", studentCode);
+            return null;
+        }
+    }
+
     public async Task<IEnumerable<StudentExamSessionDto>?> GetStudentExamSessionsFromRedisCacheAsync(string studentCode)
     {
         try
