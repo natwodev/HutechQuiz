@@ -8,6 +8,80 @@ using System.Threading.Tasks;
 
 namespace backend_manage.Messages.RabbitMQ
 {
+    public class RabbitMqFallbackService : IRabbitMqService
+    {
+        private readonly ILogger _logger;
+        private readonly Dictionary<string, Func<object, Task>> _messageHandlers;
+
+        public RabbitMqFallbackService(ILogger logger)
+        {
+            _logger = logger;
+            _messageHandlers = new Dictionary<string, Func<object, Task>>();
+            _logger.LogWarning("Sử dụng RabbitMQ fallback service - RabbitMQ không khả dụng, sẽ thực hiện tác vụ trực tiếp");
+        }
+
+        public void PublishMessage<T>(string queueName, T message)
+        {
+            _logger.LogWarning("RabbitMQ không khả dụng - thực hiện tác vụ trực tiếp cho queue {QueueName}", queueName);
+            
+            // Thực hiện tác vụ trực tiếp thay vì bỏ qua
+            try
+            {
+                if (_messageHandlers.ContainsKey(queueName))
+                {
+                    _ = Task.Run(async () =>
+                    {
+                        try
+                        {
+                            await _messageHandlers[queueName](message);
+                            _logger.LogInformation("Đã thực hiện tác vụ trực tiếp cho queue {QueueName}", queueName);
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError(ex, "Lỗi khi thực hiện tác vụ trực tiếp cho queue {QueueName}", queueName);
+                        }
+                    });
+                }
+                else
+                {
+                    _logger.LogWarning("Không có handler cho queue {QueueName}, bỏ qua message", queueName);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi xử lý message trực tiếp cho queue {QueueName}", queueName);
+            }
+        }
+
+        public void Subscribe<T>(string queueName, Func<T, Task> onMessage)
+        {
+            _logger.LogInformation("Đăng ký handler trực tiếp cho queue {QueueName}", queueName);
+            
+            // Lưu handler để sử dụng khi publish message
+            _messageHandlers[queueName] = async (message) =>
+            {
+                if (message is T typedMessage)
+                {
+                    await onMessage(typedMessage);
+                }
+                else
+                {
+                    _logger.LogWarning("Message type không khớp cho queue {QueueName}", queueName);
+                }
+            };
+        }
+
+        public void CheckQueueStatus(string queueName)
+        {
+            _logger.LogWarning("RabbitMQ không khả dụng - không thể kiểm tra trạng thái queue {QueueName}", queueName);
+        }
+
+        public void Dispose()
+        {
+            _logger.LogInformation("Dispose RabbitMQ fallback service");
+        }
+    }
+
     public class RabbitMqService : IRabbitMqService, IDisposable
     {
         private readonly IConnection _connection;
@@ -207,7 +281,7 @@ namespace backend_manage.Messages.RabbitMQ
                 "save_answer_queue",
                 "submit_exam_queue",
                 "save_exam_queue",
-                "cache_student_exam_sessions_queue" // Thêm queue mới cho cache StudentExamSession
+                "student_import_queue" // Thêm queue cho student import
             };
 
             foreach (var queueName in queues)
@@ -230,7 +304,7 @@ namespace backend_manage.Messages.RabbitMQ
                 "save_answer_queue" => (100, 1, TimeSpan.FromMilliseconds(50)),
                 "submit_exam_queue" => (30, 1, TimeSpan.FromMilliseconds(25)),
                 "save_exam_queue" => (30, 1, TimeSpan.FromMilliseconds(25)),
-                "cache_student_exam_sessions_queue" => (10, 1, TimeSpan.FromMilliseconds(100)), // cấu hình riêng cho queue cache
+                "student_import_queue" => (5, 1, TimeSpan.FromMilliseconds(500)), // cấu hình cho student import (xử lý chậm hơn)
                 _ => (75, 1, TimeSpan.FromMilliseconds(50))
             };
         }

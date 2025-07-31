@@ -6,67 +6,94 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Text.Json;
 using System.Threading.Tasks;
+using backend_manage.DTOs;
+using backend_manage.Services.Interfaces;
 
 namespace backend_manage.Messages.RabbitMQ
 {
-    public class RabbitMqConsumer
+    public class RabbitMqFallbackConsumer : IRabbitMqConsumer
     {
-        private readonly IRabbitMqService _rabbitMQService;
+        private readonly ILogger _logger;
+
+        public RabbitMqFallbackConsumer(ILogger logger)
+        {
+            _logger = logger;
+            _logger.LogWarning("Sử dụng RabbitMQ fallback consumer - RabbitMQ không khả dụng");
+        }
+
+        public void StartConsuming()
+        {
+            _logger.LogWarning("RabbitMQ không khả dụng - không thể start consumers");
+            // Không làm gì cả, chỉ log warning
+        }
+    }
+
+    public class RabbitMqConsumer : IRabbitMqConsumer
+    {
+        private readonly IRabbitMqService _rabbitMqService;
         private readonly IServiceScopeFactory _serviceScopeFactory;
         private readonly ILogger<RabbitMqConsumer> _logger;
         private const string ExamSubmissionQueue = "submit_exam_queue";
         private const string StudentAnswerSavedQueue = "save_answer_queue";
         private const string SaveExamQueue = "save_exam_queue";
-        private const string CacheStudentExamSessionsQueue = "cache_student_exam_sessions_queue";
+        private const string StudentImportQueue = "student_import_queue";
         
         // Cấu hình số lượng consumers cho xử lý song song
         private const int StudentAnswerConsumerCount = 2; // 2 consumers cho lưu đáp án
         private const int ExamSubmissionConsumerCount = 2; // 2 consumers cho nộp bài
         private const int SaveExamConsumerCount = 2; // 2 consumers cho lưu bài
-        private const int CacheStudentExamSessionsConsumerCount = 1; // Số lượng consumer cho queue này
+        private const int StudentImportConsumerCount = 1; // 1 consumer cho import (vì import nặng)
 
         public RabbitMqConsumer(
             IRabbitMqService rabbitMQService,
             IServiceScopeFactory serviceScopeFactory,
             ILogger<RabbitMqConsumer> logger)
         {
-            _rabbitMQService = rabbitMQService;
+            _rabbitMqService = rabbitMQService;
             _serviceScopeFactory = serviceScopeFactory;
             _logger = logger;
         }
 
         public void StartConsuming()
         {
-            // Tạo nhiều consumers cho student_answer_saved_queue
-            for (int i = 0; i < StudentAnswerConsumerCount; i++)
+            try
             {
-                _rabbitMQService.Subscribe<StudentAnswerSavedMessage>(StudentAnswerSavedQueue, ProcessStudentAnswerSaved);
-                _logger.LogInformation("Bắt đầu consumer {ConsumerId} cho queue: {QueueName}", i + 1, StudentAnswerSavedQueue);
+                // Tạo nhiều consumers cho student_answer_saved_queue
+                for (int i = 0; i < StudentAnswerConsumerCount; i++)
+                {
+                    _rabbitMqService.Subscribe<StudentAnswerSavedMessage>(StudentAnswerSavedQueue, ProcessStudentAnswerSaved);
+                    _logger.LogInformation("Bắt đầu consumer {ConsumerId} cho queue: {QueueName}", i + 1, StudentAnswerSavedQueue);
+                }
+                
+                // Tạo nhiều consumers cho exam_submission_queue
+                for (int i = 0; i < ExamSubmissionConsumerCount; i++)
+                {
+                    _rabbitMqService.Subscribe<ExamSubmissionMessage>(ExamSubmissionQueue, ProcessExamSubmission);
+                    _logger.LogInformation("Bắt đầu consumer {ConsumerId} cho queue: {QueueName}", i + 1, ExamSubmissionQueue);
+                }
+                
+                // Tạo nhiều consumers cho save_exam_queue
+                for (int i = 0; i < SaveExamConsumerCount; i++)
+                {
+                    _rabbitMqService.Subscribe<ExamSubmissionMessage>(SaveExamQueue, ProcessSaveExam);
+                    _logger.LogInformation("Bắt đầu consumer {ConsumerId} cho queue: {QueueName}", i + 1, SaveExamQueue);
+                }
+                
+                // Tạo consumer cho student_import_queue
+                for (int i = 0; i < StudentImportConsumerCount; i++)
+                {
+                    _rabbitMqService.Subscribe<StudentImportMessage>(StudentImportQueue, ProcessStudentImport);
+                    _logger.LogInformation("Bắt đầu consumer {ConsumerId} cho queue: {QueueName}", i + 1, StudentImportQueue);
+                }
+                
+                _logger.LogInformation("Đã khởi tạo {StudentAnswerCount} consumers cho lưu đáp án, {ExamSubmissionCount} consumers cho nộp bài, {SaveExamCount} consumers cho lưu bài và {StudentImportCount} consumer cho import", 
+                    StudentAnswerConsumerCount, ExamSubmissionConsumerCount, SaveExamConsumerCount, StudentImportConsumerCount);
             }
-            
-            // Tạo nhiều consumers cho exam_submission_queue
-            for (int i = 0; i < ExamSubmissionConsumerCount; i++)
+            catch (Exception ex)
             {
-                _rabbitMQService.Subscribe<ExamSubmissionMessage>(ExamSubmissionQueue, ProcessExamSubmission);
-                _logger.LogInformation("Bắt đầu consumer {ConsumerId} cho queue: {QueueName}", i + 1, ExamSubmissionQueue);
+                _logger.LogError(ex, "Lỗi khi khởi tạo RabbitMQ consumers");
+                throw;
             }
-            
-            // Tạo nhiều consumers cho save_exam_queue
-            for (int i = 0; i < SaveExamConsumerCount; i++)
-            {
-                _rabbitMQService.Subscribe<ExamSubmissionMessage>(SaveExamQueue, ProcessSaveExam);
-                _logger.LogInformation("Bắt đầu consumer {ConsumerId} cho queue: {QueueName}", i + 1, SaveExamQueue);
-            }
-            
-            // Thêm consumer cho cache_student_exam_sessions_queue
-            for (int i = 0; i < CacheStudentExamSessionsConsumerCount; i++)
-            {
-                _rabbitMQService.Subscribe<CacheStudentExamSessionsMessage>(CacheStudentExamSessionsQueue, ProcessCacheStudentExamSessions);
-                _logger.LogInformation("Bắt đầu consumer {ConsumerId} cho queue: {QueueName}", i + 1, CacheStudentExamSessionsQueue);
-            }
-            
-            _logger.LogInformation("Đã khởi tạo {StudentAnswerCount} consumers cho lưu đáp án, {ExamSubmissionCount} consumers cho nộp bài và {SaveExamCount} consumers cho lưu bài", 
-                StudentAnswerConsumerCount, ExamSubmissionConsumerCount, SaveExamConsumerCount);
         }
 
         private async Task ProcessExamSubmission(ExamSubmissionMessage message)
@@ -144,14 +171,14 @@ namespace backend_manage.Messages.RabbitMQ
                 }
 
                 _logger.LogInformation(
-                    "Đã lưu kết quả bài thi vào DB. StudentCode: {StudentCode}, Điểm: {Score}",
-                    message.StudentCode,
-                    message.Score
+                    "Đã cập nhật kết quả bài thi vào DB. StudentCode: {StudentCode}, Score: {Score}, CorrectAnswers: {CorrectAnswers}/{TotalQuestions}",
+                    message.StudentCode, message.Score, message.CorrectAnswers, message.TotalQuestions
                 );
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Lỗi khi lưu kết quả bài thi vào DB");
+                _logger.LogError(ex, "Lỗi khi xử lý message nộp bài thi. StudentCode: {StudentCode}, ShuffledExamPaperId: {ShuffledExamPaperId}",
+                    message.StudentCode, message.ShuffledExamPaperId);
                 throw;
             }
         }
@@ -170,7 +197,7 @@ namespace backend_manage.Messages.RabbitMQ
                 if (studentExamSession == null)
                 {
                     _logger.LogWarning(
-                        "Không tìm thấy StudentExamSession (lưu bài). StudentCode: {StudentCode}, ShuffledExamPaperId: {ShuffledExamPaperId}",
+                        "Không tìm thấy StudentExamSession. StudentCode: {StudentCode}, ShuffledExamPaperId: {ShuffledExamPaperId}",
                         message.StudentCode,
                         message.ShuffledExamPaperId
                     );
@@ -183,8 +210,9 @@ namespace backend_manage.Messages.RabbitMQ
                 // Không cập nhật Score, CorrectAnswers, TotalQuestions, IsCompleted
 
                 dbContext.SaveChanges();
+
                 _logger.LogInformation(
-                    "Đã lưu bài nháp vào DB. StudentCode: {StudentCode}, ShuffledExamPaperId: {ShuffledExamPaperId}",
+                    "Đã lưu bài vào DB. StudentCode: {StudentCode}, ShuffledExamPaperId: {ShuffledExamPaperId}",
                     message.StudentCode,
                     message.ShuffledExamPaperId
                 );
@@ -216,8 +244,9 @@ namespace backend_manage.Messages.RabbitMQ
                 if (studentExamSession == null)
                 {
                     _logger.LogWarning(
-                        "Không tìm thấy StudentExamSession. StudentCode: {StudentCode}, ShuffledExamPaperId: {ShuffledExamPaperId}",
-                        message.StudentCode, message.ShuffledExamPaperId
+                        "Không tìm thấy StudentExamSession (lưu đáp án). StudentCode: {StudentCode}, ShuffledExamPaperId: {ShuffledExamPaperId}",
+                        message.StudentCode,
+                        message.ShuffledExamPaperId
                     );
                     return;
                 }
@@ -251,61 +280,67 @@ namespace backend_manage.Messages.RabbitMQ
             }
         }
 
-        private async Task ProcessCacheStudentExamSessions(CacheStudentExamSessionsMessage message)
+        private async Task ProcessStudentImport(StudentImportMessage message)
         {
             try
             {
-                string studentCode = message.StudentCode;
-                using var scope = _serviceScopeFactory.CreateScope();
-                var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-                var redisConn = scope.ServiceProvider.GetService(typeof(StackExchange.Redis.IConnectionMultiplexer)) as StackExchange.Redis.IConnectionMultiplexer;
-
-                if (redisConn == null)
-                {
-                    _logger.LogError("Không lấy được Redis connection trong ProcessCacheStudentExamSessions");
-                    return;
-                }
-                var redisDb = redisConn.GetDatabase();
-
-                // 1. Truy vấn tất cả phiên thi của sinh viên
-                var studentExamSessions = dbContext.StudentExamSessions
-                    .Where(x => x.StudentCode == studentCode)
-                    .ToList();
-
-                int cachedCount = 0;
-                int skippedCount = 0;
-
-                foreach (var session in studentExamSessions)
-                {
-                    // 2. Kiểm tra xem cache đã tồn tại chưa
-                    string sessionCacheKey = $"student_exam_session:{studentCode}:{session.StudentExamSessionId}";
-                    
-                    // Kiểm tra cache có tồn tại và còn hạn không
-                    var existingCache = redisDb.StringGet(sessionCacheKey);
-                    
-                    if (existingCache.HasValue)
-                    {
-                        // Cache đã tồn tại, bỏ qua để tránh ghi đè
-                        skippedCount++;
-                        _logger.LogDebug("Cache đã tồn tại cho session {SessionId}, bỏ qua", session.StudentExamSessionId);
-                        continue;
-                    }
-
-                    // 3. Chỉ cache khi chưa có trong Redis
-                    var jsonSession = System.Text.Json.JsonSerializer.Serialize(session);
-                    redisDb.StringSet(sessionCacheKey, jsonSession, TimeSpan.FromHours(6));
-                    cachedCount++;
-                    
-                    _logger.LogDebug("Đã cache session {SessionId} cho sinh viên {StudentCode}", 
-                        session.StudentExamSessionId, studentCode);
-                }
+                _logger.LogInformation("Bắt đầu xử lý import student cho job {JobId}", message.JobId);
                 
-                _logger.LogInformation("Cache StudentExamSession cho sinh viên {StudentCode}: {CachedCount} session mới, {SkippedCount} session đã có cache", 
-                    studentCode, cachedCount, skippedCount);
+                using var scope = _serviceScopeFactory.CreateScope();
+                var studentService = scope.ServiceProvider.GetRequiredService<IStudentService>();
+                var redis = scope.ServiceProvider.GetRequiredService<StackExchange.Redis.IConnectionMultiplexer>();
+                
+                // 1. Update progress: 10% - Đang đọc file
+                await UpdateImportProgress(redis, message.JobId, 10, "Processing", "Đang đọc file Excel...");
+                
+                // 2. Decode file content từ base64
+                var fileBytes = Convert.FromBase64String(message.FileContent);
+                using var stream = new MemoryStream(fileBytes);
+                
+                // 3. Update progress: 30% - Đang parse dữ liệu
+                await UpdateImportProgress(redis, message.JobId, 30, "Processing", "Đang parse dữ liệu Excel...");
+                
+                // 4. Gọi service import (cần tạo method mới nhận Stream)
+                var result = await studentService.ImportFromExcelStreamAsync(stream, message.ExamSessionSubjectCore, message.ExamRoomId, message.UserId);
+                
+                // 5. Update progress: 100% - Hoàn thành
+                await UpdateImportProgress(redis, message.JobId, 100, "Completed", "Import thành công!", result);
+                
+                _logger.LogInformation("Hoàn thành import student cho job {JobId}. Kết quả: {StudentsAdded} sinh viên, {SessionsAdded} phiên thi", 
+                    message.JobId, result.StudentsAdded, result.StudentExamSessionsAdded);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Lỗi khi xử lý cache_student_exam_sessions_queue cho sinh viên {StudentCode}", message.StudentCode);
+                _logger.LogError(ex, "Lỗi khi xử lý import student cho job {JobId}", message.JobId);
+                
+                using var scope = _serviceScopeFactory.CreateScope();
+                var redis = scope.ServiceProvider.GetRequiredService<StackExchange.Redis.IConnectionMultiplexer>();
+                await UpdateImportProgress(redis, message.JobId, 0, "Failed", $"Lỗi: {ex.Message}");
+            }
+        }
+
+        private async Task UpdateImportProgress(StackExchange.Redis.IConnectionMultiplexer redis, string jobId, int progress, string status, string message, StudentImportResultDto? result = null)
+        {
+            try
+            {
+                var progressData = new StudentImportProgressMessage
+                {
+                    JobId = jobId,
+                    Progress = progress,
+                    Status = status,
+                    Message = message,
+                    Result = result,
+                    UpdatedAt = DateTime.UtcNow
+                };
+                
+                var db = redis.GetDatabase();
+                await db.StringSetAsync($"import_progress:{jobId}", System.Text.Json.JsonSerializer.Serialize(progressData), TimeSpan.FromHours(1));
+                
+                _logger.LogDebug("Đã cập nhật progress cho job {JobId}: {Progress}% - {Status}", jobId, progress, status);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi cập nhật progress cho job {JobId}", jobId);
             }
         }
     }

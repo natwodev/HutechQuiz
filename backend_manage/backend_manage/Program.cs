@@ -3,6 +3,7 @@ using OfficeOpenXml;
 using Serilog;
 using Microsoft.EntityFrameworkCore;
 using backend_manage.Messages.RabbitMQ;
+using backend_manage.Services.AuthService.Helpers;
 
 
 
@@ -39,6 +40,19 @@ try
     {
         var services = scope.ServiceProvider;
         await backend_manage.Data.SeedData.InitializeAsync(services);
+        
+        // Preload approved papers vào Redis cache
+        try
+        {
+            var examPaperHelper = services.GetRequiredService<ExamPaperHelper>();
+            await examPaperHelper.PreloadAllApprovedPapersAsync();
+            Log.Information("Đã preload approved papers vào Redis cache thành công");
+        }
+        catch (Exception ex)
+        {
+            Log.Warning(ex, "Không thể preload approved papers vào Redis cache, hệ thống sẽ chạy bình thường");
+            // Không throw exception để app vẫn chạy được
+        }
     }
 
     // Configure the HTTP request pipeline.
@@ -52,9 +66,18 @@ try
 
     ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
 
-    // Start RabbitMQ consumer
-    var rabbitMQConsumer = app.Services.GetRequiredService<RabbitMqConsumer>();
-    rabbitMQConsumer.StartConsuming();
+    // Start RabbitMQ consumer với error handling
+    try
+    {
+        var rabbitMqConsumer = app.Services.GetRequiredService<IRabbitMqConsumer>();
+        rabbitMqConsumer.StartConsuming();
+        Log.Information("RabbitMQ consumer đã được khởi động thành công");
+    }
+    catch (Exception ex)
+    {
+        Log.Warning(ex, "Không thể khởi động RabbitMQ consumer, hệ thống sẽ chạy không có message queue");
+        // Không throw exception để app vẫn chạy được
+    }
 
     app.Run();
 }

@@ -4,5 +4,6 @@ namespace backend_manage.DTOs
     {
         public int StudentsAdded { get; set; }
         public int StudentExamSessionsAdded { get; set; }
+        public string? JobId { get; set; }
     }
 } 

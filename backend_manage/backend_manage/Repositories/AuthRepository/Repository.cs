@@ -35,6 +35,13 @@ namespace backend_manage.Repositories.AuthRepository
 
         public async Task<T> UpdateAsync(T entity)
         {
+            // Kiểm tra xem entity đã được track hay chưa
+            var existingEntry = _context.Entry(entity);
+            if (existingEntry.State != EntityState.Detached)
+            {
+                existingEntry.State = EntityState.Detached;
+            }
+            
             _dbSet.Update(entity);
             await _context.SaveChangesAsync();
             return entity;
@@ -61,4 +68,4 @@ namespace backend_manage.Repositories.AuthRepository
             return _dbSet.AsQueryable();
         }
     }
-} 
+}

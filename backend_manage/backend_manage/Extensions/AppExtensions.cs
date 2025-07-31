@@ -11,9 +11,7 @@ namespace backend_manage.Extensions
         public static void ConfigureMiddleware(this WebApplication app)
         {
             app.UseMiddleware<ExceptionMiddleware>(); // Xử lý lỗi chung
-
-            app.UseMiddleware<MaintenanceMiddleware>(); // Check chế độ bảo trì
-
+            
             app.Urls.Add("http://0.0.0.0:5163"); // Lắng nghe mọi IP
 
             app.UseCors("AllowAll"); // ✅ Dùng 1 lần, đúng policy
