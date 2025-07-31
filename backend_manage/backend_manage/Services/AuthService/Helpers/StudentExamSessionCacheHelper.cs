@@ -40,7 +40,7 @@ public class StudentExamSessionCacheHelper
     }
 
     /// <summary>
-    /// Cập nhật StudentAnswersString trong cache thay vì tạo key riêng
+    /// Cập nhật StudentAnswersString trong cache với fallback về database
     /// </summary>
     public async Task<(bool Success, string Message)> UpdateStudentAnswersInCacheAsync(
         string studentCode, int shuffledExamPaperId, string newAnswersString)
@@ -84,19 +84,74 @@ public class StudentExamSessionCacheHelper
                 }
             }
             
-            _logger.LogWarning("Không tìm thấy session với ShuffledExamPaperId {ShuffledExamPaperId} cho sinh viên {StudentCode}", 
+            _logger.LogWarning("Không tìm thấy session với ShuffledExamPaperId {ShuffledExamPaperId} cho sinh viên {StudentCode} trong cache, thử database", 
                 shuffledExamPaperId, studentCode);
-            return (false, "Không tìm thấy phiên thi");
+            
+            // Fallback: Cập nhật trong database nếu không có trong cache
+            return await UpdateStudentAnswersInDatabaseAsync(studentCode, shuffledExamPaperId, newAnswersString);
+        }
+        catch (RedisTimeoutException ex)
+        {
+            _logger.LogWarning(ex, "Redis timeout khi cập nhật StudentAnswersString trong cache cho sinh viên {StudentCode}, chuyển sang database", studentCode);
+            return await UpdateStudentAnswersInDatabaseAsync(studentCode, shuffledExamPaperId, newAnswersString);
+        }
+        catch (RedisConnectionException ex)
+        {
+            _logger.LogWarning(ex, "Redis connection error khi cập nhật StudentAnswersString trong cache cho sinh viên {StudentCode}, chuyển sang database", studentCode);
+            return await UpdateStudentAnswersInDatabaseAsync(studentCode, shuffledExamPaperId, newAnswersString);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Lỗi khi cập nhật StudentAnswersString trong cache cho sinh viên {StudentCode}", studentCode);
+            return await UpdateStudentAnswersInDatabaseAsync(studentCode, shuffledExamPaperId, newAnswersString);
+        }
+    }
+
+    /// <summary>
+    /// Cập nhật StudentAnswersString trong database khi Redis không khả dụng
+    /// </summary>
+    private async Task<(bool Success, string Message)> UpdateStudentAnswersInDatabaseAsync(
+        string studentCode, int shuffledExamPaperId, string newAnswersString)
+    {
+        try
+        {
+            var student = await _studentRepository.GetQueryable().FirstOrDefaultAsync(x => x.StudentCode == studentCode);
+            if (student == null)
+            {
+                _logger.LogWarning("Không tìm thấy sinh viên với mã {StudentCode}", studentCode);
+                return (false, "Không tìm thấy sinh viên");
+            }
+
+            var session = await _studentExamSessionRepository.GetQueryable()
+                .Where(x => x.StudentId == student.StudentId && x.ShuffledExamPaperId == shuffledExamPaperId)
+                .FirstOrDefaultAsync();
+
+            if (session != null)
+            {
+                session.StudentAnswersString = newAnswersString;
+                session.UpdatedAt = DateTime.UtcNow;
+                
+                await _studentExamSessionRepository.UpdateAsync(session);
+                
+                _logger.LogInformation("Đã cập nhật StudentAnswersString trong database cho sinh viên {StudentCode} với ShuffledExamPaperId {ShuffledExamPaperId}", 
+                    studentCode, shuffledExamPaperId);
+                
+                return (true, "Cập nhật đáp án thành công");
+            }
+
+            _logger.LogWarning("Không tìm thấy session trong database cho sinh viên {StudentCode} với ShuffledExamPaperId {ShuffledExamPaperId}", 
+                studentCode, shuffledExamPaperId);
+            return (false, "Không tìm thấy phiên thi");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Lỗi khi cập nhật StudentAnswersString trong database cho sinh viên {StudentCode}", studentCode);
             return (false, "Lỗi khi cập nhật đáp án");
         }
     }
 
     /// <summary>
-    /// Lấy StudentAnswersString từ cache
+    /// Lấy StudentAnswersString từ cache với fallback về database
     /// </summary>
     public async Task<string?> GetStudentAnswersFromCacheAsync(string studentCode, int shuffledExamPaperId)
     {
@@ -129,13 +184,61 @@ public class StudentExamSessionCacheHelper
                 }
             }
             
-            _logger.LogDebug("Không tìm thấy StudentAnswersString trong cache cho sinh viên {StudentCode} với ShuffledExamPaperId {ShuffledExamPaperId}", 
+            _logger.LogDebug("Không tìm thấy StudentAnswersString trong cache cho sinh viên {StudentCode} với ShuffledExamPaperId {ShuffledExamPaperId}, thử từ database", 
+                studentCode, shuffledExamPaperId);
+            
+            // Fallback: Lấy từ database nếu không có trong cache
+            return await GetStudentAnswersFromDatabaseAsync(studentCode, shuffledExamPaperId);
+        }
+        catch (RedisTimeoutException ex)
+        {
+            _logger.LogWarning(ex, "Redis timeout khi lấy StudentAnswersString từ cache cho sinh viên {StudentCode}, chuyển sang database", studentCode);
+            return await GetStudentAnswersFromDatabaseAsync(studentCode, shuffledExamPaperId);
+        }
+        catch (RedisConnectionException ex)
+        {
+            _logger.LogWarning(ex, "Redis connection error khi lấy StudentAnswersString từ cache cho sinh viên {StudentCode}, chuyển sang database", studentCode);
+            return await GetStudentAnswersFromDatabaseAsync(studentCode, shuffledExamPaperId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Lỗi khi lấy StudentAnswersString từ cache cho sinh viên {StudentCode}", studentCode);
+            return await GetStudentAnswersFromDatabaseAsync(studentCode, shuffledExamPaperId);
+        }
+    }
+
+    /// <summary>
+    /// Lấy StudentAnswersString từ database khi Redis không khả dụng
+    /// </summary>
+    private async Task<string?> GetStudentAnswersFromDatabaseAsync(string studentCode, int shuffledExamPaperId)
+    {
+        try
+        {
+            var student = await _studentRepository.GetQueryable().FirstOrDefaultAsync(x => x.StudentCode == studentCode);
+            if (student == null)
+            {
+                _logger.LogWarning("Không tìm thấy sinh viên với mã {StudentCode}", studentCode);
+                return null;
+            }
+
+            var session = await _studentExamSessionRepository.GetQueryable()
+                .Where(x => x.StudentId == student.StudentId && x.ShuffledExamPaperId == shuffledExamPaperId)
+                .FirstOrDefaultAsync();
+
+            if (session != null)
+            {
+                _logger.LogInformation("Đã lấy StudentAnswersString từ database cho sinh viên {StudentCode} với ShuffledExamPaperId {ShuffledExamPaperId}", 
+                    studentCode, shuffledExamPaperId);
+                return session.StudentAnswersString;
+            }
+
+            _logger.LogWarning("Không tìm thấy session trong database cho sinh viên {StudentCode} với ShuffledExamPaperId {ShuffledExamPaperId}", 
                 studentCode, shuffledExamPaperId);
             return null;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Lỗi khi lấy StudentAnswersString từ cache cho sinh viên {StudentCode}", studentCode);
+            _logger.LogError(ex, "Lỗi khi lấy StudentAnswersString từ database cho sinh viên {StudentCode}", studentCode);
             return null;
         }
     }

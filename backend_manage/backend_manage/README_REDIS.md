@@ -52,9 +52,9 @@ services.AddScoped<IRedisService>(sp =>
 ### Cách hoạt động
 1. **Khi Redis khả dụng**: Cache data để tăng performance
 2. **Khi Redis không khả dụng**:
-   - Log warning
-   - Fallback về database
-   - Hệ thống vẫn chạy bình thường
+    - Log warning
+    - Fallback về database
+    - Hệ thống vẫn chạy bình thường
 
 
 ### Các helper classes sử dụng Redis
@@ -80,18 +80,18 @@ services.AddScoped<IRedisService>(sp =>
 - **Host**: localhost:5672
 - **Credentials**: guest/guest
 - **Queues**:
-   - `save_answer_queue`: Lưu đáp án
-   - `submit_exam_queue`: Nộp bài thi
-   - `save_exam_queue`: Lưu bài nháp
-   - `student_import_queue`: Import sinh viên
+    - `save_answer_queue`: Lưu đáp án
+    - `submit_exam_queue`: Nộp bài thi
+    - `save_exam_queue`: Lưu bài nháp
+    - `student_import_queue`: Import sinh viên
 
 ### Fallback Strategy - ⭐ **CẢI THIỆN QUAN TRỌNG**
 1. **Khi RabbitMQ khả dụng**: Xử lý message queue async bình thường
 2. **Khi RabbitMQ không khả dụng**:
-   - Sử dụng `RabbitMqFallbackService`
-   - **Thực hiện tác vụ trực tiếp** thay vì bỏ qua
-   - Không mất dữ liệu, tất cả tác vụ vẫn được xử lý
-   - Chỉ khác là không async mà thực hiện đồng bộ
+    - Sử dụng `RabbitMqFallbackService`
+    - **Thực hiện tác vụ trực tiếp** thay vì bỏ qua
+    - Không mất dữ liệu, tất cả tác vụ vẫn được xử lý
+    - Chỉ khác là không async mà thực hiện đồng bộ
 
 ### Error Handling
 - **Dependency Injection**: Try-catch khi khởi tạo services
@@ -136,9 +136,9 @@ var value = await _redisService.StringGetAsync("key"); // Returns null
    ```
 
 3. **Kiểm tra logs**:
-   - Ứng dụng sẽ log warning về Redis không khả dụng
-   - API calls sẽ hoạt động bình thường (chậm hơn do không có cache)
-   - **App không crash** khi Redis không khả dụng
+    - Ứng dụng sẽ log warning về Redis không khả dụng
+    - API calls sẽ hoạt động bình thường (chậm hơn do không có cache)
+    - **App không crash** khi Redis không khả dụng
 
 
 
@@ -342,5 +342,99 @@ public void CheckQueueStatus(string queueName)
 - ✅ **Dễ quản lý** và maintain
 - ✅ **Performance tốt hơn** khi truy vấn
 - ✅ **Code sạch hơn** - không còn logic phức tạp để parse key
+
+## Fallback Mechanism cho Student Answer Operations
+
+### Tổng quan
+Hệ thống đã được cập nhật để có fallback mechanism khi Redis không khả dụng cho các thao tác lưu đáp án. Khi Redis timeout hoặc không thể kết nối, hệ thống sẽ tự động chuyển sang sử dụng database để đảm bảo tính liên tục của dịch vụ.
+
+### Các thay đổi chính
+
+#### 1. StudentExamSessionCacheHelper
+
+##### GetStudentAnswersFromCacheAsync
+- **Trước**: Chỉ lấy từ Redis cache, trả về null nếu không tìm thấy
+- **Sau**: Có fallback về database khi Redis timeout hoặc không khả dụng
+
+```csharp
+// Fallback mechanism
+catch (RedisTimeoutException ex)
+{
+    _logger.LogWarning(ex, "Redis timeout khi lấy StudentAnswersString từ cache cho sinh viên {StudentCode}, chuyển sang database", studentCode);
+    return await GetStudentAnswersFromDatabaseAsync(studentCode, shuffledExamPaperId);
+}
+```
+
+##### UpdateStudentAnswersInCacheAsync
+- **Trước**: Chỉ cập nhật trong Redis cache
+- **Sau**: Có fallback về database khi Redis không khả dụng
+
+#### 2. StudentAnswerHelper
+
+##### UpdateSingleAnswerAsync
+- **Trước**: Chỉ hoạt động với Redis cache
+- **Sau**: Sử dụng StudentExamSessionCacheHelper có fallback mechanism
+
+### Cách hoạt động cho Student Answer Operations
+
+#### Khi Redis khả dụng (bình thường)
+1. Lấy dữ liệu từ Redis cache
+2. Cập nhật dữ liệu vào Redis cache
+3. RabbitMQ được sử dụng để xử lý bất đồng bộ
+
+#### Khi Redis không khả dụng
+1. **Lấy dữ liệu**: Tự động chuyển sang database
+2. **Cập nhật dữ liệu**: Lưu trực tiếp vào database
+3. **RabbitMQ**: Bỏ qua nếu không khả dụng (đã có fallback service)
+
+### Log messages cho Student Answer Operations
+
+#### Redis khả dụng
+```
+[INF] Redis service đã được khởi tạo thành công
+[INF] Đã lấy StudentAnswersString từ cache cho session 002:123
+[INF] Đã cập nhật StudentAnswersString trong cache cho session 002:123
+```
+
+#### Redis không khả dụng
+```
+[WRN] Redis không khả dụng, bỏ qua kiểm tra blacklist token
+[WRN] Redis timeout khi lấy StudentAnswersString từ cache cho sinh viên 002, chuyển sang database
+[INF] Đã lấy StudentAnswersString từ database cho sinh viên 002 với ShuffledExamPaperId 1
+[INF] Đã cập nhật StudentAnswersString trong database cho sinh viên 002 với ShuffledExamPaperId 1
+```
+
+### Lợi ích của Fallback Mechanism
+
+1. **Tính liên tục**: Hệ thống vẫn hoạt động khi Redis không khả dụng
+2. **Tự động**: Không cần can thiệp thủ công
+3. **Transparent**: Người dùng không nhận biết được sự thay đổi
+4. **Logging**: Đầy đủ log để theo dõi và debug
+
+### Testing Fallback cho Student Answer Operations
+
+#### Test Redis không khả dụng
+1. Tắt Redis server
+2. Gửi request lưu đáp án
+3. Kiểm tra log để xác nhận fallback hoạt động
+4. Kiểm tra database để xác nhận dữ liệu được lưu
+
+#### Test Redis khả dụng trở lại
+1. Bật Redis server
+2. Gửi request lưu đáp án
+3. Kiểm tra log để xác nhận Redis được sử dụng trở lại
+
+### Monitoring cho Student Answer Operations
+
+#### Metrics cần theo dõi
+- Số lượng Redis timeout
+- Số lượng fallback về database
+- Thời gian response khi sử dụng fallback
+- Tỷ lệ thành công của fallback
+
+#### Alerting
+- Redis connection failures
+- Database connection issues
+- High fallback usage rate
 
  
