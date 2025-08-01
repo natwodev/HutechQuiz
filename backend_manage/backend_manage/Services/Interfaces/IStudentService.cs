@@ -12,7 +12,11 @@ public interface IStudentService
     Task<bool> DeleteAsync(string id);
     Task<StudentImportResultDto> ImportFromExcelAsync(IFormFile file, string examSessionSubjectCore, int examRoomId);
     Task<Student?> GetByStudentCodeAsync(string studentCode);
-    Task<ShuffledExamPaperDto> StartExamAsync(string studentCode, int studentExamSessionId);
+
+// Trong IStudentService
+    Task<(StudentExamSessionCacheDto studentExamSessionCacheDto, ShuffledExamPaperDto? shuffledExamPaperDto)>
+        StartExamAsync(string studentCode,
+            int studentExamSessionId);
     Task<IEnumerable<StudentExamSessionDto>> GetStudentExamSessionsAsync(string studentCode);
     Task<IEnumerable<StudentExamRoomStatusDto>> GetStudentsByExamRoomAsync(int examRoomId, int examSessionSubjectId);
     Task<(bool Success, string Message)> AvtiveLoginAsync(string studentCode, bool isLogin);

@@ -120,9 +120,9 @@ public class StudentController : ControllerBase
         var studentCode = User.FindFirst("studentCode")?.Value;
         if (string.IsNullOrEmpty(studentCode))
             return Unauthorized(new { message = "Token không hợp lệ!" });
-        var result = await _studentService.StartExamAsync(studentCode, studentExamSessionId);
-        if (result == null) return BadRequest(new { message = "Không thể bắt đầu làm bài." });
-        return Ok(result);
+        var (result,pp) = await _studentService.StartExamAsync(studentCode, studentExamSessionId);
+        if (result == null) return BadRequest(new { message = "Không thể bắt đầu làm bài vì k có phiên thi." });
+        return Ok(new { studentSession = result, examPaper = pp });
     }
 
     [HttpGet("exam-sessions")]

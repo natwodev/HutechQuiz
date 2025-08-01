@@ -12,5 +12,7 @@ namespace backend_manage.DTOs
         public DateTime StartTime { get; set; }
         public DateTime EndTime { get; set; }
         public int StudentExamSessionId { get; set; }
+        public int? ShuffledExamPaperId { get; set; }
+        public string StudentAnswersString { get; set; }
     }
 } 

@@ -37,67 +37,6 @@ namespace backend_manage.Controllers
             await _service.PreloadApprovedPapersToRedisAsync();
             return Ok(new { message = "Đã tải sẵn tất cả đề thi hoán vị đã phê duyệt vào Redis" });
         }
-
-        [HttpPost("preload-approved-papers")]
-        [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> PreloadApprovedPapers()
-        {
-            try
-            {
-                var examPaperHelper = HttpContext.RequestServices.GetRequiredService<ExamPaperHelper>();
-                await examPaperHelper.PreloadAllApprovedPapersAsync();
-                
-                return Ok(new { 
-                    Success = true, 
-                    Message = "Đã preload tất cả approved papers vào Redis cache thành công" 
-                });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Lỗi khi preload approved papers");
-                return StatusCode(500, new { 
-                    Success = false, 
-                    Message = "Lỗi khi preload approved papers: " + ex.Message 
-                });
-            }
-        }
-
-        [HttpGet("test-cache/{originalExamPaperId}")]
-        [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> TestCache(int originalExamPaperId)
-        {
-            try
-            {
-                var examPaperHelper = HttpContext.RequestServices.GetRequiredService<ExamPaperHelper>();
-                
-                // Test lấy random paper từ cache
-                var randomPaper = await examPaperHelper.GetRandomExamPaperAsync(originalExamPaperId);
-                
-                if (randomPaper != null)
-                {
-                    return Ok(new { 
-                        Success = true, 
-                        Message = "Test cache thành công",
-                        ShuffledExamPaperId = randomPaper.ShuffledExamPaperId,
-                        Title = randomPaper.Title
-                    });
-                }
-                else
-                {
-                    return NotFound(new { 
-                        Success = false, 
-                        Message = "Không tìm thấy đề thi cho OriginalExamPaperId này" 
-                    });
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Lỗi khi test cache");
-                return StatusCode(500, new { 
-                    Success = false, 
-                    Message = "Lỗi khi test cache: " + ex.Message 
-                });
-            }
-        }
+        
     }
 } 
