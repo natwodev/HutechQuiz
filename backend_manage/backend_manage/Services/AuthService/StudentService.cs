@@ -626,18 +626,8 @@ public class StudentService : IStudentService
     {
         try
         {
-            string sessionCacheKey = $"student_exam_session:{StudentCode}:*";
-            
-            var db = _redis.GetDatabase();
-            
-            // Parallel processing: Lấy dữ liệu từ Redis đồng thời
-            Task<string?> studentAnswersTask = _sessionCacheHelper.GetStudentAnswersFromCacheAsync(StudentCode, submitExamDto.ShuffledExamPaperId);
-            Task<StudentExamSession?> sessionTask = _validationHelper.GetStudentExamSessionFromCacheAsync(db, sessionCacheKey, submitExamDto.ShuffledExamPaperId);
-            
-            await Task.WhenAll(studentAnswersTask, sessionTask);
-            
-            var studentAnswersString = await studentAnswersTask;
-            var cachedSession = await sessionTask;
+            // Chỉ gọi Redis 1 lần và cache kết quả
+            var studentAnswersString = await _sessionCacheHelper.GetStudentAnswersFromCacheAsync(StudentCode, submitExamDto.ShuffledExamPaperId);
             
             if (string.IsNullOrEmpty(studentAnswersString))
             {
@@ -645,20 +635,17 @@ public class StudentService : IStudentService
                 return (false, "Không tìm thấy bài thi của sinh viên", null);
             }
             
-            // Validate và lấy dữ liệu song song
-            Task<(bool Success, string Message)> validationTask = _validationHelper.ValidateStudentExamSessionOptimizedAsync(StudentCode, submitExamDto.ShuffledExamPaperId, cachedSession);
-            Task<(bool Success, string Message, Dictionary<int, string>? CurrentAnswers)> updateAnswersTask = _answerHelper.UpdateStudentAnswersOptimizedAsync(
-                new RedisValue(studentAnswersString), submitExamDto.SaveAnswerDtos, StudentCode, submitExamDto.ShuffledExamPaperId);
+            // Validate session (không cần lấy lại từ Redis)
+            var validationResult = await _validationHelper.ValidateStudentExamSessionOptimizedAsync(StudentCode, submitExamDto.ShuffledExamPaperId, null);
             
-            await Task.WhenAll(validationTask, updateAnswersTask);
-            
-            var (validationSuccess, validationMessage) = await validationTask;
-            var (updateSuccess, updateMessage, currentAnswers) = await updateAnswersTask;
-            
-            if (!validationSuccess)
+            if (!validationResult.Success)
             {
-                return (false, validationMessage, null);
+                return (false, validationResult.Message, null);
             }
+            
+            // Update answers với dữ liệu đã có
+            var (updateSuccess, updateMessage, currentAnswers) = await _answerHelper.UpdateStudentAnswersOptimizedAsync(
+                new RedisValue(studentAnswersString), submitExamDto.SaveAnswerDtos, StudentCode, submitExamDto.ShuffledExamPaperId);
             
             if (!updateSuccess)
             {
@@ -733,14 +720,8 @@ public class StudentService : IStudentService
             
             var db = _redis.GetDatabase();
             
-            // Parallel processing: Lấy dữ liệu từ Redis đồng thời
-            Task<string?> studentAnswersTask = _sessionCacheHelper.GetStudentAnswersFromCacheAsync(StudentCode, submitExamDto.ShuffledExamPaperId);
-            Task<StudentExamSession?> sessionTask = _validationHelper.GetStudentExamSessionFromCacheAsync(db, sessionCacheKey, submitExamDto.ShuffledExamPaperId);
-            
-            await Task.WhenAll(studentAnswersTask, sessionTask);
-            
-            var studentAnswersString = await studentAnswersTask;
-            var cachedSession = await sessionTask;
+            // Chỉ gọi Redis 1 lần và cache kết quả
+            var studentAnswersString = await _sessionCacheHelper.GetStudentAnswersFromCacheAsync(StudentCode, submitExamDto.ShuffledExamPaperId);
             
             if (string.IsNullOrEmpty(studentAnswersString))
             {
@@ -748,20 +729,17 @@ public class StudentService : IStudentService
                 return (false, "Không tìm thấy bài thi của sinh viên");
             }
             
-            // Validate và update answers song song
-            Task<(bool Success, string Message)> validationTask = _validationHelper.ValidateStudentExamSessionOptimizedAsync(StudentCode, submitExamDto.ShuffledExamPaperId, cachedSession);
-            Task<(bool Success, string Message, Dictionary<int, string>? CurrentAnswers)> updateAnswersTask = _answerHelper.UpdateStudentAnswersOptimizedAsync(
-                new RedisValue(studentAnswersString), submitExamDto.SaveAnswerDtos, StudentCode, submitExamDto.ShuffledExamPaperId);
+            // Validate session (không cần lấy lại từ Redis)
+            var validationResult = await _validationHelper.ValidateStudentExamSessionOptimizedAsync(StudentCode, submitExamDto.ShuffledExamPaperId, null);
             
-            await Task.WhenAll(validationTask, updateAnswersTask);
-            
-            var (validationSuccess, validationMessage) = await validationTask;
-            var (updateSuccess, updateMessage, currentAnswers) = await updateAnswersTask;
-            
-            if (!validationSuccess)
+            if (!validationResult.Success)
             {
-                return (false, validationMessage);
+                return (false, validationResult.Message);
             }
+            
+            // Update answers với dữ liệu đã có
+            var (updateSuccess, updateMessage, currentAnswers) = await _answerHelper.UpdateStudentAnswersOptimizedAsync(
+                new RedisValue(studentAnswersString), submitExamDto.SaveAnswerDtos, StudentCode, submitExamDto.ShuffledExamPaperId);
             
             if (!updateSuccess)
             {

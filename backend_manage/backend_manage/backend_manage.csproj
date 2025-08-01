@@ -77,6 +77,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <Folder Include="Logs\" />
       <Folder Include="wwwroot\EPZ\" />
     </ItemGroup>
 

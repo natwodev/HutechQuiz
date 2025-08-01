@@ -1,11 +1,10 @@
-using System.IdentityModel.Tokens.Jwt;
 using backend_manage.Authentication.Repositories;
 using backend_manage.Entities;
 using backend_manage.Hubs;
 using backend_manage.Middlewares.Jwt;
 using backend_manage.Repositories.Interfaces;
 using Microsoft.AspNetCore.Identity;
-using StackExchange.Redis;
+using Microsoft.Extensions.Logging;
 
 namespace backend_manage.Authentication.Services
 {
@@ -15,23 +14,23 @@ namespace backend_manage.Authentication.Services
         private readonly JwtTokenGenerator _jwtTokenGenerator;
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly RoleManager<IdentityRole> _roleManager;
-        private readonly IConnectionMultiplexer _redis;
         private readonly IUserRepository _userRepository;
+        private readonly ILogger<AuthService> _logger;
 
         public AuthService(
             IAuthRepository authRepository, 
             SignInManager<ApplicationUser> signInManager, 
             IConfiguration configuration,
             RoleManager<IdentityRole> roleManager,
-            IConnectionMultiplexer redis,
-            IUserRepository userRepository)
+            IUserRepository userRepository,
+            ILogger<AuthService> logger)
         {
             _authRepository = authRepository;
             _signInManager = signInManager;
             _jwtTokenGenerator = new JwtTokenGenerator(configuration);
             _roleManager = roleManager;
-            _redis = redis;
             _userRepository = userRepository;
+            _logger = logger;
         }
 
         // Phương thức xác thực
@@ -83,25 +82,9 @@ namespace backend_manage.Authentication.Services
         
         public async Task LogoutAsync(string token)
         {
-            var jwtToken = new JwtSecurityTokenHandler().ReadToken(token) as JwtSecurityToken;
-
-            if (jwtToken == null)
-            {
-                throw new ArgumentException("Invalid token");
-            }
-
-            var expirationTime = jwtToken.ValidTo;
-            var timeToExpire = expirationTime - DateTimeHelper.GetVietnamTime();
-
-            if (timeToExpire.TotalSeconds > 0)
-            {
-                var db = _redis.GetDatabase();
-                await db.StringSetAsync(
-                    $"blacklist:{token}",
-                    "revoked",
-                    timeToExpire
-                );
-            }
+            // Token blacklist functionality has been removed
+            // Logout now only logs the action without blacklisting the token
+            _logger.LogInformation("User logged out successfully");
         }
     }
 }

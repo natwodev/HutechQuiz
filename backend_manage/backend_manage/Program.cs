@@ -4,6 +4,7 @@ using Serilog;
 using Microsoft.EntityFrameworkCore;
 using backend_manage.Messages.RabbitMQ;
 using backend_manage.Services.AuthService.Helpers;
+using StackExchange.Redis;
 
 
 
@@ -15,6 +16,23 @@ Log.Logger = new LoggerConfiguration()
     .CreateLogger();
 
 builder.Host.UseSerilog();
+
+// Cấu hình Kestrel server cho high concurrency và tăng timeout
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.Limits.MaxConcurrentConnections = 2000; // Tăng số connection đồng thời
+    options.Limits.MaxConcurrentUpgradedConnections = 2000;
+    options.Limits.MaxRequestBodySize = 10 * 1024 * 1024; // 10MB
+    options.Limits.KeepAliveTimeout = TimeSpan.FromMinutes(5); // Tăng keep-alive
+    options.Limits.RequestHeadersTimeout = TimeSpan.FromSeconds(60); // Tăng timeout
+    
+    // Cấu hình thread pool
+    options.Limits.MaxRequestBufferSize = 1024 * 1024; // 1MB
+    options.Limits.MaxRequestLineSize = 8192; // 8KB
+    
+    // Tối ưu cho performance
+    options.AllowSynchronousIO = false;
+});
 
 // Add services to the container.
 builder.Services.AddOpenApi();
@@ -40,19 +58,27 @@ try
     {
         var services = scope.ServiceProvider;
         await backend_manage.Data.SeedData.InitializeAsync(services);
+    }
+
+    // Health check Redis khi khởi động
+    try
+    {
+        using var scope = app.Services.CreateScope();
+        var redisService = scope.ServiceProvider.GetRequiredService<backend_manage.Services.Interfaces.IRedisService>();
+        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
         
-        // Preload approved papers vào Redis cache
-        try
+        if (redisService.IsConnected)
         {
-            var examPaperHelper = services.GetRequiredService<ExamPaperHelper>();
-            await examPaperHelper.PreloadAllApprovedPapersAsync();
-            Log.Information("Đã preload approved papers vào Redis cache thành công");
+            logger.LogInformation("✅ Redis health check: Kết nối thành công");
         }
-        catch (Exception ex)
+        else
         {
-            Log.Warning(ex, "Không thể preload approved papers vào Redis cache, hệ thống sẽ chạy bình thường");
-            // Không throw exception để app vẫn chạy được
+            logger.LogWarning("⚠️ Redis health check: Không kết nối được, đang sử dụng fallback");
         }
+    }
+    catch (Exception ex)
+    {
+        Log.Warning(ex, "❌ Redis health check thất bại");
     }
 
     // Configure the HTTP request pipeline.

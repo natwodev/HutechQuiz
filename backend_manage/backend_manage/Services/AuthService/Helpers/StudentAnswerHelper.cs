@@ -37,57 +37,28 @@ public class StudentAnswerHelper
             studentCode, shuffledExamPaperId, index, answer
         );
 
-        // Lấy chuỗi đáp án hiện tại từ cache
-        var currentAnswersString = await _sessionCacheHelper.GetStudentAnswersFromCacheAsync(studentCode, shuffledExamPaperId);
-        
-        if (string.IsNullOrEmpty(currentAnswersString))
+        try
         {
-            _logger.LogError("Không tìm thấy chuỗi đáp án trong cache cho sinh viên {StudentCode} với ShuffledExamPaperId {ShuffledExamPaperId}", 
+            // Tối ưu: Chỉ gọi Redis 1 lần để lấy và cập nhật đáp án
+            var (success, message, newAnswersString) = await _sessionCacheHelper.GetAndUpdateStudentAnswersAsync(
+                studentCode, shuffledExamPaperId, index, answer);
+            
+            if (success)
+            {
+                _logger.LogInformation("Đã lưu đáp án thành công. Chuỗi đáp án mới: {NewAnswers}", newAnswersString);
+                return (true, "Cập nhật đáp án thành công", newAnswersString);
+            }
+            else
+            {
+                _logger.LogError("Lỗi khi cập nhật đáp án: {Message}", message);
+                return (false, message, null);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Lỗi khi lưu đáp án cho sinh viên {StudentCode} với ShuffledExamPaperId {ShuffledExamPaperId}", 
                 studentCode, shuffledExamPaperId);
-            return (false, "Không tìm thấy bài thi của sinh viên", null);
-        }
-
-        // Tách chuỗi đáp án thành mảng
-        var answerParts = currentAnswersString.Split(';', StringSplitOptions.RemoveEmptyEntries);
-        var updatedParts = new List<string>();
-
-        // Cập nhật đáp án tại index tương ứng
-        bool found = false;
-        foreach (var part in answerParts)
-        {
-            if (part.StartsWith($"({index},"))
-            {
-                updatedParts.Add($"({index},{answer})");
-                found = true;
-            }
-            else if (!string.IsNullOrWhiteSpace(part))
-            {
-                updatedParts.Add(part);
-            }
-        }
-
-        // Nếu không tìm thấy index, thêm mới
-        if (!found)
-        {
-            updatedParts.Add($"({index},{answer})");
-        }
-
-        // Tạo chuỗi đáp án mới
-        string newAnswersString = string.Join(";", updatedParts) + ";";
-
-        // Cập nhật vào cache thay vì tạo key riêng
-        var (success, message) = await _sessionCacheHelper.UpdateStudentAnswersInCacheAsync(
-            studentCode, shuffledExamPaperId, newAnswersString);
-
-        if (success)
-        {
-            _logger.LogInformation("Đã lưu đáp án thành công vào cache. Chuỗi đáp án mới: {NewAnswers}", newAnswersString);
-            return (true, "Cập nhật đáp án thành công", newAnswersString);
-        }
-        else
-        {
-            _logger.LogError("Lỗi khi cập nhật đáp án vào cache: {Message}", message);
-            return (false, message, null);
+            return (false, "Lỗi khi lưu đáp án", null);
         }
     }
 
@@ -200,8 +171,13 @@ public class StudentAnswerHelper
 
     public StudentAnswerSavedMessage CreateAnswerSavedMessage(string studentCode, int shuffledExamPaperId, int index, string answer, string newAnswersString)
     {
-        return _mapper.Map<StudentAnswerSavedMessage>(
-            (studentCode, shuffledExamPaperId, index, answer, newAnswersString)
-        );
+        return new StudentAnswerSavedMessage
+        {
+            StudentCode = studentCode,
+            ShuffledExamPaperId = shuffledExamPaperId,
+            Index = index,
+            Answer = answer,
+            NewAnswersString = newAnswersString
+        };
     }
 } 

@@ -6,25 +6,26 @@ using StackExchange.Redis;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
 using backend_manage.Repositories.Interfaces;
+using backend_manage.Services.Interfaces;
 
 namespace backend_manage.Services.AuthService.Helpers;
 
 public class ExamPaperHelper
 {
-    private readonly IConnectionMultiplexer _redis;
+    private readonly IRedisService _redisService;
     private readonly ILogger<ExamPaperHelper> _logger;
     private readonly IRepository<ShuffledExamPaper> _shuffledExamPaperRepository;
     private readonly IRepository<ExamSessionSubject> _examSessionSubjectRepository;
     private readonly AutoMapper.IMapper _mapper;
 
     public ExamPaperHelper(
-        IConnectionMultiplexer redis,
+        IRedisService redisService,
         ILogger<ExamPaperHelper> logger,
         IRepository<ShuffledExamPaper> shuffledExamPaperRepository,
         IRepository<ExamSessionSubject> examSessionSubjectRepository,
         AutoMapper.IMapper mapper)
     {
-        _redis = redis;
+        _redisService = redisService;
         _logger = logger;
         _shuffledExamPaperRepository = shuffledExamPaperRepository;
         _examSessionSubjectRepository = examSessionSubjectRepository;
@@ -36,7 +37,15 @@ public class ExamPaperHelper
     {
         try
         {
-            var db = _redis.GetDatabase();
+            // Kiểm tra Redis connection trước khi cache
+            if (!_redisService.IsConnected)
+            {
+                _logger.LogWarning("Redis không khả dụng, bỏ qua cache available papers cho OriginalExamPaperId {OriginalExamPaperId}", 
+                    originalExamPaperId);
+                return;
+            }
+
+            var db = _redisService.GetDatabase();
             string cacheKey = $"available_papers:{originalExamPaperId}";
             
             // Convert sang array of RedisValue
@@ -61,7 +70,15 @@ public class ExamPaperHelper
     {
         try
         {
-            var db = _redis.GetDatabase();
+            // Kiểm tra Redis connection trước khi lấy từ cache
+            if (!_redisService.IsConnected)
+            {
+                _logger.LogDebug("Redis không khả dụng, bỏ qua lấy random paper từ cache cho OriginalExamPaperId {OriginalExamPaperId}", 
+                    originalExamPaperId);
+                return null;
+            }
+
+            var db = _redisService.GetDatabase();
             string cacheKey = $"available_papers:{originalExamPaperId}";
             
             // Kiểm tra key có tồn tại không
@@ -95,6 +112,13 @@ public class ExamPaperHelper
     {
         try
         {
+            // Kiểm tra Redis connection trước khi preload
+            if (!_redisService.IsConnected)
+            {
+                _logger.LogWarning("Redis không khả dụng, bỏ qua preload approved papers vào cache");
+                return;
+            }
+
             _logger.LogInformation("Bắt đầu preload tất cả approved papers vào cache");
             
             // Lấy tất cả OriginalExamPaperId có approved papers
@@ -125,7 +149,15 @@ public class ExamPaperHelper
     {
         try
         {
-            var db = _redis.GetDatabase();
+            // Kiểm tra Redis connection trước khi lấy từ cache
+            if (!_redisService.IsConnected)
+            {
+                _logger.LogDebug("Redis không khả dụng, bỏ qua lấy đề thi từ cache cho ShuffledExamPaperId {ShuffledExamPaperId}", 
+                    shuffledExamPaperId);
+                return null;
+            }
+
+            var db = _redisService.GetDatabase();
             string cacheKey = $"shuffled_exam_paper:{shuffledExamPaperId}";
             _logger.LogInformation("Đang tìm đề thi từ Redis với key: {CacheKey}", cacheKey);
             
@@ -196,7 +228,15 @@ public class ExamPaperHelper
     {
         try
         {
-            var db = _redis.GetDatabase();
+            // Kiểm tra Redis connection trước khi cache
+            if (!_redisService.IsConnected)
+            {
+                _logger.LogWarning("Redis không khả dụng, bỏ qua cache đề thi vào Redis cho ShuffledExamPaperId {ShuffledExamPaperId}", 
+                    shuffledExamPaperId);
+                return false;
+            }
+
+            var db = _redisService.GetDatabase();
             string cacheKey = $"shuffled_exam_paper:{shuffledExamPaperId}";
             
             var jsonString = JsonSerializer.Serialize(paperDto);
