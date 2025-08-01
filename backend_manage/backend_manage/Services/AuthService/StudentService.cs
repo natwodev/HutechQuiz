@@ -417,7 +417,7 @@ public class StudentService : IStudentService
         try
         {
             studentExamSession.ShuffledExamPaperId = shuffledExamPaperId;
-            await _sessionCacheHelper.CacheStudentExamSessionsForStudentAsync(studentCode, new List<StudentExamSession> { studentExamSession });
+            await _sessionCacheHelper.CacheStudentExamSessions(studentCode, new List<StudentExamSession> { studentExamSession });
             
             _logger.LogInformation("Đã cập nhật ShuffledExamPaperId {ShuffledExamPaperId} vào StudentExamSession trong Redis cho sinh viên {StudentCode}", 
                 shuffledExamPaperId, studentCode);
@@ -494,7 +494,7 @@ public class StudentService : IStudentService
         try
         {
             // Thử lấy từ Redis cache trước
-            var cachedSessions = await _sessionCacheHelper.GetStudentExamSessionsFromRedisCacheAsync(studentCode);
+            var cachedSessions = await _sessionCacheHelper.GetStudentExamSessionsFromRedisAsync(studentCode);
             if (cachedSessions != null && cachedSessions.Any())
             {
                 _logger.LogDebug("Đã lấy {Count} phiên thi từ Redis cache cho sinh viên {StudentCode}", 
@@ -516,7 +516,7 @@ public class StudentService : IStudentService
                 .ToListAsync();
             
             // Cache lại vào Redis
-            await _sessionCacheHelper.CacheStudentExamSessionsForStudentAsync(studentCode, sessions);
+            await _sessionCacheHelper.CacheStudentExamSessions(studentCode, sessions);
             
             return sessions.Select(x => _mapper.Map<StudentExamSessionDto>(x));
         }

@@ -26,14 +26,12 @@ public class StudentCacheHelper
 
     public async Task<Student?> GetStudentFromRedisAsync(string studentCode)
     {
-        string key = $"student:{studentCode}";
-
         // B1: Lấy từ cache
-        _logger.LogInformation("Bắt đầu tìm sinh viên với key {Key}", key);
-        var (redisAvailable, cachedStudent) = await GetStudentFromCache(key);
+        _logger.LogInformation("Bắt đầu tìm sinh viên với key {Key}", studentCode);
+        var (redisAvailable, cachedStudent) = await GetStudentFromCache(studentCode);
         if (cachedStudent != null)
         {
-            _logger.LogInformation("Tìm thấy sinh viên với {key}", key);
+            _logger.LogInformation("Tìm thấy sinh viên với {key}", studentCode);
             return cachedStudent;
         }
 
@@ -41,14 +39,14 @@ public class StudentCacheHelper
         // B2: Fallback DB
         if (!redisAvailable)
         {
-            _logger.LogInformation("Tìm kiếm sinh viên ở db vì không kết nối được với redis {key}", key);
+            _logger.LogInformation("Tìm kiếm sinh viên ở db vì không kết nối được với redis: {key}", studentCode);
         }
 
         var dbStudent = await GetStudentFromDb(studentCode);
 
         // B3: Cache lại nếu Redis hoạt động
         if (redisAvailable)
-            await CacheStudent(key, dbStudent);
+            await CacheStudent(studentCode, dbStudent);
 
         return dbStudent;
     }
@@ -65,7 +63,7 @@ public class StudentCacheHelper
             }
             else
             {
-                _logger.LogInformation("Đã tìm thấy sinh viên với mã: {key}", studentCode);
+                _logger.LogInformation("Đã tìm thấy sinh viên với mã: {key} từ DB", studentCode);
             }
             return student;
         }
@@ -77,10 +75,11 @@ public class StudentCacheHelper
     }
     
 
-private async Task CacheStudent(string key, Student? student)
+private async Task CacheStudent(string studentCode, Student? student)
     {
         try
         {
+            string key = $"student:{studentCode}";
             var db = _redis.GetDatabase();
             if (student == null)
             {
@@ -94,25 +93,26 @@ private async Task CacheStudent(string key, Student? student)
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Không thể cache sinh viên với key {Key}", key);
+            _logger.LogWarning(ex, "Không thể cache sinh viên với key {Key}", studentCode);
         }
     }
-    private async Task<(bool redisAvailable, Student? student)> GetStudentFromCache(string key)
+    private async Task<(bool redisAvailable, Student? student)> GetStudentFromCache(string studentCode)
     {
         try
         {
+            string key = $"student:{studentCode}";
             var db = _redis.GetDatabase();
             var cachedValue = await db.StringGetAsync(key);
 
             if (!cachedValue.HasValue)
             {
-                _logger.LogInformation("Redis không có dữ liệu cho {Key}", key);
+                _logger.LogInformation("Redis không có dữ liệu cho {Key}", studentCode);
                 return (true, null); 
             }
 
             if (cachedValue == "null")
             {
-                _logger.LogInformation("Redis cache null cho {Key}", key);
+                _logger.LogInformation("Redis cache null cho {Key}", studentCode);
                 return (true, null); // Redis hoạt động, nhưng là null
             }
 
@@ -121,7 +121,7 @@ private async Task CacheStudent(string key, Student? student)
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Redis lỗi khi lấy sinh viên từ key {Key}", key);
+            _logger.LogWarning(ex, "Redis lỗi khi lấy sinh viên từ key {Key}", studentCode);
             return (false, null); // Redis lỗi
         }
     }

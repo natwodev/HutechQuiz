@@ -179,6 +179,7 @@ public class MappingProfile : Profile
         CreateMap<LecturerCreateDto, Lecturer>();
         CreateMap<Lecturer, LecturerDto>()
             .ForMember(dest => dest.DepartmentName, opt => opt.MapFrom(src => src.Department != null ? src.Department.DepartmentName : null));
+        CreateMap<StudentExamSessionCacheDto, StudentExamSessionDto>();
 
         // Mapping cho ExamSubmissionMessage
         CreateMap<backend_manage.DTOs.ExamSubmissionDto, ExamSubmissionMessage>()
