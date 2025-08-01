@@ -39,48 +39,10 @@ public class StudentAnswerHelper
 
         try
         {
-            // Lấy chuỗi đáp án hiện tại từ cache (có fallback về database)
-            var currentAnswersString = await _sessionCacheHelper.GetStudentAnswersFromCacheAsync(studentCode, shuffledExamPaperId);
+            // Tối ưu: Chỉ gọi Redis 1 lần để lấy và cập nhật đáp án
+            var (success, message, newAnswersString) = await _sessionCacheHelper.GetAndUpdateStudentAnswersAsync(
+                studentCode, shuffledExamPaperId, index, answer);
             
-            if (string.IsNullOrEmpty(currentAnswersString))
-            {
-                _logger.LogError("Không tìm thấy chuỗi đáp án cho sinh viên {StudentCode} với ShuffledExamPaperId {ShuffledExamPaperId}", 
-                    studentCode, shuffledExamPaperId);
-                return (false, "Không tìm thấy bài thi của sinh viên", null);
-            }
-
-            // Tách chuỗi đáp án thành mảng
-            var answerParts = currentAnswersString.Split(';', StringSplitOptions.RemoveEmptyEntries);
-            var updatedParts = new List<string>();
-
-            // Cập nhật đáp án tại index tương ứng
-            bool found = false;
-            foreach (var part in answerParts)
-            {
-                if (part.StartsWith($"({index},"))
-                {
-                    updatedParts.Add($"({index},{answer})");
-                    found = true;
-                }
-                else if (!string.IsNullOrWhiteSpace(part))
-                {
-                    updatedParts.Add(part);
-                }
-            }
-
-            // Nếu không tìm thấy index, thêm mới
-            if (!found)
-            {
-                updatedParts.Add($"({index},{answer})");
-            }
-
-            // Tạo chuỗi đáp án mới
-            string newAnswersString = string.Join(";", updatedParts) + ";";
-
-            // Cập nhật vào cache (có fallback về database)
-            var (success, message) = await _sessionCacheHelper.UpdateStudentAnswersInCacheAsync(
-                studentCode, shuffledExamPaperId, newAnswersString);
-
             if (success)
             {
                 _logger.LogInformation("Đã lưu đáp án thành công. Chuỗi đáp án mới: {NewAnswers}", newAnswersString);

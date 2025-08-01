@@ -17,9 +17,7 @@ namespace backend_manage.Extensions
             app.UseCors("AllowAll"); // ✅ Dùng 1 lần, đúng policy
 
             // app.UseHttpsRedirection(); // Bật lại nếu dùng HTTPS
-
-            app.UseMiddleware<JwtBlacklistMiddleware>(); // Check token trong blacklist
-
+            
             app.UseAuthentication();
             app.UseAuthorization();
 

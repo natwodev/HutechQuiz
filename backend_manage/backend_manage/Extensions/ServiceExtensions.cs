@@ -95,15 +95,20 @@ namespace backend_manage.Extensions
                 try
                 {
                     var options = ConfigurationOptions.Parse(redisConnectionString);
-                    options.ConnectRetry = 1; // Chỉ retry 1 lần để khởi động nhanh
-                    options.ConnectTimeout = 2000; // Timeout 2 giây
-                    options.SyncTimeout = 2000;
-                    options.ResponseTimeout = 2000;
+                    options.ConnectRetry = 3; // Tăng retry lên 3 lần
+                    options.ConnectTimeout = 10000; // Tăng timeout lên 10 giây
+                    options.SyncTimeout = 10000;
+                    options.ResponseTimeout = 10000;
                     options.KeepAlive = 60;
                     options.AbortOnConnectFail = false;
-                    options.ReconnectRetryPolicy = new ExponentialRetry(3);
+                    options.ReconnectRetryPolicy = new ExponentialRetry(5); // Tăng retry policy
                     options.ConfigCheckSeconds = 30;
-                    options.AsyncTimeout = 2000;
+                    options.AsyncTimeout = 10000;
+                    
+                    // Thêm cấu hình cho high concurrency
+                    options.TieBreaker = "hutech_quiz_tiebreaker";
+                    options.DefaultDatabase = 0;
+                    options.ChannelPrefix = "hutech_quiz";
                     
                     logger.LogInformation("Đang kết nối Redis với connection string: {ConnectionString}", redisConnectionString);
                     var redis = ConnectionMultiplexer.Connect(options);
@@ -112,7 +117,7 @@ namespace backend_manage.Extensions
                     var db = redis.GetDatabase();
                     var pingResult = db.Ping();
                     
-                    if (pingResult.TotalMilliseconds < 5000) // Nếu ping thành công trong 5 giây
+                    if (pingResult.TotalMilliseconds < 15000) // Tăng timeout lên 15 giây
                     {
                         logger.LogInformation("✅ Kết nối Redis thành công! Ping time: {PingTime}ms", pingResult.TotalMilliseconds);
                         return redis;

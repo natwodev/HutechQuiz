@@ -17,6 +17,23 @@ Log.Logger = new LoggerConfiguration()
 
 builder.Host.UseSerilog();
 
+// Cấu hình Kestrel server cho high concurrency và tăng timeout
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.Limits.MaxConcurrentConnections = 2000; // Tăng số connection đồng thời
+    options.Limits.MaxConcurrentUpgradedConnections = 2000;
+    options.Limits.MaxRequestBodySize = 10 * 1024 * 1024; // 10MB
+    options.Limits.KeepAliveTimeout = TimeSpan.FromMinutes(5); // Tăng keep-alive
+    options.Limits.RequestHeadersTimeout = TimeSpan.FromSeconds(60); // Tăng timeout
+    
+    // Cấu hình thread pool
+    options.Limits.MaxRequestBufferSize = 1024 * 1024; // 1MB
+    options.Limits.MaxRequestLineSize = 8192; // 8KB
+    
+    // Tối ưu cho performance
+    options.AllowSynchronousIO = false;
+});
+
 // Add services to the container.
 builder.Services.AddOpenApi();
 
