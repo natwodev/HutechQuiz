@@ -17,55 +17,161 @@ public class ExamPaperHelper
     private readonly IRepository<ShuffledExamPaper> _shuffledExamPaperRepository;
     private readonly IRepository<ExamSessionSubject> _examSessionSubjectRepository;
     private readonly AutoMapper.IMapper _mapper;
+    private readonly StudentExamSessionCacheHelper _sessionCacheHelper;
+
 
     public ExamPaperHelper(
         IRedisService redisService,
         ILogger<ExamPaperHelper> logger,
         IRepository<ShuffledExamPaper> shuffledExamPaperRepository,
         IRepository<ExamSessionSubject> examSessionSubjectRepository,
-        AutoMapper.IMapper mapper)
+        AutoMapper.IMapper mapper,
+        StudentExamSessionCacheHelper sessionCacheHelper)
     {
         _redisService = redisService;
         _logger = logger;
         _shuffledExamPaperRepository = shuffledExamPaperRepository;
         _examSessionSubjectRepository = examSessionSubjectRepository;
         _mapper = mapper;
+        _sessionCacheHelper = sessionCacheHelper;
     }
 
-    // Cache danh sách ShuffledExamPaperId theo OriginalExamPaperId
-    private async Task CacheAvailablePapersAsync(int originalExamPaperId, List<ShuffledExamPaper> papers)
+    //dùng để bắt đầu thi()
+    #region GetStudentExamSessionAndExamPaperAsync
+    public async Task<(StudentExamSessionCacheDto studentExamSessionDto, ShuffledExamPaperDto? existingExamPaper)> GetStudentExamSessionAndExamPaperAsync(string studentCode, int studentExamSessionId)
+    {
+        var (redisAvailable, studentExamSessionDto) = await _sessionCacheHelper.GetStudentExamSessionAsync(studentCode, studentExamSessionId);
+
+        if (studentExamSessionDto == null)
+        {
+            _logger.LogWarning("Không tìm thấy phiên thi của sinh viên {StudentCode} với ID phiên thi {SessionId}", studentCode, studentExamSessionId);
+            return (null, null);
+        }
+
+        if (!studentExamSessionDto.ShuffledExamPaperId.HasValue)
+        {
+            _logger.LogInformation("Chưa có đề thi nên sẽ random đề thi mới cho sinh viên {StudentCode}", studentCode);
+            var newExamPaper = await CreateNewExamPaperAsync(studentExamSessionDto.ExamSessionSubjectId, studentCode);
+            return (studentExamSessionDto, newExamPaper);
+        }
+
+        _logger.LogInformation("Đã có đề thi, tiến hành lấy từ Redis với ID {ShuffledExamPaperId}", studentExamSessionDto.ShuffledExamPaperId.Value);
+        var existingExamPaper = await GetExamFromRedisAsync(studentExamSessionDto.ShuffledExamPaperId.Value);
+        return (studentExamSessionDto, existingExamPaper);
+    }
+
+    
+    //chọn đề thi cho sinh viên
+    private async Task<ShuffledExamPaperDto> CreateNewExamPaperAsync(int examSessionSubjectId, string studentCode)
+    {
+        var shuffledExamPaper = await GetRandomExamPaperAsync(examSessionSubjectId);
+        
+        _logger.LogInformation("Đã chọn ngẫu nhiên đề thi {ShuffledExamPaperId} cho sinh viên {StudentCode}", shuffledExamPaper.ShuffledExamPaperId, studentCode);
+        
+        // Thử lấy đề từ cache trước, fallback về database
+        var paperDto = await TryGetExamFromCacheAsync(shuffledExamPaper.ShuffledExamPaperId, studentCode);
+        if (paperDto == null)
+        {
+            _logger.LogInformation("Đang lấy đề thi từ db");
+            var pp  = await GetExamFromDatabaseAsync(shuffledExamPaper.ShuffledExamPaperId);
+            paperDto = pp;
+        }
+        
+        //Sẽ cập nhật redis và đưa mess vào rabit mq ở đây để lưu vào db
+        //cập nhật id đề thi vào phiên thi 
+        //cập nhật chuỗi đáp án rỗng vào phiên
+        //cập iscomplete là 1 vào redis đánh dấu đã làm bài không cho phép làm bài lại(admin có thể mở)
+        //đưa mess vào rabit mq để lưu id đề vào phiên , thời gian làm bài , chuỗi đáp án, iscomplete
+
+        
+        return paperDto;
+    }
+    
+    
+    
+     public async Task<ShuffledExamPaper> GetRandomExamPaperAsync(int examSessionSubjectId)
+    {
+        _logger.LogInformation("Sinh viên chưa được gán đề thi, đang chọn đề ngẫu nhiên");
+        
+        // Lấy ExamSessionSubject và kiểm tra đề gốc
+        var examSessionSubject = await _examSessionSubjectRepository.GetQueryable()
+            .FirstOrDefaultAsync(x => x.ExamSessionSubjectId == examSessionSubjectId);
+        if (examSessionSubject == null)
+        {
+            _logger.LogError("Không tìm thấy ca thi môn {ExamSessionSubjectId}", examSessionSubjectId);
+            throw new Exception("Không tìm thấy ca thi môn này.");
+        }
+        if (examSessionSubject.OriginalExamPaperId == null)
+        {
+            _logger.LogError("Ca thi môn {ExamSessionSubjectId} chưa có đề thi gốc", examSessionSubjectId);
+            throw new Exception("Chưa có đề thi gốc cho ca thi này.");
+        }
+        
+        // Thử lấy từ cache trước
+        var randomPaperId = await GetRandomPaperIdFromCacheAsync(examSessionSubject.OriginalExamPaperId.Value);
+        if (randomPaperId.HasValue)
+        {
+            // Lấy chi tiết đề từ database
+            var cachedExamPaper = await _shuffledExamPaperRepository.GetQueryable()
+                .FirstOrDefaultAsync(p => p.ShuffledExamPaperId == randomPaperId.Value);
+            
+            if (cachedExamPaper != null)
+            {
+                _logger.LogInformation("Đã chọn ngẫu nhiên đề thi {ShuffledExamPaperId} từ cache", cachedExamPaper.ShuffledExamPaperId);
+                return cachedExamPaper;
+            }
+        }
+        
+        // Fallback về database nếu cache miss
+        _logger.LogInformation("Không lấy được danh sách đề trên redis,chuyển sang lấy từ database");
+        var availablePapers = await _shuffledExamPaperRepository.GetQueryable()
+            .Where(p => p.OriginalExamPaperId == examSessionSubject.OriginalExamPaperId && p.IsApproved == true)
+            .ToListAsync();
+        
+        if (!availablePapers.Any())
+        {
+            _logger.LogError("Không có đề thi hoán vị nào được phê duyệt cho ca thi {ExamSessionSubjectId}", 
+                examSessionSubjectId);
+            throw new Exception("Chưa có đề thi hoán vị đã được phê duyệt cho ca thi này.");
+        }
+        
+        _logger.LogInformation("Tìm thấy {Count} đề thi hoán vị khả dụng", availablePapers.Count);
+        
+        // Cache lại cho lần sau
+        await CacheAvailablePapersAsync(examSessionSubject.OriginalExamPaperId.Value, availablePapers);
+        
+        var random = new Random();
+        var selectedExamPaper = availablePapers[random.Next(availablePapers.Count)];
+        
+        _logger.LogInformation("Đã chọn ngẫu nhiên đề thi {ShuffledExamPaperId}", selectedExamPaper.ShuffledExamPaperId);
+        return selectedExamPaper;
+    }
+
+    
+    #endregion
+    
+    
+
+    private async Task<ShuffledExamPaperDto?> TryGetExamFromCacheAsync(int shuffledExamPaperId, string studentCode)
     {
         try
         {
-            // Kiểm tra Redis connection trước khi cache
-            if (!_redisService.IsConnected)
+            _logger.LogInformation("Thử lấy đề thi {ShuffledExamPaperId} từ Redis", shuffledExamPaperId);
+            var paperDto = await GetExamFromRedisAsync(shuffledExamPaperId);
+            if (paperDto != null)
             {
-                _logger.LogWarning("Redis không khả dụng, bỏ qua cache available papers cho OriginalExamPaperId {OriginalExamPaperId}", 
-                    originalExamPaperId);
-                return;
+                _logger.LogInformation("Đã lấy được đề thi từ Redis cho sinh viên {StudentCode}", studentCode);
+                return paperDto;
             }
-
-            var db = _redisService.GetDatabase();
-            string cacheKey = $"available_papers:{originalExamPaperId}";
-            
-            // Convert sang array of RedisValue
-            var paperIds = papers.Select(p => (RedisValue)p.ShuffledExamPaperId).ToArray();
-            
-            // Lưu vào Redis Set với TTL 6 giờ
-            await db.SetAddAsync(cacheKey, paperIds);
-            await db.KeyExpireAsync(cacheKey, TimeSpan.FromHours(6));
-            
-            _logger.LogInformation("Đã cache {Count} đề thi cho OriginalExamPaperId {OriginalExamPaperId}", 
-                papers.Count, originalExamPaperId);
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Lỗi khi cache available papers cho OriginalExamPaperId {OriginalExamPaperId}", 
-                originalExamPaperId);
+            _logger.LogWarning(ex, "Lỗi khi lấy đề thi từ Redis, sẽ lấy từ database");
         }
+        return null;
     }
 
-    // Lấy random ShuffledExamPaperId từ cache
+   
     private async Task<int?> GetRandomPaperIdFromCacheAsync(int originalExamPaperId)
     {
         try
@@ -106,102 +212,99 @@ public class ExamPaperHelper
             return null;
         }
     }
-
-    // Preload tất cả approved papers vào cache
-    public async Task PreloadAllApprovedPapersAsync()
+    
+    
+    
+    
+    // Cache danh sách ShuffledExamPaperId theo OriginalExamPaperId
+    private async Task CacheAvailablePapersAsync(int originalExamPaperId, List<ShuffledExamPaper> papers)
     {
         try
         {
-            // Kiểm tra Redis connection trước khi preload
+            // Kiểm tra Redis connection trước khi cache
             if (!_redisService.IsConnected)
             {
-                _logger.LogWarning("Redis không khả dụng, bỏ qua preload approved papers vào cache");
+                _logger.LogWarning("Redis không khả dụng, bỏ qua cache available papers cho OriginalExamPaperId {OriginalExamPaperId}", 
+                    originalExamPaperId);
                 return;
             }
 
-            _logger.LogInformation("Bắt đầu preload tất cả approved papers vào cache");
+            var db = _redisService.GetDatabase();
+            string cacheKey = $"available_papers:{originalExamPaperId}";
             
-            // Lấy tất cả OriginalExamPaperId có approved papers
-            var originalExamPaperIds = await _shuffledExamPaperRepository.GetQueryable()
-                .Where(p => p.IsApproved == true)
-                .Select(p => p.OriginalExamPaperId)
-                .Distinct()
-                .ToListAsync();
+            // Convert sang array of RedisValue
+            var paperIds = papers.Select(p => (RedisValue)p.ShuffledExamPaperId).ToArray();
             
-            foreach (var originalExamPaperId in originalExamPaperIds)
-            {
-                var papers = await _shuffledExamPaperRepository.GetQueryable()
-                    .Where(p => p.OriginalExamPaperId == originalExamPaperId && p.IsApproved == true)
-                    .ToListAsync();
-                
-                await CacheAvailablePapersAsync(originalExamPaperId, papers);
-            }
+            // Lưu vào Redis Set với TTL 6 giờ
+            await db.SetAddAsync(cacheKey, paperIds);
+            await db.KeyExpireAsync(cacheKey, TimeSpan.FromHours(6));
             
-            _logger.LogInformation("Hoàn thành preload {Count} OriginalExamPaper vào cache", originalExamPaperIds.Count);
+            _logger.LogInformation("Đã cache {Count} đề thi cho OriginalExamPaperId {OriginalExamPaperId}", 
+                papers.Count, originalExamPaperId);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Lỗi khi preload approved papers vào cache");
+            _logger.LogWarning(ex, "Lỗi khi cache available papers cho OriginalExamPaperId {OriginalExamPaperId}", 
+                originalExamPaperId);
         }
     }
-
-    public async Task<ShuffledExamPaperDto> GetExamFromRedisAsync(int shuffledExamPaperId)
+    
+    
+    public async Task<ShuffledExamPaperDto?> GetExamFromRedisAsync(int shuffledExamPaperId)
     {
         try
         {
-            // Kiểm tra Redis connection trước khi lấy từ cache
-            if (!_redisService.IsConnected)
-            {
-                _logger.LogDebug("Redis không khả dụng, bỏ qua lấy đề thi từ cache cho ShuffledExamPaperId {ShuffledExamPaperId}", 
-                    shuffledExamPaperId);
-                return null;
-            }
-
             var db = _redisService.GetDatabase();
             string cacheKey = $"shuffled_exam_paper:{shuffledExamPaperId}";
             _logger.LogInformation("Đang tìm đề thi từ Redis với key: {CacheKey}", cacheKey);
-            
+
             var cachedPaper = await db.StringGetAsync(cacheKey);
-            
+
             if (cachedPaper.HasValue)
             {
                 var cachedValue = cachedPaper.ToString();
-                try 
+                try
                 {
                     var paperDto = JsonSerializer.Deserialize<ShuffledExamPaperDto>(cachedValue);
-                    _logger.LogInformation("Đã lấy được đề thi từ Redis");
-                    return paperDto;
+                    if (paperDto != null)
+                    {
+                        _logger.LogInformation("Đã lấy được đề thi từ Redis");
+                        return paperDto;
+                    }
+                    else
+                    {
+                        _logger.LogWarning("Dữ liệu Redis null sau khi deserialize, xóa key: {CacheKey}", cacheKey);
+                        await db.KeyDeleteAsync(cacheKey);
+                    }
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Lỗi khi deserialize đề thi từ Redis");
+                    _logger.LogError(ex, "Lỗi khi deserialize đề thi từ Redis, xóa key: {CacheKey}", cacheKey);
                     await db.KeyDeleteAsync(cacheKey);
                 }
             }
-            
-            // Nếu không có trong Redis, lấy từ database và cache vào Redis
-            _logger.LogInformation("Không tìm thấy đề thi trong Redis, đang lấy từ database");
-            var (examPaper, examPaperDto) = await GetExamFromDatabaseAsync(shuffledExamPaperId);
-            
-            if (examPaperDto != null)
-            {
-                // Cache vào Redis
-                await CacheExamPaperAsync(shuffledExamPaperId, examPaperDto, examPaper.AnswerKey);
-                _logger.LogInformation("Đã cache đề thi từ database vào Redis");
-                
-                return examPaperDto;
-            }
-            
-            return null;
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Lỗi khi truy cập Redis để lấy đề thi");
-            return null;
         }
+
+        return null;
     }
 
-    public async Task<(ShuffledExamPaper ExamPaper, ShuffledExamPaperDto ExamPaperDto)> GetExamFromDatabaseAsync(int shuffledExamPaperId)
+    #region MyRegion
+    private async Task<ShuffledExamPaperDto> GetExamFromDatabaseAsync(int shuffledExamPaperId)
+    {
+        _logger.LogInformation("Lấy đề thi từ database cho ShuffledExamPaperId: {ShuffledExamPaperId}", shuffledExamPaperId);
+        var (examPaper, examPaperDto) = await GetExamFromDatabase(shuffledExamPaperId);
+        
+        // Cache lại vào Redis
+        await CacheExamPaperAsync(shuffledExamPaperId, examPaperDto);
+        
+        return examPaperDto;
+    }
+    
+    public async Task<(ShuffledExamPaper ExamPaper, ShuffledExamPaperDto ExamPaperDto)> GetExamFromDatabase(int shuffledExamPaperId)
     {
         _logger.LogInformation("Lấy đề thi từ database với ID: {ShuffledExamPaperId}", shuffledExamPaperId);
         
@@ -224,7 +327,7 @@ public class ExamPaperHelper
         return (shuffledExamPaper, paperDto);
     }
 
-    public async Task<bool> CacheExamPaperAsync(int shuffledExamPaperId, ShuffledExamPaperDto paperDto, string answerKey)
+    public async Task<bool> CacheExamPaperAsync(int shuffledExamPaperId, ShuffledExamPaperDto paperDto)
     {
         try
         {
@@ -242,7 +345,7 @@ public class ExamPaperHelper
             var jsonString = JsonSerializer.Serialize(paperDto);
             await db.StringSetAsync(cacheKey, jsonString, TimeSpan.FromHours(6));
             
-            _logger.LogInformation("Đã cache đề thi vào Redis (AnswerKey đã được include trong paperDto)");
+            _logger.LogInformation("Đã cache đề thi vào Redis ");
             return true;
         }
         catch (Exception ex)
@@ -251,65 +354,8 @@ public class ExamPaperHelper
             return false;
         }
     }
-
-    public async Task<ShuffledExamPaper> GetRandomExamPaperAsync(int examSessionSubjectId)
-    {
-        _logger.LogInformation("Sinh viên chưa được gán đề thi, đang chọn đề ngẫu nhiên");
-        
-        // Lấy ExamSessionSubject và kiểm tra đề gốc
-        var examSessionSubject = await _examSessionSubjectRepository.GetQueryable()
-            .FirstOrDefaultAsync(x => x.ExamSessionSubjectId == examSessionSubjectId);
-        if (examSessionSubject == null)
-        {
-            _logger.LogError("Không tìm thấy ca thi môn {ExamSessionSubjectId}", examSessionSubjectId);
-            throw new Exception("Không tìm thấy ca thi môn này.");
-        }
-        if (examSessionSubject.OriginalExamPaperId == null)
-        {
-            _logger.LogError("Ca thi môn {ExamSessionSubjectId} chưa có đề thi gốc", examSessionSubjectId);
-            throw new Exception("Chưa có đề thi gốc cho ca thi này.");
-        }
-        
-        // Thử lấy từ cache trước
-        var randomPaperId = await GetRandomPaperIdFromCacheAsync(examSessionSubject.OriginalExamPaperId.Value);
-        if (randomPaperId.HasValue)
-        {
-            // Lấy chi tiết đề từ database
-            var cachedExamPaper = await _shuffledExamPaperRepository.GetQueryable()
-                .FirstOrDefaultAsync(p => p.ShuffledExamPaperId == randomPaperId.Value);
-            
-            if (cachedExamPaper != null)
-            {
-                _logger.LogInformation("Đã chọn ngẫu nhiên đề thi {ShuffledExamPaperId} từ cache", cachedExamPaper.ShuffledExamPaperId);
-                return cachedExamPaper;
-            }
-        }
-        
-        // Fallback về database nếu cache miss
-        _logger.LogInformation("Cache miss, lấy từ database");
-        var availablePapers = await _shuffledExamPaperRepository.GetQueryable()
-            .Where(p => p.OriginalExamPaperId == examSessionSubject.OriginalExamPaperId && p.IsApproved == true)
-            .ToListAsync();
-        
-        if (!availablePapers.Any())
-        {
-            _logger.LogError("Không có đề thi hoán vị nào được phê duyệt cho ca thi {ExamSessionSubjectId}", 
-                examSessionSubjectId);
-            throw new Exception("Chưa có đề thi hoán vị đã được phê duyệt cho ca thi này.");
-        }
-        
-        _logger.LogInformation("Tìm thấy {Count} đề thi hoán vị khả dụng", availablePapers.Count);
-        
-        // Cache lại cho lần sau
-        await CacheAvailablePapersAsync(examSessionSubject.OriginalExamPaperId.Value, availablePapers);
-        
-        var random = new Random();
-        var selectedExamPaper = availablePapers[random.Next(availablePapers.Count)];
-        
-        _logger.LogInformation("Đã chọn ngẫu nhiên đề thi {ShuffledExamPaperId}", selectedExamPaper.ShuffledExamPaperId);
-        return selectedExamPaper;
-    }
-
+    #endregion
+    // /// // // // // //
     public async Task<(bool Success, string Message, Dictionary<int, string>? CorrectAnswers)> GetAnswerKeyAsync(int shuffledExamPaperId)
     {
         try

@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using backend_manage.Data;
 using backend_manage.Entities;
 using backend_manage.Repositories.Interfaces;
@@ -67,5 +68,11 @@ namespace backend_manage.Repositories.AuthRepository
         {
             return _dbSet.AsQueryable();
         }
+        
+        public async Task<T?> GetByConditionAsync(Expression<Func<T, bool>> predicate)
+        {
+            return await _dbSet.AsNoTracking().FirstOrDefaultAsync(predicate);
+        }
+
     }
 }

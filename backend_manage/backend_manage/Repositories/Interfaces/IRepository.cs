@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using backend_manage.Entities;
 
 namespace backend_manage.Repositories.Interfaces
@@ -10,5 +11,7 @@ namespace backend_manage.Repositories.Interfaces
         Task<T> UpdateAsync(T entity);
         Task<bool> DeleteAsync(object id);
         IQueryable<T> GetQueryable();
+        Task<T?> GetByConditionAsync(Expression<Func<T, bool>> predicate);
+
     }
 } 
