@@ -109,23 +109,7 @@ public class StudentService : IStudentService
                 ErrorMessage = "Không tìm thấy sinh viên với mã này."
             };
         }
-        /*
-        if (student.IsLogin)
-        {
-            return new StudentAuthResultDto
-            {
-                IsSuccess = false,
-                ErrorMessage = "Sinh viên đã có phiên đăng nhập."
-            };
-        }*/
-        /*
-        student.IsLogin = true;
-        student.LastLoggedIn = DateTimeHelper.GetVietnamTime();
-        await _repository.UpdateAsync(student);
-        */ //tạm thời không dùng tới giới hạn phiên đăng nhập và thời gian đăng nhập lần cuối
-        // Cập nhật lại vào Redis cache sau khi thay đổi
-        await _studentCacheHelper.UpdateStudentInRedisAsync(student);
-
+        
         // Sinh JWT token như cũ, nhưng không có username
         var tokenHandler = new JwtSecurityTokenHandler();
         var key = Encoding.ASCII.GetBytes(_configuration["JWT:key"] ?? "default_secret_key");

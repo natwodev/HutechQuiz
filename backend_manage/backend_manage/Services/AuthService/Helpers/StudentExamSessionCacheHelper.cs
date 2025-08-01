@@ -38,10 +38,7 @@ public class StudentExamSessionCacheHelper
         _studentRepository = studentRepository;
         _mapper = mapper;
     }
-
-    /// <summary>
-    /// Cập nhật StudentAnswersString trong cache với fallback về database
-    /// </summary>
+    
     public async Task<(bool Success, string Message)> UpdateStudentAnswersInCacheAsync(
         string studentCode, int shuffledExamPaperId, string newAnswersString)
     {

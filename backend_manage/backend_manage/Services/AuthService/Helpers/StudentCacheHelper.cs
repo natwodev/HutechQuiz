@@ -13,7 +13,7 @@ public class StudentCacheHelper
     private readonly IRepository<Student> _studentRepository;
 
     public StudentCacheHelper(
-        IConnectionMultiplexer redis, 
+        IConnectionMultiplexer redis,
         ILogger<StudentCacheHelper> logger,
         IRepository<Student> studentRepository)
     {
@@ -22,146 +22,113 @@ public class StudentCacheHelper
         _studentRepository = studentRepository;
     }
 
+    #region GetStudentFromRedisAsync
+
     public async Task<Student?> GetStudentFromRedisAsync(string studentCode)
     {
-        try
+        string key = $"student:{studentCode}";
+
+        // B1: Lấy từ cache
+        _logger.LogInformation("Bắt đầu tìm sinh viên với key {Key}", key);
+        var (redisAvailable, cachedStudent) = await GetStudentFromCache(key);
+        if (cachedStudent != null)
         {
-            var db = _redis.GetDatabase();
-            string studentCacheKey = $"student:{studentCode}";
-            
-            // Thử lấy từ Redis cache trước
-            var cachedStudent = await db.StringGetAsync(studentCacheKey);
-            
-            if (cachedStudent.HasValue)
-            {
-                try
-                {
-                    var cachedStudentObj = JsonSerializer.Deserialize<Student>(cachedStudent);
-                    _logger.LogInformation("Đã lấy sinh viên {StudentCode} từ Redis cache", studentCode);
-                    return cachedStudentObj;
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning(ex, "Lỗi khi deserialize sinh viên {StudentCode} từ Redis cache, sẽ kiểm tra database", studentCode);
-                    // Nếu lỗi deserialize, xóa cache và kiểm tra database
-                    try
-                    {
-                        await db.KeyDeleteAsync(studentCacheKey);
-                    }
-                    catch (Exception deleteEx)
-                    {
-                        _logger.LogWarning(deleteEx, "Không thể xóa cache key {Key} do Redis không khả dụng", studentCacheKey);
-                    }
-                }
-            }
-            
-            _logger.LogInformation("Không tìm thấy sinh viên {StudentCode} trong Redis cache, kiểm tra database", studentCode);
-            
-            // Fallback về database
-            try
-            {
-                var students = await _studentRepository.GetAllAsync();
-                var dbStudent = students.FirstOrDefault(s => s.StudentCode == studentCode);
-                
-                if (dbStudent != null)
-                {
-                    // Cache lại vào Redis (nếu Redis khả dụng)
-                    try
-                    {
-                        await UpdateStudentInRedisAsync(dbStudent);
-                        _logger.LogInformation("Đã tìm thấy sinh viên {StudentCode} trong database và cache lại vào Redis", studentCode);
-                    }
-                    catch (Exception cacheEx)
-                    {
-                        _logger.LogWarning(cacheEx, "Không thể cache sinh viên {StudentCode} do Redis không khả dụng", studentCode);
-                    }
-                    
-                    return dbStudent;
-                }
-                else
-                {
-                    _logger.LogInformation("Không tìm thấy sinh viên {StudentCode} trong database", studentCode);
-                    return null;
-                }
-            }
-            catch (Exception dbEx)
-            {
-                _logger.LogError(dbEx, "Lỗi khi truy vấn database cho sinh viên {StudentCode}", studentCode);
-                return null;
-            }
+            _logger.LogInformation("Tìm thấy sinh viên với {key}", key);
+            return cachedStudent;
         }
-        catch (Exception ex)
+
+        // Redis có "null" → vẫn truy vấn DB, KHÔNG return null ở đây nữa
+        // B2: Fallback DB
+        if (!redisAvailable)
         {
-            _logger.LogError(ex, "Lỗi khi lấy sinh viên {StudentCode} từ Redis cache", studentCode);
-            
-            // Fallback về database nếu có lỗi Redis
-            try
-            {
-                var students = await _studentRepository.GetAllAsync();
-                var dbStudent = students.FirstOrDefault(s => s.StudentCode == studentCode);
-                
-                if (dbStudent != null)
-                {
-                    _logger.LogInformation("Đã tìm thấy sinh viên {StudentCode} trong database (fallback)", studentCode);
-                    return dbStudent;
-                }
-            }
-            catch (Exception dbEx)
-            {
-                _logger.LogError(dbEx, "Lỗi khi truy vấn database cho sinh viên {StudentCode} (fallback)", studentCode);
-            }
-            
-            return null;
+            _logger.LogInformation("Tìm kiếm sinh viên ở db vì không kết nối được với redis {key}", key);
         }
+
+        var dbStudent = await GetStudentFromDb(studentCode);
+
+        // B3: Cache lại nếu Redis hoạt động
+        if (redisAvailable)
+            await CacheStudent(key, dbStudent);
+
+        return dbStudent;
     }
 
-    public async Task<bool> UpdateStudentInRedisAsync(Student student)
+    private async Task<Student?> GetStudentFromDb(string studentCode)
     {
         try
         {
-            var db = _redis.GetDatabase();
-            string studentCacheKey = $"student:{student.StudentCode}";
-            
-            var studentJson = JsonSerializer.Serialize(student);
-            await db.StringSetAsync(studentCacheKey, studentJson, TimeSpan.FromHours(6));
-            
-            _logger.LogDebug("Đã cập nhật sinh viên {StudentCode} trong Redis cache", student.StudentCode);
-            return true;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Lỗi khi cập nhật sinh viên {StudentCode} trong Redis cache", student.StudentCode);
-            return false;
-        }
-    }
-
-    public async Task<bool> RemoveStudentFromRedisAsync(string studentCode)
-    {
-        try
-        {
-            var db = _redis.GetDatabase();
-            string studentCacheKey = $"student:{studentCode}";
-            
-            var result = await db.KeyDeleteAsync(studentCacheKey);
-            
-            if (result)
+            var student = await _studentRepository
+                .GetByConditionAsync(s => s.StudentCode == studentCode);
+            if (student == null)
             {
-                _logger.LogDebug("Đã xóa sinh viên {StudentCode} khỏi Redis cache", studentCode);
+                _logger.LogInformation("Không có sinh viên nào với mã: {key}", studentCode);
             }
             else
             {
-                _logger.LogDebug("Không tìm thấy sinh viên {StudentCode} trong Redis cache để xóa", studentCode);
+                _logger.LogInformation("Đã tìm thấy sinh viên với mã: {key}", studentCode);
             }
-            
-            return result;
+            return student;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Lỗi khi xóa sinh viên {StudentCode} khỏi Redis cache", studentCode);
-            return false;
+            _logger.LogError(ex, "Lỗi khi truy vấn sinh viên: {StudentCode} từ DB", studentCode);
+            return null;
+        }
+    }
+    
+
+private async Task CacheStudent(string key, Student? student)
+    {
+        try
+        {
+            var db = _redis.GetDatabase();
+            if (student == null)
+            {
+                await db.StringSetAsync(key, "null", TimeSpan.FromMinutes(3));
+            }
+            else
+            {
+                var json = JsonSerializer.Serialize(student);
+                await db.StringSetAsync(key, json, TimeSpan.FromMinutes(30));
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Không thể cache sinh viên với key {Key}", key);
+        }
+    }
+    private async Task<(bool redisAvailable, Student? student)> GetStudentFromCache(string key)
+    {
+        try
+        {
+            var db = _redis.GetDatabase();
+            var cachedValue = await db.StringGetAsync(key);
+
+            if (!cachedValue.HasValue)
+            {
+                _logger.LogInformation("Redis không có dữ liệu cho {Key}", key);
+                return (true, null); 
+            }
+
+            if (cachedValue == "null")
+            {
+                _logger.LogInformation("Redis cache null cho {Key}", key);
+                return (true, null); // Redis hoạt động, nhưng là null
+            }
+
+            var student = JsonSerializer.Deserialize<Student>(cachedValue);
+            return (true, student);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Redis lỗi khi lấy sinh viên từ key {Key}", key);
+            return (false, null); // Redis lỗi
         }
     }
 
+
+    #endregion
+    
     public async Task<(bool Success, string Message, int CachedCount)> PreloadStudentsToRedisAsync(IEnumerable<Student> students)
     {
         try
