@@ -127,7 +127,7 @@ namespace backend_manage.Configurations
                 var logger = sp.GetRequiredService<ILogger<RabbitMqConsumer>>();
                 var rabbitMqService = sp.GetRequiredService<IRabbitMqService>();
                 var serviceScopeFactory = sp.GetRequiredService<IServiceScopeFactory>();
-                
+                 
                 try
                 {
                     var consumer = new RabbitMqConsumer(rabbitMqService, serviceScopeFactory, logger);

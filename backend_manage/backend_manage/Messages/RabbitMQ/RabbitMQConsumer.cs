@@ -8,6 +8,8 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using backend_manage.DTOs;
 using backend_manage.Services.Interfaces;
+using backend_manage.Messages;
+using backend_manage.Repositories.Interfaces;
 
 namespace backend_manage.Messages.RabbitMQ
 {
@@ -36,12 +38,14 @@ namespace backend_manage.Messages.RabbitMQ
         private const string StudentAnswerSavedQueue = "save_answer_queue";
         private const string SaveExamQueue = "save_exam_queue";
         private const string StudentImportQueue = "student_import_queue";
+        private const string StartExamQueue = "start_exam_queue";
         
         // Cấu hình số lượng consumers cho xử lý song song
         private const int StudentAnswerConsumerCount = 2; // 2 consumers cho lưu đáp án
         private const int ExamSubmissionConsumerCount = 2; // 2 consumers cho nộp bài
         private const int SaveExamConsumerCount = 2; // 2 consumers cho lưu bài
         private const int StudentImportConsumerCount = 2; // 1 consumer cho import (vì import nặng)
+        private const int StartExamConsumerCount = 2; // 2 consumers cho bắt đầu làm bài
 
         public RabbitMqConsumer(
             IRabbitMqService rabbitMqService,
@@ -85,8 +89,15 @@ namespace backend_manage.Messages.RabbitMQ
                     _logger.LogInformation("Bắt đầu consumer {ConsumerId} cho queue: {QueueName}", i + 1, StudentImportQueue);
                 }
                 
-                _logger.LogInformation("Đã khởi tạo {StudentAnswerCount} consumers cho lưu đáp án, {ExamSubmissionCount} consumers cho nộp bài, {SaveExamCount} consumers cho lưu bài và {StudentImportCount} consumer cho import", 
-                    StudentAnswerConsumerCount, ExamSubmissionConsumerCount, SaveExamConsumerCount, StudentImportConsumerCount);
+                // Tạo consumer cho start_exam_queue
+                for (int i = 0; i < StartExamConsumerCount; i++)
+                {
+                    _rabbitMqService.Subscribe<StartExamMessage>(StartExamQueue, ProcessStartExam);
+                    _logger.LogInformation("Bắt đầu consumer {ConsumerId} cho queue: {QueueName}", i + 1, StartExamQueue);
+                }
+                
+                _logger.LogInformation("Đã khởi tạo {StudentAnswerCount} consumers cho lưu đáp án, {ExamSubmissionCount} consumers cho nộp bài, {SaveExamCount} consumers cho lưu bài, {StudentImportCount} consumer cho import và {StartExamCount} consumer cho bắt đầu làm bài", 
+                    StudentAnswerConsumerCount, ExamSubmissionConsumerCount, SaveExamConsumerCount, StudentImportConsumerCount, StartExamConsumerCount);
             }
             catch (Exception ex)
             {
@@ -181,7 +192,7 @@ namespace backend_manage.Messages.RabbitMQ
                 throw;
             }
         }
-
+        
         private async Task ProcessSaveExam(ExamSubmissionMessage message)
         {
             try
@@ -315,6 +326,48 @@ namespace backend_manage.Messages.RabbitMQ
                 using var scope = _serviceScopeFactory.CreateScope();
                 var redis = scope.ServiceProvider.GetRequiredService<StackExchange.Redis.IConnectionMultiplexer>();
                 await UpdateImportProgress(redis, message.JobId, 0, "Failed", $"Lỗi: {ex.Message}");
+            }
+        }
+
+        private async Task ProcessStartExam(StartExamMessage message)
+        {
+            try
+            {
+                using var scope = _serviceScopeFactory.CreateScope();
+                var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+                var studentExamSession = dbContext.StudentExamSessions
+                    .FirstOrDefault(x => x.StudentExamSessionId == message.StudentExamSessionId
+                        && x.StudentCode == message.StudentCode);
+
+                if (studentExamSession == null)
+                {
+                    _logger.LogWarning(
+                        "Không tìm thấy StudentExamSession. StudentExamSessionId: {StudentExamSessionId}, StudentCode: {StudentCode}",
+                        message.StudentExamSessionId,
+                        message.StudentCode
+                    );
+                    return;
+                }
+
+                // Cập nhật thông tin bắt đầu làm bài
+                studentExamSession.StartTime = message.StartTime;
+                studentExamSession.ShuffledExamPaperId = message.ShuffledExamPaperId;
+                studentExamSession.StudentAnswersString = message.StudentAnswersString;
+                studentExamSession.IsCompleted = message.IsCompleted;
+
+                dbContext.SaveChanges();
+
+                _logger.LogInformation(
+                    "Đã cập nhật thông tin bắt đầu làm bài vào DB. StudentCode: {StudentCode}, StudentExamSessionId: {StudentExamSessionId}, ShuffledExamPaperId: {ShuffledExamPaperId}, StartTime: {StartTime}",
+                    message.StudentCode, message.StudentExamSessionId, message.ShuffledExamPaperId, message.StartTime
+                );
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi xử lý message bắt đầu làm bài. StudentCode: {StudentCode}, StudentExamSessionId: {StudentExamSessionId}",
+                    message.StudentCode, message.StudentExamSessionId);
+                throw;
             }
         }
 

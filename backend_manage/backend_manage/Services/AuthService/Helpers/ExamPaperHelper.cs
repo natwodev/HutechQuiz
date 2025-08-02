@@ -7,6 +7,8 @@ using Microsoft.Extensions.Logging;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using backend_manage.Hubs;
+using backend_manage.Messages;
+using backend_manage.Messages.RabbitMQ;
 using backend_manage.Repositories.Interfaces;
 using backend_manage.Services.Interfaces;
 
@@ -20,7 +22,7 @@ public class ExamPaperHelper
     private readonly IRepository<ExamSessionSubject> _examSessionSubjectRepository;
     private readonly AutoMapper.IMapper _mapper;
     private readonly StudentExamSessionCacheHelper _sessionCacheHelper;
-
+    private readonly IRabbitMqService _rabbitMqService;
 
     public ExamPaperHelper(
         IRedisService redisService,
@@ -28,7 +30,9 @@ public class ExamPaperHelper
         IRepository<ShuffledExamPaper> shuffledExamPaperRepository,
         IRepository<ExamSessionSubject> examSessionSubjectRepository,
         AutoMapper.IMapper mapper,
-        StudentExamSessionCacheHelper sessionCacheHelper)
+        StudentExamSessionCacheHelper sessionCacheHelper,
+        IRabbitMqService rabbitMqService
+        )
     {
         _redisService = redisService;
         _logger = logger;
@@ -36,6 +40,7 @@ public class ExamPaperHelper
         _examSessionSubjectRepository = examSessionSubjectRepository;
         _mapper = mapper;
         _sessionCacheHelper = sessionCacheHelper;
+        _rabbitMqService = rabbitMqService;
     }
 
     //dùng để bắt đầu thi()
@@ -64,6 +69,20 @@ public class ExamPaperHelper
             studentExamSessionDto.StudentAnswersString = result;
             studentExamSessionDto.IsCompleted = true;
             await _sessionCacheHelper.UpdateStudentExamSessionAsync(studentCode,studentExamSessionDto);
+
+            var startExamMessage = new StartExamMessage
+            {
+                StudentExamSessionId = studentExamSessionId,
+                StudentCode = studentCode,
+                StartTime = DateTimeHelper.GetVietnamTime(),
+                ShuffledExamPaperId = newExamPaper.ShuffledExamPaperId,
+                StudentAnswersString = result,
+                IsCompleted = true
+            };
+            
+            _rabbitMqService.PublishMessage("start_exam_queue",startExamMessage);
+            _logger.LogInformation("Đã gửi đến message để lưu thông tin vào db cho sinh viên {studentCode}",studentCode);
+            
             return (studentExamSessionDto, newExamPaper);
         }
 
