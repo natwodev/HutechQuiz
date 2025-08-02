@@ -205,7 +205,7 @@ public class StudentService : IStudentService
         };
         
         // Gửi message vào RabbitMQ
-        _rabbitMqService.PublishMessage("student_import_queue", message);
+       // _rabbitMqService.PublishMessage("student_import_queue", message);
         
         _logger.LogInformation("Đã gửi import job {JobId} vào queue. File: {FileName}, ExamSessionSubjectCore: {Core}", 
             jobId, file.FileName, examSessionSubjectCore);
@@ -227,7 +227,6 @@ public class StudentService : IStudentService
         return await _importHelper.ImportFromExcelStreamAsync(stream, examSessionSubjectCore, examRoomId, userId);
     }
     #endregion
-
     
     #region UpdateAsync
     public async Task<Student> UpdateAsync(string id, Student student)
@@ -468,152 +467,5 @@ public class StudentService : IStudentService
 
     // Helper methods để tái sử dụng code
 
-
-
-
-
-
-    #region SubmitExamAsync
-    public async Task<(bool Success, string Message, double? Score)> SubmitExamAsync(string StudentCode,SubmitExamDto submitExamDto)
-    {
-        try
-        {
-            // Chỉ gọi Redis 1 lần và cache kết quả
-            var studentAnswersString = await _sessionCacheHelper.GetStudentAnswersFromCacheAsync(StudentCode, submitExamDto.ShuffledExamPaperId);
-            
-            if (string.IsNullOrEmpty(studentAnswersString))
-            {
-                _logger.LogError("Không tìm thấy đáp án của sinh viên trong cache");
-                return (false, "Không tìm thấy bài thi của sinh viên", null);
-            }
-            
-            // Validate session (không cần lấy lại từ Redis)
-            var validationResult = await _validationHelper.ValidateStudentExamSessionOptimizedAsync(StudentCode, submitExamDto.ShuffledExamPaperId, null);
-            
-            if (!validationResult.Success)
-            {
-                return (false, validationResult.Message, null);
-            }
-            
-            // Update answers với dữ liệu đã có
-            var (updateSuccess, updateMessage, currentAnswers) = await _answerHelper.UpdateStudentAnswersOptimizedAsync(
-                new RedisValue(studentAnswersString), submitExamDto.SaveAnswerDtos, StudentCode, submitExamDto.ShuffledExamPaperId);
-            
-            if (!updateSuccess)
-            {
-                return (false, updateMessage, null);
-            }
-            
-            // Lấy AnswerKey từ ShuffledExamPaper cache thay vì cache riêng
-            var (answerKeySuccess, answerKeyMessage, correctAnswerPairs) = await _examPaperHelper.GetAnswerKeyAsync(submitExamDto.ShuffledExamPaperId);
-            
-            if (!answerKeySuccess)
-            {
-                _logger.LogError("Không thể lấy AnswerKey: {Message}", answerKeyMessage);
-                return (false, "Không thể lấy đáp án để chấm điểm", null);
-            }
-            
-            // Tính điểm tối ưu
-            var (score, correctCount, totalQuestions) = _answerHelper.CalculateScoreOptimized(currentAnswers, correctAnswerPairs);
-            
-            // Tạo message và gửi RabbitMQ
-            var examSubmissionMessage = _answerHelper.CreateExamSubmissionMessage(StudentCode, submitExamDto.ShuffledExamPaperId, score, correctCount, totalQuestions, currentAnswers);
-            _rabbitMqService.PublishMessage("submit_exam_queue", examSubmissionMessage);
-            
-            _logger.LogInformation(
-                "Sinh viên {StudentCode} đã nộp bài thi {ShuffledExamPaperId} với điểm {Score}", 
-                StudentCode, submitExamDto.ShuffledExamPaperId, score);
-            
-            return (true, "Nộp bài thành công", score);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Lỗi khi nộp bài thi của sinh viên {StudentCode}", StudentCode);
-            return (false, $"Lỗi khi nộp bài: {ex.Message}", null);
-        }
-    }
-    #endregion
-
-    #region SaveStudentAnswerAsync
-    public async Task<(bool Success, string Message)> SaveStudentAnswerAsync(string studentCode, int shuffledExamPaperId, int index, string answer)
-    {
-        try
-        {
-            // Sử dụng helper method để cập nhật đáp án đơn lẻ
-            var (success, message, newAnswersString) = await _answerHelper.UpdateSingleAnswerAsync(
-                studentCode, shuffledExamPaperId, index, answer);
-            
-            if (!success)
-            {
-                return (false, message);
-            }
-            
-            // Gửi message qua RabbitMQ
-            var answerSavedMessage = _answerHelper.CreateAnswerSavedMessage(studentCode, shuffledExamPaperId, index, answer, newAnswersString);
-            _rabbitMqService.PublishMessage("save_answer_queue", answerSavedMessage);
-            
-            return (true, "Đã lưu đáp án thành công");
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Lỗi khi lưu đáp án của sinh viên. StudentCode: {StudentCode}, ShuffledExamPaperId: {ShuffledExamPaperId}, Index: {Index}",
-                studentCode, shuffledExamPaperId, index);
-            return (false, $"Lỗi khi lưu đáp án: {ex.Message}");
-        }
-    }
-    #endregion
-
-    #region SaveExamAsync
-    public async Task<(bool Success, string Message)> SaveExamAsync(string StudentCode, SubmitExamDto submitExamDto)
-    {
-        try
-        {
-            string sessionCacheKey = $"student_exam_session:{StudentCode}:*";
-            
-            var db = _redis.GetDatabase();
-            
-            // Chỉ gọi Redis 1 lần và cache kết quả
-            var studentAnswersString = await _sessionCacheHelper.GetStudentAnswersFromCacheAsync(StudentCode, submitExamDto.ShuffledExamPaperId);
-            
-            if (string.IsNullOrEmpty(studentAnswersString))
-            {
-                _logger.LogError("Không tìm thấy đáp án của sinh viên trong cache");
-                return (false, "Không tìm thấy bài thi của sinh viên");
-            }
-            
-            // Validate session (không cần lấy lại từ Redis)
-            var validationResult = await _validationHelper.ValidateStudentExamSessionOptimizedAsync(StudentCode, submitExamDto.ShuffledExamPaperId, null);
-            
-            if (!validationResult.Success)
-            {
-                return (false, validationResult.Message);
-            }
-            
-            // Update answers với dữ liệu đã có
-            var (updateSuccess, updateMessage, currentAnswers) = await _answerHelper.UpdateStudentAnswersOptimizedAsync(
-                new RedisValue(studentAnswersString), submitExamDto.SaveAnswerDtos, StudentCode, submitExamDto.ShuffledExamPaperId);
-            
-            if (!updateSuccess)
-            {
-                return (false, updateMessage);
-            }
-            
-            // Tạo message và gửi RabbitMQ
-            var saveExamMessage = _answerHelper.CreateSaveExamMessage(StudentCode, submitExamDto.ShuffledExamPaperId, currentAnswers);
-            _rabbitMqService.PublishMessage("save_exam_queue", saveExamMessage);
-
-            _logger.LogInformation(
-                "Sinh viên {StudentCode} đã lưu bài thi {ShuffledExamPaperId} thành công (Cache + RabbitMQ)", 
-                StudentCode, submitExamDto.ShuffledExamPaperId);
-
-            return (true, "Lưu bài thi thành công (Cache + RabbitMQ)");
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Lỗi khi lưu bài thi của sinh viên {StudentCode}", StudentCode);
-            return (false, $"Lỗi khi lưu bài thi: {ex.Message}");
-        }
-    }
-    #endregion
     
 } 

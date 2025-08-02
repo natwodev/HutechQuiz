@@ -1,9 +1,11 @@
+using System.Threading.Tasks;
 using backend_manage.Authentication.Repositories;
 using backend_manage.Entities;
 using backend_manage.Hubs;
 using backend_manage.Middlewares.Jwt;
 using backend_manage.Repositories.Interfaces;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 namespace backend_manage.Authentication.Services

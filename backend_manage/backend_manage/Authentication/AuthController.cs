@@ -3,6 +3,7 @@ using backend_manage.Authentication.Services;
 using backend_manage.Middlewares.Jwt;
 using backend_manage.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using IConfiguration = Microsoft.Extensions.Configuration.IConfiguration;
 
 namespace backend_manage.Authentication
 {

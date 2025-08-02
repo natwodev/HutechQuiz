@@ -80,7 +80,7 @@ public class ExamPaperHelper
                 IsCompleted = true
             };
             
-            _rabbitMqService.PublishMessage("start_exam_queue",startExamMessage);
+            _rabbitMqService.Publish("start_exam_queue",startExamMessage);
             _logger.LogInformation("Đã gửi đến message để lưu thông tin vào db cho sinh viên {studentCode}",studentCode);
             
             return (studentExamSessionDto, newExamPaper);
