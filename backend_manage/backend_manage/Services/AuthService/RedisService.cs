@@ -1,9 +1,7 @@
 using backend_manage.Services.Interfaces;
-using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
-using System.Threading.Tasks;
 
-namespace backend_manage.Services
+namespace backend_manage.Services.AuthService
 {
     public class RedisService : IRedisService
     {

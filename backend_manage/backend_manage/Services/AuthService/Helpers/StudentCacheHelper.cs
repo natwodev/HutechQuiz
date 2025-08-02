@@ -1,6 +1,6 @@
 using backend_manage.Entities;
 using backend_manage.Repositories.Interfaces;
-using StackExchange.Redis;
+using backend_manage.Services.Interfaces;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
 
@@ -8,16 +8,16 @@ namespace backend_manage.Services.AuthService.Helpers;
 
 public class StudentCacheHelper
 {
-    private readonly IConnectionMultiplexer _redis;
+    private readonly IRedisService _redisService;
     private readonly ILogger<StudentCacheHelper> _logger;
     private readonly IRepository<Student> _studentRepository;
 
     public StudentCacheHelper(
-        IConnectionMultiplexer redis,
+        IRedisService redisService,
         ILogger<StudentCacheHelper> logger,
         IRepository<Student> studentRepository)
     {
-        _redis = redis;
+        _redisService = redisService;
         _logger = logger;
         _studentRepository = studentRepository;
     }
@@ -31,7 +31,7 @@ public class StudentCacheHelper
         var (redisAvailable, cachedStudent) = await GetStudentFromCache(studentCode);
         if (cachedStudent != null)
         {
-            _logger.LogInformation("Tìm thấy sinh viên với {key}", studentCode);
+            _logger.LogInformation("Tìm thấy sinh viên với {key} ở redis", studentCode);
             return cachedStudent;
         }
 
@@ -80,15 +80,16 @@ private async Task CacheStudent(string studentCode, Student? student)
         try
         {
             string key = $"student:{studentCode}";
-            var db = _redis.GetDatabase();
             if (student == null)
             {
-                await db.StringSetAsync(key, "null", TimeSpan.FromMinutes(3));
+                _logger.LogInformation("Redis cache dữ liệu sinh viên null vì k có sinh viên {Key}", studentCode);
+                await _redisService.StringSetAsync(key, "null", TimeSpan.FromMinutes(3));
             }
             else
             {
+                _logger.LogInformation("Redis cache dữ liệu sinh viên thành công {Key}", studentCode);
                 var json = JsonSerializer.Serialize(student);
-                await db.StringSetAsync(key, json, TimeSpan.FromMinutes(30));
+                await _redisService.StringSetAsync(key, json, TimeSpan.FromMinutes(30));
             }
         }
         catch (Exception ex)
@@ -101,23 +102,22 @@ private async Task CacheStudent(string studentCode, Student? student)
         try
         {
             string key = $"student:{studentCode}";
-            var db = _redis.GetDatabase();
-            var cachedValue = await db.StringGetAsync(key);
+            var cachedValue = await _redisService.StringGetAsync(key);
 
-            if (!cachedValue.HasValue)
+            if (cachedValue == null)
             {
                 _logger.LogInformation("Redis không có dữ liệu cho {Key}", studentCode);
-                return (true, null); 
+                return (_redisService.IsConnected, null); 
             }
 
             if (cachedValue == "null")
             {
                 _logger.LogInformation("Redis cache null cho {Key}", studentCode);
-                return (true, null); // Redis hoạt động, nhưng là null
+                return (_redisService.IsConnected, null); // Redis hoạt động, nhưng là null
             }
 
             var student = JsonSerializer.Deserialize<Student>(cachedValue);
-            return (true, student);
+            return (_redisService.IsConnected, student);
         }
         catch (Exception ex)
         {
@@ -135,16 +135,12 @@ private async Task CacheStudent(string studentCode, Student? student)
         {
             _logger.LogInformation("Bắt đầu tải sinh viên lên Redis cache");
             
-            var db = _redis.GetDatabase();
-            
             if (!students.Any())
             {
                 _logger.LogWarning("Không có sinh viên nào để cache");
                 return (false, "Không có sinh viên nào để cache", 0);
             }
             
-            var batch = db.CreateBatch();
-            var cacheTasks = new List<Task>();
             int cachedCount = 0;
             int updatedCount = 0;
             int skippedCount = 0;
@@ -157,9 +153,9 @@ private async Task CacheStudent(string studentCode, Student? student)
                     string studentCacheKey = $"student:{student.StudentCode}";
                     
                     // Kiểm tra xem sinh viên đã tồn tại trong cache chưa
-                    var existingStudent = await db.StringGetAsync(studentCacheKey);
+                    var existingStudent = await _redisService.StringGetAsync(studentCacheKey);
                     
-                    if (existingStudent.HasValue)
+                    if (existingStudent != null)
                     {
                         try
                         {
@@ -172,8 +168,7 @@ private async Task CacheStudent(string studentCode, Student? student)
                             {
                                 // Cập nhật nếu có thay đổi
                                 var studentJson = JsonSerializer.Serialize(student);
-                                var cacheTask = batch.StringSetAsync(studentCacheKey, studentJson, TimeSpan.FromHours(6));
-                                cacheTasks.Add(cacheTask);
+                                await _redisService.StringSetAsync(studentCacheKey, studentJson, TimeSpan.FromHours(6));
                                 updatedCount++;
                                 _logger.LogDebug("Cập nhật sinh viên {StudentCode} trong Redis cache", student.StudentCode);
                             }
@@ -189,8 +184,7 @@ private async Task CacheStudent(string studentCode, Student? student)
                             _logger.LogWarning(ex, "Lỗi khi deserialize sinh viên {StudentCode} từ cache, sẽ cập nhật lại", student.StudentCode);
                             // Nếu lỗi deserialize, cập nhật lại
                             var studentJson = JsonSerializer.Serialize(student);
-                            var cacheTask = batch.StringSetAsync(studentCacheKey, studentJson, TimeSpan.FromHours(6));
-                            cacheTasks.Add(cacheTask);
+                            await _redisService.StringSetAsync(studentCacheKey, studentJson, TimeSpan.FromHours(6));
                             updatedCount++;
                         }
                     }
@@ -198,8 +192,7 @@ private async Task CacheStudent(string studentCode, Student? student)
                     {
                         // Thêm mới nếu chưa tồn tại
                         var studentJson = JsonSerializer.Serialize(student);
-                        var cacheTask = batch.StringSetAsync(studentCacheKey, studentJson, TimeSpan.FromHours(6));
-                        cacheTasks.Add(cacheTask);
+                        await _redisService.StringSetAsync(studentCacheKey, studentJson, TimeSpan.FromHours(6));
                         cachedCount++;
                         _logger.LogDebug("Thêm mới sinh viên {StudentCode} vào Redis cache", student.StudentCode);
                     }
@@ -208,13 +201,6 @@ private async Task CacheStudent(string studentCode, Student? student)
                 {
                     _logger.LogError(ex, "Lỗi khi xử lý cache cho sinh viên {StudentCode}", student.StudentCode);
                 }
-            }
-            
-            // Thực hiện batch cache
-            if (cacheTasks.Any())
-            {
-                batch.Execute();
-                await Task.WhenAll(cacheTasks);
             }
             
             var totalProcessed = cachedCount + updatedCount + skippedCount;
