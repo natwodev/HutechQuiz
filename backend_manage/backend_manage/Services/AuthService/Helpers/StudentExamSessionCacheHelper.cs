@@ -8,12 +8,13 @@ using AutoMapper;
 using System.Text.Json;
 using System.Linq;
 using backend_manage.Repositories.Interfaces;
+using backend_manage.Services.Interfaces;
 
 namespace backend_manage.Services.AuthService.Helpers;
 
 public class StudentExamSessionCacheHelper
 {
-    private readonly IConnectionMultiplexer _redis;
+    private readonly IRedisService _redisService;
     private readonly ILogger<StudentExamSessionCacheHelper> _logger;
     private readonly IRepository<ExamSessionSubject> _examSessionSubjectRepository;
     private readonly IRepository<ExamRoom> _examRoomRepository;
@@ -22,7 +23,7 @@ public class StudentExamSessionCacheHelper
     private readonly IMapper _mapper;
 
     public StudentExamSessionCacheHelper(
-        IConnectionMultiplexer redis, 
+        IRedisService redisService,
         ILogger<StudentExamSessionCacheHelper> logger,
         IRepository<ExamSessionSubject> examSessionSubjectRepository,
         IRepository<ExamRoom> examRoomRepository,
@@ -30,7 +31,7 @@ public class StudentExamSessionCacheHelper
         IRepository<Student> studentRepository,
         IMapper mapper)
     {
-        _redis = redis;
+        _redisService = redisService;
         _logger = logger;
         _examSessionSubjectRepository = examSessionSubjectRepository;
         _examRoomRepository = examRoomRepository;
@@ -39,7 +40,10 @@ public class StudentExamSessionCacheHelper
         _mapper = mapper;
     }
 
+    
+    //Hoàn thành 
     #region GetStudentExamSessionsFromRedisAsync
+    
     //phương thức chính dùng cho lúc đăng nhập(lấy danh sách)
     public async Task<IEnumerable<StudentExamSessionDto>?> GetListStudentExamSessionsFromRedisAsync(string studentCode)
     {
@@ -100,24 +104,23 @@ public class StudentExamSessionCacheHelper
     {
         try
         {
-            var db = _redis.GetDatabase();
             string redisHashKey = $"student_exam_sessions:{studentCode}";
 
-            var hashEntries = await db.HashGetAllAsync(redisHashKey);
+            var hashData = await _redisService.HashGetAllAsync(redisHashKey);
 
-            if (hashEntries.Length == 0)
+            if (hashData == null)
             {
-                _logger.LogInformation("Redis không có phiên thi cho sinh viên: {StudentCode}", studentCode);
-                return (true, new List<StudentExamSessionCacheDto>()); // Redis hoạt động nhưng không có dữ liệu
+                _logger.LogInformation("Redis không có phiên thi hoặc không kết nối được: {StudentCode}", studentCode);
+                return (_redisService.IsConnected, new List<StudentExamSessionCacheDto>()); 
             }
 
             var sessions = new List<StudentExamSessionCacheDto>();
 
-            foreach (var entry in hashEntries)
+            foreach (var kvp in hashData)
             {
                 try
                 {
-                    var session = JsonSerializer.Deserialize<StudentExamSessionCacheDto>(entry.Value);
+                    var session = JsonSerializer.Deserialize<StudentExamSessionCacheDto>(kvp.Value);
                     if (session != null)
                     {
                         sessions.Add(session);
@@ -126,25 +129,25 @@ public class StudentExamSessionCacheHelper
                 catch (Exception ex)
                 {
                     _logger.LogWarning(ex, "Lỗi khi deserialize phiên thi từ Redis cho sinh viên {StudentCode}, key = {SessionId}",
-                        studentCode, entry.Name.ToString());
+                        studentCode, kvp.Key);
                 }
             }
 
             _logger.LogDebug("Lấy {Count} phiên thi từ Redis cho sinh viên {StudentCode}", sessions.Count, studentCode);
-            return (true, sessions); // Redis OK
+            return (true, sessions);
         }
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Redis lỗi khi lấy phiên thi cho sinh viên {StudentCode}", studentCode);
-            return (false, null); // Redis lỗi
+            return (false, null);
         }
     }
-    
-    public async Task CacheStudentExamSessions(string studentCode, IEnumerable<StudentExamSession> sessions)
+
+    public async Task CacheStudentExamSessions(string studentCode, IEnumerable<StudentExamSession>? sessions)
     {
         try
         {
-            var db = _redis.GetDatabase();
+            var db = _redisService.GetDatabase();
             string redisHashKey = $"student_exam_sessions:{studentCode}";
             int cachedCount = 0;
 
@@ -158,7 +161,7 @@ public class StudentExamSessionCacheHelper
                     var sessionJson = JsonSerializer.Serialize(cacheDto);
                     hashEntries.Add(new HashEntry(session.StudentExamSessionId.ToString(), sessionJson));
                     cachedCount++;
-                    _logger.LogInformation("Đã cache phiên thi cho sinh viên: {StudentCode}", studentCode);
+                    _logger.LogInformation("Đã cache phiên thi cho sinh viên: {StudentCode} {cachedCount}", studentCode,cachedCount);
 
                 }
                 catch (Exception ex)
@@ -219,7 +222,7 @@ public class StudentExamSessionCacheHelper
 
         try
         {
-            var db = _redis.GetDatabase();
+            var db = _redisService.GetDatabase();
             string redisHashKey = $"student_exam_sessions:{studentCode}";
             string field = studentExamSessionId.ToString();
 
@@ -256,7 +259,7 @@ public class StudentExamSessionCacheHelper
                 {
                     try
                     {
-                        var db = _redis.GetDatabase();
+                        var db = _redisService.GetDatabase();
                         string redisHashKey = $"student_exam_sessions:{studentCode}";
                         string field = studentExamSessionId.ToString();
                         var sessionJson = JsonSerializer.Serialize(session);
@@ -281,8 +284,42 @@ public class StudentExamSessionCacheHelper
     }
 
    #endregion
+
+
+   //Hoàn thành
+   #region UpdateStudentExamSessionAsync
+   public async Task UpdateStudentExamSessionAsync(string studentCode, StudentExamSessionCacheDto studentExamSessionDto)
+   {
+       try
+       {
+           string redisHashKey = $"student_exam_sessions:{studentCode}";
+           string field = studentExamSessionDto.StudentExamSessionId.ToString();
+
+           string sessionJson = JsonSerializer.Serialize(studentExamSessionDto);
+
+           await _redisService.HashSetAsync(redisHashKey, field, sessionJson);
+
+           _logger.LogInformation("Đã cập nhật phiên thi {SessionId} cho sinh viên {StudentCode} trong Redis", studentExamSessionDto.StudentExamSessionId, studentCode);
+       }
+       catch (Exception ex)
+       {
+           _logger.LogError(ex, "Lỗi khi cập nhật phiên thi {SessionId} cho sinh viên {StudentCode} trong Redis", studentExamSessionDto.StudentExamSessionId, studentCode);
+       }
+   }
    
-     
+   #endregion
+ 
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
     private async Task<(bool Success, string Message)> UpdateStudentAnswersInDatabaseAsync(
         string studentCode, int shuffledExamPaperId, string newAnswersString)
     {
@@ -329,7 +366,7 @@ public class StudentExamSessionCacheHelper
     {
         try
         {
-            var db = _redis.GetDatabase();
+            var db = _redisService.GetDatabase();
             string sessionCacheKey = $"student_exam_session:{studentCode}:*";
             
             // Tìm session có ShuffledExamPaperId tương ứng
@@ -514,7 +551,7 @@ public class StudentExamSessionCacheHelper
     {
         try
         {
-            var db = _redis.GetDatabase();
+            var db = _redisService.GetDatabase();
             string sessionCacheKey = $"student_exam_session:{studentCode}:*";
             
             var keys = db.Multiplexer.GetServer(db.Multiplexer.GetEndPoints().First()).Keys(pattern: sessionCacheKey);
@@ -605,7 +642,7 @@ public class StudentExamSessionCacheHelper
     {
         try
         {
-            var db = _redis.GetDatabase();
+            var db = _redisService.GetDatabase();
             string sessionCacheKey = $"student_exam_session:{studentCode}:*";
             
             // Tìm session có ShuffledExamPaperId tương ứng

@@ -249,7 +249,6 @@ public class StudentService : IStudentService
     public async Task<(StudentExamSessionCacheDto studentExamSessionCacheDto, ShuffledExamPaperDto? shuffledExamPaperDto)> StartExamAsync(string studentCode, int studentExamSessionId)
     {
         _logger.LogInformation("Bắt đầu lấy đề thi cho sinh viên {StudentCode}, phiên thi {StudentExamSessionId}", studentCode, studentExamSessionId);
-        _logger.LogInformation("Hiện tại chưa có đề thi nên sẽ chọn random đề thi mới");
 
         var (studentExamSessionCacheDto, shuffledExamPaperDto) = await _examPaperHelper.GetStudentExamSessionAndExamPaperAsync(studentCode, studentExamSessionId);
 

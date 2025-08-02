@@ -192,47 +192,182 @@ namespace backend_manage.Services.AuthService
                 return false;
             }
         }
+
+        // Hash operations
+        public async Task<bool> HashSetAsync(string key, string hashField, string value, TimeSpan? expiry = null)
+        {
+            try
+            {
+                if (!IsConnected)
+                {
+                    _logger.LogDebug("Redis không khả dụng, bỏ qua hash set: {Key}:{Field}", key, hashField);
+                    return false;
+                }
+
+                var db = _redis.GetDatabase();
+                var result = await db.HashSetAsync(key, hashField, value);
+                
+                // Set expiry if provided
+                if (result && expiry.HasValue)
+                {
+                    await db.KeyExpireAsync(key, expiry.Value);
+                }
+                
+                // Reset failure flag nếu operation thành công
+                if (result) _hasRecentFailure = false;
+                
+                return result;
+            }
+            catch (RedisConnectionException ex)
+            {
+                _logger.LogWarning(ex, "Không thể kết nối Redis để hash set: {Key}:{Field}", key, hashField);
+                _isConnected = false;
+                _hasRecentFailure = true;
+                return false;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi hash set: {Key}:{Field}", key, hashField);
+                return false;
+            }
+        }
+
+        public async Task<string?> HashGetAsync(string key, string hashField)
+        {
+            try
+            {
+                if (!IsConnected)
+                {
+                    _logger.LogDebug("Redis không khả dụng, bỏ qua hash get: {Key}:{Field}", key, hashField);
+                    return null;
+                }
+
+                var db = _redis.GetDatabase();
+                var value = await db.HashGetAsync(key, hashField);
+                
+                // Reset failure flag nếu operation thành công
+                _hasRecentFailure = false;
+                
+                return value.HasValue ? value.ToString() : null;
+            }
+            catch (RedisConnectionException ex)
+            {
+                _logger.LogWarning(ex, "Không thể kết nối Redis để hash get: {Key}:{Field}", key, hashField);
+                _isConnected = false;
+                _hasRecentFailure = true;
+                return null;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi hash get: {Key}:{Field}", key, hashField);
+                return null;
+            }
+        }
+
+        public async Task<Dictionary<string, string>?> HashGetAllAsync(string key)
+        {
+            try
+            {
+                if (!IsConnected)
+                {
+                    _logger.LogDebug("Redis không khả dụng, bỏ qua hash get all: {Key}", key);
+                    return null;
+                }
+
+                var db = _redis.GetDatabase();
+                var hashEntries = await db.HashGetAllAsync(key);
+                
+                // Reset failure flag nếu operation thành công
+                _hasRecentFailure = false;
+                
+                if (hashEntries.Length == 0)
+                    return null;
+
+                var result = new Dictionary<string, string>();
+                foreach (var entry in hashEntries)
+                {
+                    result[entry.Name] = entry.Value;
+                }
+                
+                return result;
+            }
+            catch (RedisConnectionException ex)
+            {
+                _logger.LogWarning(ex, "Không thể kết nối Redis để hash get all: {Key}", key);
+                _isConnected = false;
+                _hasRecentFailure = true;
+                return null;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi hash get all: {Key}", key);
+                return null;
+            }
+        }
+
+        public async Task<bool> HashDeleteAsync(string key, string hashField)
+        {
+            try
+            {
+                if (!IsConnected)
+                {
+                    _logger.LogDebug("Redis không khả dụng, bỏ qua hash delete: {Key}:{Field}", key, hashField);
+                    return false;
+                }
+
+                var db = _redis.GetDatabase();
+                var result = await db.HashDeleteAsync(key, hashField);
+                
+                // Reset failure flag nếu operation thành công
+                if (result) _hasRecentFailure = false;
+                
+                return result;
+            }
+            catch (RedisConnectionException ex)
+            {
+                _logger.LogWarning(ex, "Không thể kết nối Redis để hash delete: {Key}:{Field}", key, hashField);
+                _isConnected = false;
+                _hasRecentFailure = true;
+                return false;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi hash delete: {Key}:{Field}", key, hashField);
+                return false;
+            }
+        }
+
+        public async Task<bool> HashExistsAsync(string key, string hashField)
+        {
+            try
+            {
+                if (!IsConnected)
+                {
+                    _logger.LogDebug("Redis không khả dụng, bỏ qua hash exists: {Key}:{Field}", key, hashField);
+                    return false;
+                }
+
+                var db = _redis.GetDatabase();
+                var result = await db.HashExistsAsync(key, hashField);
+                
+                // Reset failure flag nếu operation thành công
+                _hasRecentFailure = false;
+                
+                return result;
+            }
+            catch (RedisConnectionException ex)
+            {
+                _logger.LogWarning(ex, "Không thể kết nối Redis để hash exists: {Key}:{Field}", key, hashField);
+                _isConnected = false;
+                _hasRecentFailure = true;
+                return false;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi hash exists: {Key}:{Field}", key, hashField);
+                return false;
+            }
+        }
     }
-
-    public class RedisFallbackService : IRedisService
-    {
-        private readonly ILogger<RedisFallbackService> _logger;
-
-        public RedisFallbackService(ILogger<RedisFallbackService> logger)
-        {
-            _logger = logger;
-            _logger.LogInformation("RedisFallbackService được khởi tạo - Redis không khả dụng");
-        }
-
-        public bool IsConnected => false;
-
-        public IDatabase GetDatabase()
-        {
-            throw new InvalidOperationException("Redis không khả dụng");
-        }
-
-        public async Task<bool> StringSetAsync(string key, string value, TimeSpan? expiry = null)
-        {
-            _logger.LogDebug("Redis fallback: Bỏ qua set key {Key} - Redis không khả dụng", key);
-            return false;
-        }
-
-        public async Task<string?> StringGetAsync(string key)
-        {
-            _logger.LogDebug("Redis fallback: Bỏ qua get key {Key} - Redis không khả dụng", key);
-            return null;
-        }
-
-        public async Task<bool> KeyDeleteAsync(string key)
-        {
-            _logger.LogDebug("Redis fallback: Bỏ qua delete key {Key} - Redis không khả dụng", key);
-            return false;
-        }
-
-        public async Task<bool> KeyExistsAsync(string key)
-        {
-            _logger.LogDebug("Redis fallback: Bỏ qua check key {Key} - Redis không khả dụng", key);
-            return false;
-        }
-    }
+    
 } 

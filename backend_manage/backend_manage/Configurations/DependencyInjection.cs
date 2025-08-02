@@ -54,6 +54,7 @@ namespace backend_manage.Configurations
                 {
                     // Sử dụng IConnectionMultiplexer đã được đăng ký trong ServiceExtensions
                     var redis = sp.GetRequiredService<IConnectionMultiplexer>();
+                    var logger = sp.GetRequiredService<ILogger<RedisService>>();
                     
                     // Kiểm tra kết nối Redis chỉ một lần khi khởi tạo
                     if (redis.IsConnected)
@@ -63,35 +64,31 @@ namespace backend_manage.Configurations
                         
                         if (pingResult.TotalMilliseconds < 5000)
                         {
-                            var logger = sp.GetRequiredService<ILogger<RedisService>>();
                             logger.LogInformation("✅ Redis service đã được khởi tạo thành công - Ping: {PingTime}ms", pingResult.TotalMilliseconds);
-                            return new RedisService(redis, logger);
                         }
                         else
                         {
-                            var logger = sp.GetRequiredService<ILogger<RedisFallbackService>>();
-                            logger.LogWarning("⚠️ Redis ping chậm ({PingTime}ms), sử dụng fallback", pingResult.TotalMilliseconds);
-                            return new RedisFallbackService(logger);
+                            logger.LogWarning("⚠️ Redis ping chậm ({PingTime}ms), nhưng vẫn sử dụng RedisService", pingResult.TotalMilliseconds);
                         }
                     }
                     else
                     {
-                        var logger = sp.GetRequiredService<ILogger<RedisFallbackService>>();
-                        logger.LogWarning("⚠️ Redis không kết nối, sử dụng fallback");
-                        return new RedisFallbackService(logger);
+                        logger.LogWarning("⚠️ Redis không kết nối, nhưng vẫn sử dụng RedisService");
                     }
+                    
+                    return new RedisService(redis, logger);
                 }
                 catch (RedisConnectionException ex)
                 {
-                    var logger = sp.GetRequiredService<ILogger<RedisFallbackService>>();
+                    var logger = sp.GetRequiredService<ILogger<RedisService>>();
                     logger.LogWarning("❌ Redis connection exception: {Message}", ex.Message);
-                    return new RedisFallbackService(logger);
+                    return new RedisService(sp.GetRequiredService<IConnectionMultiplexer>(), logger);
                 }
                 catch (Exception ex)
                 {
-                    var logger = sp.GetRequiredService<ILogger<RedisFallbackService>>();
+                    var logger = sp.GetRequiredService<ILogger<RedisService>>();
                     logger.LogWarning("❌ Không thể khởi tạo Redis service: {Message}", ex.Message);
-                    return new RedisFallbackService(logger);
+                    return new RedisService(sp.GetRequiredService<IConnectionMultiplexer>(), logger);
                 }
             });
             

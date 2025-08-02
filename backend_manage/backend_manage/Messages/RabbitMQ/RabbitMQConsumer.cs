@@ -24,7 +24,6 @@ namespace backend_manage.Messages.RabbitMQ
         public void StartConsuming()
         {
             _logger.LogWarning("RabbitMQ không khả dụng - không thể start consumers");
-            // Không làm gì cả, chỉ log warning
         }
     }
 
@@ -42,14 +41,14 @@ namespace backend_manage.Messages.RabbitMQ
         private const int StudentAnswerConsumerCount = 2; // 2 consumers cho lưu đáp án
         private const int ExamSubmissionConsumerCount = 2; // 2 consumers cho nộp bài
         private const int SaveExamConsumerCount = 2; // 2 consumers cho lưu bài
-        private const int StudentImportConsumerCount = 1; // 1 consumer cho import (vì import nặng)
+        private const int StudentImportConsumerCount = 2; // 1 consumer cho import (vì import nặng)
 
         public RabbitMqConsumer(
-            IRabbitMqService rabbitMQService,
+            IRabbitMqService rabbitMqService,
             IServiceScopeFactory serviceScopeFactory,
             ILogger<RabbitMqConsumer> logger)
         {
-            _rabbitMqService = rabbitMQService;
+            _rabbitMqService = rabbitMqService;
             _serviceScopeFactory = serviceScopeFactory;
             _logger = logger;
         }
