@@ -5,6 +5,10 @@ using Microsoft.EntityFrameworkCore;
 using StackExchange.Redis;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
+using System.Text.RegularExpressions;
+using backend_manage.Hubs;
+using backend_manage.Messages;
+using backend_manage.Messages.RabbitMQ;
 using backend_manage.Repositories.Interfaces;
 using backend_manage.Services.Interfaces;
 
@@ -18,7 +22,7 @@ public class ExamPaperHelper
     private readonly IRepository<ExamSessionSubject> _examSessionSubjectRepository;
     private readonly AutoMapper.IMapper _mapper;
     private readonly StudentExamSessionCacheHelper _sessionCacheHelper;
-
+    private readonly IRabbitMqService _rabbitMqService;
 
     public ExamPaperHelper(
         IRedisService redisService,
@@ -26,7 +30,9 @@ public class ExamPaperHelper
         IRepository<ShuffledExamPaper> shuffledExamPaperRepository,
         IRepository<ExamSessionSubject> examSessionSubjectRepository,
         AutoMapper.IMapper mapper,
-        StudentExamSessionCacheHelper sessionCacheHelper)
+        StudentExamSessionCacheHelper sessionCacheHelper,
+        IRabbitMqService rabbitMqService
+        )
     {
         _redisService = redisService;
         _logger = logger;
@@ -34,6 +40,7 @@ public class ExamPaperHelper
         _examSessionSubjectRepository = examSessionSubjectRepository;
         _mapper = mapper;
         _sessionCacheHelper = sessionCacheHelper;
+        _rabbitMqService = rabbitMqService;
     }
 
     //dùng để bắt đầu thi()
@@ -47,19 +54,44 @@ public class ExamPaperHelper
             _logger.LogWarning("Không tìm thấy phiên thi của sinh viên {StudentCode} với ID phiên thi {SessionId}", studentCode, studentExamSessionId);
             return (null, null);
         }
-
+        
         if (!studentExamSessionDto.ShuffledExamPaperId.HasValue)
         {
             _logger.LogInformation("Chưa có đề thi nên sẽ random đề thi mới cho sinh viên {StudentCode}", studentCode);
             var newExamPaper = await CreateNewExamPaperAsync(studentExamSessionDto.ExamSessionSubjectId, studentCode);
+            _logger.LogInformation("Cập nhật đề thi vào phiên thi trên redis và db");
+            studentExamSessionDto.ShuffledExamPaperId = newExamPaper.ShuffledExamPaperId;
+            studentExamSessionDto.StartTime = DateTimeHelper.GetVietnamTime();
+            // Regex: tìm các nhóm như (1,B), (2,C), ...
+            string pattern = @"\((\d+),[A-Z]\)";
+            // Thay thế bằng (số,-)
+            string result = Regex.Replace(newExamPaper.AnswerKey, pattern, "($1,-)");
+            studentExamSessionDto.StudentAnswersString = result;
+            studentExamSessionDto.IsCompleted = true;
+            await _sessionCacheHelper.UpdateStudentExamSessionAsync(studentCode,studentExamSessionDto);
+
+            var startExamMessage = new StartExamMessage
+            {
+                StudentExamSessionId = studentExamSessionId,
+                StudentCode = studentCode,
+                StartTime = DateTimeHelper.GetVietnamTime(),
+                ShuffledExamPaperId = newExamPaper.ShuffledExamPaperId,
+                StudentAnswersString = result,
+                IsCompleted = true
+            };
+            
+            _rabbitMqService.Publish("start_exam_queue",startExamMessage);
+            _logger.LogInformation("Đã gửi đến message để lưu thông tin vào db cho sinh viên {studentCode}",studentCode);
+            
             return (studentExamSessionDto, newExamPaper);
         }
 
         _logger.LogInformation("Đã có đề thi, tiến hành lấy từ Redis với ID {ShuffledExamPaperId}", studentExamSessionDto.ShuffledExamPaperId.Value);
         var existingExamPaper = await GetExamFromRedisAsync(studentExamSessionDto.ShuffledExamPaperId.Value);
+      
         return (studentExamSessionDto, existingExamPaper);
     }
-
+    
     
     //chọn đề thi cho sinh viên
     private async Task<ShuffledExamPaperDto> CreateNewExamPaperAsync(int examSessionSubjectId, string studentCode)
@@ -76,13 +108,6 @@ public class ExamPaperHelper
             var pp  = await GetExamFromDatabaseAsync(shuffledExamPaper.ShuffledExamPaperId);
             paperDto = pp;
         }
-        
-        //Sẽ cập nhật redis và đưa mess vào rabit mq ở đây để lưu vào db
-        //cập nhật id đề thi vào phiên thi 
-        //cập nhật chuỗi đáp án rỗng vào phiên
-        //cập iscomplete là 1 vào redis đánh dấu đã làm bài không cho phép làm bài lại(admin có thể mở)
-        //đưa mess vào rabit mq để lưu id đề vào phiên , thời gian làm bài , chuỗi đáp án, iscomplete
-
         
         return paperDto;
     }
