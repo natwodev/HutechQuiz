@@ -409,7 +409,7 @@ namespace backend_manage.Services.AuthService
                 // Phân loại câu hỏi
                 var parentQuestions = originalDetails.Where(q => q.ParentQuestionId == null && 
                                                                originalDetails.Any(c => c.ParentQuestionId == q.OriginalExamPaperDetailId)).ToList();
-                var childQuestions = originalDetails.Where(q => q.ParentQuestionId.HasValue).ToList();
+                var allChildQuestions = originalDetails.Where(q => q.ParentQuestionId.HasValue).ToList();
                 var independentQuestions = originalDetails.Where(q => q.ParentQuestionId == null && 
                                                                    !originalDetails.Any(c => c.ParentQuestionId == q.OriginalExamPaperDetailId)).ToList();
                 
@@ -462,7 +462,7 @@ namespace backend_manage.Services.AuthService
                         shuffledQuestions.Add(question);
                         
                         // Thêm câu hỏi con ngay sau
-                        var childrenOfParent = childQuestions.Where(c => c.ParentQuestionId == question.OriginalExamPaperDetailId)
+                        var childrenOfParent = allChildQuestions.Where(c => c.ParentQuestionId == question.OriginalExamPaperDetailId)
                                                            .OrderBy(c => c.Order).ToList();
                         shuffledQuestions.AddRange(childrenOfParent);
                     }
@@ -495,6 +495,22 @@ namespace backend_manage.Services.AuthService
                 
                 // Mapping để theo dõi OriginalExamPaperDetailId -> ShuffledExamPaperDetailId
                 var originalToShuffledMapping = new Dictionary<int, int>();
+                
+                // Dictionary để lưu trữ câu hỏi con theo câu hỏi cha
+                var parentChildMapping = new Dictionary<int, List<OriginalExamPaperDetail>>();
+                
+                // Phân loại câu hỏi cha và con
+                foreach (var question in shuffledQuestions)
+                {
+                    if (question.ParentQuestionId.HasValue)
+                    {
+                        if (!parentChildMapping.ContainsKey(question.ParentQuestionId.Value))
+                        {
+                            parentChildMapping[question.ParentQuestionId.Value] = new List<OriginalExamPaperDetail>();
+                        }
+                        parentChildMapping[question.ParentQuestionId.Value].Add(question);
+                    }
+                }
                 
                 foreach (var question in shuffledQuestions)
                 {
@@ -574,7 +590,6 @@ namespace backend_manage.Services.AuthService
                     string correctChar = correctIndex.HasValue && correctIndex.Value >= 1 && correctIndex.Value <= 4
                         ? ((char)('A' + correctIndex.Value - 1)).ToString()
                         : "-";
-                    answerKeyParts.Add($"({order},{correctChar})");
 
                     // Tìm ParentQuestionId cho câu hỏi con
                     int? parentQuestionId = null;
@@ -602,8 +617,155 @@ namespace backend_manage.Services.AuthService
                     // Lưu mapping
                     originalToShuffledMapping[question.OriginalExamPaperDetailId] = shuffledDetail.ShuffledExamPaperDetailId;
                 }
-                // Lưu AnswerKey vào đề hoán vị
-                shuffledExamPaper.AnswerKey = string.Join(";", answerKeyParts) + ";";
+                
+                // Tạo AnswerKey với format mới hỗ trợ câu hỏi nhóm
+                var finalAnswerKeyParts = new List<string>();
+                order = 1;
+                
+                foreach (var question in shuffledQuestions)
+                {
+                    // Tính toán đáp án đúng cho câu hỏi này
+                    Dictionary<string, bool> shuffleInfo = null;
+                    if (!string.IsNullOrEmpty(question.AnswerShuffleInfo))
+                    {
+                        try
+                        {
+                            shuffleInfo = JsonSerializer.Deserialize<Dictionary<string, bool>>(question.AnswerShuffleInfo);
+                        }
+                        catch
+                        {
+                            shuffleInfo = null;
+                        }
+                    }
+                    
+                    List<int> newAnswerOrder = new List<int> { 1, 2, 3, 4 };
+                    if (shuffleInfo != null && shuffleInfo.Any())
+                    {
+                        var fixedPositions = new List<int>();
+                        var shuffleablePositions = new List<int>();
+                        for (int j = 1; j <= 4; j++)
+                        {
+                            if (shuffleInfo.ContainsKey(j.ToString()) && shuffleInfo[j.ToString()])
+                                shuffleablePositions.Add(j);
+                            else
+                                fixedPositions.Add(j);
+                        }
+                        
+                        if (shuffleablePositions.Count >= 2)
+                        {
+                            var shuffledPositions = shuffleablePositions.OrderBy(x => random.Next()).ToList();
+                            newAnswerOrder.Clear();
+                            int shuffleIdx = 0;
+                            
+                            for (int j = 1; j <= 4; j++)
+                            {
+                                if (fixedPositions.Contains(j))
+                                {
+                                    newAnswerOrder.Add(j);
+                                }
+                                else
+                                {
+                                    newAnswerOrder.Add(shuffledPositions[shuffleIdx++]);
+                                }
+                            }
+                        }
+                    }
+                    
+                    int? correctIndex = question.CorrectAnswerIndex.HasValue ? 
+                        newAnswerOrder.IndexOf(question.CorrectAnswerIndex.Value) + 1 : 
+                        (int?)null;
+
+                    string correctChar = correctIndex.HasValue && correctIndex.Value >= 1 && correctIndex.Value <= 4
+                        ? ((char)('A' + correctIndex.Value - 1)).ToString()
+                        : "-";
+                    
+                    // Kiểm tra xem đây có phải là câu hỏi cha không
+                    if (question.ParentQuestionId == null && parentChildMapping.ContainsKey(question.OriginalExamPaperDetailId))
+                    {
+                        // Đây là câu hỏi cha, tạo format nhóm
+                        var groupChildQuestions = parentChildMapping[question.OriginalExamPaperDetailId];
+                        var childAnswerParts = new List<string>();
+                        
+                        foreach (var childQuestion in groupChildQuestions)
+                        {
+                            // Tính toán đáp án đúng cho câu hỏi con
+                            Dictionary<string, bool> childShuffleInfo = null;
+                            if (!string.IsNullOrEmpty(childQuestion.AnswerShuffleInfo))
+                            {
+                                try
+                                {
+                                    childShuffleInfo = JsonSerializer.Deserialize<Dictionary<string, bool>>(childQuestion.AnswerShuffleInfo);
+                                }
+                                catch
+                                {
+                                    childShuffleInfo = null;
+                                }
+                            }
+                            
+                            List<int> childNewAnswerOrder = new List<int> { 1, 2, 3, 4 };
+                            if (childShuffleInfo != null && childShuffleInfo.Any())
+                            {
+                                var childFixedPositions = new List<int>();
+                                var childShuffleablePositions = new List<int>();
+                                for (int j = 1; j <= 4; j++)
+                                {
+                                    if (childShuffleInfo.ContainsKey(j.ToString()) && childShuffleInfo[j.ToString()])
+                                        childShuffleablePositions.Add(j);
+                                    else
+                                        childFixedPositions.Add(j);
+                                }
+                                
+                                if (childShuffleablePositions.Count >= 2)
+                                {
+                                    var childShuffledPositions = childShuffleablePositions.OrderBy(x => random.Next()).ToList();
+                                    childNewAnswerOrder.Clear();
+                                    int childShuffleIdx = 0;
+                                    
+                                    for (int j = 1; j <= 4; j++)
+                                    {
+                                        if (childFixedPositions.Contains(j))
+                                        {
+                                            childNewAnswerOrder.Add(j);
+                                        }
+                                        else
+                                        {
+                                            childNewAnswerOrder.Add(childShuffledPositions[childShuffleIdx++]);
+                                        }
+                                    }
+                                }
+                            }
+                            
+                            int? childCorrectIndex = childQuestion.CorrectAnswerIndex.HasValue ? 
+                                childNewAnswerOrder.IndexOf(childQuestion.CorrectAnswerIndex.Value) + 1 : 
+                                (int?)null;
+
+                            string childCorrectChar = childCorrectIndex.HasValue && childCorrectIndex.Value >= 1 && childCorrectIndex.Value <= 4
+                                ? ((char)('A' + childCorrectIndex.Value - 1)).ToString()
+                                : "-";
+                            
+                            childAnswerParts.Add($"({childQuestion.Order},{childCorrectChar})");
+                        }
+                        
+                        // Tạo format câu hỏi nhóm: (order,(child1);(child2);(child3))
+                        var childAnswersString = string.Join(";", childAnswerParts);
+                        finalAnswerKeyParts.Add($"({order},{childAnswersString})");
+                    }
+                    else if (question.ParentQuestionId.HasValue)
+                    {
+                        // Đây là câu hỏi con, bỏ qua vì đã được xử lý trong câu hỏi cha
+                        continue;
+                    }
+                    else
+                    {
+                        // Đây là câu hỏi đơn
+                        finalAnswerKeyParts.Add($"({order},{correctChar})");
+                    }
+                    
+                    order++;
+                }
+                
+                // Lưu AnswerKey vào đề hoán vị với format mới
+                shuffledExamPaper.AnswerKey = string.Join(";", finalAnswerKeyParts) + ";";
                 await _shuffledExamPaperRepository.UpdateAsync(shuffledExamPaper);
             }
             originalExamPaper.TotalShuffledPapers += count;

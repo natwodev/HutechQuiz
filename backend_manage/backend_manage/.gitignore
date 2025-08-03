@@ -60,3 +60,9 @@ bld/
 [Oo]bj/
 [Ll]og/
 [Ll]ogs/
+
+# EPZ files and folders
+wwwroot/EPZ/
+wwwroot/EPZ_DL/
+epz/
+epz_dl/
