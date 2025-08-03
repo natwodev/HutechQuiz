@@ -96,7 +96,8 @@ public class MappingProfile : Profile
         CreateMap<OriginalExamPaper, OriginalExamPaperDto>()
             .ForMember(dest => dest.Details, opt => opt.MapFrom(src => src.OriginalExamPaperDetails.Where(d => d.ParentQuestionId == null)));
         CreateMap<OriginalExamPaperDetail, OriginalExamPaperDetailDto>()
-            .ForMember(dest => dest.ChildQuestions, opt => opt.MapFrom(src => src.ChildQuestions));
+            .ForMember(dest => dest.ChildQuestions, opt => opt.MapFrom(src => src.ChildQuestions))
+            .ForMember(dest => dest.ParentQuestion, opt => opt.MapFrom(src => src.ParentQuestion));
 
         // ShuffledExamPaper & Detail
         CreateMap<ShuffledExamPaper, ShuffledExamPaperDto>()
@@ -111,6 +112,7 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.Answer3, opt => opt.Ignore())
             .ForMember(dest => dest.Answer4, opt => opt.Ignore())
             .ForMember(dest => dest.ChildQuestions, opt => opt.MapFrom(src => src.ChildQuestions))
+            .ForMember(dest => dest.ParentQuestion, opt => opt.MapFrom(src => src.ParentQuestion))
             .AfterMap((src, dest) => {
                 var original = src.OriginalExamPaperDetail;
                 if (original == null || string.IsNullOrEmpty(src.AnswerOrder))
