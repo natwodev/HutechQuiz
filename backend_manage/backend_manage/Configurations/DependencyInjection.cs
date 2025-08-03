@@ -8,6 +8,7 @@ using backend_manage.Services.AuthService.Helpers;
 using backend_manage.Services.Interfaces;
 using backend_manage.Services;
 using backend_manage.Messages.RabbitMQ;
+using backend_manage.Messages.RabbitMQ.FallBack;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
@@ -93,6 +94,8 @@ namespace backend_manage.Configurations
                     return new RedisService(sp.GetRequiredService<IConnectionMultiplexer>(), logger);
                 }
             });
+            services.AddHostedService<FallbackRetryWorker>();
+            services.AddHostedService<RabbitMqReconnectWorker>();
             services.AddSingleton<IRabbitMqService, RabbitMqService>();
             services.AddHostedService<RabbitMqConsumer>();
 
