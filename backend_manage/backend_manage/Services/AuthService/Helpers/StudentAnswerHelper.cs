@@ -27,76 +27,26 @@ public class StudentAnswerHelper
         _mapper = mapper;
         _sessionCacheHelper = sessionCacheHelper;
     }
-
-    public async Task<(bool Success, string Message, string? NewAnswersString)> UpdateSingleAnswerAsync(
-        string studentCode, int shuffledExamPaperId, int index, string answer)
+/*
+    public async Task<(bool Success, string Message, string? NewAnswersString)> UpdateSingleAnswerAsync(string studentCode, int studentExamSessionId, double index, string answer)
     {
-        // Log thông tin
-        _logger.LogInformation(
-            "Đang lưu đáp án cho sinh viên. StudentCode: {StudentCode}, ShuffledExamPaperId: {ShuffledExamPaperId}, Index: {Index}, Answer: {Answer}",
-            studentCode, shuffledExamPaperId, index, answer
-        );
-
-        try
+        var (redisAvailable, studentExamSessionDto) = await _sessionCacheHelper.GetStudentExamSessionAsync(studentCode, studentExamSessionId);
+        if (studentExamSessionDto == null)
         {
-            // Tối ưu: Chỉ gọi Redis 1 lần để lấy và cập nhật đáp án
-            var (success, message, newAnswersString) = await _sessionCacheHelper.GetAndUpdateStudentAnswersAsync(
-                studentCode, shuffledExamPaperId, index, answer);
+            _logger.LogWarning("Không tìm thấy phiên thi của sinh viên {StudentCode} với ID phiên thi {SessionId}", studentCode, studentExamSessionId);
+            return (false,"Không có bài thi nào", null);
+        }
+
+        if (!studentExamSessionDto.ShuffledExamPaperId.HasValue)
+        {
+            string newAnswersString = studentExamSessionDto.StudentAnswersString;
             
-            if (success)
-            {
-                _logger.LogInformation("Đã lưu đáp án thành công. Chuỗi đáp án mới: {NewAnswers}", newAnswersString);
-                return (true, "Cập nhật đáp án thành công", newAnswersString);
-            }
-            else
-            {
-                _logger.LogError("Lỗi khi cập nhật đáp án: {Message}", message);
-                return (false, message, null);
-            }
+            await _sessionCacheHelper.UpdateStudentExamSessionAsync(studentCode,studentExamSessionDto);
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Lỗi khi lưu đáp án cho sinh viên {StudentCode} với ShuffledExamPaperId {ShuffledExamPaperId}", 
-                studentCode, shuffledExamPaperId);
-            return (false, "Lỗi khi lưu đáp án", null);
-        }
-    }
 
-    public async Task<(bool Success, string Message, Dictionary<int, string>? CurrentAnswers)> UpdateStudentAnswersOptimizedAsync(
-        RedisValue studentAnswers, List<SaveAnswerDto> saveAnswerDtos, string studentCode, int shuffledExamPaperId)
-    {
-        if (!studentAnswers.HasValue)
-        {
-            _logger.LogError("Không tìm thấy bài làm của sinh viên trong cache");
-            return (false, "Không tìm thấy bài làm của sinh viên", null);
-        }
-        
-        var currentAnswers = ParseStudentAnswers(studentAnswers.ToString());
-        
-        // Batch update answers
-        foreach (var answer in saveAnswerDtos)
-        {
-            if (currentAnswers.ContainsKey(answer.Index))
-            {
-                currentAnswers[answer.Index] = answer.Answer;
-            }
-        }
-        
-        var newAnswersString = CreateAnswersString(currentAnswers);
-        
-        // Cập nhật vào cache thay vì tạo key riêng
-        var (success, message) = await _sessionCacheHelper.UpdateStudentAnswersInCacheAsync(
-            studentCode, shuffledExamPaperId, newAnswersString);
-        
-        if (!success)
-        {
-            _logger.LogError("Lỗi khi cập nhật đáp án vào cache: {Message}", message);
-            return (false, message, null);
-        }
-        
-        return (true, "Cập nhật đáp án thành công", currentAnswers);
     }
-
+*/
+  
     public Dictionary<int, string> ParseStudentAnswers(string answersString)
     {
         return answersString.Split(';', StringSplitOptions.RemoveEmptyEntries)
@@ -111,73 +61,4 @@ public class StudentAnswerHelper
             .ToDictionary(parts => int.Parse(parts[0]), parts => parts[1]);
     }
     
-    public string CreateAnswersString(Dictionary<int, string> answers)
-    {
-        return string.Join(";", answers.Select(pair => $"({pair.Key},{pair.Value})")) + ";";
-    }
-
-    public (double Score, int CorrectCount, int TotalQuestions) CalculateScoreOptimized(
-        Dictionary<int, string> currentAnswers, Dictionary<int, string> correctAnswerPairs)
-    {
-        int correctCount = 0;
-        int totalQuestions = correctAnswerPairs.Count;
-        
-        // Sử dụng LINQ để tối ưu performance
-        correctCount = currentAnswers
-            .Where(pair => correctAnswerPairs.TryGetValue(pair.Key, out string correctAnswer) && pair.Value == correctAnswer)
-            .Count();
-        
-        double score = (double)correctCount / totalQuestions * 10;
-        
-        return (score, correctCount, totalQuestions);
-    }
-
-    public ExamSubmissionMessage CreateExamSubmissionMessage(string studentCode, int shuffledExamPaperId, 
-        double score, int correctCount, int totalQuestions, Dictionary<int, string> currentAnswers)
-    {
-        var newAnswersString = CreateAnswersString(currentAnswers);
-        
-        var examSubmissionDto = new ExamSubmissionDto
-        {
-            StudentCode = studentCode,
-            ShuffledExamPaperId = shuffledExamPaperId,
-            Score = score,
-            CorrectAnswers = correctCount,
-            TotalQuestions = totalQuestions,
-            EndTime = DateTimeHelper.GetVietnamTime(),
-            StudentAnswersString = newAnswersString
-        };
-        
-        return _mapper.Map<ExamSubmissionMessage>(examSubmissionDto);
-    }
-    
-    public ExamSubmissionMessage CreateSaveExamMessage(string studentCode, int shuffledExamPaperId, Dictionary<int, string> currentAnswers)
-    {
-        var newAnswersString = CreateAnswersString(currentAnswers);
-        
-        var saveExamDto = new ExamSubmissionDto
-        {
-            StudentCode = studentCode,
-            ShuffledExamPaperId = shuffledExamPaperId,
-            Score = null,
-            CorrectAnswers = null,
-            TotalQuestions = null,
-            EndTime = DateTimeHelper.GetVietnamTime(),
-            StudentAnswersString = newAnswersString
-        };
-        
-        return _mapper.Map<ExamSubmissionMessage>(saveExamDto);
-    }
-
-    public StudentAnswerSavedMessage CreateAnswerSavedMessage(string studentCode, int shuffledExamPaperId, int index, string answer, string newAnswersString)
-    {
-        return new StudentAnswerSavedMessage
-        {
-            StudentCode = studentCode,
-            ShuffledExamPaperId = shuffledExamPaperId,
-            Index = index,
-            Answer = answer,
-            NewAnswersString = newAnswersString
-        };
-    }
 } 
