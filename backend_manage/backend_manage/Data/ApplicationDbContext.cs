@@ -141,6 +141,13 @@ namespace backend_manage.Data
                 .HasForeignKey(e => e.ChapterId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            // OriginalExamPaperDetail → ParentQuestion (self-ref)
+            builder.Entity<OriginalExamPaperDetail>()
+                .HasOne(e => e.ParentQuestion)
+                .WithMany(p => p.ChildQuestions)
+                .HasForeignKey(e => e.ParentQuestionId)
+                .OnDelete(DeleteBehavior.Restrict);
+
             // ExamRoomLecturerAssignment → ExamRoom
             builder.Entity<ExamRoomLecturerAssignment>()
                 .HasOne(e => e.ExamRoom)

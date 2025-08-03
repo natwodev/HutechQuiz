@@ -40,6 +40,7 @@ namespace backend_manage.Services.AuthService
                 .Include(x => x.ShuffledExamPaperDetails)
                 .ThenInclude(d => d.OriginalExamPaperDetail)
                 .Include(x => x.OriginalExamPaper)
+                .Include(x => x.Subject)
                 .FirstOrDefaultAsync();
             if (paper == null) return null;
             return _mapper.Map<ShuffledExamPaperDto>(paper);
@@ -74,6 +75,7 @@ namespace backend_manage.Services.AuthService
                 .Include(x => x.ShuffledExamPaperDetails)
                     .ThenInclude(d => d.OriginalExamPaperDetail)
                 .Include(x => x.OriginalExamPaper)
+                .Include(x => x.Subject)
                 .ToListAsync();
 
             foreach (var paper in approvedPapers)
