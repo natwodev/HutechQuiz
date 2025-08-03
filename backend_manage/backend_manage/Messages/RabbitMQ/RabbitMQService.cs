@@ -1,8 +1,11 @@
 using System.Text;
-using backend_manage.Messages.RabbitMQ.FallBack;
 using Newtonsoft.Json;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
+using backend_manage.Data;
+using Microsoft.Extensions.DependencyInjection;
+using backend_manage.Messages;
+using backend_manage.Services;
 
 namespace backend_manage.Messages.RabbitMQ;
 
@@ -12,15 +15,15 @@ public class RabbitMqService : IRabbitMqService, IDisposable
     private IModel? _channel;
     private readonly ILogger<RabbitMqService> _logger;
     private readonly IConfiguration _configuration;
-    private readonly FallBack<QueuedMessage> _fallbackQueue = new();
-
+    private readonly IMessageProcessingService _messageProcessingService;
 
     public bool IsConnected => _connection != null && _connection.IsOpen && _channel != null && _channel.IsOpen;
 
-    public RabbitMqService(IConfiguration configuration, ILogger<RabbitMqService> logger)
+    public RabbitMqService(IConfiguration configuration, ILogger<RabbitMqService> logger, IMessageProcessingService messageProcessingService)
     {
         _logger = logger;
         _configuration = configuration;
+        _messageProcessingService = messageProcessingService;
         TryInitializeConnection(); // ✅ dùng try-catch
     }
 
@@ -50,16 +53,14 @@ public class RabbitMqService : IRabbitMqService, IDisposable
         }
     }
 
-    
-    
     public void Publish<T>(string queueName, T message)
     {
         try
         {
             if (!IsConnected)
             {
-                _logger.LogWarning("⚠️ RabbitMQ chưa kết nối, fallback message vào bộ nhớ tạm.");
-                _fallbackQueue.Enqueue(new QueuedMessage { QueueName = queueName, Message = message! });
+                _logger.LogWarning("⚠️ RabbitMQ chưa kết nối, thực hiện trực tiếp và lưu vào database.");
+                _messageProcessingService.ProcessMessageAsync(queueName, message).Wait();
                 return;
             }
 
@@ -77,12 +78,10 @@ public class RabbitMqService : IRabbitMqService, IDisposable
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "❌ Lỗi khi gửi message tới queue {QueueName}, fallback message vào bộ nhớ tạm.", queueName);
-            _fallbackQueue.Enqueue(new QueuedMessage { QueueName = queueName, Message = message! });
+            _logger.LogError(ex, "❌ Lỗi khi gửi message tới queue {QueueName}, thực hiện trực tiếp và lưu vào database.", queueName);
+            _messageProcessingService.ProcessMessageAsync(queueName, message).Wait();
         }
     }
-
-
 
     public void Subscribe<T>(string queueName, Func<T, Task> onMessage)
     {
@@ -157,7 +156,6 @@ public class RabbitMqService : IRabbitMqService, IDisposable
         }
     }
 
-    
     public void TryReconnect()
     {
         if (!IsConnected)
@@ -166,14 +164,6 @@ public class RabbitMqService : IRabbitMqService, IDisposable
             _logger.LogWarning("🔁 Đang thử reconnect RabbitMQ...");
             TryInitializeConnection();
         }
-    }
-    
-    
-    public bool HasFallbackMessages => _fallbackQueue.HasMessage;
-
-    public Task<QueuedMessage?> DequeueFallbackMessageAsync(CancellationToken cancellationToken)
-    {
-        return _fallbackQueue.DequeueAsync(cancellationToken);
     }
 
     public void Dispose()

@@ -8,7 +8,6 @@ using backend_manage.Services.AuthService.Helpers;
 using backend_manage.Services.Interfaces;
 using backend_manage.Services;
 using backend_manage.Messages.RabbitMQ;
-using backend_manage.Messages.RabbitMQ.FallBack;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
@@ -49,6 +48,9 @@ namespace backend_manage.Configurations
             services.AddScoped<StudentAnswerHelper>();
             services.AddScoped<StudentValidationHelper>();
             services.AddScoped<StudentImportHelper>();
+
+            // Register Message Processing Service
+            services.AddSingleton<IMessageProcessingService, MessageProcessingService>();
 
             // Register Redis Service as Singleton to avoid ping on every request
             services.AddSingleton<IRedisService>(sp =>
@@ -94,7 +96,8 @@ namespace backend_manage.Configurations
                     return new RedisService(sp.GetRequiredService<IConnectionMultiplexer>(), logger);
                 }
             });
-            services.AddHostedService<FallbackRetryWorker>();
+
+            // Register RabbitMQ Services
             services.AddHostedService<RabbitMqReconnectWorker>();
             services.AddSingleton<IRabbitMqService, RabbitMqService>();
             services.AddHostedService<RabbitMqConsumer>();
