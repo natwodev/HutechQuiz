@@ -161,68 +161,77 @@ public class StudentController : ControllerBase
         }
     }
 
-    [HttpPost("save-answer")]
-    public async Task<IActionResult> UpdateAnswer([FromBody] SaveAnswerDto request)
+  [HttpPost("save-answer")]
+public async Task<IActionResult> UpdateAnswer([FromBody] SaveAnswerDto request)
+{
+    try
     {
-        try
+        var studentCode = User.FindFirst("studentCode")?.Value;
+        if (string.IsNullOrEmpty(studentCode))
         {
-            // Lấy studentCode từ JWT token
-            var studentCode = User.FindFirst("studentCode")?.Value;
-            if (string.IsNullOrEmpty(studentCode))
-            {
-                return Unauthorized(new { success = false, message = "Không tìm thấy thông tin sinh viên" });
-            }
-
-            // Validate input
-            if (request.Index < 0)
-            {
-                return BadRequest(new { success = false, message = "Index không hợp lệ" });
-            }
-
-            if (string.IsNullOrEmpty(request.Answer))
-            {
-                return BadRequest(new { success = false, message = "Đáp án không được để trống" });
-            }
-
-            // Cập nhật đáp án
-            var (success, message, newAnswersString) = await _studentService.UpdateSingleAnswerAsync(
-                studentCode, 
-                request.StudentExamSessionId, 
-                request.Index, 
-                request.Answer
-            );
-
-            if (success)
-            {
-                _logger.LogInformation("✅ Sinh viên {StudentCode} đã cập nhật đáp án tại vị trí {Index}: {Answer}", 
-                    studentCode, request.Index, request.Answer);
-                
-                return Ok(new { 
-                    success = true, 
-                    message = message,
-                    data = new { 
-                        newAnswersString = newAnswersString,
-                        index = request.Index,
-                        answer = request.Answer
-                    }
-                });
-            }
-            else
-            {
-                _logger.LogWarning("⚠️ Sinh viên {StudentCode} không thể cập nhật đáp án tại vị trí {Index}: {Message}", 
-                    studentCode, request.Index, message);
-                
-                return BadRequest(new { success = false, message = message });
-            }
+            return Unauthorized(new { success = false, message = "Không tìm thấy thông tin sinh viên" });
         }
-        catch (Exception ex)
+
+        if (request.Index < 0)
         {
-            _logger.LogError(ex, "❌ Lỗi khi cập nhật đáp án cho sinh viên {StudentCode} tại vị trí {Index}", 
-                User.FindFirst("studentCode")?.Value, request.Index);
-            
-            return StatusCode(500, new { success = false, message = "Lỗi server khi cập nhật đáp án" });
+            return BadRequest(new { success = false, message = "Index không hợp lệ" });
+        }
+
+        if (string.IsNullOrWhiteSpace(request.Answer))
+        {
+            return BadRequest(new { success = false, message = "Đáp án không được để trống" });
+        }
+
+        var (success, message, newAnswersString) = await _studentService.UpdateSingleAnswerAsync(
+            studentCode,
+            request.StudentExamSessionId,
+            request.Index,
+            request.SubIndex, // truyền thêm vào
+            request.Answer
+        );
+
+        if (success)
+        {
+            _logger.LogInformation("✅ Sinh viên {StudentCode} đã cập nhật đáp án tại vị trí {Index}{SubIndex}: {Answer}",
+                studentCode,
+                request.Index,
+                request.SubIndex.HasValue ? $" (câu con {request.SubIndex})" : "",
+                request.Answer);
+
+            return Ok(new
+            {
+                success = true,
+                message,
+                data = new
+                {
+                    newAnswersString,
+                    index = request.Index,
+                    subIndex = request.SubIndex,
+                    answer = request.Answer
+                }
+            });
+        }
+        else
+        {
+            _logger.LogWarning("⚠️ Sinh viên {StudentCode} không thể cập nhật đáp án tại vị trí {Index}{SubIndex}: {Message}",
+                studentCode,
+                request.Index,
+                request.SubIndex.HasValue ? $" (câu con {request.SubIndex})" : "",
+                message);
+
+            return BadRequest(new { success = false, message });
         }
     }
+    catch (Exception ex)
+    {
+        _logger.LogError(ex, "❌ Lỗi khi cập nhật đáp án cho sinh viên {StudentCode} tại vị trí {Index}{SubIndex}",
+            User.FindFirst("studentCode")?.Value,
+            request.Index,
+            request.SubIndex);
+
+        return StatusCode(500, new { success = false, message = "Lỗi server khi cập nhật đáp án" });
+    }
+}
 
     [HttpPost("active-login")]
     public async Task<IActionResult> ActiveLogin([FromBody] ActiveLoginRequest request)

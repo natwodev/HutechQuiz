@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
 
 namespace backend_manage.DTOs
 {
@@ -28,7 +29,6 @@ namespace backend_manage.DTOs
         public string Answer2 { get; set; }
         public string Answer3 { get; set; }
         public string Answer4 { get; set; }
-        public ShuffledExamPaperDetailDto? ParentQuestion { get; set; }
         public List<ShuffledExamPaperDetailDto> ChildQuestions { get; set; } = new();
     }
 } 

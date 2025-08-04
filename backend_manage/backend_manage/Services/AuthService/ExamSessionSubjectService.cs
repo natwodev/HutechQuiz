@@ -32,6 +32,7 @@ namespace backend_manage.Services.AuthService
             var entities = await _repository.GetQueryable()
                 .Include(x => x.Subject)
                 .Include(x => x.OriginalExamPaper)
+                .AsSplitQuery()
                 .ToListAsync();
             return _mapper.Map<IEnumerable<ExamSessionSubjectDto>>(entities);
         }
@@ -42,6 +43,7 @@ namespace backend_manage.Services.AuthService
             var entity = await _repository.GetQueryable()
                 .Include(x => x.Subject)
                 .Include(x => x.OriginalExamPaper)
+                .AsSplitQuery()
                 .FirstOrDefaultAsync(x => x.ExamSessionSubjectId == entityId);
             return entity == null ? null : _mapper.Map<ExamSessionSubjectDto>(entity);
         }

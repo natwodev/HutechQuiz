@@ -7,6 +7,5 @@ namespace backend_manage.Services.Interfaces
     {
         Task<ShuffledExamPaperDto> GetWithDetailsAsync(string shuffledExamPaperCore);
         Task<bool> DeleteSoftAsync(int shuffledExamPaperId);
-        Task PreloadApprovedPapersToRedisAsync();
     }
 } 

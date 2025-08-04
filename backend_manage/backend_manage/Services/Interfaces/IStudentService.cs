@@ -23,7 +23,7 @@ public interface IStudentService
     Task<(bool Success, string Message)> AvtiveLoginAsync(string studentCode, bool isLogin);
     Task<bool> AddExtraMinutesAsync(string studentCode, int studentExamSessionId, int extraMinutes, string? reasonForExtra);
     
-    Task<(bool Success, string Message, string? NewAnswersString)> UpdateSingleAnswerAsync(string studentCode, int studentExamSessionId, int index, string answer);
+    Task<(bool Success, string Message, string? NewAnswersString)> UpdateSingleAnswerAsync(string studentCode, int studentExamSessionId, int index,int? SubIndex, string answer);
     
     Task<StudentImportResultDto> ImportFromExcelStreamAsync(Stream stream, string examSessionSubjectCore,
         int examRoomId, string userId);
