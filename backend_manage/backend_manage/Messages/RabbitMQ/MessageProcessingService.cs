@@ -1,4 +1,6 @@
 using backend_manage.Data;
+using backend_manage.Messages;
+using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 
 namespace backend_manage.Messages.RabbitMQ;
@@ -33,6 +35,9 @@ public class MessageProcessingService : IMessageProcessingService
                 case "start_exam_queue":
                     await ProcessStartExamMessageAsync(message);
                     break;
+                case "save_answer_queue":
+                    await ProcessSaveAnswerMessageAsync(message);
+                    break;
                 // Thêm các case khác cho các loại message khác
                 // case "student_import_queue":
                 //     await ProcessStudentImportMessageAsync(message);
@@ -61,13 +66,12 @@ public class MessageProcessingService : IMessageProcessingService
                 var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
                 var studentExamSession = dbContext.StudentExamSessions
-                    .FirstOrDefault(x => x.StudentExamSessionId == startExamMessage.StudentExamSessionId
-                        && x.StudentCode == startExamMessage.StudentCode);
+                    .SingleOrDefault(x => x.StudentExamSessionId == startExamMessage.StudentExamSessionId);
 
                 if (studentExamSession == null)
                 {
-                    _logger.LogWarning("❗ Không tìm thấy StudentExamSession. StudentExamSessionId: {StudentExamSessionId}, StudentCode: {StudentCode}",
-                        startExamMessage.StudentExamSessionId, startExamMessage.StudentCode);
+                    _logger.LogWarning("❗ Không tìm thấy StudentExamSession. StudentExamSessionId: {StudentExamSessionId}",
+                        startExamMessage.StudentExamSessionId);
                     return;
                 }
 
@@ -92,6 +96,48 @@ public class MessageProcessingService : IMessageProcessingService
         catch (Exception ex)
         {
             _logger.LogError(ex, "❌ Lỗi xử lý StartExamMessage trực tiếp: {Message}", JsonConvert.SerializeObject(message));
+            throw;
+        }
+    }
+
+    private async Task ProcessSaveAnswerMessageAsync<T>(T message)
+    {
+        try
+        {
+            if (message is StudentAnswerSavedMessage saveAnswerMessage)
+            {
+                using var scope = _serviceScopeFactory.CreateScope();
+                var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+                // Tìm StudentExamSession bằng StudentExamSessionId
+                var studentExamSession = dbContext.StudentExamSessions
+                    .AsNoTracking() // Chỉ đọc dữ liệu, không track changes
+                    .SingleOrDefault(x => x.StudentExamSessionId == saveAnswerMessage.StudentExamSessionId);
+
+                if (studentExamSession == null)
+                {
+                    _logger.LogWarning("❗ Không tìm thấy StudentExamSession. StudentExamSessionId: {StudentExamSessionId}", 
+                        saveAnswerMessage.StudentExamSessionId);
+                    return;
+                }
+
+                // Cập nhật đáp án mới
+                studentExamSession.StudentAnswersString = saveAnswerMessage.NewAnswersString;
+                await dbContext.SaveChangesAsync();
+
+                _logger.LogInformation(
+                    "📝 Đã cập nhật đáp án trực tiếp: StudentCode={StudentCode}, StudentExamSessionId={StudentExamSessionId}, Index={Index}, Answer={Answer}",
+                    saveAnswerMessage.StudentCode, saveAnswerMessage.StudentExamSessionId, saveAnswerMessage.Index, saveAnswerMessage.Answer
+                );
+            }
+            else
+            {
+                _logger.LogWarning("⚠️ Message không phải là StudentAnswerSavedMessage: {MessageType}", typeof(T).Name);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "❌ Lỗi xử lý StudentAnswerSavedMessage trực tiếp: {Message}", JsonConvert.SerializeObject(message));
             throw;
         }
     }
