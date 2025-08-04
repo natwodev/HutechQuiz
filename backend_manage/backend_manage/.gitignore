@@ -69,3 +69,6 @@ wwwroot/EPZ/
 wwwroot/EPZ_DL/
 epz/
 epz_dl/
+
+# Git ignore files
+.gitignore
