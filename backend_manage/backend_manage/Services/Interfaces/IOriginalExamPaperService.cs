@@ -10,8 +10,6 @@ namespace backend_manage.Services.Interfaces
     {
         Task ImportFromXmlAsync(Microsoft.AspNetCore.Http.IFormFile file, string OriginalExamPaperCore);
         //Task CreateShuffledExamPapersAsync(string originalExamPaperCore, int count);
-        Task<OriginalExamPaperDto> GetWithDetailsAsync(string originalExamPaperCore);
-
 
         Task CreateShuffledExamPapersAsync(string originalExamPaperCore, int count);
         Task<IEnumerable<OriginalExamPaperDetail>> GetOriginalExamPaperDetailsByCanShuffleQuestionAsync();
@@ -31,5 +29,8 @@ namespace backend_manage.Services.Interfaces
         Task<IEnumerable<OriginalExamPaperDetail>> GetNonShuffleableChildQuestionsByParentIdAsync(int parentQuestionId);
         
         Task<IEnumerable<OriginalExamPaperDetail>> Shufflepaperchild(int parentQuestionId);
+        
+        // Phương thức tạo AnswerKey cho đề thi hoán vị
+        Task<string> GenerateAnswerKeyAsync(string shuffledExamPaperCore);
     }
 } 
