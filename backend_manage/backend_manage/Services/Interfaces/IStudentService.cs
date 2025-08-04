@@ -13,6 +13,7 @@ public interface IStudentService
     Task<StudentImportResultDto> ImportFromExcelAsync(IFormFile file, string examSessionSubjectCore, int examRoomId);
     Task<Student?> GetByStudentCodeAsync(string studentCode);
 
+    Task<StudentImportResultDto> ImportFromExcelAsyncs(IFormFile file, string examSessionSubjectCore, int examRoomId);
 // Trong IStudentService
     Task<(StudentExamSessionCacheDto studentExamSessionCacheDto, ShuffledExamPaperDto? shuffledExamPaperDto)>
         StartExamAsync(string studentCode,
@@ -21,6 +22,8 @@ public interface IStudentService
     Task<IEnumerable<StudentExamRoomStatusDto>> GetStudentsByExamRoomAsync(int examRoomId, int examSessionSubjectId);
     Task<(bool Success, string Message)> AvtiveLoginAsync(string studentCode, bool isLogin);
     Task<bool> AddExtraMinutesAsync(string studentCode, int studentExamSessionId, int extraMinutes, string? reasonForExtra);
+    
+    Task<(bool Success, string Message, string? NewAnswersString)> UpdateSingleAnswerAsync(string studentCode, int studentExamSessionId, int index, string answer);
     
     Task<StudentImportResultDto> ImportFromExcelStreamAsync(Stream stream, string examSessionSubjectCore,
         int examRoomId, string userId);

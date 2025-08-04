@@ -11,6 +11,9 @@ Migrations/
 bin/
 obj/
 
+# Test folder
+Test/
+
 # Log files
 *.log
 Logs/

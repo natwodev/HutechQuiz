@@ -35,7 +35,7 @@ namespace backend_manage.DTOs
     public class SaveAnswerDto
     {
         [Required]
-        public int ShuffledExamPaperId { get; set; }
+        public int StudentExamSessionId { get; set; }
 
         [Required]
         public int Index { get; set; }

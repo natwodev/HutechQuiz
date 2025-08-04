@@ -62,12 +62,11 @@ public class ExamPaperHelper
             _logger.LogInformation("Cập nhật đề thi vào phiên thi trên redis và db");
             studentExamSessionDto.ShuffledExamPaperId = newExamPaper.ShuffledExamPaperId;
             studentExamSessionDto.StartTime = DateTimeHelper.GetVietnamTime();
-            // Regex: tìm các nhóm như (1,B), (2,C), ...
-            string pattern = @"\((\d+),[A-Z]\)";
-            // Thay thế bằng (số,-)
-            string result = Regex.Replace(newExamPaper.AnswerKey, pattern, "($1,-)");
-            studentExamSessionDto.StudentAnswersString = result;
-            studentExamSessionDto.IsCompleted = true;
+            
+            // Tạo chuỗi đáp án rỗng dựa trên cấu trúc đề thi thực tế
+            var emptyAnswers = CreateEmptyAnswersString(newExamPaper);
+            studentExamSessionDto.StudentAnswersString = emptyAnswers;
+            studentExamSessionDto.IsCompleted = false; // Chưa hoàn thành
             await _sessionCacheHelper.UpdateStudentExamSessionAsync(studentCode,studentExamSessionDto);
 
             var startExamMessage = new StartExamMessage
@@ -76,8 +75,8 @@ public class ExamPaperHelper
                 StudentCode = studentCode,
                 StartTime = DateTimeHelper.GetVietnamTime(),
                 ShuffledExamPaperId = newExamPaper.ShuffledExamPaperId,
-                StudentAnswersString = result,
-                IsCompleted = true
+                StudentAnswersString = emptyAnswers,
+                IsCompleted = false
             };
             
             _rabbitMqService.Publish("start_exam_queue",startExamMessage);
@@ -419,5 +418,87 @@ public class ExamPaperHelper
         return answerKeyString.Split(';', StringSplitOptions.RemoveEmptyEntries)
             .Select(a => a.Trim('(', ')').Split(','))
             .ToDictionary(parts => int.Parse(parts[0]), parts => parts[1]);
+    }
+
+    private string CreateEmptyAnswersString(ShuffledExamPaperDto paperDto)
+    {
+        if (string.IsNullOrEmpty(paperDto.AnswerKey))
+            return "";
+
+        int globalIndex = 1;
+
+        string ProcessPart(string input)
+        {
+            input = input.Trim();
+            // Nếu là nhóm (nested)
+            if (input.Contains(",("))
+            {
+                // Tìm vị trí mở đầu nhóm
+                int groupIndex = globalIndex++;
+                // Tìm phần con bên trong dấu ngoặc
+                int openIdx = input.IndexOf('(');
+                int firstComma = input.IndexOf(',', openIdx);
+                int groupContentStart = firstComma + 1;
+                int groupContentEnd = input.LastIndexOf(')');
+                string groupContent = input.Substring(groupContentStart, groupContentEnd - groupContentStart);
+
+                // Tách các câu hỏi con trong nhóm
+                var childParts = new List<string>();
+                int depth = 0, lastSplit = 0;
+                for (int i = 0; i < groupContent.Length; i++)
+                {
+                    if (groupContent[i] == '(') depth++;
+                    if (groupContent[i] == ')') depth--;
+                    if (groupContent[i] == ';' && depth == 0)
+                    {
+                        childParts.Add(groupContent.Substring(lastSplit, i - lastSplit));
+                        lastSplit = i + 1;
+                    }
+                }
+                if (lastSplit < groupContent.Length)
+                    childParts.Add(groupContent.Substring(lastSplit));
+
+                // Xử lý từng câu hỏi con
+                var replacedChildren = childParts
+                    .Select(p => p.Trim())
+                    .Where(p => !string.IsNullOrEmpty(p))
+                    .Select(ProcessPart)
+                    .ToList();
+
+                return $"({groupIndex},{string.Join(";", replacedChildren)})";
+            }
+            else
+            {
+                // Câu hỏi đơn
+                int idx = globalIndex++;
+                return $"({idx},-)";
+            }
+        }
+
+        // Phân tách các phần tử ngoài cùng (câu hỏi đơn hoặc nhóm)
+        var parts = new List<string>();
+        int depth2 = 0, lastSplit2 = 0;
+        for (int i = 0; i < paperDto.AnswerKey.Length; i++)
+        {
+            if (paperDto.AnswerKey[i] == '(') depth2++;
+            if (paperDto.AnswerKey[i] == ')') depth2--;
+            if (paperDto.AnswerKey[i] == ';' && depth2 == 0)
+            {
+                parts.Add(paperDto.AnswerKey.Substring(lastSplit2, i - lastSplit2));
+                lastSplit2 = i + 1;
+            }
+        }
+        if (lastSplit2 < paperDto.AnswerKey.Length)
+            parts.Add(paperDto.AnswerKey.Substring(lastSplit2));
+
+        var resultParts = parts
+            .Select(p => p.Trim())
+            .Where(p => !string.IsNullOrEmpty(p))
+            .Select(ProcessPart)
+            .ToList();
+
+        var result = string.Join(";", resultParts) + ";";
+        _logger.LogInformation("Đã tạo chuỗi đáp án rỗng chuẩn hóa: {EmptyAnswers}", result);
+        return result;
     }
 } 
