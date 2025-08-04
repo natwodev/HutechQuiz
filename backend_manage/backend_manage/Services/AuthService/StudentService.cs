@@ -395,6 +395,7 @@ public class StudentService : IStudentService
                 .Include(x => x.ExamSessionSubject)
                     .ThenInclude(x => x.Subject)
                 .Include(x => x.ExamRoom)
+                .AsSplitQuery()
                 .ToListAsync();
             
             // Cache lại vào Redis
@@ -420,6 +421,7 @@ public class StudentService : IStudentService
             .Include(ses => ses.Student)
             .Include(ses => ses.ExamSessionSubject)
                 .ThenInclude(ess => ess.Subject)
+            .AsSplitQuery()
             .ToListAsync();
         return sessions.Select(x => _mapper.Map<StudentExamRoomStatusDto>(x));
     }
@@ -483,12 +485,12 @@ public class StudentService : IStudentService
     // Helper methods để tái sử dụng code
 
     #region UpdateSingleAnswerAsync
-    public async Task<(bool Success, string Message, string? NewAnswersString)> UpdateSingleAnswerAsync(string studentCode, int studentExamSessionId, int index, string answer)
+    public async Task<(bool Success, string Message, string? NewAnswersString)> UpdateSingleAnswerAsync(string studentCode, int studentExamSessionId, int index,int? SubIndex, string answer)
     {
         try
         {
             // Cập nhật đáp án sử dụng StudentAnswerHelper
-            var (success, message, newAnswersString) = await _answerHelper.UpdateSingleAnswerAsync(studentCode, studentExamSessionId, index, answer);
+            var (success, message, newAnswersString) = await _answerHelper.UpdateSingleAnswerAsync(studentCode, studentExamSessionId, index, SubIndex, answer);
             
             if (success)
             {

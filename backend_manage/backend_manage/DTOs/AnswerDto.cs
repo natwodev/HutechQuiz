@@ -40,9 +40,14 @@ namespace backend_manage.DTOs
         [Required]
         public int Index { get; set; }
 
+        // Dùng cho câu hỏi con trong câu cha
+        public int? SubIndex { get; set; }
+
         [Required]
-        public string Answer { get; set; }
+        [RegularExpression("^[A-D]$", ErrorMessage = "Đáp án phải là A, B, C hoặc D")]
+        public string Answer { get; set; } = null!;
     }
+
 
     public class ExamSubmissionDto
     {

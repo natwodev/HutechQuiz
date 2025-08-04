@@ -101,38 +101,22 @@ public class MappingProfile : Profile
 
         // ShuffledExamPaper & Detail
         CreateMap<ShuffledExamPaper, ShuffledExamPaperDto>()
-            .ForMember(dest => dest.Details, opt => opt.MapFrom(src => src.ShuffledExamPaperDetails))
+            .ForMember(dest => dest.Details, opt => opt.MapFrom(src => src.ShuffledExamPaperDetails.Where(d => d.ParentQuestionId == null)))
             .ForMember(dest => dest.SubjectName, opt => opt.MapFrom(src => src.Subject.SubjectName))
             .ForMember(dest => dest.SubjectCode, opt => opt.MapFrom(src => src.Subject.SubjectCore))
             .ForMember(dest => dest.ExamSessionSubjectId, opt => opt.MapFrom(src => (int?)null));
         CreateMap<ShuffledExamPaperDetail, ShuffledExamPaperDetailDto>()
-            .ForMember(dest => dest.QuestionContent, opt => opt.MapFrom(src => src.OriginalExamPaperDetail.QuestionContent))
-            .ForMember(dest => dest.Answer1, opt => opt.Ignore())
-            .ForMember(dest => dest.Answer2, opt => opt.Ignore())
-            .ForMember(dest => dest.Answer3, opt => opt.Ignore())
-            .ForMember(dest => dest.Answer4, opt => opt.Ignore())
-            .ForMember(dest => dest.ChildQuestions, opt => opt.MapFrom(src => src.ChildQuestions))
-            .ForMember(dest => dest.ParentQuestion, opt => opt.MapFrom(src => src.ParentQuestion))
-            .AfterMap((src, dest) => {
-                var original = src.OriginalExamPaperDetail;
-                if (original == null || string.IsNullOrEmpty(src.AnswerOrder))
-                {
-                    dest.Answer1 = original?.Answer1;
-                    dest.Answer2 = original?.Answer2;
-                    dest.Answer3 = original?.Answer3;
-                    dest.Answer4 = original?.Answer4;
-                }
-                else
-                {
-                    var answers = new[] { original.Answer1, original.Answer2, original.Answer3, original.Answer4 };
-                    var order = src.AnswerOrder.ToCharArray().Select(c => int.Parse(c.ToString()) - 1).ToArray();
-                    var shuffledAnswers = order.Select(i => answers.ElementAtOrDefault(i)).ToArray();
-                    dest.Answer1 = shuffledAnswers.ElementAtOrDefault(0);
-                    dest.Answer2 = shuffledAnswers.ElementAtOrDefault(1);
-                    dest.Answer3 = shuffledAnswers.ElementAtOrDefault(2);
-                    dest.Answer4 = shuffledAnswers.ElementAtOrDefault(3);
-                }
-            });
+            .ForMember(dest => dest.QuestionContent,
+                opt => opt.MapFrom(src => src.OriginalExamPaperDetail.QuestionContent))
+            .ForMember(dest => dest.Answer1, 
+                opt => opt.MapFrom(src => GetShuffledAnswer(src, 1)))
+            .ForMember(dest => dest.Answer2, 
+                opt => opt.MapFrom(src => GetShuffledAnswer(src, 2)))
+            .ForMember(dest => dest.Answer3, 
+                opt => opt.MapFrom(src => GetShuffledAnswer(src, 3)))
+            .ForMember(dest => dest.Answer4, 
+                opt => opt.MapFrom(src => GetShuffledAnswer(src, 4)))
+            .ForMember(dest => dest.ChildQuestions, opt => opt.MapFrom(src => src.ChildQuestions));
 
         CreateMap<StudentExamSession, StudentExamSessionDto>()
             .ForMember(dest => dest.ExamSessionSubjectId, opt => opt.MapFrom(src => src.ExamSessionSubjectId))
@@ -201,5 +185,37 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.Index, opt => opt.MapFrom(src => src.Index))
             .ForMember(dest => dest.Answer, opt => opt.MapFrom(src => src.Answer))
             .ForMember(dest => dest.NewAnswersString, opt => opt.MapFrom(src => src.NewAnswersString));
+    }
+
+    private static string GetShuffledAnswer(ShuffledExamPaperDetail detail, int position)
+    {
+        if (detail.OriginalExamPaperDetail == null)
+            return null;
+
+        // Nếu không có answerOrder hoặc answerOrder không hợp lệ, trả về đáp án gốc
+        if (string.IsNullOrWhiteSpace(detail.AnswerOrder) || detail.AnswerOrder.Length != 4)
+        {
+            return GetOriginalAnswer(detail.OriginalExamPaperDetail, position);
+        }
+
+        // Tìm vị trí gốc tương ứng với vị trí hiện tại
+        // Ví dụ: answerOrder = "4123", position = 1 (answer1)
+        // Thì cần tìm số nào ở vị trí 1 trong "4123" = 4
+        // Sau đó lấy đáp án gốc ở vị trí 4
+        var originalPosition = detail.AnswerOrder[position - 1] - '0'; // Chuyển char thành int
+        
+        return GetOriginalAnswer(detail.OriginalExamPaperDetail, originalPosition);
+    }
+
+    private static string GetOriginalAnswer(OriginalExamPaperDetail originalDetail, int position)
+    {
+        return position switch
+        {
+            1 => originalDetail.Answer1,
+            2 => originalDetail.Answer2,
+            3 => originalDetail.Answer3,
+            4 => originalDetail.Answer4,
+            _ => null
+        };
     }
 }

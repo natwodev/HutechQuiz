@@ -506,6 +506,7 @@ namespace backend_manage.Services.AuthService
             var childQuestions = await _originalExamPaperDetailRepository.GetQueryable()
                 .Where(d => d.ParentQuestionId == parentQuestionId) 
                 .Include(d => d.OriginalExamPaper) 
+                .AsSplitQuery()
                 .OrderBy(d => d.Order) 
                 .ToListAsync();
 
@@ -588,6 +589,7 @@ namespace backend_manage.Services.AuthService
                 .Where(d => d.OriginalExamPaperDetailId == questionId && 
                             d.ParentQuestionId == null)
                 .Include(d => d.ChildQuestions)
+                .AsSplitQuery()
                 .FirstOrDefaultAsync();
 
             return question != null && question.ChildQuestions != null && question.ChildQuestions.Any();
@@ -767,6 +769,7 @@ namespace backend_manage.Services.AuthService
                 .Include(s => s.ShuffledExamPaperDetails)
                 .ThenInclude(d => d.OriginalExamPaperDetail)
                 .ThenInclude(od => od.ChildQuestions)
+                .AsSplitQuery()
                 .FirstOrDefaultAsync(s => s.ShuffledExamPaperCore == shuffledExamPaperCore);
 
             if (shuffledExamPaper == null)

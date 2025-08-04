@@ -38,7 +38,11 @@ namespace backend_manage.Services.AuthService
             var paper = await _shuffledExamPaperRepository.GetQueryable()
                 .Where(x => x.ShuffledExamPaperCore == shuffledExamPaperCore)
                 .Include(x => x.ShuffledExamPaperDetails)
-                .ThenInclude(d => d.OriginalExamPaperDetail)
+                    .ThenInclude(d => d.OriginalExamPaperDetail)
+                .Include(x => x.ShuffledExamPaperDetails)
+                    .ThenInclude(d => d.ChildQuestions)
+                .Include(x => x.ShuffledExamPaperDetails)
+                    .ThenInclude(d => d.ParentQuestion)
                 .Include(x => x.OriginalExamPaper)
                 .Include(x => x.Subject)
                 .FirstOrDefaultAsync();
@@ -64,30 +68,6 @@ namespace backend_manage.Services.AuthService
             await _shuffledExamPaperRepository.UpdateAsync(paper);
             return true;
         }
-
-        public async Task PreloadApprovedPapersToRedisAsync()
-        {
-            var db = _redis.GetDatabase();
-            
-            // Lấy tất cả đề thi hoán vị đã được phê duyệt
-            var approvedPapers = await _shuffledExamPaperRepository.GetQueryable()
-                .Where(x => x.IsApproved == true)
-                .Include(x => x.ShuffledExamPaperDetails)
-                    .ThenInclude(d => d.OriginalExamPaperDetail)
-                .Include(x => x.OriginalExamPaper)
-                .Include(x => x.Subject)
-                .ToListAsync();
-
-            foreach (var paper in approvedPapers)
-            {
-                var paperDto = _mapper.Map<ShuffledExamPaperDto>(paper);
-                string cacheKey = $"shuffled_exam_paper:{paper.ShuffledExamPaperId}";
-                await db.StringSetAsync(
-                    cacheKey,
-                    System.Text.Json.JsonSerializer.Serialize(paperDto),
-                    TimeSpan.FromHours(6)
-                );
-            }
-        }
+        
     }
 } 

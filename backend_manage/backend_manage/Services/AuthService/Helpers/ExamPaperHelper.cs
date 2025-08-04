@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using StackExchange.Redis;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using backend_manage.Hubs;
 using backend_manage.Messages;
@@ -64,7 +65,7 @@ public class ExamPaperHelper
             studentExamSessionDto.StartTime = DateTimeHelper.GetVietnamTime();
             
             // Tạo chuỗi đáp án rỗng dựa trên cấu trúc đề thi thực tế
-            var emptyAnswers = CreateEmptyAnswersString(newExamPaper);
+            var emptyAnswers = CreateEmptyAnswersString(newExamPaper.AnswerKey);
             studentExamSessionDto.StudentAnswersString = emptyAnswers;
             studentExamSessionDto.IsCompleted = false; // Chưa hoàn thành
             await _sessionCacheHelper.UpdateStudentExamSessionAsync(studentCode,studentExamSessionDto);
@@ -137,6 +138,14 @@ public class ExamPaperHelper
         {
             // Lấy chi tiết đề từ database
             var cachedExamPaper = await _shuffledExamPaperRepository.GetQueryable()
+                .Include(x => x.ShuffledExamPaperDetails)
+                    .ThenInclude(d => d.OriginalExamPaperDetail)
+                .Include(x => x.ShuffledExamPaperDetails)
+                    .ThenInclude(d => d.ChildQuestions)
+                .Include(x => x.ShuffledExamPaperDetails)
+                    .ThenInclude(d => d.ParentQuestion)
+                .Include(x => x.OriginalExamPaper)
+                .Include(x => x.Subject)
                 .FirstOrDefaultAsync(p => p.ShuffledExamPaperId == randomPaperId.Value);
             
             if (cachedExamPaper != null)
@@ -263,7 +272,7 @@ public class ExamPaperHelper
             await db.SetAddAsync(cacheKey, paperIds);
             await db.KeyExpireAsync(cacheKey, TimeSpan.FromHours(6));
             
-            _logger.LogInformation("Đã cache {Count} đề thi cho OriginalExamPaperId {OriginalExamPaperId}", 
+            _logger.LogInformation("Đã cache {Count} đề thi cho OriginalExamPaperId cho đề gốc  {OriginalExamPaperId}", 
                 papers.Count, originalExamPaperId);
         }
         catch (Exception ex)
@@ -289,7 +298,12 @@ public class ExamPaperHelper
                 var cachedValue = cachedPaper.ToString();
                 try
                 {
-                    var paperDto = JsonSerializer.Deserialize<ShuffledExamPaperDto>(cachedValue);
+                    var jsonOptions = new JsonSerializerOptions
+                {
+                    ReferenceHandler = ReferenceHandler.Preserve,
+                    MaxDepth = 64
+                };
+                var paperDto = JsonSerializer.Deserialize<ShuffledExamPaperDto>(cachedValue, jsonOptions);
                     if (paperDto != null)
                     {
                         _logger.LogInformation("Đã lấy được đề thi từ Redis");
@@ -316,7 +330,7 @@ public class ExamPaperHelper
         return null;
     }
 
-    #region MyRegion
+    #region GetExamFromDatabaseAsync
     private async Task<ShuffledExamPaperDto> GetExamFromDatabaseAsync(int shuffledExamPaperId)
     {
         _logger.LogInformation("Lấy đề thi từ database cho ShuffledExamPaperId: {ShuffledExamPaperId}", shuffledExamPaperId);
@@ -327,29 +341,30 @@ public class ExamPaperHelper
         
         return examPaperDto;
     }
-    
+    //đang sửa ở đây
     public async Task<(ShuffledExamPaper ExamPaper, ShuffledExamPaperDto ExamPaperDto)> GetExamFromDatabase(int shuffledExamPaperId)
     {
-        _logger.LogInformation("Lấy đề thi từ database với ID: {ShuffledExamPaperId}", shuffledExamPaperId);
-        
         var shuffledExamPaper = await _shuffledExamPaperRepository.GetQueryable()
-            .Where(x => x.ShuffledExamPaperId == shuffledExamPaperId)
             .Include(x => x.ShuffledExamPaperDetails)
-            .ThenInclude(d => d.OriginalExamPaperDetail)
+                .ThenInclude(d => d.OriginalExamPaperDetail)
+            .Include(x => x.ShuffledExamPaperDetails)
+                .ThenInclude(d => d.ChildQuestions)
+            .Include(x => x.ShuffledExamPaperDetails)
+                .ThenInclude(d => d.ParentQuestion)
             .Include(x => x.OriginalExamPaper)
             .Include(x => x.Subject)
-            .FirstOrDefaultAsync();
-        
+            .FirstOrDefaultAsync(x => x.ShuffledExamPaperId == shuffledExamPaperId);
+
         if (shuffledExamPaper == null)
         {
-            _logger.LogError("Không tìm thấy đề thi hoán vị {ShuffledExamPaperId} trong database", 
-                shuffledExamPaperId);
+            _logger.LogError("Không tìm thấy đề thi hoán vị với ID: {ShuffledExamPaperId}", shuffledExamPaperId);
             throw new Exception("Không tìm thấy đề thi hoán vị.");
         }
-        
+
         var paperDto = _mapper.Map<ShuffledExamPaperDto>(shuffledExamPaper);
         return (shuffledExamPaper, paperDto);
     }
+
 
     public async Task<bool> CacheExamPaperAsync(int shuffledExamPaperId, ShuffledExamPaperDto paperDto)
     {
@@ -366,7 +381,12 @@ public class ExamPaperHelper
             var db = _redisService.GetDatabase();
             string cacheKey = $"shuffled_exam_paper:{shuffledExamPaperId}";
             
-            var jsonString = JsonSerializer.Serialize(paperDto);
+            var jsonOptions = new JsonSerializerOptions
+            {
+                ReferenceHandler = ReferenceHandler.Preserve,
+                MaxDepth = 64
+            };
+            var jsonString = JsonSerializer.Serialize(paperDto, jsonOptions);
             await db.StringSetAsync(cacheKey, jsonString, TimeSpan.FromHours(6));
             
             _logger.LogInformation("Đã cache đề thi vào Redis ");
@@ -419,86 +439,16 @@ public class ExamPaperHelper
             .Select(a => a.Trim('(', ')').Split(','))
             .ToDictionary(parts => int.Parse(parts[0]), parts => parts[1]);
     }
-
-    private string CreateEmptyAnswersString(ShuffledExamPaperDto paperDto)
+    
+    private string CreateEmptyAnswersString(string paperDto)
     {
-        if (string.IsNullOrEmpty(paperDto.AnswerKey))
+        if (string.IsNullOrWhiteSpace(paperDto))
             return "";
 
-        int globalIndex = 1;
+        // Thay thế các ký tự A, B, C, D sau dấu ',' hoặc '(' bằng dấu '-'
+        string result = Regex.Replace(paperDto, @"(?<=[,(])([A-D])(?=[)\s;,])", "-");
 
-        string ProcessPart(string input)
-        {
-            input = input.Trim();
-            // Nếu là nhóm (nested)
-            if (input.Contains(",("))
-            {
-                // Tìm vị trí mở đầu nhóm
-                int groupIndex = globalIndex++;
-                // Tìm phần con bên trong dấu ngoặc
-                int openIdx = input.IndexOf('(');
-                int firstComma = input.IndexOf(',', openIdx);
-                int groupContentStart = firstComma + 1;
-                int groupContentEnd = input.LastIndexOf(')');
-                string groupContent = input.Substring(groupContentStart, groupContentEnd - groupContentStart);
-
-                // Tách các câu hỏi con trong nhóm
-                var childParts = new List<string>();
-                int depth = 0, lastSplit = 0;
-                for (int i = 0; i < groupContent.Length; i++)
-                {
-                    if (groupContent[i] == '(') depth++;
-                    if (groupContent[i] == ')') depth--;
-                    if (groupContent[i] == ';' && depth == 0)
-                    {
-                        childParts.Add(groupContent.Substring(lastSplit, i - lastSplit));
-                        lastSplit = i + 1;
-                    }
-                }
-                if (lastSplit < groupContent.Length)
-                    childParts.Add(groupContent.Substring(lastSplit));
-
-                // Xử lý từng câu hỏi con
-                var replacedChildren = childParts
-                    .Select(p => p.Trim())
-                    .Where(p => !string.IsNullOrEmpty(p))
-                    .Select(ProcessPart)
-                    .ToList();
-
-                return $"({groupIndex},{string.Join(";", replacedChildren)})";
-            }
-            else
-            {
-                // Câu hỏi đơn
-                int idx = globalIndex++;
-                return $"({idx},-)";
-            }
-        }
-
-        // Phân tách các phần tử ngoài cùng (câu hỏi đơn hoặc nhóm)
-        var parts = new List<string>();
-        int depth2 = 0, lastSplit2 = 0;
-        for (int i = 0; i < paperDto.AnswerKey.Length; i++)
-        {
-            if (paperDto.AnswerKey[i] == '(') depth2++;
-            if (paperDto.AnswerKey[i] == ')') depth2--;
-            if (paperDto.AnswerKey[i] == ';' && depth2 == 0)
-            {
-                parts.Add(paperDto.AnswerKey.Substring(lastSplit2, i - lastSplit2));
-                lastSplit2 = i + 1;
-            }
-        }
-        if (lastSplit2 < paperDto.AnswerKey.Length)
-            parts.Add(paperDto.AnswerKey.Substring(lastSplit2));
-
-        var resultParts = parts
-            .Select(p => p.Trim())
-            .Where(p => !string.IsNullOrEmpty(p))
-            .Select(ProcessPart)
-            .ToList();
-
-        var result = string.Join(";", resultParts) + ";";
-        _logger.LogInformation("Đã tạo chuỗi đáp án rỗng chuẩn hóa: {EmptyAnswers}", result);
         return result;
     }
+
 } 
