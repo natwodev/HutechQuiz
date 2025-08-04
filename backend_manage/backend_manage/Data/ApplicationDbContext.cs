@@ -99,12 +99,17 @@ namespace backend_manage.Data
                 .HasForeignKey(s => s.ExamSessionSubjectId)
                 .OnDelete(DeleteBehavior.Restrict); // Tránh cascade path
 
-           // StudentExamSession → ShuffledExamPaper
+                       // StudentExamSession → ShuffledExamPaper
             builder.Entity<StudentExamSession>()
                 .HasOne(s => s.ShuffledExamPaper)
                 .WithMany(ep => ep.StudentExamSessions) // nếu có navigation ngược
                 .HasForeignKey(s => s.ShuffledExamPaperId)
                 .OnDelete(DeleteBehavior.Cascade); // giữ lại 1 cascade là đủ
+
+            // Thêm index cho StudentExamSession để tối ưu hóa tìm kiếm theo StudentExamSessionId
+            builder.Entity<StudentExamSession>()
+                .HasIndex(s => s.StudentExamSessionId)
+                .HasDatabaseName("IX_StudentExamSession_StudentExamSessionId");
 
             // OriginalExamPaper → Subject
             builder.Entity<OriginalExamPaper>()
