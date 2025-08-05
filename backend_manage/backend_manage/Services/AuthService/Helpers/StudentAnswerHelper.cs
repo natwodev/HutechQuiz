@@ -51,9 +51,6 @@ public class StudentAnswerHelper
             // Lấy chuỗi đáp án hiện tại
             string currentAnswersString = studentExamSessionDto.StudentAnswersString ?? "";
             
-            // Parse chuỗi đáp án hiện tại thành Dictionary
-            var answersDict = ParseStudentAnswers(currentAnswersString);
-            
             // Cập nhật đáp án
             string newAnswersString;
             if (saveAnswerDto.SubIndex.HasValue)
@@ -64,7 +61,7 @@ public class StudentAnswerHelper
             else
             {
                 // Cập nhật câu hỏi thường
-                newAnswersString = UpdateRegularQuestionAnswer(currentAnswersString, saveAnswerDto.Index, saveAnswerDto.Answer);
+                newAnswersString = UpdateSingleQuestionAnswer(currentAnswersString, saveAnswerDto.Index, saveAnswerDto.Answer);
             }
          
             // Cập nhật vào DTO
@@ -111,81 +108,51 @@ public class StudentAnswerHelper
         return await UpdateSingleAnswerAsync(saveAnswerDto, studentCode);
     }
 
-    private string UpdateRegularQuestionAnswer(string currentAnswersString, int index, string answer)
+    private static string UpdateSingleQuestionAnswer(string currentAnswerString, int index, string answer)
     {
-        var answersDict = ParseStudentAnswers(currentAnswersString);
-        answersDict[index] = answer;
+        // Parse chuỗi đáp án hiện tại
+        var answersDict = ParseAnswersString(currentAnswerString);
+        
+        // Cập nhật đáp án cho câu hỏi đơn
+        answersDict[index.ToString()] = answer;
+        
+        // Tạo lại chuỗi đáp án
         return CreateAnswersString(answersDict);
     }
 
-    private string UpdateGroupQuestionAnswer(string currentAnswersString, int index, int subIndex, string answer)
+    
+    private static string UpdateGroupQuestionAnswer(string currentAnswerString, int index, int subindex, string answer)
     {
-        // Tìm câu hỏi nhóm hiện tại
-        var groupQuestionPattern = $@"\({index},\([^)]+\)\)";
-        var match = System.Text.RegularExpressions.Regex.Match(currentAnswersString, groupQuestionPattern);
+        // Parse chuỗi đáp án hiện tại
+        var answersDict = ParseAnswersString(currentAnswerString);
         
-        if (match.Success)
-        {
-            // Cập nhật câu hỏi nhóm hiện có
-            var groupContent = match.Value;
-            var newGroupContent = UpdateSubAnswerInGroup(groupContent, subIndex, answer);
-            return currentAnswersString.Replace(groupContent, newGroupContent);
-        }
-        else
-        {
-            // Tạo câu hỏi nhóm mới
-            var newGroupQuestion = $"({index},({subIndex},{answer}))";
+        // Tạo key cho câu hỏi nhóm: index.subindex
+        var groupKey = $"{index}.{subindex}";
+        
+        // Cập nhật đáp án cho câu hỏi nhóm
+        answersDict[groupKey] = answer;
+        
+        // Tạo lại chuỗi đáp án
+        return CreateAnswersString(answersDict);
+    }
+
+    private static string CreateAnswersString(Dictionary<string, string> answers)
+    {
+        if (answers == null || answers.Count == 0)
+            return "";
             
-            if (string.IsNullOrEmpty(currentAnswersString))
-            {
-                return newGroupQuestion;
-            }
-            else
-            {
-                return currentAnswersString + ";" + newGroupQuestion;
-            }
-        }
+        return string.Join(";", answers.Select(kv => $"({kv.Key},{kv.Value})"));
     }
 
-    private string UpdateSubAnswerInGroup(string groupContent, int subIndex, string answer)
-    {
-        // Parse nội dung nhóm: (index,(subindex1,answer1);(subindex2,answer2);...)
-        var innerContent = groupContent.Substring(groupContent.IndexOf('(') + 1, groupContent.LastIndexOf(')') - groupContent.IndexOf('(') - 1);
-        var parts = innerContent.Split(',', 2);
-        var mainIndex = parts[0];
-        var subAnswers = parts[1].Trim('(', ')');
-        
-        // Parse các câu hỏi con
-        var subAnswerDict = new Dictionary<int, string>();
-        var subParts = subAnswers.Split(';', StringSplitOptions.RemoveEmptyEntries);
-        
-        foreach (var part in subParts)
-        {
-            var cleanPart = part.Trim('(', ')');
-            var subParts2 = cleanPart.Split(',');
-            if (subParts2.Length == 2)
-            {
-                subAnswerDict[int.Parse(subParts2[0])] = subParts2[1];
-            }
-        }
-        
-        // Cập nhật câu hỏi con
-        subAnswerDict[subIndex] = answer;
-        
-        // Tạo lại chuỗi câu hỏi con
-        var newSubAnswers = string.Join(";", subAnswerDict.Select(kv => $"({kv.Key},{kv.Value})"));
-        
-        return $"({mainIndex},({newSubAnswers}))";
-    }
-
-    public Dictionary<int, string> ParseStudentAnswers(string answersString)
+    
+    private static Dictionary<string, string> ParseAnswersString(string answersString)
     {
         if (string.IsNullOrEmpty(answersString))
-            return new Dictionary<int, string>();
+            return new Dictionary<string, string>();
 
         try
         {
-            var result = new Dictionary<int, string>();
+            var result = new Dictionary<string, string>();
             var parts = answersString.Split(';', StringSplitOptions.RemoveEmptyEntries);
             
             foreach (var part in parts)
@@ -195,20 +162,9 @@ public class StudentAnswerHelper
                 
                 if (subParts.Length == 2)
                 {
-                    var index = int.Parse(subParts[0]);
+                    var key = subParts[0];
                     var answer = subParts[1];
-                    
-                    // Kiểm tra xem có phải câu hỏi nhóm không
-                    if (answer.StartsWith("(") && answer.EndsWith(")"))
-                    {
-                        // Đây là câu hỏi nhóm, lưu nguyên chuỗi
-                        result[index] = answer;
-                    }
-                    else
-                    {
-                        // Câu hỏi thường
-                        result[index] = answer;
-                    }
+                    result[key] = answer;
                 }
             }
             
@@ -216,16 +172,11 @@ public class StudentAnswerHelper
         }
         catch (Exception ex)
         {
-            _logger.LogWarning("Lỗi khi parse chuỗi đáp án: {AnswersString}. Lỗi: {Error}", answersString, ex.Message);
-            return new Dictionary<int, string>();
+            // Log error if needed
+            return new Dictionary<string, string>();
         }
     }
 
-    public string CreateAnswersString(Dictionary<int, string> answers)
-    {
-        if (answers == null || answers.Count == 0)
-            return "";
-            
-        return string.Join(";", answers.Select(kv => $"({kv.Key},{kv.Value})"));
-    }
+    
+    
 } 

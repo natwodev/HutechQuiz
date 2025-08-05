@@ -494,11 +494,11 @@ public class StudentService : IStudentService
             
             if (success)
             {
-                _logger.LogInformation("✅ Đã cập nhật đáp án thành công cho sinh viên {StudentCode} tại vị trí {Index}", studentCode, index);
+                _logger.LogInformation("✅ Đã cập nhật đáp án thành công cho sinh viên {StudentCode} tại vị trí {Index} ,{SubIndex}", studentCode, index,SubIndex);
             }
             else
             {
-                _logger.LogWarning("⚠️ Không thể cập nhật đáp án cho sinh viên {StudentCode} tại vị trí {Index}: {Message}", studentCode, index, message);
+                _logger.LogWarning("⚠️ Không thể cập nhật đáp án cho sinh viên {StudentCode} tại vị trí {Index}  ,{SubIndex}: {Message}", studentCode, index,SubIndex, message);
             }
 
             return (success, message, newAnswersString);

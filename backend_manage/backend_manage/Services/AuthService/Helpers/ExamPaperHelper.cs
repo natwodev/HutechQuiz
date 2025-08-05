@@ -440,14 +440,18 @@ public class ExamPaperHelper
             .ToDictionary(parts => int.Parse(parts[0]), parts => parts[1]);
     }
     
-    private string CreateEmptyAnswersString(string paperDto)
+    private string CreateEmptyAnswersString(string answerKey)
     {
-        if (string.IsNullOrWhiteSpace(paperDto))
+        if (string.IsNullOrWhiteSpace(answerKey))
             return "";
 
-        // Thay thế các ký tự A, B, C, D sau dấu ',' hoặc '(' bằng dấu '-'
-        string result = Regex.Replace(paperDto, @"(?<=[,(])([A-D])(?=[)\s;,])", "-");
-
+        // Tạo chuỗi đáp án rỗng bằng cách thay thế tất cả các ký tự A, B, C, D bằng dấu '-'
+        // Giữ nguyên cấu trúc format của answer key
+        string result = answerKey;
+        
+        // Thay thế tất cả các ký tự A, B, C, D bằng dấu '-'
+        result = Regex.Replace(result, @"[A-D]", "-");
+        
         return result;
     }
 
