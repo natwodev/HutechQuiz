@@ -18,10 +18,10 @@ namespace backend_manage.Extensions
 
             // app.UseHttpsRedirection(); // Bật lại nếu dùng HTTPS
             
+            app.UseStaticFiles(); // ✅ Bật để phục vụ file tĩnh từ wwwroot
+            
             app.UseAuthentication();
             app.UseAuthorization();
-
-            // app.UseStaticFiles(); // Bật nếu có phục vụ file tĩnh (ảnh, js...)
 
             // app.UseIpRateLimiting(); // Tắt rate limiting
 

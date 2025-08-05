@@ -4,6 +4,7 @@
 @inject frontend_manage.Pages.Login.InfoApi InfoApi
 @inject ISnackbar Snackbar
 @inject IDialogService Dialog
+@inject HttpClient Http
 
 @using FrontEnd.DTOs
 @using Microsoft.AspNetCore.Components
@@ -114,6 +115,67 @@
         }
         return total;
     }
+
+    private string GetAudioPath(string audioFileName)
+    {
+        if (string.IsNullOrEmpty(shuffledExam?.ShuffledExamPaperCore) || string.IsNullOrEmpty(audioFileName))
+            return string.Empty;
+
+        // Lấy phần trước dấu _ từ ShuffledExamPaperCore
+        var folderName = shuffledExam.ShuffledExamPaperCore.Split('_')[0];
+        
+        // Tạo đường dẫn audio trực tiếp tới file trong backend
+        var baseAddress = Http.BaseAddress?.ToString() ?? "http://localhost:5163/";
+        return $"{baseAddress}EPZ/{folderName}/{audioFileName}";
+    }
+
+    private string GetPhysicalAudioPath(string audioFileName)
+    {
+        if (string.IsNullOrEmpty(shuffledExam?.ShuffledExamPaperCore) || string.IsNullOrEmpty(audioFileName))
+            return string.Empty;
+
+        // Lấy phần trước dấu _ từ ShuffledExamPaperCore
+        var folderName = shuffledExam.ShuffledExamPaperCore.Split('_')[0];
+        
+        // Tạo đường dẫn vật lý để kiểm tra file có tồn tại không
+        var wwwrootPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+        return Path.Combine(wwwrootPath, "EPZ", folderName, audioFileName);
+    }
+
+    private string ProcessQuestionContent(string content)
+    {
+        if (string.IsNullOrEmpty(content))
+            return content;
+
+        // Tìm và thay thế thẻ audio
+        var audioPattern = @"<audio>([^<]+)</audio>";
+        var match = System.Text.RegularExpressions.Regex.Match(content, audioPattern);
+        
+        if (match.Success)
+        {
+            var audioPath = match.Groups[1].Value;
+            var fullAudioPath = GetAudioPath(audioPath);
+            
+            // Debug: Log đường dẫn audio
+            Console.WriteLine($"Audio path: {audioPath}");
+            Console.WriteLine($"Full audio path: {fullAudioPath}");
+            
+            if (!string.IsNullOrEmpty(fullAudioPath))
+            {
+                // Thay thế thẻ audio bằng HTML audio player
+                var audioPlayer = $@"<div class=""audio-player mb-3"">
+                    <audio controls style=""width: 100%; max-width: 400px;"">
+                        <source src=""{fullAudioPath}"" type=""audio/mpeg"">
+                        Your browser does not support the audio element.
+                    </audio>
+                </div>";
+                
+                return System.Text.RegularExpressions.Regex.Replace(content, audioPattern, audioPlayer);
+            }
+        }
+        
+        return content;
+    }
 }
 
 @if (!string.IsNullOrEmpty(errorMessage))
@@ -144,7 +206,7 @@ else
                             <MudPaper Class="pa-4 mb-3" Elevation="1" Style="border: 1px solid #e0e0e0;">
                                 <MudText id="@($"question-{questionNumber}")" Typo="Typo.body1" Class="mb-3">
                                     <b>Câu @questionNumber: </b>
-                                    @((MarkupString)q.QuestionContent)
+                                    @((MarkupString)ProcessQuestionContent(q.QuestionContent))
                                 </MudText>
                 
                 @if (!string.IsNullOrEmpty(q.Answer1) || !string.IsNullOrEmpty(q.Answer2) || 
@@ -181,17 +243,17 @@ else
                 @if (q.ChildQuestions != null && q.ChildQuestions.Any())
                 {
                                     <MudDivider Class="my-3" />
-                                    <MudText Typo="Typo.subtitle2" Class="mb-3">Câu hỏi con:</MudText>
+                                    //<MudText Typo="Typo.subtitle2" Class="mb-3">Câu hỏi con:</MudText>
                                     
                             @foreach (var childQ in q.ChildQuestions.OrderBy(cq => cq.Order))
                             {
-                                        var childQuestionNumber = char.ConvertFromUtf32(97 + q.ChildQuestions.OrderBy(cq => cq.Order).ToList().IndexOf(childQ));
+                                        var childQuestionIndex = q.ChildQuestions.OrderBy(cq => cq.Order).ToList().IndexOf(childQ) + 1;
                                         var selectedChildAnswer = GetSelectedChildAnswer(childQ.ShuffledExamPaperDetailId);
                                         
                                         <MudPaper Class="pa-3 mb-2 ml-4" Elevation="0" Style="background-color: #f5f5f5;">
                                             <MudText Typo="Typo.body2" Class="mb-2">
-                                                <b>Câu @questionNumber@childQuestionNumber: </b>
-                                                @((MarkupString)childQ.QuestionContent)
+                                                <b>Câu @questionNumber.@childQuestionIndex: </b>
+                                                @((MarkupString)ProcessQuestionContent(childQ.QuestionContent))
                                             </MudText>
                                             
                                             <MudRadioGroup T="string" @bind-Value="selectedChildAnswer" Class="mt-2">
@@ -305,6 +367,16 @@ else
         -moz-user-select: none; /* Firefox */
         -ms-user-select: none; /* IE10+/Edge */
         user-select: none; /* Standard */
+    }
+    
+    /* Audio player styling */
+    .audio-player {
+        margin: 10px 0;
+    }
+    
+    .audio-player audio {
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
 </style>
 
