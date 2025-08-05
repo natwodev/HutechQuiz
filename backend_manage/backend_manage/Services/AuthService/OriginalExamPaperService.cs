@@ -791,43 +791,32 @@ namespace backend_manage.Services.AuthService
                 // Kiểm tra xem có phải câu hỏi cha có câu hỏi con không
                 if (originalDetail.ChildQuestions != null && originalDetail.ChildQuestions.Any())
                 {
-                    // Đây là câu hỏi nhóm
-                    answerKeyBuilder.Append($"({questionNumber},");
-                    
-                    // Lấy các câu hỏi con của câu hỏi cha này
+                    // Đây là câu hỏi nhóm - flatten thành các câu hỏi con riêng biệt
                     var childQuestions = shuffledExamPaper.ShuffledExamPaperDetails
                         .Where(d => d.ParentQuestionId == question.ShuffledExamPaperDetailId)
                         .OrderBy(d => d.Order)
                         .ToList();
 
-                    var childAnswerKeyBuilder = new StringBuilder();
                     var childNumber = 1;
-
                     foreach (var childQuestion in childQuestions)
                     {
                         var childOriginalDetail = childQuestion.OriginalExamPaperDetail;
                         var correctAnswer = GetCorrectAnswerWithShuffle(childOriginalDetail, childQuestion.AnswerOrder);
                         
-                        if (childNumber > 1)
-                            childAnswerKeyBuilder.Append(";");
-                        childAnswerKeyBuilder.Append($"({childNumber},{correctAnswer})");
+                        if (answerKeyBuilder.Length > 0)
+                            answerKeyBuilder.Append(";");
+                        answerKeyBuilder.Append($"({questionNumber}.{childNumber},{correctAnswer})");
                         childNumber++;
                     }
-
-                    answerKeyBuilder.Append(childAnswerKeyBuilder.ToString());
-                    answerKeyBuilder.Append(")");
                 }
                 else
                 {
                     // Đây là câu hỏi đơn
                     var correctAnswer = GetCorrectAnswerWithShuffle(originalDetail, question.AnswerOrder);
+                    
+                    if (answerKeyBuilder.Length > 0)
+                        answerKeyBuilder.Append(";");
                     answerKeyBuilder.Append($"({questionNumber},{correctAnswer})");
-                }
-
-                // Thêm dấu chấm phẩy nếu không phải câu cuối cùng
-                if (questionNumber < parentAndIndependentQuestions.Count)
-                {
-                    answerKeyBuilder.Append(";");
                 }
 
                 questionNumber++;

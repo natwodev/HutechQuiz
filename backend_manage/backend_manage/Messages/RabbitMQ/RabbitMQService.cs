@@ -132,6 +132,8 @@ public class RabbitMqService : IRabbitMqService, IDisposable
         return queueName switch
         {
             "start_exam_queue" => (50, 1, TimeSpan.FromMilliseconds(100)),
+            "exam_submission_queue" => (30, 1, TimeSpan.FromMilliseconds(150)),
+            "save_answer_queue" => (100, 1, TimeSpan.FromMilliseconds(50)),
             _ => (75, 1, TimeSpan.FromMilliseconds(50))
         };
     }

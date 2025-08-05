@@ -22,8 +22,10 @@ namespace backend_manage.Messages.RabbitMQ
 
         private const int StartExamConsumerCount = 2; // 2 consumers cho bắt đầu làm bài
         private const int SaveAnswerConsumerCount = 3; // 3 consumers cho lưu đáp án
+        private const int ExamSubmissionConsumerCount = 2; // 2 consumers cho nộp bài thi
         private const string StartExamQueue = "start_exam_queue";
         private const string SaveAnswerQueue = "save_answer_queue";
+        private const string ExamSubmissionQueue = "exam_submission_queue";
 
         public RabbitMqConsumer(
             IRabbitMqService rabbitMqService,
@@ -85,6 +87,31 @@ namespace backend_manage.Messages.RabbitMQ
                 });
 
                 _logger.LogInformation("🚀 Bắt đầu SaveAnswer Consumer {ConsumerId} cho queue: {QueueName}", consumerId, SaveAnswerQueue);
+            }
+
+            // Khởi tạo consumers cho exam_submission_queue
+            for (int i = 0; i < ExamSubmissionConsumerCount; i++)
+            {
+                int consumerId = i + 1;
+
+                _rabbitMqService.Subscribe<ExamSubmissionMessage>(ExamSubmissionQueue, async (message) =>
+                {
+                    try
+                    {
+                        _logger.LogInformation("🕒 ExamSubmission Consumer {ConsumerId} bắt đầu xử lý: {Time}", consumerId, DateTime.UtcNow);
+                        await ProcessExamSubmission(message);
+                        _logger.LogInformation("✅ ExamSubmission Consumer {ConsumerId} hoàn tất xử lý: {Time}", consumerId, DateTime.UtcNow);
+                        _logger.LogInformation("✅ ExamSubmission Consumer {ConsumerId} đã xử lý xong message từ queue: {QueueName}",
+                            consumerId, ExamSubmissionQueue);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "❌ Lỗi khi xử lý message bởi ExamSubmission Consumer {ConsumerId} - Queue: {QueueName}",
+                            consumerId, ExamSubmissionQueue);
+                    }
+                });
+
+                _logger.LogInformation("🚀 Bắt đầu ExamSubmission Consumer {ConsumerId} cho queue: {QueueName}", consumerId, ExamSubmissionQueue);
             }
 
             return Task.CompletedTask;
@@ -160,6 +187,57 @@ namespace backend_manage.Messages.RabbitMQ
             {
                 _logger.LogError(ex, "❌ Lỗi xử lý StudentAnswerSavedMessage: StudentCode={StudentCode}, Index={Index}, Answer={Answer}",
                     message.StudentCode, message.Index, message.Answer);
+                throw;
+            }
+        }
+
+        private async Task ProcessExamSubmission(ExamSubmissionMessage message)
+        {
+            try
+            {
+                using var scope = _serviceScopeFactory.CreateScope();
+                var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+                // Tìm StudentExamSession bằng StudentCode và ShuffledExamPaperId
+                var studentExamSession = dbContext.StudentExamSessions
+                    .FirstOrDefault(x => x.StudentCode == message.StudentCode && 
+                                        x.ShuffledExamPaperId == message.ShuffledExamPaperId);
+
+                if (studentExamSession == null)
+                {
+                    _logger.LogWarning("❗ Không tìm thấy StudentExamSession. StudentCode: {StudentCode}, ShuffledExamPaperId: {ShuffledExamPaperId}",
+                        message.StudentCode, message.ShuffledExamPaperId);
+                    return;
+                }
+
+                // Cập nhật thông tin nộp bài thi
+                studentExamSession.EndTime = message.EndTime;
+                studentExamSession.Score = message.Score;
+                studentExamSession.CorrectAnswers = message.CorrectAnswers;
+                studentExamSession.TotalQuestions = message.TotalQuestions;
+                studentExamSession.IsCompleted = message.IsCompleted;
+                studentExamSession.StudentAnswersString = message.StudentAnswersString;
+
+                // Cập nhật audit fields
+                studentExamSession.UpdatedAt = DateTime.UtcNow;
+                studentExamSession.UpdatedBy = "system";
+
+                await dbContext.SaveChangesAsync();
+
+                _logger.LogInformation(
+                    "📝 Đã cập nhật nộp bài thi vào database: StudentCode={StudentCode}, ShuffledExamPaperId={ShuffledExamPaperId}, Score={Score}, CorrectAnswers={CorrectAnswers}/{TotalQuestions}, EndTime={EndTime}",
+                    message.StudentCode, 
+                    message.ShuffledExamPaperId, 
+                    message.Score, 
+                    message.CorrectAnswers, 
+                    message.TotalQuestions,
+                    message.EndTime
+                );
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Lỗi xử lý ExamSubmissionMessage: StudentCode={StudentCode}, ShuffledExamPaperId={ShuffledExamPaperId}",
+                    message.StudentCode, message.ShuffledExamPaperId);
                 throw;
             }
         }
