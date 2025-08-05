@@ -5,7 +5,7 @@ using frontend_manage.Pages.Lecturer;
 using frontend_manage.Pages.Login;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
-
+using MudBlazor.Services;
 
 using frontend_manage.Services;
 
@@ -14,6 +14,9 @@ var builder = WebAssemblyHostBuilder.CreateDefault(args);
 
 builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
+
+// Add MudBlazor services
+builder.Services.AddMudServices();
 
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<InfoApi>();

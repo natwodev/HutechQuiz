@@ -2,17 +2,27 @@
 @inject IJSRuntime JSRuntime
 @inject NavigationManager Navigation
 @inject frontend_manage.Pages.Login.InfoApi InfoApi
+@inject ISnackbar Snackbar
+@inject IDialogService Dialog
 
 @using FrontEnd.DTOs
 @using Microsoft.AspNetCore.Components
+
+<PageTitle>Làm bài thi</PageTitle>
 
 @code {
     [Parameter]
     [SupplyParameterFromQuery]
     public int? studentExamSessionId { get; set; }
 
+    private StartExamResponseDto? startExamResponse;
     private ShuffledExamPaperDto? shuffledExam;
+    private StudentExamSessionCacheDto? studentSession;
     private string? errorMessage;
+    
+    // Dictionary to store selected answers for each question
+    private Dictionary<int, string> selectedAnswers = new();
+    private Dictionary<int, string> selectedChildAnswers = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -23,10 +33,15 @@
         }
         try
         {
-            shuffledExam = await InfoApi.StartExamAsync(studentExamSessionId.Value);
-            if (shuffledExam == null)
+            startExamResponse = await InfoApi.StartExamAsync(studentExamSessionId.Value);
+            if (startExamResponse == null)
             {
-                errorMessage = "Không thể lấy đề thi hoán vị.";
+                errorMessage = "Không thể lấy thông tin làm bài.";
+            }
+            else
+            {
+                shuffledExam = startExamResponse.ExamPaper;
+                studentSession = startExamResponse.StudentSession;
             }
         }
         catch (Exception ex)
@@ -34,36 +49,297 @@
             errorMessage = ex.Message;
         }
     }
+
+    private void OnAnswerSelected(int questionId, string answer)
+    {
+        selectedAnswers[questionId] = answer;
+        StateHasChanged();
+    }
+
+    private void OnChildAnswerSelected(int questionId, string answer)
+    {
+        selectedChildAnswers[questionId] = answer;
+        StateHasChanged();
+    }
+
+    private string GetSelectedAnswer(int questionId)
+    {
+        return selectedAnswers.TryGetValue(questionId, out var answer) ? answer : "";
+    }
+
+    private string GetSelectedChildAnswer(int questionId)
+    {
+        return selectedChildAnswers.TryGetValue(questionId, out var answer) ? answer : "";
+    }
+
+    private async Task OnSubmitExamAsync()
+    {
+        var parameters = new DialogParameters
+        {
+            ["Title"] = "Xác nhận nộp bài",
+            ["Content"] = "Bạn có chắc chắn muốn nộp bài thi này?",
+            ["YesText"] = "Nộp bài",
+            ["NoText"] = "Hủy"
+        };
+
+        var dialog = await Dialog.ShowMessageBox("Xác nhận", "Bạn có chắc chắn muốn nộp bài thi này?", "Nộp bài", "Hủy");
+        if (dialog == true)
+        {
+            // TODO: Implement submit exam logic
+            Snackbar.Add("Đã nộp bài thi thành công!", Severity.Success);
+        }
+    }
+
+    private async Task ScrollToQuestionAsync(int questionNumber)
+    {
+        await JSRuntime.InvokeVoidAsync("scrollToElement", $"question-{questionNumber}");
+    }
+
+    private int GetAnsweredQuestionsCount()
+    {
+        return selectedAnswers.Count + selectedChildAnswers.Count;
+    }
+
+    private int GetTotalQuestionsCount()
+    {
+        if (shuffledExam?.Details == null) return 0;
+        
+        int total = shuffledExam.Details.Count;
+        foreach (var detail in shuffledExam.Details)
+        {
+            if (detail.ChildQuestions != null)
+            {
+                total += detail.ChildQuestions.Count;
+            }
+        }
+        return total;
+    }
 }
 
-<h3>Làm bài thi</h3>
 @if (!string.IsNullOrEmpty(errorMessage))
 {
-    <div class="alert alert-danger">@errorMessage</div>
+    <MudAlert Severity="Severity.Error" Class="mb-4">@errorMessage</MudAlert>
 }
 else if (shuffledExam == null)
 {
-    <p>Đang tải đề thi...</p>
+    <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+    <MudText Class="ml-3">Đang tải đề thi...</MudText>
 }
 else
 {
-    <div class="mb-3">
-        <h4>@shuffledExam.Title (@shuffledExam.ShuffledExamPaperCore)</h4>
-        <p><b>Mã đề:</b> @shuffledExam.ShuffledExamPaperCore</p>
-        <p><b>Trạng thái phê duyệt:</b> @(shuffledExam.IsApproved ? "Đã duyệt" : "Chưa duyệt")</p>
-    </div>
-    <ol>
+    <MudPaper Elevation="4" Class="pa-4">
+        <MudGrid Class="noselect">
+            <!-- Main Content -->
+            <MudItem xs="12" md="9">
+                <MudPaper Class="pa-4" Style="border: 1px solid #ccc;">
+                    <MudText Typo="Typo.h4" Class="mb-4">@shuffledExam.Title (@shuffledExam.ShuffledExamPaperCore)</MudText>
+                    
+                    @if (shuffledExam.Details != null)
+                    {
         @foreach (var q in shuffledExam.Details.OrderBy(d => d.Order))
         {
-            <li class="mb-3">
-                <div>@((MarkupString)q.QuestionContent)</div>
-                <div class="mt-2">
-                    <div><input type="radio" name="q@q.ShuffledExamPaperDetailId" /> @((MarkupString)q.Answer1)</div>
-                    <div><input type="radio" name="q@q.ShuffledExamPaperDetailId" /> @((MarkupString)q.Answer2)</div>
-                    <div><input type="radio" name="q@q.ShuffledExamPaperDetailId" /> @((MarkupString)q.Answer3)</div>
-                    <div><input type="radio" name="q@q.ShuffledExamPaperDetailId" /> @((MarkupString)q.Answer4)</div>
-                </div>
-            </li>
-        }
-    </ol>
+                            var questionNumber = shuffledExam.Details.OrderBy(d => d.Order).ToList().IndexOf(q) + 1;
+                            var selectedAnswer = GetSelectedAnswer(q.ShuffledExamPaperDetailId);
+                            
+                            <MudPaper Class="pa-4 mb-3" Elevation="1" Style="border: 1px solid #e0e0e0;">
+                                <MudText id="@($"question-{questionNumber}")" Typo="Typo.body1" Class="mb-3">
+                                    <b>Câu @questionNumber: </b>
+                                    @((MarkupString)q.QuestionContent)
+                                </MudText>
+                
+                @if (!string.IsNullOrEmpty(q.Answer1) || !string.IsNullOrEmpty(q.Answer2) || 
+                     !string.IsNullOrEmpty(q.Answer3) || !string.IsNullOrEmpty(q.Answer4))
+                {
+                                    <MudRadioGroup T="string" @bind-Value="selectedAnswer" Class="mt-3">
+                        @if (!string.IsNullOrEmpty(q.Answer1))
+                        {
+                                            <MudRadio T="string" Value="@($"q{q.ShuffledExamPaperDetailId}_1")" Color="Color.Primary">
+                                                @((MarkupString)q.Answer1)
+                                            </MudRadio>
+                        }
+                        @if (!string.IsNullOrEmpty(q.Answer2))
+                        {
+                                            <MudRadio T="string" Value="@($"q{q.ShuffledExamPaperDetailId}_2")" Color="Color.Primary">
+                                                @((MarkupString)q.Answer2)
+                                            </MudRadio>
+                        }
+                        @if (!string.IsNullOrEmpty(q.Answer3))
+                        {
+                                            <MudRadio T="string" Value="@($"q{q.ShuffledExamPaperDetailId}_3")" Color="Color.Primary">
+                                                @((MarkupString)q.Answer3)
+                                            </MudRadio>
+                        }
+                        @if (!string.IsNullOrEmpty(q.Answer4))
+                        {
+                                            <MudRadio T="string" Value="@($"q{q.ShuffledExamPaperDetailId}_4")" Color="Color.Primary">
+                                                @((MarkupString)q.Answer4)
+                                            </MudRadio>
+                        }
+                                    </MudRadioGroup>
+                }
+
+                @if (q.ChildQuestions != null && q.ChildQuestions.Any())
+                {
+                                    <MudDivider Class="my-3" />
+                                    <MudText Typo="Typo.subtitle2" Class="mb-3">Câu hỏi con:</MudText>
+                                    
+                            @foreach (var childQ in q.ChildQuestions.OrderBy(cq => cq.Order))
+                            {
+                                        var childQuestionNumber = char.ConvertFromUtf32(97 + q.ChildQuestions.OrderBy(cq => cq.Order).ToList().IndexOf(childQ));
+                                        var selectedChildAnswer = GetSelectedChildAnswer(childQ.ShuffledExamPaperDetailId);
+                                        
+                                        <MudPaper Class="pa-3 mb-2 ml-4" Elevation="0" Style="background-color: #f5f5f5;">
+                                            <MudText Typo="Typo.body2" Class="mb-2">
+                                                <b>Câu @questionNumber@childQuestionNumber: </b>
+                                                @((MarkupString)childQ.QuestionContent)
+                                            </MudText>
+                                            
+                                            <MudRadioGroup T="string" @bind-Value="selectedChildAnswer" Class="mt-2">
+                                        @if (!string.IsNullOrEmpty(childQ.Answer1))
+                                        {
+                                                    <MudRadio T="string" Value="@($"cq{childQ.ShuffledExamPaperDetailId}_1")" Color="Color.Secondary" Size="Size.Small">
+                                                        @((MarkupString)childQ.Answer1)
+                                                    </MudRadio>
+                                        }
+                                        @if (!string.IsNullOrEmpty(childQ.Answer2))
+                                        {
+                                                    <MudRadio T="string" Value="@($"cq{childQ.ShuffledExamPaperDetailId}_2")" Color="Color.Secondary" Size="Size.Small">
+                                                        @((MarkupString)childQ.Answer2)
+                                                    </MudRadio>
+                                        }
+                                        @if (!string.IsNullOrEmpty(childQ.Answer3))
+                                        {
+                                                    <MudRadio T="string" Value="@($"cq{childQ.ShuffledExamPaperDetailId}_3")" Color="Color.Secondary" Size="Size.Small">
+                                                        @((MarkupString)childQ.Answer3)
+                                                    </MudRadio>
+                                        }
+                                        @if (!string.IsNullOrEmpty(childQ.Answer4))
+                                        {
+                                                    <MudRadio T="string" Value="@($"cq{childQ.ShuffledExamPaperDetailId}_4")" Color="Color.Secondary" Size="Size.Small">
+                                                        @((MarkupString)childQ.Answer4)
+                                                    </MudRadio>
+                                                }
+                                            </MudRadioGroup>
+                                        </MudPaper>
+                                    }
+                                }
+                            </MudPaper>
+                        }
+                    }
+                </MudPaper>
+            </MudItem>
+
+            <!-- Sidebar Info -->
+            <MudItem xs="12" md="3" Style="position: sticky; top: 0; overflow-y: auto; height: 100%">
+                <!-- Timer and Submit Button -->
+                <MudPaper Style="text-align: center; border: 1px solid #ccc; margin-bottom: 15%;">
+                    <MudGrid>
+                        <MudItem xs="6" Style="align-content: center">
+                            <MudText Typo="Typo.h4" Color="Color.Primary" id="time-clock">
+                                @(studentSession?.Duration ?? 0):00
+                            </MudText>
+                        </MudItem>
+                        <MudItem xs="6">
+                            <MudButton Style="margin: 5px" Variant="Variant.Outlined" Color="Color.Success" 
+                                     Size="Size.Large" OnClick="OnSubmitExamAsync">
+                                Nộp Bài
+                            </MudButton>
+                        </MudItem>
+                    </MudGrid>
+                </MudPaper>
+
+                <!-- Student Info -->
+                <MudPaper Class="pa-4" Style="text-align: center; border: 1px solid #ccc; margin-bottom: 15%;">
+                    <MudImage Src="images/exam/Ellipse 1.svg" Width="120" Class="mb-2" />
+                    <MudDivider Class="mb-2" />
+                    <MudText Typo="Typo.subtitle2"><b>Mã đề:</b> @shuffledExam.ShuffledExamPaperCore</MudText>
+                    <MudText Typo="Typo.subtitle2"><b>Môn học:</b> @shuffledExam.SubjectName (@shuffledExam.SubjectCode)</MudText>
+                    <MudText Typo="Typo.subtitle2"><b>Phòng thi:</b> @studentSession.RoomName</MudText>
+                    <MudText Typo="Typo.subtitle2"><b>Thời gian:</b> @studentSession.Duration phút</MudText>
+                    @if (studentSession.ExtraMinutes > 0)
+                    {
+                        <MudText Typo="Typo.subtitle2"><b>Thêm:</b> @studentSession.ExtraMinutes phút</MudText>
+                    }
+                </MudPaper>
+
+                <!-- Question Navigation -->
+                <MudPaper Class="pa-4" Style="text-align: center; border: 1px solid #ccc; max-height: 450px; overflow-y: auto">
+                    <MudText Typo="Typo.subtitle2" Class="mb-2"><b>Danh sách câu hỏi</b></MudText>
+                    <MudGrid>
+                        @if (shuffledExam.Details != null)
+                        {
+                            @foreach (var q in shuffledExam.Details.OrderBy(d => d.Order))
+                            {
+                                var questionNumber = shuffledExam.Details.OrderBy(d => d.Order).ToList().IndexOf(q) + 1;
+                                var isAnswered = !string.IsNullOrEmpty(GetSelectedAnswer(q.ShuffledExamPaperDetailId));
+                                
+                                <MudItem xs="2" md="3" Style="padding-left: 15px">
+                                    <MudButton Size="Size.Small" Variant="Variant.Filled" 
+                                             Color="@(isAnswered ? Color.Success : Color.Default)" 
+                                             OnClick="async () => await ScrollToQuestionAsync(questionNumber)">
+                                        @questionNumber
+                                    </MudButton>
+                                </MudItem>
+                            }
+                        }
+                    </MudGrid>
+                    
+                    <MudDivider Class="my-3" />
+                    <MudText Typo="Typo.body2">
+                        Đã trả lời: @GetAnsweredQuestionsCount() / @GetTotalQuestionsCount() câu
+                    </MudText>
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
 }
+
+<style>
+    .mud-main-content {
+        padding: 0;
+    }
+    
+    /*Chống bôi đen văn bản copy*/
+    .noselect {
+        -webkit-user-select: none; /* Safari */
+        -moz-user-select: none; /* Firefox */
+        -ms-user-select: none; /* IE10+/Edge */
+        user-select: none; /* Standard */
+    }
+</style>
+
+<script>
+    window.scrollToElement = (elementId) => {
+        const el = document.getElementById(elementId);
+        if (el) {
+            el.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+    };
+
+    // Chặn copy văn bản
+    window.antiCopy = {
+        enable: function () {
+            // Chặn chuột phải
+            document.addEventListener('contextmenu', e => e.preventDefault());
+
+            // Chặn tổ hợp phím Ctrl+C, Ctrl+U, PrintScreen...
+            document.addEventListener('keydown', function (e) {
+                if ((e.ctrlKey && ['c', 'u', 's', 'x'].includes(e.key.toLowerCase())) ||
+                    e.key === 'PrintScreen') {
+                    e.preventDefault();
+                }
+            });
+
+            // Chặn copy
+            document.addEventListener('copy', function (e) {
+                e.preventDefault();
+                alert("Không được phép sao chép nội dung!");
+            });
+        }
+    };
+
+    // Kích hoạt chống copy khi trang load
+    document.addEventListener('DOMContentLoaded', function() {
+        window.antiCopy.enable();
+    });
+</script>

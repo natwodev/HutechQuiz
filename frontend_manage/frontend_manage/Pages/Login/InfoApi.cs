@@ -23,14 +23,14 @@ public class InfoApi
         return await _httpClient.GetFromJsonAsync<List<ExamSessionDto>>("api/Student/exam-sessions");
     }
 
-    public async Task<ShuffledExamPaperDto?> StartExamAsync(int studentExamSessionId)
+    public async Task<StartExamResponseDto?> StartExamAsync(int studentExamSessionId)
     {
         var form = new MultipartFormDataContent();
         form.Add(new StringContent(studentExamSessionId.ToString()), "studentExamSessionId");
         var response = await _httpClient.PostAsync("api/Student/start-exam", form);
         if (response.IsSuccessStatusCode)
         {
-            return await response.Content.ReadFromJsonAsync<ShuffledExamPaperDto>();
+            return await response.Content.ReadFromJsonAsync<StartExamResponseDto>();
         }
         return null;
     }
