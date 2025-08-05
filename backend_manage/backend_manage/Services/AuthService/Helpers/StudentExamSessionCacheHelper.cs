@@ -246,9 +246,12 @@ public class StudentExamSessionCacheHelper
         // Nếu Redis không có hoặc lỗi thì truy vấn DB
         try
         {
-            var sessionEntity = await _studentExamSessionRepository.GetByConditionAsync(
-                x => x.StudentCode == studentCode && x.StudentExamSessionId == studentExamSessionId
-            );
+            var sessionEntity = await _studentExamSessionRepository.GetQueryable()
+                .Where(x => x.StudentCode == studentCode && x.StudentExamSessionId == studentExamSessionId)
+                .Include(x => x.ExamSessionSubject)
+                .ThenInclude(x => x.Subject)
+                .Include(x => x.ExamRoom)
+                .FirstOrDefaultAsync();
 
             if (sessionEntity != null)
             {
