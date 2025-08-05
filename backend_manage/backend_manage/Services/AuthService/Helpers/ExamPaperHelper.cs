@@ -112,8 +112,6 @@ public class ExamPaperHelper
         return paperDto;
     }
     
-    
-    
      public async Task<ShuffledExamPaper> GetRandomExamPaperAsync(int examSessionSubjectId)
     {
         _logger.LogInformation("Sinh viên chưa được gán đề thi, đang chọn đề ngẫu nhiên");
@@ -400,44 +398,12 @@ public class ExamPaperHelper
     }
     #endregion
     // /// // // // // //
-    public async Task<(bool Success, string Message, Dictionary<int, string>? CorrectAnswers)> GetAnswerKeyAsync(int shuffledExamPaperId)
-    {
-        try
-        {
-            // Lấy đề thi từ cache (đã include AnswerKey)
-            var examPaperDto = await GetExamFromRedisAsync(shuffledExamPaperId);
-            
-            if (examPaperDto == null)
-            {
-                _logger.LogError("Không tìm thấy đề thi trong Redis");
-                return (false, "Không tìm thấy đề thi", null);
-            }
-
-            if (string.IsNullOrEmpty(examPaperDto.AnswerKey))
-            {
-                _logger.LogError("Đề thi không có AnswerKey");
-                return (false, "Đề thi không có AnswerKey", null);
-            }
-
-            string correctAnswers = examPaperDto.AnswerKey;
-            var correctAnswerPairs = correctAnswers.Split(';', StringSplitOptions.RemoveEmptyEntries)
-                .Select(a => a.Trim('(', ')').Split(','))
-                .ToDictionary(parts => int.Parse(parts[0]), parts => parts[1]);
-
-            return (true, "Lấy đáp án thành công", correctAnswerPairs);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Lỗi khi lấy AnswerKey từ cache");
-            return (false, "Lỗi khi lấy AnswerKey: " + ex.Message, null);
-        }
-    }
-
-    public Dictionary<int, string> ParseAnswerKey(string answerKeyString)
+   
+    public Dictionary<string, string> ParseAnswerKey(string answerKeyString)
     {
         return answerKeyString.Split(';', StringSplitOptions.RemoveEmptyEntries)
             .Select(a => a.Trim('(', ')').Split(','))
-            .ToDictionary(parts => int.Parse(parts[0]), parts => parts[1]);
+            .ToDictionary(parts => parts[0], parts => parts[1]);
     }
     
     private string CreateEmptyAnswersString(string answerKey)
@@ -455,4 +421,157 @@ public class ExamPaperHelper
         return result;
     }
 
+
+    public async Task<(bool s, double core, string message,StudentExamSessionCacheDto? dto)> SubmitExam(string studentCode, int studentExamSessionId)
+    {
+        try
+        {
+            _logger.LogInformation("🔄 Bắt đầu xử lý nộp bài thi cho sinh viên {StudentCode} với session {SessionId}", studentCode, studentExamSessionId);
+            
+            var (redisAvailable, studentExamSessionDto) = await _sessionCacheHelper.GetStudentExamSessionAsync(studentCode, studentExamSessionId);
+
+            if (studentExamSessionDto == null)
+            {
+                _logger.LogWarning("❌ Không tìm thấy phiên thi của sinh viên {StudentCode} với ID phiên thi {SessionId}", studentCode, studentExamSessionId);
+                return (false, 0, "Không tìm thấy phiên thi",null);
+            }
+
+            if (studentExamSessionDto.IsCompleted)
+            {
+                _logger.LogWarning("⚠️ Sinh viên {StudentCode} đã nộp bài thi trước đó", studentCode);
+                return (false, 0, "Đã nộp bài thi trước đó",null);
+            }
+
+            if (!studentExamSessionDto.ShuffledExamPaperId.HasValue)
+            {
+                _logger.LogWarning("❌ Sinh viên {StudentCode} chưa có đề thi được gán", studentCode);
+                return (false, 0, "Chưa có đề thi được gán",null);
+            }
+
+            // Lấy đề thi từ Redis, nếu không có thì lấy từ database
+            var paperDto = await GetExamFromRedisAsync(studentExamSessionDto.ShuffledExamPaperId.Value);
+            if (paperDto == null)
+            {
+                _logger.LogWarning("⚠️ Không thể lấy đề thi từ Redis cho ShuffledExamPaperId {PaperId}, thử lấy từ database", studentExamSessionDto.ShuffledExamPaperId.Value);
+                try
+                {
+                    paperDto = await GetExamFromDatabaseAsync(studentExamSessionDto.ShuffledExamPaperId.Value);
+                    if (paperDto == null)
+                    {
+                        _logger.LogError("❌ Không thể lấy đề thi từ database cho ShuffledExamPaperId {PaperId}", studentExamSessionDto.ShuffledExamPaperId.Value);
+                        return (false, 0, "Không thể lấy đề thi", null);
+                    }
+                    _logger.LogInformation("✅ Đã lấy được đề thi từ database cho ShuffledExamPaperId {PaperId}", studentExamSessionDto.ShuffledExamPaperId.Value);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "❌ Lỗi khi lấy đề thi từ database cho ShuffledExamPaperId {PaperId}", studentExamSessionDto.ShuffledExamPaperId.Value);
+                    return (false, 0, "Không thể lấy đề thi", null);
+                }
+            }
+
+            
+            
+            if (string.IsNullOrEmpty(paperDto.AnswerKey))
+            {
+                _logger.LogError("❌ Đề thi không có đáp án chuẩn");
+                return (false, 0, "Đề thi không có đáp án chuẩn",null);
+            }
+
+            // Tính điểm và đếm câu đúng
+            var (score, correctAnswers, totalQuestions) = CalculateScore(
+                studentExamSessionDto.StudentAnswersString, 
+                paperDto.AnswerKey
+            );
+
+            // Cập nhật thông tin phiên thi
+            var endTime = DateTimeHelper.GetVietnamTime();
+            studentExamSessionDto.EndTime = endTime;
+            studentExamSessionDto.Score = score;
+            studentExamSessionDto.CorrectAnswers = correctAnswers;
+            studentExamSessionDto.TotalQuestions = totalQuestions;
+            studentExamSessionDto.IsCompleted = true;
+
+            // Cập nhật vào Redis
+            await _sessionCacheHelper.UpdateStudentExamSessionAsync(studentCode, studentExamSessionDto);
+
+            // Tạo message để lưu vào database
+            var examSubmissionMessage = new ExamSubmissionMessage
+            {
+                StudentCode = studentCode,
+                ShuffledExamPaperId = studentExamSessionDto.ShuffledExamPaperId.Value,
+                Score = score,
+                CorrectAnswers = correctAnswers,
+                TotalQuestions = totalQuestions,
+                IsCompleted = true,
+                EndTime = endTime,
+                StudentAnswersString = studentExamSessionDto.StudentAnswersString
+            };
+
+            // Gửi message qua RabbitMQ
+            _rabbitMqService.Publish("exam_submission_queue", examSubmissionMessage);
+            _logger.LogInformation("📤 Đã gửi message nộp bài thi qua RabbitMQ cho sinh viên {StudentCode}", studentCode);
+
+            _logger.LogInformation("✅ Hoàn thành nộp bài thi cho sinh viên {StudentCode}. Điểm: {Score}, Đúng: {CorrectAnswers}/{TotalQuestions}", 
+                studentCode, score, correctAnswers, totalQuestions);
+
+            return (true, score, $"Nộp bài thi thành công. Điểm: {score:F2}, Đúng: {correctAnswers}/{totalQuestions} câu",studentExamSessionDto);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "❌ Lỗi khi nộp bài thi cho sinh viên {StudentCode}", studentCode);
+            return (false, 0, $"Lỗi hệ thống: {ex.Message}",null);
+        }
+    }
+
+    private (double score, int correctAnswers, int totalQuestions) CalculateScore(string studentAnswers, string answerKey)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(studentAnswers) || string.IsNullOrWhiteSpace(answerKey))
+            {
+                _logger.LogWarning("⚠️ Chuỗi đáp án sinh viên hoặc đáp án chuẩn rỗng");
+                return (0, 0, 0);
+            }
+
+            var studentAnswerPairs = ParseAnswerKey(studentAnswers);     // Dictionary<string, string>
+            var correctAnswerPairs = ParseAnswerKey(answerKey);          // Dictionary<string, string>
+
+            int correctCount = 0;
+            int totalCount = 0;
+
+            foreach (var correctPair in correctAnswerPairs)
+            {
+                var key = correctPair.Key;
+                var correctAnswer = correctPair.Value;
+
+                totalCount++;
+
+                if (studentAnswerPairs.TryGetValue(key, out var studentAnswer))
+                {
+                    if (!string.IsNullOrWhiteSpace(studentAnswer) && studentAnswer != "-")
+                    {
+                        if (string.Equals(studentAnswer, correctAnswer, StringComparison.OrdinalIgnoreCase))
+                        {
+                            correctCount++;
+                        }
+                    }
+                }
+            }
+
+            double score = totalCount > 0 ? (double)correctCount / totalCount * 10 : 0;
+
+            _logger.LogInformation("📊 Kết quả tính điểm: Đúng {CorrectCount}/{TotalCount}, Điểm: {Score:F2}",
+                correctCount, totalCount, score);
+
+            return (score, correctCount, totalCount);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "❌ Lỗi khi tính điểm");
+            return (0, 0, 0);
+        }
+    }
+
+    
 } 

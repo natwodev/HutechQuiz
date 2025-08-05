@@ -46,7 +46,6 @@ namespace backend_manage.Configurations
             services.AddScoped<StudentExamSessionCacheHelper>();
             services.AddScoped<ExamPaperHelper>();
             services.AddScoped<StudentAnswerHelper>();
-            services.AddScoped<StudentValidationHelper>();
             services.AddScoped<StudentImportHelper>();
 
             // Register Message Processing Service

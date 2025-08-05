@@ -27,4 +27,7 @@ public interface IStudentService
     
     Task<StudentImportResultDto> ImportFromExcelStreamAsync(Stream stream, string examSessionSubjectCore,
         int examRoomId, string userId);
+    
+    // Method để nộp bài thi
+    Task<(bool Success, string Message, ExamSubmissionDto? SubmissionData)> SubmitExamAsync(string studentCode, int studentExamSessionId);
 } 

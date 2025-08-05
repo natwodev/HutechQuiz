@@ -2,6 +2,7 @@ using backend_manage.Data;
 using backend_manage.Messages;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
+using System;
 
 namespace backend_manage.Messages.RabbitMQ;
 
@@ -37,6 +38,9 @@ public class MessageProcessingService : IMessageProcessingService
                     break;
                 case "save_answer_queue":
                     await ProcessSaveAnswerMessageAsync(message);
+                    break;
+                case "exam_submission_queue":
+                    await ProcessExamSubmissionMessageAsync(message);
                     break;
                 // Thêm các case khác cho các loại message khác
                 // case "student_import_queue":
@@ -138,6 +142,64 @@ public class MessageProcessingService : IMessageProcessingService
         catch (Exception ex)
         {
             _logger.LogError(ex, "❌ Lỗi xử lý StudentAnswerSavedMessage trực tiếp: {Message}", JsonConvert.SerializeObject(message));
+            throw;
+        }
+    }
+
+    private async Task ProcessExamSubmissionMessageAsync<T>(T message)
+    {
+        try
+        {
+            if (message is ExamSubmissionMessage examSubmissionMessage)
+            {
+                using var scope = _serviceScopeFactory.CreateScope();
+                var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+                // Tìm StudentExamSession bằng StudentCode và ShuffledExamPaperId
+                // Cần tìm chính xác phiên thi của sinh viên với đề thi cụ thể
+                var studentExamSession = dbContext.StudentExamSessions
+                    .FirstOrDefault(x => x.StudentCode == examSubmissionMessage.StudentCode && 
+                                        x.ShuffledExamPaperId == examSubmissionMessage.ShuffledExamPaperId);
+
+                if (studentExamSession == null)
+                {
+                    _logger.LogWarning("❗ Không tìm thấy StudentExamSession. StudentCode: {StudentCode}, ShuffledExamPaperId: {ShuffledExamPaperId}",
+                        examSubmissionMessage.StudentCode, examSubmissionMessage.ShuffledExamPaperId);
+                    return;
+                }
+
+                // Cập nhật thông tin nộp bài thi
+                studentExamSession.EndTime = examSubmissionMessage.EndTime;
+                studentExamSession.Score = examSubmissionMessage.Score;
+                studentExamSession.CorrectAnswers = examSubmissionMessage.CorrectAnswers;
+                studentExamSession.TotalQuestions = examSubmissionMessage.TotalQuestions;
+                studentExamSession.IsCompleted = examSubmissionMessage.IsCompleted;
+                studentExamSession.StudentAnswersString = examSubmissionMessage.StudentAnswersString;
+
+                // Cập nhật audit fields
+                studentExamSession.UpdatedAt = DateTime.UtcNow;
+                studentExamSession.UpdatedBy = "system"; // Hoặc có thể lấy từ context
+
+                await dbContext.SaveChangesAsync();
+
+                _logger.LogInformation(
+                    "📝 Đã cập nhật nộp bài thi thành công: StudentCode={StudentCode}, ShuffledExamPaperId={ShuffledExamPaperId}, Score={Score}, CorrectAnswers={CorrectAnswers}/{TotalQuestions}, EndTime={EndTime}",
+                    examSubmissionMessage.StudentCode, 
+                    examSubmissionMessage.ShuffledExamPaperId, 
+                    examSubmissionMessage.Score, 
+                    examSubmissionMessage.CorrectAnswers, 
+                    examSubmissionMessage.TotalQuestions,
+                    examSubmissionMessage.EndTime
+                );
+            }
+            else
+            {
+                _logger.LogWarning("⚠️ Message không phải là ExamSubmissionMessage: {MessageType}", typeof(T).Name);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "❌ Lỗi xử lý ExamSubmissionMessage trực tiếp: {Message}", JsonConvert.SerializeObject(message));
             throw;
         }
     }
