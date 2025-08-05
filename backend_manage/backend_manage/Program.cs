@@ -61,11 +61,6 @@ try
         await backend_manage.Data.SeedData.InitializeAsync(services);
     }
 
-    // Gọi hàm test
-    backend_manage.Test.ExamPaperHelperTest.TestCreateEmptyAnswersString();
-    
-    // Test UpdateAnswerString
-    backend_manage.Test.TestHelper.test();
 
     // Health check Redis khi khởi động
     try

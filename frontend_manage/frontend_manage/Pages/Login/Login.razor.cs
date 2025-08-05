@@ -11,30 +11,42 @@ public partial class Login : ComponentBase
 
     private FrontEnd.DTOs.LoginModelDto loginModel = new();
     private string? ErrorMessage;
-    private bool _processing = false;
+    private bool _isLoading = false;
 
     private async Task HandleLogin()
     {
         ErrorMessage = null;
-        _processing = true;
+        _isLoading = true;
         StateHasChanged();
-        var result = await AuthService.LoginStudent(loginModel.UserName, loginModel.Password);
-        _processing = false;
-        StateHasChanged();
-        if (result.IsSuccess)
+        
+        try
         {
-            Navigation.NavigateTo("/student-dashboard");
-        }
-        else
-        {
-            if (result.ErrorMessage == "Không tìm thấy sinh viên với mã này.")
+            var result = await AuthService.LoginStudent(loginModel.UserName, loginModel.Password);
+            
+            if (result.IsSuccess)
             {
-                ErrorMessage = "Không tìm thấy thông tin thí sinh, vui lòng liên hệ cán bộ coi thi";
+                Navigation.NavigateTo("/student-dashboard");
             }
             else
             {
-                ErrorMessage = result.ErrorMessage;
+                if (result.ErrorMessage == "Không tìm thấy sinh viên với mã này.")
+                {
+                    ErrorMessage = "Không tìm thấy thông tin thí sinh, vui lòng liên hệ cán bộ coi thi";
+                }
+                else
+                {
+                    ErrorMessage = result.ErrorMessage;
+                }
             }
+        }
+        catch (System.Exception ex)
+        {
+            ErrorMessage = "Đã xảy ra lỗi khi đăng nhập. Vui lòng thử lại.";
+        }
+        finally
+        {
+            _isLoading = false;
+            StateHasChanged();
         }
     }
 }

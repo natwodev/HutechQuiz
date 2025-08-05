@@ -1,40 +1,185 @@
 @page "/student-login"
 @using frontend_manage.Services
-
+@using MudBlazor
+@using Microsoft.AspNetCore.Components.Forms
 
 <PageTitle>Đăng nhập Sinh viên</PageTitle>
 
-<div class="login-grid">
-    <div class="login-video-col">
-        <video autoplay loop muted playsinline class="video-background">
-            <source src="/images/login/login-video.mp4" type="video/mp4">
-            Trình duyệt của bạn không hỗ trợ video.
-        </video>
-    </div>
-    <div class="login-form-col">
-        <div class="login-content">
-            <h3>Đăng nhập Sinh viên</h3>
-            @if (!string.IsNullOrEmpty(ErrorMessage))
-            {
-                <div class="alert alert-danger">@ErrorMessage</div>
-            }
-            <EditForm Model="loginModel" OnValidSubmit="HandleLogin">
-                <DataAnnotationsValidator />
-                <ValidationSummary />
-                <div class="mb-3">
-                    <label for="username" class="form-label">Mã sinh viên</label>
-                    <InputText id="username" class="form-control" @bind-Value="loginModel.UserName" />
-                </div>
-                <div class="mb-3">
-                    <label for="password" class="form-label">Mật khẩu</label>
-                    <InputText id="password" type="password" class="form-control" @bind-Value="loginModel.Password" />
-                </div>
-                <button type="submit" class="btn btn-primary">Đăng nhập</button>
-            </EditForm>
-        </div>
-    </div>
-</div>
+<MudContainer MaxWidth="MaxWidth.False" Style="height: 100vh; margin: 0; padding: 0; position: relative; overflow: hidden;">
+    
+    <!-- Background Image phủ full trang -->
+    <div style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-image: url('/images/Home_Page2.jpg'); background-size: cover; background-position: center; background-repeat: no-repeat; z-index: 1;"></div>
+    
+    <!-- Overlay -->
+    <div style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.3); z-index: 2;"></div>
+    
+    <!-- Main Content căn giữa -->
+    <MudGrid Justify="Justify.Center" AlignItems="AlignItems.Center" Style="height: 100vh; position: relative; z-index: 3; margin: 0; padding: 20px;">
+        <MudItem xs="12" sm="10" md="8" lg="7" xl="6">
+            <MudPaper Elevation="25" Style="border-radius: 32px; max-width: 900px; background: rgba(255, 255, 255, 0.98); backdrop-filter: blur(20px); overflow: hidden;">
+                
+                <MudGrid Style="height: 580px;">
+                    
+                    <!-- Left Column - Login Form -->
+                    <MudItem xs="12" md="6">
+                        <MudContainer Style="padding: 40px 30px; height: 100%; display: flex; flex-direction: column; justify-content: center;">
+                            
+                            <!-- Header -->
+                            <MudStack Spacing="4" AlignItems="AlignItems.Center" Style="margin-bottom: 30px;">
+                                <MudImage Src="/images/exam/Logo.svg" Width="120" Alt="HUTECH Logo" />
+                                <MudText Typo="Typo.h6" Color="Color.Primary" Style="font-weight: 800; text-align: center; letter-spacing: 2px; text-transform: uppercase;">
+                                    Đăng nhập sinh viên
+                                </MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary" Style="text-align: center; opacity: 0.8; font-weight: 500;">
+                                    Hệ thống thi trực tuyến HUTECH
+                                </MudText>
+                            </MudStack>
+                            
+                            <!-- Login Form -->
+                            <MudStack Spacing="4">
+                                @if (!string.IsNullOrEmpty(ErrorMessage))
+                                {
+                                    <MudAlert Severity="Severity.Error" Variant="Variant.Filled" Style="border-radius: 16px;">
+                                        <MudText Style="font-weight: 700;">⚠️ Lỗi đăng nhập</MudText>
+                                        <MudText Style="font-size: 0.9rem;">@ErrorMessage</MudText>
+                                    </MudAlert>
+                                }
+                                
+                                <EditForm Model="loginModel" OnValidSubmit="HandleLogin">
+                                    <DataAnnotationsValidator />
+                                    
+                                    <MudStack Spacing="3">
+                                        <!-- Student ID Field -->
+                                        <MudTextField @bind-Value="loginModel.UserName"
+                                                     Label="Mã sinh viên"
+                                                     Variant="Variant.Outlined"
+                                                     Adornment="Adornment.Start"
+                                                     AdornmentIcon="@Icons.Material.Filled.Person"
+                                                     Required="true"
+                                                     RequiredError="Vui lòng nhập mã sinh viên"
+                                                     Style="border-radius: 16px;" />
+                                        
+                                        <!-- Password Field -->
+                                        <MudTextField @bind-Value="loginModel.Password"
+                                                     Label="Mật khẩu"
+                                                     Variant="Variant.Outlined"
+                                                     Adornment="Adornment.Start"
+                                                     AdornmentIcon="@Icons.Material.Filled.Lock"
+                                                     InputType="InputType.Password"
+                                                     Required="true"
+                                                     RequiredError="Vui lòng nhập mật khẩu"
+                                                     Style="border-radius: 16px;" />
+                                        
+                                        <!-- Login Button -->
+                                        <MudButton ButtonType="ButtonType.Submit"
+                                                   Variant="Variant.Filled"
+                                                   Color="Color.Primary"
+                                                   StartIcon="@(_isLoading ? Icons.Material.Filled.HourglassEmpty : Icons.Material.Filled.Login)"
+                                                   Disabled="@_isLoading"
+                                                   FullWidth="true"
+                                                   Size="Size.Medium"
+                                                   Style="border-radius: 20px; font-weight: 700; height: 50px; font-size: 1rem; text-transform: uppercase; letter-spacing: 2px; margin-top: 15px;">
+                                            @(_isLoading ? "Đang xử lý..." : "Đăng nhập")
+                                        </MudButton>
+                                    </MudStack>
+                                </EditForm>
+                            </MudStack>
+                            
+                            <!-- Footer -->
+                            <MudStack Spacing="2" AlignItems="AlignItems.Center" Style="margin-top: 25px;">
+                                <MudText Typo="Typo.caption" Color="Color.Secondary" Style="text-align: center; opacity: 0.7;">
+                                    © 2024 HUTECH - Hệ thống quản lý thi trực tuyến
+                                </MudText>
+                            </MudStack>
+                        </MudContainer>
+                    </MudItem>
+                    
+                    <!-- Right Column - Rules & Info -->
+                    <MudItem xs="12" md="6">
+                        <MudContainer Style="height: 100%; background: linear-gradient(135deg, #1976d2 0%, #42a5f5 50%, #64b5f6 100%); padding: 15px 15px 10px 15px; display: flex; flex-direction: column; justify-content: space-between; position: relative; border-radius: 0 32px 32px 0;">
+                            
+                            <!-- Content -->
+                            <MudStack Spacing="2">
+                                <MudStack Spacing="1" AlignItems="AlignItems.Center" Style="margin-bottom: 10px;">
+                                    <MudIcon Icon="@Icons.Material.Filled.School" Size="Size.Medium" Style="color: white; font-size: 2rem;" />
+                                    <MudText Typo="Typo.h6" Style="font-weight: 800; text-align: center; letter-spacing: 2px; text-transform: uppercase; color: white;">
+                                        Nội quy thi
+                                    </MudText>
+                                    <MudText Typo="Typo.caption" Style="text-align: center; opacity: 0.9; font-weight: 500; color: white;">
+                                        Vui lòng tuân thủ các quy định sau
+                                    </MudText>
+                                </MudStack>
+                                
+                                <MudStack Spacing="1">
+                                    <MudPaper Elevation="0" Style="background: rgba(255, 255, 255, 0.15); border-radius: 10px; padding: 6px; margin-bottom: 4px;">
+                                        <MudStack Spacing="1">
+                                            <MudText Typo="Typo.body2" Style="font-weight: 700; font-size: 0.8rem; color: white;">
+                                                1. Chuẩn bị thiết bị
+                                            </MudText>
+                                            <MudText Typo="Typo.caption" Style="font-size: 0.62rem; line-height: 1.2; opacity: 0.9; color: white;">
+                                                • Đảm bảo máy tính có kết nối internet ổn định<br/>
+                                                • Kiểm tra camera và microphone hoạt động tốt<br/>
+                                                • Đóng tất cả ứng dụng không cần thiết
+                                            </MudText>
+                                        </MudStack>
+                                    </MudPaper>
+                                    
+                                    <MudPaper Elevation="0" Style="background: rgba(255, 255, 255, 0.15); border-radius: 10px; padding: 6px; margin-bottom: 4px;">
+                                        <MudStack Spacing="1">
+                                            <MudText Typo="Typo.body2" Style="font-weight: 700; font-size: 0.8rem; color: white;">
+                                                2. Môi trường thi
+                                            </MudText>
+                                            <MudText Typo="Typo.caption" Style="font-size: 0.62rem; line-height: 1.2; opacity: 0.9; color: white;">
+                                                • Ngồi thi tại nơi yên tĩnh, đủ ánh sáng<br/>
+                                                • Không có người khác trong phòng<br/>
+                                                • Bàn thi sạch sẽ, không có tài liệu
+                                            </MudText>
+                                        </MudStack>
+                                    </MudPaper>
+                                    
+                                    <MudPaper Elevation="0" Style="background: rgba(255, 255, 255, 0.15); border-radius: 10px; padding: 6px; margin-bottom: 4px;">
+                                        <MudStack Spacing="1">
+                                            <MudText Typo="Typo.body2" Style="font-weight: 700; font-size: 0.8rem; color: white;">
+                                                3. Quy định thi
+                                            </MudText>
+                                            <MudText Typo="Typo.caption" Style="font-size: 0.62rem; line-height: 1.2; opacity: 0.9; color: white;">
+                                                • Không được sử dụng tài liệu, điện thoại<br/>
+                                                • Không được trao đổi với người khác<br/>
+                                                • Không được thoát khỏi màn hình thi
+                                            </MudText>
+                                        </MudStack>
+                                    </MudPaper>
+                                    
+                                    <MudPaper Elevation="0" Style="background: rgba(255, 255, 255, 0.15); border-radius: 10px; padding: 6px; margin-bottom: 4px;">
+                                        <MudStack Spacing="1">
+                                            <MudText Typo="Typo.body2" Style="font-weight: 700; font-size: 0.8rem; color: white;">
+                                                4. Xử lý sự cố
+                                            </MudText>
+                                            <MudText Typo="Typo.caption" Style="font-size: 0.62rem; line-height: 1.2; opacity: 0.9; color: white;">
+                                                • Nếu mất kết nối, liên hệ ngay giám thị<br/>
+                                                • Không tự ý làm lại bài thi<br/>
+                                                • Tuân thủ hướng dẫn của giám thị
+                                            </MudText>
+                                        </MudStack>
+                                    </MudPaper>
+                                </MudStack>
+                            </MudStack>
+                            
+                            <!-- Alert ở cuối -->
+                            <MudAlert Severity="Severity.Warning" Variant="Variant.Filled" Style="border-radius: 10px; margin-top: 8px;">
+                                <MudStack Spacing="0">
+                                    <MudText Style="font-weight: 700; color: white; font-size: 0.75rem;">⚠️ Lưu ý quan trọng</MudText>
+                                    <MudText Style="font-size: 0.6rem; color: white; opacity: 0.9;">Việc vi phạm nội quy sẽ dẫn đến việc hủy kết quả thi.</MudText>
+                                </MudStack>
+                            </MudAlert>
+                        </MudContainer>
+                    </MudItem>
+                </MudGrid>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+</MudContainer>
 
 @code {
-    // Đã chuyển toàn bộ logic sang Login.razor.cs
-} 
+    // Logic được xử lý trong Login.razor.cs
+}
