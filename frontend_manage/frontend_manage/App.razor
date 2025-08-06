@@ -1,4 +1,16 @@
-﻿<Router AppAssembly="@typeof(App).Assembly">
+﻿@code {
+    [Microsoft.AspNetCore.Components.RouteAttribute("/")]
+    public partial class RedirectToLogin : Microsoft.AspNetCore.Components.ComponentBase
+    {
+        [Inject] private NavigationManager Navigation { get; set; }
+        protected override void OnInitialized()
+        {
+            Navigation.NavigateTo("/student-login", true);
+        }
+    }
+}
+
+<Router AppAssembly="@typeof(App).Assembly">
     <Found Context="routeData">
         <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
         <FocusOnNavigate RouteData="@routeData" Selector="h1" />
@@ -12,15 +24,3 @@
 </Router>
 
 <RedirectToLogin />
-
-@code {
-    [Microsoft.AspNetCore.Components.RouteAttribute("/")]
-    public partial class RedirectToLogin : Microsoft.AspNetCore.Components.ComponentBase
-    {
-        [Inject] private NavigationManager Navigation { get; set; }
-        protected override void OnInitialized()
-        {
-            Navigation.NavigateTo("/student-login", true);
-        }
-    }
-}
