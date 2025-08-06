@@ -98,7 +98,7 @@ else
                                         var selectedChildAnswer = GetSelectedChildAnswer(childQ.ShuffledExamPaperDetailId);
                                         
                                         <MudPaper Class="pa-3 mb-2 ml-4" Elevation="0" Style="background-color: #f5f5f5;">
-                                            <MudText Typo="Typo.body2" Class="mb-2">
+                                            <MudText id="@($"question-{questionNumber}.{childQuestionIndex}")" Typo="Typo.body2" Class="mb-2">
                                                 <b>Câu @questionNumber.@childQuestionIndex: </b>
                                                 @((MarkupString)ProcessQuestionContent(childQ.QuestionContent))
                                             </MudText>
@@ -156,8 +156,8 @@ else
                 <MudPaper Style="text-align: center; border: 1px solid #ccc; margin-bottom: 15%;">
                     <MudGrid>
                         <MudItem xs="6" Style="align-content: center">
-                            <MudText Typo="Typo.h4" Color="Color.Primary" id="time-clock">
-                                @(studentSession?.Duration ?? 0):00
+                            <MudText Typo="Typo.h4" Color="@(isTimeUp ? Color.Error : remainingMinutes <= 5 ? Color.Warning : Color.Primary)" id="time-clock">
+                                @GetFormattedTime()
                             </MudText>
                         </MudItem>
                         <MudItem xs="6">
@@ -197,10 +197,28 @@ else
                                 <MudItem xs="2" md="3" Style="padding-left: 15px">
                                     <MudButton Size="Size.Small" Variant="Variant.Filled" 
                                              Color="@(isAnswered ? Color.Success : Color.Default)" 
-                                             OnClick="async () => await ScrollToQuestionAsync(questionNumber)">
+                                             OnClick="async () => await ScrollToQuestionAsync(questionNumber.ToString())">
                                         @questionNumber
                                     </MudButton>
                                 </MudItem>
+                                
+                                @if (q.ChildQuestions != null && q.ChildQuestions.Any())
+                                {
+                                    @foreach (var childQ in q.ChildQuestions.OrderBy(cq => cq.Order))
+                                    {
+                                        var childQuestionIndex = q.ChildQuestions.OrderBy(cq => cq.Order).ToList().IndexOf(childQ) + 1;
+                                        var isChildAnswered = !string.IsNullOrEmpty(GetSelectedChildAnswer(childQ.ShuffledExamPaperDetailId));
+                                        
+                                        <MudItem xs="2" md="3" Style="padding-left: 15px">
+                                            <MudButton Size="Size.Small" Variant="Variant.Outlined" 
+                                                     Color="@(isChildAnswered ? Color.Success : Color.Secondary)" 
+                                                     OnClick="@(async () => await ScrollToQuestionAsync($"{questionNumber}.{childQuestionIndex}"))"
+                                                     Style="font-size: 0.8em;">
+                                                @questionNumber.@childQuestionIndex
+                                            </MudButton>
+                                        </MudItem>
+                                    }
+                                }
                             }
                         }
                     </MudGrid>

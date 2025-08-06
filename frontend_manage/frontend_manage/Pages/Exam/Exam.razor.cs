@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using MudBlazor;
 using System.Text.RegularExpressions;
+using System.Timers;
 using frontend_manage.DTOs;
 
 namespace frontend_manage.Pages.Exam
@@ -20,6 +21,12 @@ namespace frontend_manage.Pages.Exam
         // Dictionary to store selected answers for each question
         private Dictionary<int, string> selectedAnswers = new();
         private Dictionary<int, string> selectedChildAnswers = new();
+        
+        // Timer variables
+        private System.Timers.Timer? examTimer;
+        private int remainingMinutes;
+        private int remainingSeconds;
+        private bool isTimeUp = false;
 
         protected override async Task OnInitializedAsync()
         {
@@ -39,6 +46,9 @@ namespace frontend_manage.Pages.Exam
                 {
                     shuffledExam = startExamResponse.ExamPaper;
                     studentSession = startExamResponse.StudentSession;
+                    
+                    // Initialize timer
+                    InitializeTimer();
                 }
             }
             catch (Exception ex)
@@ -125,6 +135,9 @@ namespace frontend_manage.Pages.Exam
 
         private async Task OnSubmitExamAsync()
         {
+            // Stop timer
+            examTimer?.Stop();
+            
             var dialog = await Dialog.ShowMessageBox("Xác nhận", "Bạn có chắc chắn muốn nộp bài thi này?", "Nộp bài", "Hủy");
             if (dialog == true)
             {
@@ -136,9 +149,65 @@ namespace frontend_manage.Pages.Exam
             }
         }
 
-        private async Task ScrollToQuestionAsync(int questionNumber)
+        private async Task ScrollToQuestionAsync(string questionIdentifier)
         {
-            await JSRuntime.InvokeVoidAsync("scrollToElement", $"question-{questionNumber}");
+            await JSRuntime.InvokeVoidAsync("scrollToElement", $"question-{questionIdentifier}");
+        }
+
+        private void InitializeTimer()
+        {
+            if (studentSession?.Duration > 0)
+            {
+                remainingMinutes = studentSession.Duration;
+                remainingSeconds = 0;
+                
+                // Start timer that ticks every second
+                examTimer = new System.Timers.Timer(1000);
+                examTimer.Elapsed += OnTimerElapsed;
+                examTimer.Start();
+            }
+        }
+
+        private void OnTimerElapsed(object? sender, System.Timers.ElapsedEventArgs e)
+        {
+            if (remainingSeconds > 0)
+            {
+                remainingSeconds--;
+            }
+            else if (remainingMinutes > 0)
+            {
+                remainingMinutes--;
+                remainingSeconds = 59;
+            }
+            else
+            {
+                // Time is up
+                isTimeUp = true;
+                examTimer?.Stop();
+                
+                // Auto submit exam
+                InvokeAsync(async () =>
+                {
+                    await OnSubmitExamAsync();
+                });
+            }
+            
+            // Update UI
+            InvokeAsync(StateHasChanged);
+        }
+
+        public void Dispose()
+        {
+            examTimer?.Stop();
+            examTimer?.Dispose();
+        }
+
+        private string GetFormattedTime()
+        {
+            if (isTimeUp)
+                return "00:00";
+                
+            return $"{remainingMinutes:D2}:{remainingSeconds:D2}";
         }
 
         private int GetAnsweredQuestionsCount()
