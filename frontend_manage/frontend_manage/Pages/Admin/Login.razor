@@ -1,5 +1,6 @@
 
 @page "/login"
+@using frontend_manage.DTOs
 @using frontend_manage.Services
 @inject AuthService AuthService
 @inject NavigationManager Navigation
@@ -38,7 +39,7 @@
 </div>
 
 @code {
-    private FrontEnd.DTOs.LoginModelDto loginModel = new();
+    private LoginModelDto loginModel = new();
     private string? ErrorMessage;
 
     private async Task HandleLogin()
