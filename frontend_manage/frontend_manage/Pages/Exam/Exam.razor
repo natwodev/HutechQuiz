@@ -1,182 +1,16 @@
 @page "/Exam"
 @inject IJSRuntime JSRuntime
 @inject NavigationManager Navigation
-@inject frontend_manage.Pages.Login.InfoApi InfoApi
+@inject InfoApi InfoApi
+@inject ExamApi ExamApi
 @inject ISnackbar Snackbar
 @inject IDialogService Dialog
 @inject HttpClient Http
-
-@using FrontEnd.DTOs
+@using frontend_manage.Pages.StudentLogin
 @using Microsoft.AspNetCore.Components
+@using MudBlazor
 
 <PageTitle>Làm bài thi</PageTitle>
-
-@code {
-    [Parameter]
-    [SupplyParameterFromQuery]
-    public int? studentExamSessionId { get; set; }
-
-    private StartExamResponseDto? startExamResponse;
-    private ShuffledExamPaperDto? shuffledExam;
-    private StudentExamSessionCacheDto? studentSession;
-    private string? errorMessage;
-    
-    // Dictionary to store selected answers for each question
-    private Dictionary<int, string> selectedAnswers = new();
-    private Dictionary<int, string> selectedChildAnswers = new();
-
-    protected override async Task OnInitializedAsync()
-    {
-        if (studentExamSessionId == null)
-        {
-            errorMessage = "Không tìm thấy thông tin ca thi môn học.";
-            return;
-        }
-        try
-        {
-            startExamResponse = await InfoApi.StartExamAsync(studentExamSessionId.Value);
-            if (startExamResponse == null)
-            {
-                errorMessage = "Không thể lấy thông tin làm bài.";
-            }
-            else
-            {
-                shuffledExam = startExamResponse.ExamPaper;
-                studentSession = startExamResponse.StudentSession;
-            }
-        }
-        catch (Exception ex)
-        {
-            errorMessage = ex.Message;
-        }
-    }
-
-    private void OnAnswerSelected(int questionId, string answer)
-    {
-        selectedAnswers[questionId] = answer;
-        StateHasChanged();
-    }
-
-    private void OnChildAnswerSelected(int questionId, string answer)
-    {
-        selectedChildAnswers[questionId] = answer;
-        StateHasChanged();
-    }
-
-    private string GetSelectedAnswer(int questionId)
-    {
-        return selectedAnswers.TryGetValue(questionId, out var answer) ? answer : "";
-    }
-
-    private string GetSelectedChildAnswer(int questionId)
-    {
-        return selectedChildAnswers.TryGetValue(questionId, out var answer) ? answer : "";
-    }
-
-    private async Task OnSubmitExamAsync()
-    {
-        var parameters = new DialogParameters
-        {
-            ["Title"] = "Xác nhận nộp bài",
-            ["Content"] = "Bạn có chắc chắn muốn nộp bài thi này?",
-            ["YesText"] = "Nộp bài",
-            ["NoText"] = "Hủy"
-        };
-
-        var dialog = await Dialog.ShowMessageBox("Xác nhận", "Bạn có chắc chắn muốn nộp bài thi này?", "Nộp bài", "Hủy");
-        if (dialog == true)
-        {
-            // TODO: Implement submit exam logic
-            Snackbar.Add("Đã nộp bài thi thành công!", Severity.Success);
-        }
-    }
-
-    private async Task ScrollToQuestionAsync(int questionNumber)
-    {
-        await JSRuntime.InvokeVoidAsync("scrollToElement", $"question-{questionNumber}");
-    }
-
-    private int GetAnsweredQuestionsCount()
-    {
-        return selectedAnswers.Count + selectedChildAnswers.Count;
-    }
-
-    private int GetTotalQuestionsCount()
-    {
-        if (shuffledExam?.Details == null) return 0;
-        
-        int total = shuffledExam.Details.Count;
-        foreach (var detail in shuffledExam.Details)
-        {
-            if (detail.ChildQuestions != null)
-            {
-                total += detail.ChildQuestions.Count;
-            }
-        }
-        return total;
-    }
-
-    private string GetAudioPath(string audioFileName)
-    {
-        if (string.IsNullOrEmpty(shuffledExam?.ShuffledExamPaperCore) || string.IsNullOrEmpty(audioFileName))
-            return string.Empty;
-
-        // Lấy phần trước dấu _ từ ShuffledExamPaperCore
-        var folderName = shuffledExam.ShuffledExamPaperCore.Split('_')[0];
-        
-        // Tạo đường dẫn audio trực tiếp tới file trong backend
-        var baseAddress = Http.BaseAddress?.ToString() ?? "http://localhost:5163/";
-        return $"{baseAddress}EPZ/{folderName}/{audioFileName}";
-    }
-
-    private string GetPhysicalAudioPath(string audioFileName)
-    {
-        if (string.IsNullOrEmpty(shuffledExam?.ShuffledExamPaperCore) || string.IsNullOrEmpty(audioFileName))
-            return string.Empty;
-
-        // Lấy phần trước dấu _ từ ShuffledExamPaperCore
-        var folderName = shuffledExam.ShuffledExamPaperCore.Split('_')[0];
-        
-        // Tạo đường dẫn vật lý để kiểm tra file có tồn tại không
-        var wwwrootPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
-        return Path.Combine(wwwrootPath, "EPZ", folderName, audioFileName);
-    }
-
-    private string ProcessQuestionContent(string content)
-    {
-        if (string.IsNullOrEmpty(content))
-            return content;
-
-        // Tìm và thay thế thẻ audio
-        var audioPattern = @"<audio>([^<]+)</audio>";
-        var match = System.Text.RegularExpressions.Regex.Match(content, audioPattern);
-        
-        if (match.Success)
-        {
-            var audioPath = match.Groups[1].Value;
-            var fullAudioPath = GetAudioPath(audioPath);
-            
-            // Debug: Log đường dẫn audio
-            Console.WriteLine($"Audio path: {audioPath}");
-            Console.WriteLine($"Full audio path: {fullAudioPath}");
-            
-            if (!string.IsNullOrEmpty(fullAudioPath))
-            {
-                // Thay thế thẻ audio bằng HTML audio player
-                var audioPlayer = $@"<div class=""audio-player mb-3"">
-                    <audio controls style=""width: 100%; max-width: 400px;"">
-                        <source src=""{fullAudioPath}"" type=""audio/mpeg"">
-                        Your browser does not support the audio element.
-                    </audio>
-                </div>";
-                
-                return System.Text.RegularExpressions.Regex.Replace(content, audioPattern, audioPlayer);
-            }
-        }
-        
-        return content;
-    }
-}
 
 @if (!string.IsNullOrEmpty(errorMessage))
 {
@@ -196,6 +30,7 @@ else
                 <MudPaper Class="pa-4" Style="border: 1px solid #ccc;">
                     <MudText Typo="Typo.h4" Class="mb-4">@shuffledExam.Title (@shuffledExam.ShuffledExamPaperCore)</MudText>
                     
+                    
                     @if (shuffledExam.Details != null)
                     {
         @foreach (var q in shuffledExam.Details.OrderBy(d => d.Order))
@@ -212,32 +47,44 @@ else
                 @if (!string.IsNullOrEmpty(q.Answer1) || !string.IsNullOrEmpty(q.Answer2) || 
                      !string.IsNullOrEmpty(q.Answer3) || !string.IsNullOrEmpty(q.Answer4))
                 {
-                                    <MudRadioGroup T="string" @bind-Value="selectedAnswer" Class="mt-3">
+                                    <div class="mt-3">
                         @if (!string.IsNullOrEmpty(q.Answer1))
                         {
-                                            <MudRadio T="string" Value="@($"q{q.ShuffledExamPaperDetailId}_1")" Color="Color.Primary">
+                                            <MudButton Variant="Variant.Text" Color="Color.Primary" 
+                                                     OnClick="@(async () => await OnAnswerSelected(q.ShuffledExamPaperDetailId, "A", q.Order))"
+                                                     Style="@(GetSelectedAnswer(q.ShuffledExamPaperDetailId) == $"q{q.ShuffledExamPaperDetailId}_1" ? "background-color: #e3f2fd;" : "")">
+                                                <MudIcon Icon="@Icons.Material.Filled.RadioButtonChecked" Class="mr-2" />
                                                 @((MarkupString)q.Answer1)
-                                            </MudRadio>
+                                            </MudButton>
                         }
                         @if (!string.IsNullOrEmpty(q.Answer2))
                         {
-                                            <MudRadio T="string" Value="@($"q{q.ShuffledExamPaperDetailId}_2")" Color="Color.Primary">
+                                            <MudButton Variant="Variant.Text" Color="Color.Primary"
+                                                     OnClick="@(async () => await OnAnswerSelected(q.ShuffledExamPaperDetailId, "B", q.Order))"
+                                                     Style="@(GetSelectedAnswer(q.ShuffledExamPaperDetailId) == $"q{q.ShuffledExamPaperDetailId}_2" ? "background-color: #e3f2fd;" : "")">
+                                                <MudIcon Icon="@Icons.Material.Filled.RadioButtonChecked" Class="mr-2" />
                                                 @((MarkupString)q.Answer2)
-                                            </MudRadio>
+                                            </MudButton>
                         }
                         @if (!string.IsNullOrEmpty(q.Answer3))
                         {
-                                            <MudRadio T="string" Value="@($"q{q.ShuffledExamPaperDetailId}_3")" Color="Color.Primary">
+                                            <MudButton Variant="Variant.Text" Color="Color.Primary"
+                                                     OnClick="@(async () => await OnAnswerSelected(q.ShuffledExamPaperDetailId, "C", q.Order))"
+                                                     Style="@(GetSelectedAnswer(q.ShuffledExamPaperDetailId) == $"q{q.ShuffledExamPaperDetailId}_3" ? "background-color: #e3f2fd;" : "")">
+                                                <MudIcon Icon="@Icons.Material.Filled.RadioButtonChecked" Class="mr-2" />
                                                 @((MarkupString)q.Answer3)
-                                            </MudRadio>
+                                            </MudButton>
                         }
                         @if (!string.IsNullOrEmpty(q.Answer4))
                         {
-                                            <MudRadio T="string" Value="@($"q{q.ShuffledExamPaperDetailId}_4")" Color="Color.Primary">
+                                            <MudButton Variant="Variant.Text" Color="Color.Primary"
+                                                     OnClick="@(async () => await OnAnswerSelected(q.ShuffledExamPaperDetailId, "D", q.Order))"
+                                                     Style="@(GetSelectedAnswer(q.ShuffledExamPaperDetailId) == $"q{q.ShuffledExamPaperDetailId}_4" ? "background-color: #e3f2fd;" : "")">
+                                                <MudIcon Icon="@Icons.Material.Filled.RadioButtonChecked" Class="mr-2" />
                                                 @((MarkupString)q.Answer4)
-                                            </MudRadio>
+                                            </MudButton>
                         }
-                                    </MudRadioGroup>
+                                    </div>
                 }
 
                 @if (q.ChildQuestions != null && q.ChildQuestions.Any())
@@ -256,32 +103,44 @@ else
                                                 @((MarkupString)ProcessQuestionContent(childQ.QuestionContent))
                                             </MudText>
                                             
-                                            <MudRadioGroup T="string" @bind-Value="selectedChildAnswer" Class="mt-2">
+                                            <div class="mt-2">
                                         @if (!string.IsNullOrEmpty(childQ.Answer1))
                                         {
-                                                    <MudRadio T="string" Value="@($"cq{childQ.ShuffledExamPaperDetailId}_1")" Color="Color.Secondary" Size="Size.Small">
+                                                    <MudButton Variant="Variant.Text" Color="Color.Secondary" Size="Size.Small"
+                                                             OnClick="@(async () => await OnChildAnswerSelected(childQ.ShuffledExamPaperDetailId, "A", q.Order, childQ.Order))"
+                                                             Style="@(GetSelectedChildAnswer(childQ.ShuffledExamPaperDetailId) == $"cq{childQ.ShuffledExamPaperDetailId}_1" ? "background-color: #f3e5f5;" : "")">
+                                                        <MudIcon Icon="@Icons.Material.Filled.RadioButtonChecked" Class="mr-2" Size="Size.Small" />
                                                         @((MarkupString)childQ.Answer1)
-                                                    </MudRadio>
+                                                    </MudButton>
                                         }
                                         @if (!string.IsNullOrEmpty(childQ.Answer2))
                                         {
-                                                    <MudRadio T="string" Value="@($"cq{childQ.ShuffledExamPaperDetailId}_2")" Color="Color.Secondary" Size="Size.Small">
+                                                    <MudButton Variant="Variant.Text" Color="Color.Secondary" Size="Size.Small"
+                                                             OnClick="@(async () => await OnChildAnswerSelected(childQ.ShuffledExamPaperDetailId, "B", q.Order, childQ.Order))"
+                                                             Style="@(GetSelectedChildAnswer(childQ.ShuffledExamPaperDetailId) == $"cq{childQ.ShuffledExamPaperDetailId}_2" ? "background-color: #f3e5f5;" : "")">
+                                                        <MudIcon Icon="@Icons.Material.Filled.RadioButtonChecked" Class="mr-2" Size="Size.Small" />
                                                         @((MarkupString)childQ.Answer2)
-                                                    </MudRadio>
+                                                    </MudButton>
                                         }
                                         @if (!string.IsNullOrEmpty(childQ.Answer3))
                                         {
-                                                    <MudRadio T="string" Value="@($"cq{childQ.ShuffledExamPaperDetailId}_3")" Color="Color.Secondary" Size="Size.Small">
+                                                    <MudButton Variant="Variant.Text" Color="Color.Secondary" Size="Size.Small"
+                                                             OnClick="@(async () => await OnChildAnswerSelected(childQ.ShuffledExamPaperDetailId, "C", q.Order, childQ.Order))"
+                                                             Style="@(GetSelectedChildAnswer(childQ.ShuffledExamPaperDetailId) == $"cq{childQ.ShuffledExamPaperDetailId}_3" ? "background-color: #f3e5f5;" : "")">
+                                                        <MudIcon Icon="@Icons.Material.Filled.RadioButtonChecked" Class="mr-2" Size="Size.Small" />
                                                         @((MarkupString)childQ.Answer3)
-                                                    </MudRadio>
+                                                    </MudButton>
                                         }
                                         @if (!string.IsNullOrEmpty(childQ.Answer4))
                                         {
-                                                    <MudRadio T="string" Value="@($"cq{childQ.ShuffledExamPaperDetailId}_4")" Color="Color.Secondary" Size="Size.Small">
+                                                    <MudButton Variant="Variant.Text" Color="Color.Secondary" Size="Size.Small"
+                                                             OnClick="@(async () => await OnChildAnswerSelected(childQ.ShuffledExamPaperDetailId, "D", q.Order, childQ.Order))"
+                                                             Style="@(GetSelectedChildAnswer(childQ.ShuffledExamPaperDetailId) == $"cq{childQ.ShuffledExamPaperDetailId}_4" ? "background-color: #f3e5f5;" : "")">
+                                                        <MudIcon Icon="@Icons.Material.Filled.RadioButtonChecked" Class="mr-2" Size="Size.Small" />
                                                         @((MarkupString)childQ.Answer4)
-                                                    </MudRadio>
-                                                }
-                                            </MudRadioGroup>
+                                                    </MudButton>
+                                        }
+                                            </div>
                                         </MudPaper>
                                     }
                                 }

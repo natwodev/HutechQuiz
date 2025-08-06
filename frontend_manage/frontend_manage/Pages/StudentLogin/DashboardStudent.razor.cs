@@ -1,16 +1,8 @@
-using System;
-using System.Threading;
-using System.Threading.Tasks;
+using frontend_manage.DTOs;
 using Microsoft.AspNetCore.Components;
-using frontend_manage.Services;
-using System.Net.Http.Json;
-using FrontEnd.DTOs;
-using frontend_manage.Pages.Login;
 using Microsoft.JSInterop;
-using System.Collections.Generic;
-using System.Text.Json;
 
-namespace frontend_manage.Pages.Login
+namespace frontend_manage.Pages.StudentLogin
 {
     public partial class DashboardStudent : ComponentBase, IDisposable
     {

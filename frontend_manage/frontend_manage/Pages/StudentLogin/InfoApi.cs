@@ -1,9 +1,7 @@
-using System.Net.Http;
 using System.Net.Http.Json;
-using System.Threading.Tasks;
-using FrontEnd.DTOs;
+using frontend_manage.DTOs;
 
-namespace frontend_manage.Pages.Login;
+namespace frontend_manage.Pages.StudentLogin;
 
 public class InfoApi
 {
