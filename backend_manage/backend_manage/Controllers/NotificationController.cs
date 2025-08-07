@@ -1,10 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
-using backend_manage.Hubs;
 using System.Threading.Tasks;
 using System;
-using backend_manage.DTOs;
-using backend_manage.Services.Interfaces;
+using backend_manage.core.Hubs;
 using Microsoft.AspNetCore.Authorization;
 
 namespace backend_manage.Controllers

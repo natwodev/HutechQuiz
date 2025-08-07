@@ -1,10 +1,10 @@
-using backend_manage.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using System.Threading.Tasks;
+using backend_manage.core.Services.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using backend_manage.Services.AuthService.Helpers;
+using backend_manage.shared.Interfaces;
 
 namespace backend_manage.Controllers
 {

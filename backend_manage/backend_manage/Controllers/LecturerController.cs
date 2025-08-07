@@ -1,9 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
-using backend_manage.Services.Interfaces;
-using backend_manage.DTOs;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using System.Collections.Generic;
+using backend_manage.core.Services.Interfaces;
+using backend_manage.shared.DTOs;
+using backend_manage.shared.Interfaces;
 
 namespace backend_manage.Controllers
 {
