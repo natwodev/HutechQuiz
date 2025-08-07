@@ -87,4 +87,9 @@
       <Folder Include="wwwroot\EPZ\" />
     </ItemGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\backend_manage.core\backend_manage.core.csproj" />
+      <ProjectReference Include="..\backend_manage.shared\backend_manage.shared.csproj" />
+    </ItemGroup>
+
 </Project>

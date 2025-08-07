@@ -1,0 +1,12 @@
+namespace backend_manage.core.Messages
+{
+    public class StudentAnswerSavedMessage
+    {
+        public string StudentCode { get; set; }
+        public int StudentExamSessionId { get; set; }
+        public int Index { get; set; }
+        public int? SubIndex { get; set; }
+        public string Answer { get; set; }
+        public string NewAnswersString { get; set; }
+    }
+}

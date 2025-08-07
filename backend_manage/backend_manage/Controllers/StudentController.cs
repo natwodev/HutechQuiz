@@ -1,6 +1,3 @@
-using backend_manage.DTOs;
-using backend_manage.Entities;
-using backend_manage.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
@@ -9,8 +6,10 @@ using OfficeOpenXml;
 using System.IO;
 using System.Linq;
 using System.Security.Claims;
-using backend_manage.Hubs;
-using backend_manage.Messages;
+using backend_manage.core.Messages;
+using backend_manage.core.Services.Interfaces;
+using backend_manage.shared.DTOs;
+using backend_manage.shared.Interfaces;
 
 namespace backend_manage.Controllers;
 
