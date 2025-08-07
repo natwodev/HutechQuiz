@@ -111,13 +111,13 @@ public class MessageProcessingService : IMessageProcessingService
             if (message is StudentAnswerSavedMessage saveAnswerMessage)
             {
                 using var scope = _serviceScopeFactory.CreateScope();
+            
                 var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
-                // Tìm StudentExamSession bằng StudentExamSessionId
                 var studentExamSession = dbContext.StudentExamSessions
-                    .AsNoTracking() // Chỉ đọc dữ liệu, không track changes
                     .SingleOrDefault(x => x.StudentExamSessionId == saveAnswerMessage.StudentExamSessionId);
 
+                
                 if (studentExamSession == null)
                 {
                     _logger.LogWarning("❗ Không tìm thấy StudentExamSession. StudentExamSessionId: {StudentExamSessionId}", 
