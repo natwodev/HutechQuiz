@@ -52,4 +52,31 @@ public class ExamApi
             return null;
         }
     }
+
+    public async Task<string?> GetStudentAnswersAsync(int studentExamSessionId)
+    {
+        try
+        {
+            Console.WriteLine($"🔄 ExamApi: Đang lấy đáp án đã lưu cho session {studentExamSessionId}");
+            
+            var response = await _httpClient.GetAsync($"/api/Student/answers/{studentExamSessionId}");
+            
+            if (response.IsSuccessStatusCode)
+            {
+                var result = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"✅ ExamApi: Đã lấy đáp án: {result}");
+                return result;
+            }
+            else
+            {
+                Console.WriteLine($"❌ ExamApi: Lỗi khi lấy đáp án - Status: {response.StatusCode}");
+                return null;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"❌ ExamApi: Exception khi lấy đáp án: {ex.Message}");
+            return null;
+        }
+    }
 }

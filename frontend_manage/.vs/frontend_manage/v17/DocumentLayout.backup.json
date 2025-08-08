@@ -1,0 +1,37 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Users\\Juo\\source\\repos\\HutechQuiz\\frontend_manage\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{FF4E83A3-C7DA-4B41-BD64-76160243B163}|frontend_manage\\frontend_manage.csproj|c:\\users\\juo\\source\\repos\\hutechquiz\\frontend_manage\\frontend_manage\\pages\\exam\\exam.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{FF4E83A3-C7DA-4B41-BD64-76160243B163}|frontend_manage\\frontend_manage.csproj|solutionrelative:frontend_manage\\pages\\exam\\exam.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 0,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "Exam.razor",
+              "DocumentMoniker": "C:\\Users\\Juo\\source\\repos\\HutechQuiz\\frontend_manage\\frontend_manage\\Pages\\Exam\\Exam.razor",
+              "RelativeDocumentMoniker": "frontend_manage\\Pages\\Exam\\Exam.razor",
+              "ToolTip": "C:\\Users\\Juo\\source\\repos\\HutechQuiz\\frontend_manage\\frontend_manage\\Pages\\Exam\\Exam.razor",
+              "RelativeToolTip": "frontend_manage\\Pages\\Exam\\Exam.razor",
+              "ViewState": "AgIAADECAAAAAAAAAAAAAFICAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2025-08-08T06:46:59.879Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
