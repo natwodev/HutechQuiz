@@ -56,5 +56,6 @@ namespace backend_manage.shared.DTOs
         public int? TotalQuestions { get; set; }
         public DateTime EndTime { get; set; }
         public string StudentAnswersString { get; set; }
+        public string AnswerKey { get; set; }
     }
 } 
