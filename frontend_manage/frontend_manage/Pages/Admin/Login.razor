@@ -42,41 +42,56 @@
     private LoginModelDto loginModel = new();
     private string? ErrorMessage;
 
+    protected override async Task OnInitializedAsync()
+    {
+        // Kiểm tra xem đã đăng nhập bằng cookie chưa
+        var authResult = await AuthService.CheckCookieAuth();
+        if (authResult.IsSuccess)
+        {
+            await NavigateBasedOnRole();
+        }
+    }
+
     private async Task HandleLogin()
     {
         ErrorMessage = null;
-        var result = await AuthService.Login(loginModel.UserName, loginModel.Password);
+        var result = await AuthService.LoginWithCookie(loginModel.UserName, loginModel.Password);
         if (result.IsSuccess)
         {
-            var role = await AuthService.GetUserRoleFromToken();
-            if (role == "Admin")
-            {
-                Navigation.NavigateTo("/dashboard");
-            }
-            else if (role == "Lecturer")
-            {
-                Navigation.NavigateTo("/lecturer/dashboard");
-            }
-            else if (role == "AcademicAffairs")
-            {
-                Navigation.NavigateTo("/academicaffairs/dashboard");
-            }
-            else if (role == "ExamManager")
-            {
-                Navigation.NavigateTo("/exammanager/dashboard");
-            }
-            else if (role == "ITManager")
-            {
-                Navigation.NavigateTo("/itmanager/dashboard");
-            }
-            else
-            {
-                Navigation.NavigateTo("/");
-            }
+            await NavigateBasedOnRole();
         }
         else
         {
             ErrorMessage = result.ErrorMessage;
+        }
+    }
+
+    private async Task NavigateBasedOnRole()
+    {
+        var role = await AuthService.GetUserRoleFromToken();
+        if (role == "Admin")
+        {
+            Navigation.NavigateTo("/dashboard");
+        }
+        else if (role == "Lecturer")
+        {
+            Navigation.NavigateTo("/lecturer/dashboard");
+        }
+        else if (role == "AcademicAffairs")
+        {
+            Navigation.NavigateTo("/academicaffairs/dashboard");
+        }
+        else if (role == "ExamManager")
+        {
+            Navigation.NavigateTo("/exammanager/dashboard");
+        }
+        else if (role == "ITManager")
+        {
+            Navigation.NavigateTo("/itmanager/dashboard");
+        }
+        else
+        {
+            Navigation.NavigateTo("/");
         }
     }
 } 

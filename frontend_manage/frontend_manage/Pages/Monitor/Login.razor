@@ -1,0 +1,224 @@
+@page "/monitor/login"
+@using frontend_manage.DTOs
+@using frontend_manage.Services
+@inject AuthService AuthService
+@inject NavigationManager Navigation
+
+<PageTitle>Monitor Login</PageTitle>
+
+<div class="monitor-login-container">
+    <div class="monitor-login-card">
+        <div class="monitor-login-header">
+            <h2>Monitor System</h2>
+            <p>Đăng nhập để truy cập hệ thống giám sát</p>
+        </div>
+        
+        @if (!string.IsNullOrEmpty(ErrorMessage))
+        {
+            <div class="alert alert-danger">@ErrorMessage</div>
+        }
+        
+        <EditForm Model="loginModel" OnValidSubmit="HandleLogin">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+            
+            <div class="form-group">
+                <label for="username">Tên đăng nhập</label>
+                <InputText id="username" class="form-control" @bind-Value="loginModel.UserName" />
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Mật khẩu</label>
+                <InputText id="password" type="password" class="form-control" @bind-Value="loginModel.Password" />
+            </div>
+            
+            <button type="submit" class="btn btn-primary btn-block" disabled="@IsLoading">
+                @if (IsLoading)
+                {
+                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                    <span>Đang đăng nhập...</span>
+                }
+                else
+                {
+                    <span>Đăng nhập</span>
+                }
+            </button>
+        </EditForm>
+        
+        <div class="monitor-login-footer">
+            <small class="text-muted">Hệ thống giám sát thi cử Hutech</small>
+        </div>
+    </div>
+</div>
+
+<style>
+    .monitor-login-container {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 20px;
+    }
+    
+    .monitor-login-card {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+        padding: 40px;
+        width: 100%;
+        max-width: 400px;
+    }
+    
+    .monitor-login-header {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+    
+    .monitor-login-header h2 {
+        color: #333;
+        margin-bottom: 10px;
+        font-weight: 600;
+    }
+    
+    .monitor-login-header p {
+        color: #666;
+        margin: 0;
+    }
+    
+    .form-group {
+        margin-bottom: 20px;
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 5px;
+        color: #333;
+        font-weight: 500;
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 12px 15px;
+        border: 2px solid #e1e5e9;
+        border-radius: 5px;
+        font-size: 16px;
+        transition: border-color 0.3s ease;
+    }
+    
+    .form-control:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+    
+    .btn-block {
+        width: 100%;
+        padding: 12px;
+        font-size: 16px;
+        font-weight: 500;
+        margin-top: 10px;
+    }
+    
+    .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        color: white;
+    }
+    
+    .btn-primary:hover {
+        background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+        transform: translateY(-1px);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+    }
+    
+    .btn-primary:disabled {
+        background: #ccc;
+        transform: none;
+        box-shadow: none;
+    }
+    
+    .monitor-login-footer {
+        text-align: center;
+        margin-top: 30px;
+        padding-top: 20px;
+        border-top: 1px solid #e1e5e9;
+    }
+    
+    .alert {
+        padding: 12px 15px;
+        border-radius: 5px;
+        margin-bottom: 20px;
+    }
+    
+    .alert-danger {
+        background-color: #f8d7da;
+        border: 1px solid #f5c6cb;
+        color: #721c24;
+    }
+    
+    .spinner-border-sm {
+        width: 1rem;
+        height: 1rem;
+        margin-right: 8px;
+    }
+</style>
+
+@code {
+    private LoginModelDto loginModel = new();
+    private string? ErrorMessage;
+    private bool IsLoading = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Kiểm tra xem đã đăng nhập chưa
+        if (await AuthService.IsAuthenticated())
+        {
+            var role = await AuthService.GetUserRoleFromToken();
+            if (role == "Admin" || role == "ITManager" || role == "ExamManager")
+            {
+                Navigation.NavigateTo("/monitor/dashboard");
+            }
+        }
+    }
+
+    private async Task HandleLogin()
+    {
+        ErrorMessage = null;
+        IsLoading = true;
+        
+        try
+        {
+            // Sử dụng JWT authentication cho monitor
+            var result = await AuthService.Login(loginModel.UserName, loginModel.Password);
+            
+            if (result.IsSuccess)
+            {
+                var role = await AuthService.GetUserRoleFromToken();
+                
+                // Chỉ cho phép các role có quyền truy cập monitor
+                if (role == "Admin" || role == "ITManager" || role == "ExamManager")
+                {
+                    Navigation.NavigateTo("/monitor/dashboard");
+                }
+                else
+                {
+                    ErrorMessage = "Bạn không có quyền truy cập hệ thống giám sát.";
+                    await AuthService.Logout(); // Đăng xuất nếu không có quyền
+                }
+            }
+            else
+            {
+                ErrorMessage = result.ErrorMessage;
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Lỗi đăng nhập: {ex.Message}";
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+}
