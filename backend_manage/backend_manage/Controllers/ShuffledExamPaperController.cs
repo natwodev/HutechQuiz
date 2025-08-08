@@ -1,10 +1,10 @@
-using backend_manage.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using System.Threading.Tasks;
+using backend_manage.core.Services.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using backend_manage.Services.AuthService.Helpers;
+using backend_manage.shared.Interfaces;
 
 namespace backend_manage.Controllers
 {
@@ -30,13 +30,6 @@ namespace backend_manage.Controllers
             return Ok(result);
         }
 
-        [HttpPost("preload-redis")]
-        [Authorize(Policy = "AdminOnly")]
-        public async Task<IActionResult> PreloadToRedis()
-        {
-            await _service.PreloadApprovedPapersToRedisAsync();
-            return Ok(new { message = "Đã tải sẵn tất cả đề thi hoán vị đã phê duyệt vào Redis" });
-        }
-        
+    
     }
 } 

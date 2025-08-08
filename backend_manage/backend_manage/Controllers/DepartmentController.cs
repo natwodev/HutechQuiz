@@ -1,5 +1,6 @@
-using backend_manage.DTOs;
-using backend_manage.Services.Interfaces;
+using backend_manage.core.Services.Interfaces;
+using backend_manage.shared.DTOs;
+using backend_manage.shared.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

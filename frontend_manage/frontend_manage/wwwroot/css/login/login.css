@@ -1,181 +1,220 @@
-﻿:root {
-    --fraction-rem-height: calc(100vh / 16);
-    font-size: 14px;
-}
-
-html {
-    height: 100vh;
-}
-
-.sign-in {
-    position: static;
+﻿/* Reset và base styles */
+* {
     margin: 0;
-    width: 100%;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
     height: 100%;
-    background-color: #f0f0f0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-
-.header {
-    position: relative;
-    width: 100%;
-    height: calc(var(--fraction-rem-height) * 3);
+/* Background overlay để tạo hiệu ứng mờ */
+.login-background-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: linear-gradient(135deg, rgba(25, 118, 210, 0.1) 0%, rgba(156, 39, 176, 0.1) 100%);
+    z-index: -1;
 }
 
-.logohead {
-    position: absolute;
-    height: 40%;
-}
-
-.component-thng-itn {
-    position: relative;
-    width: 100%;
-    height: calc(var(--fraction-rem-height) * 13);
-    justify-content: center;
-}
-
-
-
-.overlap {
-    position: relative;
-    width: 45%;
-    height: calc(var(--fraction-rem-height) * 9.8);
-    margin: 0 auto;
-    background-color: #d9d9d9;
-    border-radius: 12px;
-    box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
-    animation: floatUp 1.5s ease forwards;
-}
-
-@keyframes floatUp {
+/* Animation cho form đăng nhập */
+@keyframes slideInUp {
     from {
-        transform: translateY(-20%);
+        opacity: 0;
+        transform: translateY(30px);
     }
-
     to {
-        transform: translateY(0%);
+        opacity: 1;
+        transform: translateY(0);
     }
 }
 
-.logo {
-    position: absolute;
-    height: calc(var(--fraction-rem-height) * 1.5);
-    left: 50%;
-    right: 50%;
-    transform: translate(-50%, 0%);
-    background-size: cover;
-    background-position: 50% 50%;
-    margin-top: calc(var(--fraction-rem-height) * 0.5);
-}
-
-.area-signin {
-    position: absolute;
-    margin-top: calc(var(--fraction-rem-height) * 3);
-    width: 100%;
-    height: 133px;
-    left: 50%;
-    right: 50%;
-    transform: translate(-50%, 0%);
-    align-items: center;
-}
-
-.input-student-id {
-    display: grid;
-    grid-template-columns: 40px 1fr;
-    position: absolute;
-    width: 100%;
-    height: calc(var(--fraction-rem-height) * 1);
-    outline: none;
-    border: none;
-    border-radius: 9px;
-}
-
-.icon-id {
-    position: absolute;
-    width: 2rem;
-    left: 5.5%;
-    z-index: 2;
-}
-
-.input-id {
-    position: absolute;
-    left: 50%;
-    right: 50%;
-    transform: translate(-50%, 0%);
-    width: 90%;
-    height: 100%;
-    padding-left: 2.5rem;
-    font-family: "Segoe UI-Bold", Helvetica;
-    font-weight: 700;
-    color: #000000;
-    text-align: left;
-    outline: none;
-    border: none;
-    background-color: #eaeaea;
-    border-radius: 10px;
-    z-index: 1;
-}
-
-.input-student-pass {
-    display: grid;
-    grid-template-columns: 40px 400px 40px;
-    position: absolute;
-    margin-top: calc(var(--fraction-rem-height) * 2);
-    width: 100%;
-    height: calc(var(--fraction-rem-height) * 1);
-    color: #000000;
-    outline: none;
-    border: none;
-    border-radius: 9px;
-}
-
-.icon-pass {
-    position: absolute;
-    width: 2rem;
-    left: 5.5%;
-    z-index: 2;
-}
-
-
-.input-pass {
-    position: absolute;
-    left: 50%;
-    right: 50%;
-    transform: translate(-50%, 0%);
-    width: 90%;
-    height: 100%;
-    padding-left: 2.5rem;
-    font-family: "Segoe UI-Bold", Helvetica;
-    font-weight: 700;
-    color: #000000;
-    text-align: left;
-    outline: none;
-    border: none;
-    background-color: #eaeaea;
-    border-radius: 10px;
-    z-index: 1;
-}
-
-
-
-
-.button-sign-in {
-    position: absolute;
-    left: 50%;
-    right: 50%;
-    margin-top: calc(var(--fraction-rem-height) * 7);
-    transform: translate(-50%, 0%);
-    width: 30%;
-    height: calc(var(--fraction-rem-height) * 1.2);
-    border-radius: 10px;
-    font-family: "Segoe UI-Bold", Helvetica;
-    font-weight: 700;
-    color: #000000;
-    border: none;
-    /* transition-duration: 0.4s; */
-}
-
-    .button-sign-in:hover {
-        background-color: rgb(0,107,179);
-        color: white;
+@keyframes fadeIn {
+    from {
+        opacity: 0;
     }
+    to {
+        opacity: 1;
+    }
+}
+
+/* Hiệu ứng hover cho nút */
+.login-button-hover {
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.login-button-hover::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s;
+}
+
+.login-button-hover:hover::before {
+    left: 100%;
+}
+
+/* Hiệu ứng focus cho input fields */
+.mud-input-outlined-border {
+    transition: all 0.3s ease;
+}
+
+.mud-input-outlined-border:focus-within {
+    transform: scale(1.02);
+}
+
+/* Custom scrollbar cho form */
+.mud-paper::-webkit-scrollbar {
+    width: 6px;
+}
+
+.mud-paper::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.mud-paper::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+.mud-paper::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .mud-paper {
+        margin: 16px;
+        padding: 24px !important;
+    }
+
+    .mud-text-h4 {
+        font-size: 1.5rem !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .mud-paper {
+        margin: 8px;
+        padding: 16px !important;
+    }
+
+    .mud-text-h4 {
+        font-size: 1.25rem !important;
+    }
+}
+
+/* Loading animation */
+@keyframes pulse {
+    0% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+
+.loading-pulse {
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+/* Error message animation */
+@keyframes shake {
+    0%, 100% {
+        transform: translateX(0);
+    }
+    10%, 30%, 50%, 70%, 90% {
+        transform: translateX(-5px);
+    }
+    20%, 40%, 60%, 80% {
+        transform: translateX(5px);
+    }
+}
+
+.error-shake {
+    animation: shake 0.6s ease-in-out;
+}
+
+/* Success message animation */
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.success-slide {
+    animation: slideInRight 0.5s ease-out;
+}
+
+/* Glass morphism effect */
+.glass-effect {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Gradient text effect */
+.gradient-text {
+    background: linear-gradient(135deg, #1976d2, #42a5f5);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* Floating animation for logo */
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0px);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+.floating-logo {
+    animation: float 3s ease-in-out infinite;
+}
+
+/* Button ripple effect */
+.ripple-button {
+    position: relative;
+    overflow: hidden;
+}
+
+.ripple-button::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+
+.ripple-button:active::after {
+    width: 300px;
+    height: 300px;
+}

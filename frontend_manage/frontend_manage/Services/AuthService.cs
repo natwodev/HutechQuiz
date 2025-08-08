@@ -1,7 +1,7 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Net.Http.Json;
 using System.Text.Json;
-using FrontEnd.DTOs;
+using frontend_manage.DTOs;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 
@@ -147,13 +147,13 @@ public class AuthService
         }
     }
 
-    public async Task<FrontEnd.DTOs.StudentInfoDto?> GetStudentInfoAsync()
+    public async Task<StudentInfoDto?> GetStudentInfoAsync()
     {
         var studentInfoJson = await _jsRuntime.InvokeAsync<string>("localStorage.getItem", StudentInfoKey);
         if (string.IsNullOrEmpty(studentInfoJson)) return null;
         try
         {
-            return JsonSerializer.Deserialize<FrontEnd.DTOs.StudentInfoDto>(studentInfoJson);
+            return JsonSerializer.Deserialize<StudentInfoDto>(studentInfoJson);
         }
         catch
         {

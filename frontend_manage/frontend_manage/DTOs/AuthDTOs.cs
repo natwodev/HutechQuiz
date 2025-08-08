@@ -1,4 +1,4 @@
-namespace FrontEnd.DTOs;
+namespace frontend_manage.DTOs;
 
 public class LoginModelDto
 {
@@ -46,30 +46,37 @@ public class ExamSessionDto
     public DateTime EndTime { get; set; }
 } 
 
-public class ShuffledExamPaperDto
+
+
+public class StudentExamSessionCacheDto
 {
-    public int ShuffledExamPaperId { get; set; }
-    public string ShuffledExamPaperCore { get; set; }
-    public string Title { get; set; }
-    public int OriginalExamPaperId { get; set; }
-    public int? ExamSessionSubjectId { get; set; }
-    public int SubjectId { get; set; }
-    public bool IsApproved { get; set; }
-    public string AnswerKey { get; set; }
-    public List<ShuffledExamPaperDetailDto> Details { get; set; }
+    // Từ Entity
+    public int StudentExamSessionId { get; set; }
+    public DateTime? StartTime { get; set; }
+    public DateTime? EndTime { get; set; }
+    public string StudentCode { get; set; }
+    public int StudentId { get; set; }
+    public int ExamSessionSubjectId { get; set; }
+    public int? ShuffledExamPaperId { get; set; }
+    public int ExtraMinutes { get; set; }
+    public string? ReasonForExtra { get; set; }
+    public int? CorrectAnswers { get; set; }
+    public int? TotalQuestions { get; set; }
+    public double Score { get; set; }
+    public bool IsCompleted { get; set; }
+    public string StudentAnswersString { get; set; }
+    public int? ExamRoomId { get; set; }
+    
+    // Từ DTO (những trường Entity không có)
+    public string SubjectName { get; set; }
+    public string RoomName { get; set; }
+    public int Duration { get; set; }
+    
+    // Audit fields từ BaseEntity
+    public DateTime CreatedAt { get; set; }
+    public string? CreatedBy { get; set; }
+    public DateTime? UpdatedAt { get; set; }
+    public string? UpdatedBy { get; set; }
+    public int Version { get; set; }
 }
 
-public class ShuffledExamPaperDetailDto
-{
-    public int ShuffledExamPaperDetailId { get; set; }
-    public int Order { get; set; }
-    public string AnswerOrder { get; set; }
-    public int OriginalExamPaperDetailId { get; set; }
-    public int? ParentQuestionId { get; set; }
-    public string QuestionContent { get; set; }
-    public string Answer1 { get; set; }
-    public string Answer2 { get; set; }
-    public string Answer3 { get; set; }
-    public string Answer4 { get; set; }
-    public List<ShuffledExamPaperDetailDto> ChildQuestions { get; set; } = new();
-} 

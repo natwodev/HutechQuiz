@@ -1,5 +1,5 @@
+using backend_manage.core.Messages.RabbitMQ;
 using Microsoft.AspNetCore.Mvc;
-using backend_manage.Messages.RabbitMQ;
 
 namespace backend_manage.Controllers
 {
