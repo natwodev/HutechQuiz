@@ -14,6 +14,8 @@ public class RabbitMqService : IRabbitMqService, IDisposable
     private readonly ILogger<RabbitMqService> _logger;
     private readonly IConfiguration _configuration;
     private readonly IMessageProcessingService _messageProcessingService;
+    private readonly List<(string queueName, object handler)> _registeredConsumers = new();
+    private readonly object _lockObject = new object();
 
     public bool IsConnected => _connection != null && _connection.IsOpen && _channel != null && _channel.IsOpen;
 
@@ -22,7 +24,7 @@ public class RabbitMqService : IRabbitMqService, IDisposable
         _logger = logger;
         _configuration = configuration;
         _messageProcessingService = messageProcessingService;
-        TryInitializeConnection(); // ✅ dùng try-catch
+        TryInitializeConnection();
     }
 
     private void TryInitializeConnection()
@@ -42,12 +44,39 @@ public class RabbitMqService : IRabbitMqService, IDisposable
             _channel = _connection.CreateModel();
 
             _logger.LogInformation("✅ Đã kết nối RabbitMQ thành công");
+            
+            // Re-register tất cả consumers đã đăng ký trước đó
+            ReRegisterAllConsumers();
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "❌ Không thể kết nối RabbitMQ.");
             _connection = null;
             _channel = null;
+        }
+    }
+
+    private void ReRegisterAllConsumers()
+    {
+        lock (_lockObject)
+        {
+            if (!IsConnected || _registeredConsumers.Count == 0) return;
+
+            _logger.LogInformation("🔄 Re-registering {Count} consumers sau khi reconnect", _registeredConsumers.Count);
+            
+            foreach (var (queueName, handler) in _registeredConsumers)
+            {
+                try
+                {
+                    // Không thể re-register consumer vì mất thông tin generic type
+                    // Consumer sẽ được đăng ký lại khi RabbitMqConsumer khởi động
+                    _logger.LogInformation("ℹ️ Consumer cho queue {QueueName} sẽ được đăng ký lại bởi RabbitMqConsumer", queueName);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "❌ Lỗi khi re-register consumer cho queue {QueueName}", queueName);
+                }
+            }
         }
     }
 
@@ -91,38 +120,50 @@ public class RabbitMqService : IRabbitMqService, IDisposable
                 return;
             }
 
-            var (prefetchCount, batchSize, timerInterval) = GetQueueConfig(queueName);
-
-            var channel = _connection.CreateModel(); // ✅ tạo channel riêng
-            channel.BasicQos(0, prefetchCount, false);
-            channel.QueueDeclare(queue: queueName, durable: true, exclusive: false, autoDelete: false);
-
-            var consumer = new AsyncEventingBasicConsumer(channel);
-            consumer.Received += async (sender, args) =>
+            // Lưu consumer để có thể re-register sau này
+            lock (_lockObject)
             {
-                try
-                {
-                    var json = Encoding.UTF8.GetString(args.Body.ToArray());
-                    var message = JsonConvert.DeserializeObject<T>(json);
+                _registeredConsumers.Add((queueName, onMessage));
+            }
 
-                    await onMessage(message);
-
-                    channel.BasicAck(args.DeliveryTag, false);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "❌ Lỗi xử lý message từ queue {QueueName}", queueName);
-                    channel.BasicNack(args.DeliveryTag, false, true); // requeue
-                }
-            };
-
-            channel.BasicConsume(queue: queueName, autoAck: false, consumer: consumer);
-            _logger.LogInformation("📥 Đã đăng ký consumer cho queue {QueueName} (Prefetch={PrefetchCount})", queueName, prefetchCount);
+            RegisterConsumerInternal(queueName, onMessage);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "❌ Lỗi khi đăng ký consumer cho queue {QueueName}", queueName);
+            throw;
         }
+    }
+
+    private void RegisterConsumerInternal<T>(string queueName, Func<T, Task> onMessage)
+    {
+        var (prefetchCount, batchSize, timerInterval) = GetQueueConfig(queueName);
+
+        var channel = _connection.CreateModel();
+        channel.BasicQos(0, prefetchCount, false);
+        channel.QueueDeclare(queue: queueName, durable: true, exclusive: false, autoDelete: false);
+
+        var consumer = new AsyncEventingBasicConsumer(channel);
+        consumer.Received += async (sender, args) =>
+        {
+            try
+            {
+                var json = Encoding.UTF8.GetString(args.Body.ToArray());
+                var message = JsonConvert.DeserializeObject<T>(json);
+
+                await onMessage(message);
+
+                channel.BasicAck(args.DeliveryTag, false);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Lỗi xử lý message từ queue {QueueName}", queueName);
+                channel.BasicNack(args.DeliveryTag, false, true);
+            }
+        };
+
+        channel.BasicConsume(queue: queueName, autoAck: false, consumer: consumer);
+        _logger.LogInformation("📥 Đã đăng ký consumer cho queue {QueueName} (Prefetch={PrefetchCount})", queueName, prefetchCount);
     }
 
     private (ushort prefetchCount, int batchSize, TimeSpan timerInterval) GetQueueConfig(string queueName)

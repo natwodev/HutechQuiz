@@ -31,4 +31,7 @@ public interface IStudentService
     
     // Method để nộp bài thi
     Task<(bool Success, string Message, ExamSubmissionDto? SubmissionData)> SubmitExamAsync(string studentCode, int studentExamSessionId);
+    
+    // Method để lấy đáp án đã lưu
+    Task<string?> GetStudentAnswersAsync(string studentCode, int studentExamSessionId);
 } 

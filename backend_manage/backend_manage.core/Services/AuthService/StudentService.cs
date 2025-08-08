@@ -548,4 +548,43 @@ public class StudentService : IStudentService
         }
     }
     #endregion
+
+    #region GetStudentAnswersAsync
+    public async Task<string?> GetStudentAnswersAsync(string studentCode, int studentExamSessionId)
+    {
+        try
+        {
+            _logger.LogInformation("🔄 Bắt đầu lấy đáp án cho sinh viên {StudentCode}, session {SessionId}", 
+                studentCode, studentExamSessionId);
+
+            // Lấy thông tin session từ cache hoặc database
+            var (redisAvailable, studentExamSessionDto) = await _sessionCacheHelper.GetStudentExamSessionAsync(studentCode, studentExamSessionId);
+            if (studentExamSessionDto == null)
+            {
+                _logger.LogWarning("⚠️ Không tìm thấy phiên thi cho sinh viên {StudentCode}, session {SessionId}", 
+                    studentCode, studentExamSessionId);
+                return null;
+            }
+
+            if (!studentExamSessionDto.ShuffledExamPaperId.HasValue)
+            {
+                _logger.LogWarning("⚠️ Phiên thi của sinh viên {StudentCode} chưa có đề thi được phân công", studentCode);
+                return null;
+            }
+
+            // Trả về chuỗi đáp án đã lưu
+            var answersString = studentExamSessionDto.StudentAnswersString ?? "";
+            
+            _logger.LogInformation("✅ Đã lấy đáp án cho sinh viên {StudentCode}: {AnswersString}", 
+                studentCode, answersString);
+
+            return answersString;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "❌ Lỗi khi lấy đáp án cho sinh viên {StudentCode}", studentCode);
+            return null;
+        }
+    }
+    #endregion
 } 

@@ -96,14 +96,14 @@ namespace backend_manage.core.Extensions
                 {
                     var options = ConfigurationOptions.Parse(redisConnectionString);
                     options.ConnectRetry = 3; // Tăng retry lên 3 lần
-                    options.ConnectTimeout = 10000; // Tăng timeout lên 10 giây
-                    options.SyncTimeout = 10000;
-                    options.ResponseTimeout = 10000;
+                    options.ConnectTimeout = 2000; // Giảm timeout xuống 2 giây
+                    options.SyncTimeout = 2000;
+                    options.ResponseTimeout = 2000;
                     options.KeepAlive = 60;
                     options.AbortOnConnectFail = false;
                     options.ReconnectRetryPolicy = new ExponentialRetry(5); // Tăng retry policy
                     options.ConfigCheckSeconds = 30;
-                    options.AsyncTimeout = 10000;
+                    options.AsyncTimeout = 2000;
                     
                     // Thêm cấu hình cho high concurrency
                     options.TieBreaker = "hutech_quiz_tiebreaker";
@@ -117,7 +117,7 @@ namespace backend_manage.core.Extensions
                     var db = redis.GetDatabase();
                     var pingResult = db.Ping();
                     
-                    if (pingResult.TotalMilliseconds < 15000) // Tăng timeout lên 15 giây
+                    if (pingResult.TotalMilliseconds < 2000) // Giảm timeout xuống 2 giây
                     {
                         logger.LogInformation("✅ Kết nối Redis thành công! Ping time: {PingTime}ms", pingResult.TotalMilliseconds);
                         return redis;
