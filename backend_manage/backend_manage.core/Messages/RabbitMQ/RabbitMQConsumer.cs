@@ -2,6 +2,7 @@ using backend_manage.core.Data;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using System.Threading;
 
 namespace backend_manage.core.Messages.RabbitMQ
 {
@@ -10,10 +11,12 @@ namespace backend_manage.core.Messages.RabbitMQ
         private readonly IRabbitMqService _rabbitMqService;
         private readonly ILogger<RabbitMqConsumer> _logger;
         private readonly IServiceScopeFactory _serviceScopeFactory;
+        private bool _consumersRegistered = false;
+        private readonly object _lockObject = new object();
 
-        private const int StartExamConsumerCount = 2; // 2 consumers cho bắt đầu làm bài
-        private const int SaveAnswerConsumerCount = 3; // 3 consumers cho lưu đáp án
-        private const int ExamSubmissionConsumerCount = 2; // 2 consumers cho nộp bài thi
+        private const int StartExamConsumerCount = 2;
+        private const int SaveAnswerConsumerCount = 3;
+        private const int ExamSubmissionConsumerCount = 2;
         private const string StartExamQueue = "start_exam_queue";
         private const string SaveAnswerQueue = "save_answer_queue";
         private const string ExamSubmissionQueue = "exam_submission_queue";
@@ -28,84 +31,130 @@ namespace backend_manage.core.Messages.RabbitMQ
             _serviceScopeFactory = serviceScopeFactory;
         }
 
-        protected override Task ExecuteAsync(CancellationToken stoppingToken)
+        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            // Khởi tạo consumers cho start_exam_queue
-            for (int i = 0; i < StartExamConsumerCount; i++)
+            // Đăng ký consumers lần đầu
+            RegisterAllConsumers();
+
+            // Timer để kiểm tra và re-register consumer khi cần
+            var timer = new Timer(async _ => await CheckAndReRegisterConsumers(), null, TimeSpan.Zero, TimeSpan.FromSeconds(30));
+
+            // Chờ cho đến khi service bị dừng
+            while (!stoppingToken.IsCancellationRequested)
             {
-                int consumerId = i + 1;
-
-                _rabbitMqService.Subscribe<StartExamMessage>(StartExamQueue, async (message) =>
-                {
-                    try
-                    {
-                        _logger.LogInformation("🕒 Consumer {ConsumerId} bắt đầu xử lý: {Time}", consumerId, DateTime.UtcNow);
-                        await ProcessStartExam(message);
-                        _logger.LogInformation("✅ Consumer {ConsumerId} hoàn tất xử lý: {Time}", consumerId, DateTime.UtcNow);
-                        _logger.LogInformation("✅ Consumer {ConsumerId} đã xử lý xong message từ queue: {QueueName}",
-                            consumerId, StartExamQueue);
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError(ex, "❌ Lỗi khi xử lý message bởi Consumer {ConsumerId} - Queue: {QueueName}",
-                            consumerId, StartExamQueue);
-                    }
-                });
-
-                _logger.LogInformation("🚀 Bắt đầu Consumer {ConsumerId} cho queue: {QueueName}", consumerId, StartExamQueue);
+                await Task.Delay(1000, stoppingToken);
             }
 
-            // Khởi tạo consumers cho save_answer_queue
-            for (int i = 0; i < SaveAnswerConsumerCount; i++)
+            timer.Dispose();
+        }
+
+        private async Task CheckAndReRegisterConsumers()
+        {
+            try
             {
-                int consumerId = i + 1;
-
-                _rabbitMqService.Subscribe<StudentAnswerSavedMessage>(SaveAnswerQueue, async (message) =>
+                // Kiểm tra nếu RabbitMQ đã kết nối nhưng consumer chưa được đăng ký
+                if (_rabbitMqService.IsConnected && !_consumersRegistered)
                 {
-                    try
+                    _logger.LogInformation("🔄 RabbitMQ đã kết nối lại, đang re-register consumers...");
+                    RegisterAllConsumers();
+                }
+                // Kiểm tra nếu RabbitMQ không kết nối và consumer đã được đăng ký
+                else if (!_rabbitMqService.IsConnected && _consumersRegistered)
+                {
+                    _logger.LogWarning("⚠️ RabbitMQ mất kết nối, đánh dấu consumers chưa được đăng ký");
+                    lock (_lockObject)
                     {
-                        _logger.LogInformation("🕒 SaveAnswer Consumer {ConsumerId} bắt đầu xử lý: {Time}", consumerId, DateTime.UtcNow);
-                        await ProcessSaveAnswer(message);
-                        _logger.LogInformation("✅ SaveAnswer Consumer {ConsumerId} hoàn tất xử lý: {Time}", consumerId, DateTime.UtcNow);
-                        _logger.LogInformation("✅ SaveAnswer Consumer {ConsumerId} đã xử lý xong message từ queue: {QueueName}",
-                            consumerId, SaveAnswerQueue);
+                        _consumersRegistered = false;
                     }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError(ex, "❌ Lỗi khi xử lý message bởi SaveAnswer Consumer {ConsumerId} - Queue: {QueueName}",
-                            consumerId, SaveAnswerQueue);
-                    }
-                });
-
-                _logger.LogInformation("🚀 Bắt đầu SaveAnswer Consumer {ConsumerId} cho queue: {QueueName}", consumerId, SaveAnswerQueue);
+                }
             }
-
-            // Khởi tạo consumers cho exam_submission_queue
-            for (int i = 0; i < ExamSubmissionConsumerCount; i++)
+            catch (Exception ex)
             {
-                int consumerId = i + 1;
-
-                _rabbitMqService.Subscribe<ExamSubmissionMessage>(ExamSubmissionQueue, async (message) =>
-                {
-                    try
-                    {
-                        _logger.LogInformation("🕒 ExamSubmission Consumer {ConsumerId} bắt đầu xử lý: {Time}", consumerId, DateTime.UtcNow);
-                        await ProcessExamSubmission(message);
-                        _logger.LogInformation("✅ ExamSubmission Consumer {ConsumerId} hoàn tất xử lý: {Time}", consumerId, DateTime.UtcNow);
-                        _logger.LogInformation("✅ ExamSubmission Consumer {ConsumerId} đã xử lý xong message từ queue: {QueueName}",
-                            consumerId, ExamSubmissionQueue);
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError(ex, "❌ Lỗi khi xử lý message bởi ExamSubmission Consumer {ConsumerId} - Queue: {QueueName}",
-                            consumerId, ExamSubmissionQueue);
-                    }
-                });
-
-                _logger.LogInformation("🚀 Bắt đầu ExamSubmission Consumer {ConsumerId} cho queue: {QueueName}", consumerId, ExamSubmissionQueue);
+                _logger.LogError(ex, "❌ Lỗi khi kiểm tra và re-register consumers");
             }
+        }
 
-            return Task.CompletedTask;
+        private void RegisterAllConsumers()
+        {
+            lock (_lockObject)
+            {
+                if (_consumersRegistered)
+                {
+                    return;
+                }
+
+                // Khởi tạo consumers cho start_exam_queue
+                for (int i = 0; i < StartExamConsumerCount; i++)
+                {
+                    int consumerId = i + 1;
+
+                    _rabbitMqService.Subscribe<StartExamMessage>(StartExamQueue, async (message) =>
+                    {
+                        try
+                        {
+                            _logger.LogInformation("🕒 Consumer {ConsumerId} bắt đầu xử lý: {Time}", consumerId, DateTime.UtcNow);
+                            await ProcessStartExam(message);
+                            _logger.LogInformation("✅ Consumer {ConsumerId} hoàn tất xử lý: {Time}", consumerId, DateTime.UtcNow);
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError(ex, "❌ Lỗi khi xử lý message bởi Consumer {ConsumerId} - Queue: {QueueName}",
+                                consumerId, StartExamQueue);
+                        }
+                    });
+
+                    _logger.LogInformation("🚀 Bắt đầu Consumer {ConsumerId} cho queue: {QueueName}", consumerId, StartExamQueue);
+                }
+
+                // Khởi tạo consumers cho save_answer_queue
+                for (int i = 0; i < SaveAnswerConsumerCount; i++)
+                {
+                    int consumerId = i + 1;
+
+                    _rabbitMqService.Subscribe<StudentAnswerSavedMessage>(SaveAnswerQueue, async (message) =>
+                    {
+                        try
+                        {
+                            _logger.LogInformation("🕒 SaveAnswer Consumer {ConsumerId} bắt đầu xử lý: {Time}", consumerId, DateTime.UtcNow);
+                            await ProcessSaveAnswer(message);
+                            _logger.LogInformation("✅ SaveAnswer Consumer {ConsumerId} hoàn tất xử lý: {Time}", consumerId, DateTime.UtcNow);
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError(ex, "❌ Lỗi khi xử lý message bởi SaveAnswer Consumer {ConsumerId} - Queue: {QueueName}",
+                                consumerId, SaveAnswerQueue);
+                        }
+                    });
+
+                    _logger.LogInformation("🚀 Bắt đầu SaveAnswer Consumer {ConsumerId} cho queue: {QueueName}", consumerId, SaveAnswerQueue);
+                }
+
+                // Khởi tạo consumers cho exam_submission_queue
+                for (int i = 0; i < ExamSubmissionConsumerCount; i++)
+                {
+                    int consumerId = i + 1;
+
+                    _rabbitMqService.Subscribe<ExamSubmissionMessage>(ExamSubmissionQueue, async (message) =>
+                    {
+                        try
+                        {
+                            _logger.LogInformation("🕒 ExamSubmission Consumer {ConsumerId} bắt đầu xử lý: {Time}", consumerId, DateTime.UtcNow);
+                            await ProcessExamSubmission(message);
+                            _logger.LogInformation("✅ ExamSubmission Consumer {ConsumerId} hoàn tất xử lý: {Time}", consumerId, DateTime.UtcNow);
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError(ex, "❌ Lỗi khi xử lý message bởi ExamSubmission Consumer {ConsumerId} - Queue: {QueueName}",
+                                consumerId, ExamSubmissionQueue);
+                        }
+                    });
+
+                    _logger.LogInformation("🚀 Bắt đầu ExamSubmission Consumer {ConsumerId} cho queue: {QueueName}", consumerId, ExamSubmissionQueue);
+                }
+
+                _consumersRegistered = true;
+                _logger.LogInformation("✅ Đã đăng ký tất cả consumers thành công");
+            }
         }
 
         private async Task ProcessStartExam(StartExamMessage message)
