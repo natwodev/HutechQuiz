@@ -81,6 +81,76 @@ namespace backend_manage.core.Authentication.Services
                 Token = tokenString
             };
         }
+
+        // Phương thức xác thực cho cookie
+        public async Task<AuthResultDto> AuthenticateForCookieAsync(LoginModelDto loginModel)
+        {
+            // Tìm kiếm người dùng theo tên đăng nhập
+            var user = await _authRepository.GetUserByUsernameAsync(loginModel.UserName);
+
+            if (user == null)
+            {
+                return new AuthResultDto
+                {
+                    IsSuccess = false,
+                    ErrorMessage = "Tài khoản không tồn tại"
+                };
+            }
+            
+            // Kiểm tra tài khoản có bị khóa không
+            if (user.LockoutEnabled && user.LockoutEnd > DateTimeHelper.GetVietnamTime())
+            {
+                return new AuthResultDto
+                {
+                    IsSuccess = false,
+                    ErrorMessage = "Tài khoản đã bị khóa. Vui lòng liên hệ phòng đào tạo để biết thêm chi tiết!"
+                };
+            }
+
+            // Kiểm tra mật khẩu
+            var signInResult = await _signInManager.PasswordSignInAsync(user, loginModel.Password, false, true);
+            if (!signInResult.Succeeded)
+            {
+                return new AuthResultDto
+                {
+                    IsSuccess = false,
+                    ErrorMessage = "Sai tài khoản hoặc mật khẩu."
+                };
+            }
+
+            // Tạo cookie session
+            await _signInManager.SignInAsync(user, isPersistent: false);
+            
+            return new AuthResultDto
+            {
+                IsSuccess = true,
+                Token = null // Không cần token cho cookie auth
+            };
+        }
+
+        // Lấy thông tin user
+        public async Task<ApplicationUser?> GetUserByUsernameAsync(string userName)
+        {
+            return await _authRepository.GetUserByUsernameAsync(userName);
+        }
+
+        // Lấy roles của user
+        public async Task<List<string>> GetUserRolesAsync(ApplicationUser user)
+        {
+            return await _userRepository.GetUserRolesAsync(user);
+        }
+
+        // Lấy permissions của user
+        public async Task<List<string>> GetUserPermissionsAsync(ApplicationUser user)
+        {
+            return await _userRepository.GetUserPermissionsAsync(user);
+        }
+
+        // Đăng xuất cookie
+        public async Task SignOutAsync()
+        {
+            await _signInManager.SignOutAsync();
+        }
         
         public async Task LogoutAsync(string token)
         {

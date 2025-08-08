@@ -33,10 +33,10 @@ public class StudentController : ControllerBase
     }
 
 
- [HttpPost("login")]
+     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
-        var result = await _studentService.LoginAsync(request.Username, request.Password);
+        var result = await _studentService.LoginAsync(request.StudentCode1, request.StudentCode2);
         return Ok(result);
     }
 
@@ -362,6 +362,6 @@ public class SubmitExamRequest
 
 public class LoginRequest
 {
-    public string Username { get; set; }
-    public string Password { get; set; }
+    public string StudentCode1 { get; set; }
+    public string StudentCode2 { get; set; }
 } 

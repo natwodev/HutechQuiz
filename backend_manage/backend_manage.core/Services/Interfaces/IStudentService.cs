@@ -6,7 +6,7 @@ namespace backend_manage.shared.Interfaces;
 
 public interface IStudentService
 {
-    Task<StudentAuthResultDto> LoginAsync(string username, string password);
+    Task<StudentAuthResultDto> LoginAsync(string studentCode1, string studentCode2);
     Task<IEnumerable<Student>> GetAllAsync();
     Task<Student> AddAsync(StudentCreateDto dto);
     Task<Student> UpdateAsync(string id, Student student);

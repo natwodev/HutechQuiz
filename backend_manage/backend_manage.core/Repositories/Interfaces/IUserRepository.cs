@@ -9,10 +9,6 @@ namespace backend_manage.core.Repositories.Interfaces
         Task<ApplicationUser?> GetUserByIdAsync(string userId);
         Task<List<string>> GetUserRolesAsync(ApplicationUser user);
         Task<ApplicationUser?> FindByEmailAsync(string email);
-        AuthenticationProperties ConfigureExternalAuthenticationProperties(string provider, string redirectUrl);
-        Task<ExternalLoginInfo?> GetExternalLoginInfoAsync();
-        Task<IdentityResult> AddLoginAsync(ApplicationUser user, ExternalLoginInfo info);
-        Task<ApplicationUser?> FindByLoginAsync(string loginProvider, string providerKey);
         Task<List<string>> GetUserPermissionsAsync(ApplicationUser user);
     }
 }
