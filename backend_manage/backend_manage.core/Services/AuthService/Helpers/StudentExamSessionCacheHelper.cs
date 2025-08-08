@@ -254,7 +254,7 @@ public class StudentExamSessionCacheHelper
 
             if (sessionEntity != null)
             {
-                session = _mapper.Map<StudentExamSessionCacheDto>(sessionEntity);
+                session = await ConvertToCacheDtoAsync(sessionEntity);
                 _logger.LogInformation("Đã lấy phiên thi {SessionId} từ DB cho sinh viên {StudentCode}", studentExamSessionId, studentCode);
 
                 if (redisAvailable)
@@ -266,6 +266,7 @@ public class StudentExamSessionCacheHelper
                         string field = studentExamSessionId.ToString();
                         var sessionJson = JsonSerializer.Serialize(session);
                         await db.HashSetAsync(redisHashKey, field, sessionJson);
+                        await db.KeyExpireAsync(redisHashKey, TimeSpan.FromHours(6));
                     }
                     catch (Exception ex)
                     {

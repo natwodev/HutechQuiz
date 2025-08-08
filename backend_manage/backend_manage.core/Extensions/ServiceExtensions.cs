@@ -4,6 +4,8 @@ using backend_manage.core.Data;
 using backend_manage.core.Entities;
 using backend_manage.core.Mappings;
 using backend_manage.core.Middlewares.Jwt;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -19,30 +21,26 @@ namespace backend_manage.core.Extensions
     {
         public static void ConfigureServices(this IServiceCollection services, IConfiguration configuration)
         {
-            /*
-            services.AddAuthentication(options =>
-                {
-                    options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-                    options.DefaultChallengeScheme = GoogleDefaults.AuthenticationScheme;
-                })
-                .AddCookie()
-                .AddGoogle(googleOptions =>
-                {
-                    IConfigurationSection googleAuthNSection = configuration.GetSection("Authentication:Google");
-
-                    googleOptions.ClientId = googleAuthNSection["ClientId"];
-                    googleOptions.ClientSecret = googleAuthNSection["ClientSecret"];
-
-                    // Optional: cấu hình đường callback nếu bạn dùng route tùy chỉnh
-                    // googleOptions.CallbackPath = new PathString("/api/auth/external-login-callback");
-                });
-                */
             services.AddControllers().AddJsonOptions(x =>
                 x.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles);
             
             services.AddIdentity<ApplicationUser, IdentityRole>()
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddDefaultTokenProviders();
+            
+            // Cấu hình Cookie Authentication
+            services.ConfigureApplicationCookie(options =>
+            {
+                options.LoginPath = "/api/auth/login-cookie";
+                options.LogoutPath = "/api/auth/logout-cookie";
+                options.AccessDeniedPath = "/api/auth/access-denied";
+                options.Cookie.Name = "HutechQuiz.Auth";
+                options.Cookie.HttpOnly = true;
+                options.Cookie.SameSite = Microsoft.AspNetCore.Http.SameSiteMode.Strict;
+                options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+                options.ExpireTimeSpan = TimeSpan.FromHours(8);
+                options.SlidingExpiration = true;
+            });
             
             services.AddSignalR();
             

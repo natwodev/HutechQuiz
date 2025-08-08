@@ -30,29 +30,10 @@ namespace backend_manage.core.Repositories.AuthRepository
         {
             return await _userManager.FindByEmailAsync(email);
         }
-        public AuthenticationProperties ConfigureExternalAuthenticationProperties(string provider, string redirectUrl)
-        {
-            return _signInManager.ConfigureExternalAuthenticationProperties(provider, redirectUrl);
-        }
-
-        public async Task<ExternalLoginInfo?> GetExternalLoginInfoAsync()
-        {
-            return await _signInManager.GetExternalLoginInfoAsync();
-        }
 
         public async Task<ApplicationUser?> GetUserByIdAsync(string userId)
         {
             return await _userManager.Users.FirstOrDefaultAsync(u => u.Id == userId);
-        }
-
-        public async Task<IdentityResult> AddLoginAsync(ApplicationUser user, ExternalLoginInfo info)
-        {
-            return await _userManager.AddLoginAsync(user, info);
-        }
-
-        public async Task<ApplicationUser?> FindByLoginAsync(string loginProvider, string providerKey)
-        {
-            return await _userManager.FindByLoginAsync(loginProvider, providerKey);
         }
 
         public async Task<List<string>> GetUserPermissionsAsync(ApplicationUser user)
