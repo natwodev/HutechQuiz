@@ -18,6 +18,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using OfficeOpenXml;
 using StackExchange.Redis;
+using backend_manage.core.Services.AuthService.Helpers;
 
 namespace backend_manage.core.Services.AuthService;
 
@@ -99,6 +100,27 @@ public class StudentService : IStudentService
                 ErrorMessage = "Không tìm thấy sinh viên với mã này."
             };
         }
+
+        // Kiểm tra nếu sinh viên đã đăng nhập rồi
+        if (student.IsLogin)
+        {
+            return new StudentAuthResultDto
+            {
+                IsSuccess = false,
+                ErrorMessage = "Sinh viên này đã đăng nhập. Vui lòng liên hệ giám thị để mở phiên."
+            };
+        }
+        
+        // Cập nhật trạng thái đăng nhập
+        student.IsLogin = true;
+        student.LastLoggedIn = DateTimeHelper.GetVietnamTime();
+        student.UpdatedAt = DateTimeHelper.GetVietnamTime();
+        
+        // Lưu vào database
+        await _repository.UpdateAsync(student);
+        
+        // Cập nhật cache nếu cần
+        await _studentCacheHelper.CacheStudent(student.StudentCode, student);
         
         // Sinh JWT token như cũ, nhưng không có username
         var tokenHandler = new JwtSecurityTokenHandler();

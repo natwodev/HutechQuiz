@@ -50,7 +50,7 @@ export function typesetPromise() {
         typesetClear();
         return MathJax.typesetPromise();
     }).catch(err => {
-        console.log(err);
+        // Error occurred during typeset
     });
 }
 
@@ -62,7 +62,7 @@ export function typesetClear() {
         MathJax.typesetClear();
         MathJax.startup.document.clear();
     } catch (ex) {
-        console.log(ex);
+        // Error occurred during typeset clear
     }
 }
 

@@ -102,12 +102,9 @@ namespace frontend_manage.Pages.Exam
 
         private async Task OnAnswerSelected(int questionId, string answer, int order)
         {
-            Console.WriteLine($"🔄 OnAnswerSelected: questionId={questionId}, answer={answer}, order={order}");
-            
             // Cập nhật selected answer ngay lập tức
             var answerValue = $"q{questionId}_{answer switch { "A" => "1", "B" => "2", "C" => "3", "D" => "4", _ => "1" }}";
             selectedAnswers[questionId] = answerValue;
-            Console.WriteLine($"📝 Set selectedAnswers[{questionId}] = {answerValue}");
             
             // Update UI ngay lập tức
             StateHasChanged();
@@ -120,12 +117,9 @@ namespace frontend_manage.Pages.Exam
 
         private async Task OnChildAnswerSelected(int questionId, string answer, int parentOrder, int childOrder)
         {
-            Console.WriteLine($"🔄 OnChildAnswerSelected: questionId={questionId}, answer={answer}, parentOrder={parentOrder}, childOrder={childOrder}");
-            
             // Cập nhật selected child answer ngay lập tức
             var answerValue = $"cq{questionId}_{answer switch { "A" => "1", "B" => "2", "C" => "3", "D" => "4", _ => "1" }}";
             selectedChildAnswers[questionId] = answerValue;
-            Console.WriteLine($"📝 Set selectedChildAnswers[{questionId}] = {answerValue}");
             
             // Update UI ngay lập tức
             StateHasChanged();
@@ -166,7 +160,6 @@ namespace frontend_manage.Pages.Exam
             catch (Exception ex)
             {
                 savingStates.Remove(questionKey);
-                Console.WriteLine($"❌ Error saving answer silently: {ex.Message}");
                 
                 // Hiện thông báo lỗi nhẹ nhàng
                 await InvokeAsync(() =>
@@ -196,7 +189,7 @@ namespace frontend_manage.Pages.Exam
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"❌ Attempt {attempt}/{maxRetries} failed: {ex.Message}");
+                    // Attempt failed, continue to next attempt
                 }
                 
                 if (attempt < maxRetries)
@@ -218,7 +211,6 @@ namespace frontend_manage.Pages.Exam
         {
             if (studentExamSessionId == null || studentSession == null)
             {
-                Console.WriteLine("❌ StudentExamSessionId hoặc studentSession là null");
                 return false;
             }
 
@@ -232,25 +224,19 @@ namespace frontend_manage.Pages.Exam
                     Answer = answer
                 };
 
-                Console.WriteLine($"🔄 Đang gọi API save-answer: StudentExamSessionId={request.StudentExamSessionId}, Index={request.Index}, SubIndex={request.SubIndex}, Answer={request.Answer}");
-
                 var response = await ExamApi.SaveAnswerAsync(request);
                 
                 if (response?.Success == true)
                 {
-                    Console.WriteLine($"✅ Đã lưu đáp án thành công: Câu {index}{(subIndex.HasValue ? $".{subIndex}" : "")} = {answer}");
                     return true;
                 }
                 else
                 {
-                    Console.WriteLine($"❌ Lỗi khi lưu đáp án: {response?.Message ?? "Không xác định"}");
                     return false;
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ Exception khi lưu đáp án: {ex.Message}");
-                Console.WriteLine($"❌ Stack trace: {ex.StackTrace}");
                 throw; // Re-throw to be caught by retry logic
             }
         }
@@ -258,14 +244,12 @@ namespace frontend_manage.Pages.Exam
         private string GetSelectedAnswer(int questionId)
         {
             var result = selectedAnswers.TryGetValue(questionId, out var answer) ? answer : "";
-            Console.WriteLine($"🔍 GetSelectedAnswer({questionId}) = '{result}'");
             return result;
         }
 
         private string GetSelectedChildAnswer(int questionId)
         {
             var result = selectedChildAnswers.TryGetValue(questionId, out var answer) ? answer : "";
-            Console.WriteLine($"🔍 GetSelectedChildAnswer({questionId}) = '{result}'");
             return result;
         }
 
@@ -280,15 +264,12 @@ namespace frontend_manage.Pages.Exam
 
             try
             {
-                Console.WriteLine($"🔄 Loading existing answers: {studentSession.StudentAnswersString}");
-                
                 // Parse existing answers string
                 var answers = ParseAnswersString(studentSession.StudentAnswersString);
                 
                 // Chỉ proceed nếu có đáp án thực sự
                 if (answers.Count == 0)
                 {
-                    Console.WriteLine("ℹ️ No existing answers found or failed to parse");
                     return;
                 }
                 
@@ -299,8 +280,6 @@ namespace frontend_manage.Pages.Exam
                     // Sử dụng detail.Order thay vì IndexOf để đồng nhất với logic save
                     var questionNumber = detail.Order;
                     
-                    Console.WriteLine($"🔍 Processing question {questionNumber} (ID: {detail.ShuffledExamPaperDetailId})");
-                    
                     // Check for main question answer
                     if (answers.TryGetValue(questionNumber.ToString(), out var mainAnswer))
                     {
@@ -309,7 +288,6 @@ namespace frontend_manage.Pages.Exam
                         {
                             selectedAnswers[detail.ShuffledExamPaperDetailId] = $"q{detail.ShuffledExamPaperDetailId}_{answerNumber}";
                             successfullyLoaded++;
-                            Console.WriteLine($"✅ Loaded main answer for question {questionNumber} (ID: {detail.ShuffledExamPaperDetailId}): {mainAnswer}");
                         }
                     }
                     
@@ -322,8 +300,6 @@ namespace frontend_manage.Pages.Exam
                             var childQuestionIndex = childQ.Order;
                             var childKey = $"{questionNumber}.{childQuestionIndex}";
                             
-                            Console.WriteLine($"🔍 Processing child question {childKey} (ID: {childQ.ShuffledExamPaperDetailId})");
-                            
                             if (answers.TryGetValue(childKey, out var childAnswer))
                             {
                                 var childAnswerNumber = GetAnswerNumber(childAnswer);
@@ -331,21 +307,16 @@ namespace frontend_manage.Pages.Exam
                                 {
                                     selectedChildAnswers[childQ.ShuffledExamPaperDetailId] = $"cq{childQ.ShuffledExamPaperDetailId}_{childAnswerNumber}";
                                     successfullyLoaded++;
-                                    Console.WriteLine($"✅ Loaded child answer for question {childKey} (ID: {childQ.ShuffledExamPaperDetailId}): {childAnswer}");
                                 }
                             }
                         }
                     }
                 }
                 
-                Console.WriteLine($"📊 Successfully loaded {successfullyLoaded} answers from server");
                 StateHasChanged();
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ Error loading existing answers: {ex.Message}");
-                Console.WriteLine($"🔄 Restoring previous state due to error");
-                
                 // Khôi phục trạng thái trước đó nếu có lỗi
                 selectedAnswers = backupSelectedAnswers ?? selectedAnswers;
                 selectedChildAnswers = backupSelectedChildAnswers ?? selectedChildAnswers;
@@ -383,21 +354,15 @@ namespace frontend_manage.Pages.Exam
                             (answer == "A" || answer == "B" || answer == "C" || answer == "D"))
                         {
                             result[key] = answer;
-                            Console.WriteLine($"📝 Parsed answer: {key} = {answer}");
-                        }
-                        else
-                        {
-                            Console.WriteLine($"⚠️ Invalid answer format ignored: {cleanPart}");
                         }
                     }
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ Error parsing answers string: {ex.Message}");
+                // Error parsing answers string
             }
             
-            Console.WriteLine($"📊 Total parsed answers: {result.Count}");
             return result;
         }
 
@@ -426,28 +391,17 @@ namespace frontend_manage.Pages.Exam
 
             try
             {
-                Console.WriteLine($"🔄 RefreshAnswersAsync called (showMessage: {showSuccessMessage})");
-                Console.WriteLine($"📊 Current state - selectedAnswers: {selectedAnswers.Count}, selectedChildAnswers: {selectedChildAnswers.Count}");
-                
                 // Sử dụng StudentAnswersString có sẵn thay vì gọi API
                 var answersString = studentSession.StudentAnswersString;
                 if (!string.IsNullOrEmpty(answersString))
                 {
-                    Console.WriteLine($"🔄 Using existing StudentAnswersString: {answersString}");
-                    
                     // Clear current answers để reload từ StudentAnswersString
-                    Console.WriteLine($"📊 Before clear - selectedAnswers: {selectedAnswers.Count}, selectedChildAnswers: {selectedChildAnswers.Count}");
-                    
                     selectedAnswers.Clear();
                     selectedChildAnswers.Clear();
-                    
-                    Console.WriteLine($"📊 After clear - selectedAnswers: {selectedAnswers.Count}, selectedChildAnswers: {selectedChildAnswers.Count}");
                     
                     // Load the answers từ StudentAnswersString có sẵn
                     await LoadExistingAnswersAsync();
                     
-                    Console.WriteLine($"📊 After load - selectedAnswers: {selectedAnswers.Count}, selectedChildAnswers: {selectedChildAnswers.Count}");
-                    Console.WriteLine("✅ Successfully refreshed answers from existing StudentAnswersString");
                     if (showSuccessMessage)
                     {
                         Snackbar.Add("Đã cập nhật đáp án từ dữ liệu hiện tại", Severity.Success, config =>
@@ -458,7 +412,6 @@ namespace frontend_manage.Pages.Exam
                 }
                 else
                 {
-                    Console.WriteLine("⚠️ No answers found in StudentAnswersString");
                     if (showSuccessMessage)
                     {
                         Snackbar.Add("Chưa có đáp án nào được lưu", Severity.Info, config =>
@@ -470,7 +423,6 @@ namespace frontend_manage.Pages.Exam
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ Error refreshing answers: {ex.Message}");
                 if (showSuccessMessage) // Chỉ hiển thị lỗi khi user click manual
                 {
                     Snackbar.Add("Lỗi khi tải lại đáp án", Severity.Error);
@@ -492,13 +444,10 @@ namespace frontend_manage.Pages.Exam
                    var hasPending = await JSRuntime.InvokeAsync<bool>("window.answerDebouncer.hasPendingSaves");
                    if (hasPending)
                    {
-                       Console.WriteLine("💾 Force saving all pending answers before submit...");
                        Snackbar.Add("Đang lưu các đáp án cuối cùng...", Severity.Info);
 
                        // Đợi một chút để các pending saves hoàn thành
                        await Task.Delay(100);
-
-                       Console.WriteLine("✅ All pending answers should be saved");
                    }
                    
                    var submitRequest = new SubmitExamRequest
@@ -532,20 +481,20 @@ namespace frontend_manage.Pages.Exam
                        var resultJson = System.Text.Json.JsonSerializer.Serialize(resultData);
                        await JSRuntime.InvokeVoidAsync("localStorage.setItem", $"examResult_{studentExamSessionId}", resultJson);
 
+                       // Lưu studentExamSessionId vào localStorage để Result page có thể truy cập
+                       await JSRuntime.InvokeVoidAsync("localStorage.setItem", "currentStudentExamSessionId", studentExamSessionId.ToString());
+
                        // Chuyển sang trang Result
-                       var resultUrl = $"/Exam/Result/{studentExamSessionId}";
-                       Navigation.NavigateTo(resultUrl);
+                       Navigation.NavigateTo("/Exam/Result");
                    }
                    else
                    {
                        var errorMessage = submitResponse?.Message ?? "Có lỗi xảy ra khi nộp bài thi";
-                       Console.WriteLine($"❌ Lỗi khi nộp bài thi: {errorMessage}");
                        Snackbar.Add(errorMessage, Severity.Error);
                    }
                }
                catch (Exception ex)
                {
-                   Console.WriteLine($"❌ Error during submit: {ex.Message}");
                    Snackbar.Add("Có lỗi xảy ra khi nộp bài. Vui lòng thử lại!", Severity.Error);
                }
            }
@@ -569,7 +518,6 @@ namespace frontend_manage.Pages.Exam
                 examTimer.Start();
                 
                 // BỎ AUTO-SAVE TIMER - Chỉ dùng manual save
-                Console.WriteLine("ℹ️ Auto-refresh disabled - using manual save only");
             }
         }
 
@@ -582,7 +530,6 @@ namespace frontend_manage.Pages.Exam
                     // Skip auto-refresh nếu đã fail quá nhiều lần liên tiếp
                     if (autoRefreshFailCount >= 3)
                     {
-                        Console.WriteLine($"🚫 Skipping auto-refresh due to {autoRefreshFailCount} consecutive failures");
                         return;
                     }
 
@@ -594,16 +541,14 @@ namespace frontend_manage.Pages.Exam
                     // Cập nhật save time cho auto-refresh
                     lastSaveTime = DateTime.Now;
                     StateHasChanged(); // Update UI to show new save time
-                    Console.WriteLine("🔄 Auto-save refresh completed");
                 }
                 catch (Exception ex)
                 {
                     autoRefreshFailCount++;
-                    Console.WriteLine($"❌ Auto-save refresh failed (attempt {autoRefreshFailCount}): {ex.Message}");
                     
                     if (autoRefreshFailCount >= 3)
                     {
-                        Console.WriteLine("⚠️ Auto-refresh disabled due to repeated failures. Manual refresh still available.");
+                        // Auto-refresh disabled due to repeated failures. Manual refresh still available.
                     }
                 }
             });
@@ -683,7 +628,6 @@ namespace frontend_manage.Pages.Exam
                 }
             }
             
-            Console.WriteLine($"📊 Answered questions count (answerable): {answeredCount}");
             return answeredCount;
         }
 
@@ -743,7 +687,6 @@ namespace frontend_manage.Pages.Exam
                 }
             }
             
-            Console.WriteLine($"📊 Total questions count (answerable): {total}");
             return total;
         }
 
@@ -786,10 +729,6 @@ namespace frontend_manage.Pages.Exam
             {
                 var audioPath = match.Groups[1].Value;
                 var fullAudioPath = GetAudioPath(audioPath);
-                
-                // Debug: Log đường dẫn audio
-                Console.WriteLine($"Audio path: {audioPath}");
-                Console.WriteLine($"Full audio path: {fullAudioPath}");
                 
                 if (!string.IsNullOrEmpty(fullAudioPath))
                 {

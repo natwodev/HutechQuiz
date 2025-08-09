@@ -8,9 +8,6 @@ namespace frontend_manage.Pages.Exam;
 
 public partial class Result : ComponentBase
 {
-    [Parameter]
-    public int studentExamSessionId { get; set; }
-
     [Inject]
     protected NavigationManager Navigation { get; set; } = default!;
 
@@ -26,11 +23,36 @@ public partial class Result : ComponentBase
     protected bool loading = true;
     protected SubmitExamResponse? examResult;
     protected List<QuestionAnswer> questionAnswers = new();
+    protected int studentExamSessionId;
 
     protected override async Task OnInitializedAsync()
     {
         try
         {
+            // Lấy studentExamSessionId từ localStorage hoặc session storage
+            var sessionIdFromStorage = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "currentStudentExamSessionId");
+            
+            if (!string.IsNullOrEmpty(sessionIdFromStorage) && int.TryParse(sessionIdFromStorage, out var sessionId))
+            {
+                studentExamSessionId = sessionId;
+            }
+            else
+            {
+                // Nếu không có trong localStorage, thử lấy từ sessionStorage
+                sessionIdFromStorage = await JSRuntime.InvokeAsync<string>("sessionStorage.getItem", "currentStudentExamSessionId");
+                if (!string.IsNullOrEmpty(sessionIdFromStorage) && int.TryParse(sessionIdFromStorage, out sessionId))
+                {
+                    studentExamSessionId = sessionId;
+                }
+                else
+                {
+                    // Nếu không tìm thấy studentExamSessionId, redirect về trang chủ hoặc hiển thị lỗi
+                    Snackbar.Add("Không tìm thấy thông tin bài thi. Vui lòng thử lại!", Severity.Error);
+                    Navigation.NavigateTo("/");
+                    return;
+                }
+            }
+
             // Thử đọc dữ liệu từ localStorage trước
             var resultJson = await JSRuntime.InvokeAsync<string>("localStorage.getItem", $"examResult_{studentExamSessionId}");
             
@@ -60,15 +82,14 @@ public partial class Result : ComponentBase
                         };
 
                         ParseAnswers(examResult.Data.StudentAnswersString, examResult.Data.AnswerKey);
-                        Console.WriteLine($"✅ Loaded exam result from localStorage for student: {examResult.Data.StudentCode}");
                         
                         // Xóa dữ liệu khỏi localStorage sau khi đã sử dụng
                         await JSRuntime.InvokeVoidAsync("localStorage.removeItem", $"examResult_{studentExamSessionId}");
+                        await JSRuntime.InvokeVoidAsync("localStorage.removeItem", "currentStudentExamSessionId");
                     }
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"❌ Error parsing localStorage data: {ex.Message}");
                     // Nếu parse lỗi, gọi API
                     await LoadFromApiAsync();
                 }
@@ -76,13 +97,11 @@ public partial class Result : ComponentBase
             else
             {
                 // Nếu không có dữ liệu trong localStorage, gọi API
-                Console.WriteLine("⚠️ No localStorage data found, calling API...");
                 await LoadFromApiAsync();
             }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"❌ Exception loading exam result: {ex.Message}");
             Snackbar.Add($"Không thể tải kết quả bài thi: {ex.Message}", Severity.Error);
         }
         finally
@@ -100,14 +119,9 @@ public partial class Result : ComponentBase
             {
                 StudentExamSessionId = studentExamSessionId
             };
-
-            Console.WriteLine($"🔄 Calling submit-exam API for StudentExamSessionId: {studentExamSessionId}");
             
             var response = await Http.PostAsJsonAsync("/api/Student/submit-exam", submitRequest);
             var responseContent = await response.Content.ReadAsStringAsync();
-            
-            Console.WriteLine($"📄 API Response Status: {response.StatusCode}");
-            Console.WriteLine($"📄 API Response Content: {responseContent}");
             
             if (response.IsSuccessStatusCode)
             {
@@ -116,23 +130,19 @@ public partial class Result : ComponentBase
                 {
                     examResult = result;
                     ParseAnswers(examResult.Data.StudentAnswersString, examResult.Data.AnswerKey);
-                    Console.WriteLine($"✅ Successfully loaded exam result from API for student: {examResult.Data.StudentCode}");
                 }
                 else
                 {
-                    Console.WriteLine("❌ API returned success but no data");
                     Snackbar.Add("Không tìm thấy kết quả bài thi", Severity.Warning);
                 }
             }
             else
             {
-                Console.WriteLine($"❌ API Error: {response.StatusCode} - {responseContent}");
                 Snackbar.Add($"Lỗi khi tải kết quả bài thi: {response.StatusCode} - {responseContent}", Severity.Error);
             }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"❌ Exception in LoadFromApiAsync: {ex.Message}");
             Snackbar.Add($"Không thể tải kết quả bài thi từ API: {ex.Message}", Severity.Error);
         }
     }
@@ -142,20 +152,14 @@ public partial class Result : ComponentBase
         questionAnswers.Clear();
         if (string.IsNullOrEmpty(studentAnswersString) || string.IsNullOrEmpty(answerKey))
         {
-            Console.WriteLine($"⚠️ Empty data - StudentAnswersString: '{studentAnswersString}', AnswerKey: '{answerKey}'");
             return;
         }
 
         try
         {
-            Console.WriteLine($"🔄 Parsing answers - StudentAnswersString: {studentAnswersString}");
-            Console.WriteLine($"🔄 Parsing answers - AnswerKey: {answerKey}");
-            
             // Remove outer parentheses and split by semicolon
             var studentAnswers = studentAnswersString.Trim('(', ')').Split(';', StringSplitOptions.RemoveEmptyEntries);
             var correctAnswers = answerKey.Trim('(', ')').Split(';', StringSplitOptions.RemoveEmptyEntries);
-
-            Console.WriteLine($"📊 Found {studentAnswers.Length} student answers and {correctAnswers.Length} correct answers");
 
             // Parse student answers
             var answerDict = new Dictionary<string, string>();
@@ -168,11 +172,6 @@ public partial class Result : ComponentBase
                     var questionNumber = parts[0].Trim();
                     var studentAnswer = parts[1].Trim();
                     answerDict[questionNumber] = studentAnswer;
-                    Console.WriteLine($"📝 Parsed student answer: {questionNumber} = {studentAnswer}");
-                }
-                else
-                {
-                    Console.WriteLine($"⚠️ Invalid student answer format: {trimmedAnswer}");
                 }
             }
 
@@ -198,21 +197,12 @@ public partial class Result : ComponentBase
                     };
                     
                     questionAnswers.Add(questionAnswer);
-                    Console.WriteLine($"✅ Added question {questionNumber}: Student={studentAnswer ?? "-"}, Correct={correctAnswerValue}, IsCorrect={isCorrect}");
-                }
-                else
-                {
-                    Console.WriteLine($"⚠️ Invalid correct answer format: {trimmedAnswer}");
                 }
             }
-            
-            Console.WriteLine($"🎯 Total questions processed: {questionAnswers.Count}");
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"❌ Error parsing answers: {ex.Message}");
-            Console.WriteLine($"❌ Stack trace: {ex.StackTrace}");
-            Snackbar.Add("Lỗi khi xử lý dữ liệu câu trả lời", Severity.Error);
+            // Error parsing answers
         }
     }
 

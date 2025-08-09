@@ -22,7 +22,6 @@ public class ExamApi
             if (response.IsSuccessStatusCode)
             {
                 var responseContent = await response.Content.ReadAsStringAsync();
-                Console.WriteLine($"🔄 ExamApi: Response content: {responseContent}");
                 var result = await response.Content.ReadFromJsonAsync<SaveAnswerResponse>();
                 return result;
             }
