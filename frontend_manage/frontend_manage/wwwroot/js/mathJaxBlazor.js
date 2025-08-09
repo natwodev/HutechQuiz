@@ -13,7 +13,7 @@ export function typesetPromise() {
         typesetClear();
         return MathJax.typesetPromise();
     }).catch(function (err) {
-        console.log(err);
+        // Error occurred during typeset
     });
 }
 export function typesetClear() {
@@ -25,7 +25,7 @@ export function typesetClear() {
         MathJax.startup.document.clear();
     }
     catch (ex) {
-        console.log(ex);
+        // Error occurred during typeset clear
     }
 }
 export function undoTypeset() {
@@ -37,7 +37,6 @@ export function undoTypeset() {
 }
 export function processLatex(input, isDisplay) {
     if (typeof MathJax === 'undefined' || !MathJax.tex2chtmlPromise) {
-        console.error("MathJax chưa được khởi tạo hoặc tex2chtmlPromise không tồn tại!");
         return Promise.resolve(""); // Trả về chuỗi rỗng thay vì lỗi
     }
 
@@ -48,14 +47,12 @@ export function processLatex(input, isDisplay) {
             return node.outerHTML;
         })
         .catch(function (err) {
-            console.error("Lỗi khi xử lý LaTeX:", err);
             return "";
         });
 }
 
 export function processMathML(input) {
     if (typeof MathJax === 'undefined' || !MathJax.mathml2chtmlPromise) {
-        console.error("MathJax chưa được khởi tạo hoặc mathml2chtmlPromise không tồn tại!");
         return Promise.resolve("");
     }
 
@@ -66,7 +63,6 @@ export function processMathML(input) {
             return node.outerHTML;
         })
         .catch(function (err) {
-            console.error("Lỗi khi xử lý MathML:", err);
             return "";
         });
 }

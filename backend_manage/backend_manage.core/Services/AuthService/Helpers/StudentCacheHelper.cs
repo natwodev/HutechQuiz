@@ -47,7 +47,7 @@ public class StudentCacheHelper
 
         // B3: Cache lại nếu Redis hoạt động
         if (redisAvailable)
-            await CacheStudent(studentCode, dbStudent);
+            await CacheStudentInternal(studentCode, dbStudent);
 
         return dbStudent;
     }
@@ -76,7 +76,7 @@ public class StudentCacheHelper
     }
     
 
-private async Task CacheStudent(string studentCode, Student? student)
+    private async Task CacheStudentInternal(string studentCode, Student? student)
     {
         try
         {
@@ -97,6 +97,12 @@ private async Task CacheStudent(string studentCode, Student? student)
         {
             _logger.LogWarning(ex, "Không thể cache sinh viên với key {Key}", studentCode);
         }
+    }
+
+    // Public method để cache student từ bên ngoài
+    public async Task CacheStudent(string studentCode, Student? student)
+    {
+        await CacheStudentInternal(studentCode, student);
     }
     private async Task<(bool redisAvailable, Student? student)> GetStudentFromCache(string studentCode)
     {

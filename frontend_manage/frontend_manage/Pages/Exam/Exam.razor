@@ -503,33 +503,26 @@ else
             // Clear timer cũ nếu có
             if (this.timers[questionId]) {
                 clearTimeout(this.timers[questionId]);
-                console.log(`⏰ Cleared previous timer for question ${questionId}`);
             }
 
             // Set timer mới
             this.timers[questionId] = setTimeout(async () => {
-                console.log(`💾 Executing delayed save for question ${questionId} after ${this.debounceDelay}ms`);
                 try {
                     await callbackRef.invokeMethodAsync('ExecuteSave');
                 } catch (error) {
-                    console.error(`❌ Error executing save for question ${questionId}:`, error);
+                    // Error executing save
                 }
                 delete this.timers[questionId];
             }, this.debounceDelay);
-
-            console.log(`⏱️ Set new timer for question ${questionId}, will execute in ${this.debounceDelay}ms`);
         },
 
         // Force save tất cả pending answers (khi submit hoặc hết giờ)
         saveAllPending: async function(callbackMap) {
-            console.log(`🚀 Force saving all pending answers: ${Object.keys(this.timers).length} pending`);
-
             const promises = [];
             Object.keys(this.timers).forEach(questionId => {
                 if (this.timers[questionId]) {
                     clearTimeout(this.timers[questionId]);
                     if (callbackMap[questionId]) {
-                        console.log(`💾 Force executing save for question ${questionId}`);
                         promises.push(callbackMap[questionId].invokeMethodAsync('ExecuteSave'));
                     }
                     delete this.timers[questionId];
@@ -538,7 +531,6 @@ else
 
             if (promises.length > 0) {
                 await Promise.all(promises);
-                console.log(`✅ Completed force saving ${promises.length} pending answers`);
             }
         },
 

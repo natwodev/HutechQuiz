@@ -306,7 +306,7 @@ public class AuthService
         }
         else
         {
-            Console.WriteLine("Logout failed: " + response.ReasonPhrase);
+            // Logout failed
         }
     }
 
