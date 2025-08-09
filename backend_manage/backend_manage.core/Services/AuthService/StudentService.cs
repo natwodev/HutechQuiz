@@ -373,12 +373,12 @@ public class StudentService : IStudentService
             var cachedSessions = await _sessionCacheHelper.GetListStudentExamSessionsFromRedisAsync(studentCode);
             if (cachedSessions != null && cachedSessions.Any())
             {
-                _logger.LogDebug("Đã lấy {Count} phiên thi từ Redis cache cho sinh viên {StudentCode}", 
+                _logger.LogDebug("Đã lấy {Count} phiên thi chưa hoàn thành từ Redis cache cho sinh viên {StudentCode}", 
                     cachedSessions.Count(), studentCode);
                 return cachedSessions;
             }
             
-            _logger.LogDebug("Không tìm thấy phiên thi trong Redis cache cho sinh viên {StudentCode}, kiểm tra database", studentCode);
+            _logger.LogDebug("Không tìm thấy phiên thi chưa hoàn thành trong Redis cache cho sinh viên {StudentCode}, kiểm tra database", studentCode);
             
             // Fallback về database
             var student = await _repository.GetQueryable().FirstOrDefaultAsync(x => x.StudentCode == studentCode);
@@ -512,7 +512,7 @@ public class StudentService : IStudentService
         try
         {
             // Sử dụng ExamPaperHelper để nộp bài thi
-            var (success, score, message, studentExamSessionDto) = await _examPaperHelper.SubmitExam(studentCode, studentExamSessionId);
+            var (success, score, message, studentExamSessionDto, answerKey) = await _examPaperHelper.SubmitExam(studentCode, studentExamSessionId);
             
             if (!success)
             {
@@ -534,7 +534,8 @@ public class StudentService : IStudentService
                 CorrectAnswers = studentExamSessionDto.CorrectAnswers,
                 TotalQuestions = studentExamSessionDto.TotalQuestions,
                 EndTime = studentExamSessionDto.EndTime ?? DateTimeHelper.GetVietnamTime(),
-                StudentAnswersString = studentExamSessionDto.StudentAnswersString
+                StudentAnswersString = studentExamSessionDto.StudentAnswersString,
+                AnswerKey = answerKey
             };
 
             _logger.LogInformation("✅ Hoàn thành nộp bài thi cho sinh viên {StudentCode}. Điểm: {Score}", studentCode, score);
@@ -548,4 +549,5 @@ public class StudentService : IStudentService
         }
     }
     #endregion
+    
 } 

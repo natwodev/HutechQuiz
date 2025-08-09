@@ -17,24 +17,37 @@ public class AuthHeaderHandler : DelegatingHandler
     {
         Console.WriteLine($"🔄 AuthHeaderHandler: Request URL: {request.RequestUri}");
         
-        if (!request.RequestUri?.AbsolutePath.Contains("api/auth/login", StringComparison.OrdinalIgnoreCase) ?? false)
+        // Bỏ qua các API authentication
+        if (request.RequestUri?.AbsolutePath.Contains("api/auth/", StringComparison.OrdinalIgnoreCase) ?? false)
         {
+            Console.WriteLine($"🔄 AuthHeaderHandler: Skipping token for auth request");
+            return await base.SendAsync(request, cancellationToken);
+        }
+        
+        // Kiểm tra loại authentication
+        var authType = await _jsRuntime.InvokeAsync<string>("localStorage.getItem", "authType");
+        Console.WriteLine($"🔄 AuthHeaderHandler: Auth type: {authType ?? "NULL"}");
+        
+        if (authType == "cookie")
+        {
+            // Cookie authentication - không cần thêm header, cookie sẽ tự động gửi
+            Console.WriteLine($"🔄 AuthHeaderHandler: Using cookie authentication");
+        }
+        else
+        {
+            // JWT authentication - thêm Bearer token
             var token = await _jsRuntime.InvokeAsync<string>("localStorage.getItem", TokenKey);
-            Console.WriteLine($"🔄 AuthHeaderHandler: Token from localStorage: {(string.IsNullOrEmpty(token) ? "NULL" : "EXISTS")}");
+            Console.WriteLine($"🔄 AuthHeaderHandler: JWT Token from localStorage: {(string.IsNullOrEmpty(token) ? "NULL" : "EXISTS")}");
             
             if (!string.IsNullOrEmpty(token))
             {
                 request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
-                Console.WriteLine($"🔄 AuthHeaderHandler: Added Bearer token to request");
+                Console.WriteLine($"🔄 AuthHeaderHandler: Added Bearer token to request for {request.RequestUri}");
             }
             else
             {
-                Console.WriteLine($"❌ AuthHeaderHandler: No token found in localStorage");
+                Console.WriteLine($"❌ AuthHeaderHandler: No JWT token found in localStorage for {request.RequestUri}");
             }
-        }
-        else
-        {
-            Console.WriteLine($"🔄 AuthHeaderHandler: Skipping token for login request");
         }
 
         return await base.SendAsync(request, cancellationToken);

@@ -23,8 +23,17 @@ public class RabbitMqReconnectWorker : BackgroundService
             {
                 if (!_rabbitMqService.IsConnected)
                 {
-                    _logger.LogInformation("🔄 Đang kiểm tra lại kết nối RabbitMQ...");
+                    _logger.LogInformation("🔄 Đang thử reconnect RabbitMQ...");
                     _rabbitMqService.TryReconnect();
+                    
+                    if (_rabbitMqService.IsConnected)
+                    {
+                        _logger.LogInformation("✅ Đã reconnect RabbitMQ thành công");
+                    }
+                    else
+                    {
+                        _logger.LogWarning("⚠️ Không thể reconnect RabbitMQ, sẽ thử lại sau {Interval} giây", _retryInterval.TotalSeconds);
+                    }
                 }
             }
             catch (Exception ex)

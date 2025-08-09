@@ -4,6 +4,8 @@ using backend_manage.core.Data;
 using backend_manage.core.Entities;
 using backend_manage.core.Mappings;
 using backend_manage.core.Middlewares.Jwt;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -19,30 +21,26 @@ namespace backend_manage.core.Extensions
     {
         public static void ConfigureServices(this IServiceCollection services, IConfiguration configuration)
         {
-            /*
-            services.AddAuthentication(options =>
-                {
-                    options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-                    options.DefaultChallengeScheme = GoogleDefaults.AuthenticationScheme;
-                })
-                .AddCookie()
-                .AddGoogle(googleOptions =>
-                {
-                    IConfigurationSection googleAuthNSection = configuration.GetSection("Authentication:Google");
-
-                    googleOptions.ClientId = googleAuthNSection["ClientId"];
-                    googleOptions.ClientSecret = googleAuthNSection["ClientSecret"];
-
-                    // Optional: cấu hình đường callback nếu bạn dùng route tùy chỉnh
-                    // googleOptions.CallbackPath = new PathString("/api/auth/external-login-callback");
-                });
-                */
             services.AddControllers().AddJsonOptions(x =>
                 x.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles);
             
             services.AddIdentity<ApplicationUser, IdentityRole>()
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddDefaultTokenProviders();
+            
+            // Cấu hình Cookie Authentication
+            services.ConfigureApplicationCookie(options =>
+            {
+                options.LoginPath = "/api/auth/login-cookie";
+                options.LogoutPath = "/api/auth/logout-cookie";
+                options.AccessDeniedPath = "/api/auth/access-denied";
+                options.Cookie.Name = "HutechQuiz.Auth";
+                options.Cookie.HttpOnly = true;
+                options.Cookie.SameSite = Microsoft.AspNetCore.Http.SameSiteMode.Strict;
+                options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+                options.ExpireTimeSpan = TimeSpan.FromHours(8);
+                options.SlidingExpiration = true;
+            });
             
             services.AddSignalR();
             
@@ -67,7 +65,8 @@ namespace backend_manage.core.Extensions
             
             // Đăng ký DbContext
             services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
+                options.UseSqlServer(configuration.GetConnectionString("DefaultConnection"), 
+                    b => b.MigrationsAssembly("backend_manage.core")));
 
             // Đăng ký CORS
             services.AddCors(options =>
@@ -96,14 +95,14 @@ namespace backend_manage.core.Extensions
                 {
                     var options = ConfigurationOptions.Parse(redisConnectionString);
                     options.ConnectRetry = 3; // Tăng retry lên 3 lần
-                    options.ConnectTimeout = 10000; // Tăng timeout lên 10 giây
-                    options.SyncTimeout = 10000;
-                    options.ResponseTimeout = 10000;
+                    options.ConnectTimeout = 2000; // Giảm timeout xuống 2 giây
+                    options.SyncTimeout = 2000;
+                    options.ResponseTimeout = 2000;
                     options.KeepAlive = 60;
                     options.AbortOnConnectFail = false;
                     options.ReconnectRetryPolicy = new ExponentialRetry(5); // Tăng retry policy
                     options.ConfigCheckSeconds = 30;
-                    options.AsyncTimeout = 10000;
+                    options.AsyncTimeout = 2000;
                     
                     // Thêm cấu hình cho high concurrency
                     options.TieBreaker = "hutech_quiz_tiebreaker";
@@ -117,7 +116,7 @@ namespace backend_manage.core.Extensions
                     var db = redis.GetDatabase();
                     var pingResult = db.Ping();
                     
-                    if (pingResult.TotalMilliseconds < 15000) // Tăng timeout lên 15 giây
+                    if (pingResult.TotalMilliseconds < 2000) // Giảm timeout xuống 2 giây
                     {
                         logger.LogInformation("✅ Kết nối Redis thành công! Ping time: {PingTime}ms", pingResult.TotalMilliseconds);
                         return redis;

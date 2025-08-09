@@ -33,10 +33,10 @@ public class StudentController : ControllerBase
     }
 
 
- [HttpPost("login")]
+     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
-        var result = await _studentService.LoginAsync(request.Username, request.Password);
+        var result = await _studentService.LoginAsync(request.StudentCode1, request.StudentCode2);
         return Ok(result);
     }
 
@@ -92,6 +92,7 @@ public class StudentController : ControllerBase
     
     // GET: api/students/profile
     [HttpGet("profile")]
+    [Authorize(Policy = "StudentOnly")]
     public async Task<ActionResult<StudentDto>> GetProfile()
     {
         try
@@ -284,6 +285,7 @@ public async Task<IActionResult> UpdateAnswer([FromBody] SaveAnswerDto request)
             return StatusCode(500, new { success = false, message = "Lỗi server khi nộp bài thi" });
         }
     }
+    
 
     [HttpPost("active-login")]
     public async Task<IActionResult> ActiveLogin([FromBody] ActiveLoginRequest request)
@@ -312,6 +314,6 @@ public class SubmitExamRequest
 
 public class LoginRequest
 {
-    public string Username { get; set; }
-    public string Password { get; set; }
+    public string StudentCode1 { get; set; }
+    public string StudentCode2 { get; set; }
 } 

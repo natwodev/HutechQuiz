@@ -2,53 +2,59 @@ using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
 using frontend_manage.DTOs;
-using Microsoft.JSInterop;
 
 namespace frontend_manage.Pages.Exam;
 
 public class ExamApi
 {
     private readonly HttpClient _httpClient;
-    private readonly IJSRuntime _jsRuntime;
     
-    public ExamApi(HttpClient httpClient, IJSRuntime jsRuntime)
+    public ExamApi(HttpClient httpClient)
     {
         _httpClient = httpClient;
-        _jsRuntime = jsRuntime;
     }
 
     public async Task<SaveAnswerResponse?> SaveAnswerAsync(SaveAnswerDto request)
     {
         try
         {
-            Console.WriteLine($"🔄 ExamApi: Đang gửi request đến /api/Student/save-answer");
-            Console.WriteLine($"🔄 ExamApi: Request data: {System.Text.Json.JsonSerializer.Serialize(request)}");
-            
             var response = await _httpClient.PostAsJsonAsync("/api/Student/save-answer", request);
-            
-            Console.WriteLine($"🔄 ExamApi: Response status: {response.StatusCode}");
-            Console.WriteLine($"🔄 ExamApi: Response headers: {string.Join(", ", response.Headers.Select(h => $"{h.Key}={string.Join(",", h.Value)}"))}");
-            
             if (response.IsSuccessStatusCode)
             {
                 var responseContent = await response.Content.ReadAsStringAsync();
                 Console.WriteLine($"🔄 ExamApi: Response content: {responseContent}");
-                
                 var result = await response.Content.ReadFromJsonAsync<SaveAnswerResponse>();
-                Console.WriteLine($"🔄 ExamApi: Parsed response: {System.Text.Json.JsonSerializer.Serialize(result)}");
                 return result;
             }
             else
             {
-                var errorContent = await response.Content.ReadAsStringAsync();
-                Console.WriteLine($"❌ ExamApi: Error response: {errorContent}");
                 return null;
             }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"❌ ExamApi: Exception: {ex.Message}");
-            Console.WriteLine($"❌ ExamApi: Stack trace: {ex.StackTrace}");
+            return null;
+        }
+    }
+
+    public async Task<SubmitExamResponse?> SubmitExamAsync(SubmitExamRequest request)
+    {
+        try
+        {
+            var response = await _httpClient.PostAsJsonAsync("/api/Student/submit-exam", request);
+            
+            if (response.IsSuccessStatusCode)
+            {
+                var result = await response.Content.ReadFromJsonAsync<SubmitExamResponse>();
+                return result;
+            }
+            else
+            {
+                return null;
+            }
+        }
+        catch (Exception ex)
+        {
             return null;
         }
     }

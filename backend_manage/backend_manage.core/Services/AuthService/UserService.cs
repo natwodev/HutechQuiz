@@ -34,31 +34,5 @@ namespace backend_manage.core.Services.AuthService
         {
             return await _userRepository.FindByEmailAsync(email);
         }
-        
-        
-        public AuthenticationProperties ConfigureExternalAuthenticationProperties(string provider, string redirectUrl)
-        {
-            return _userRepository.ConfigureExternalAuthenticationProperties(provider, redirectUrl);
-        }
-
-        public async Task<ExternalLoginInfo?> GetExternalLoginInfoAsync()
-        {
-            return await _userRepository.GetExternalLoginInfoAsync();
-        }
-        
-        public async Task<IdentityResult> AddLoginAsync(ApplicationUser user, ExternalLoginInfo info)
-        {
-            return await _userRepository.AddLoginAsync(user, info);
-        }
-
-        public async Task<ApplicationUser?> FindByLoginAsync(string loginProvider, string providerKey)
-        {
-            return await _userRepository.FindByLoginAsync(loginProvider, providerKey);
-        }
-        
-        public async Task<List<string>> GetUserPermissionsAsync(ApplicationUser user)
-        {
-            return await _userRepository.GetUserPermissionsAsync(user);
-        }
     }
 }

@@ -1,4 +1,5 @@
 using backend_manage.core.Entities;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
@@ -35,6 +36,11 @@ namespace backend_manage.core.Data
         {
             base.OnModelCreating(builder);
             
+            // ✅ Giữ lại các bảng Identity cần thiết cho authentication
+            // builder.Ignore<IdentityUserClaim<string>>(); // Cần thiết cho user claims
+            // builder.Ignore<IdentityUserLogin<string>>(); // Cần thiết cho external login
+            // builder.Ignore<IdentityUserToken<string>>(); // Cần thiết cho user tokens
+            // builder.Ignore<IdentityRoleClaim<string>>(); // Cần thiết cho role claims
 
             // ExamSessionSubject → Subject
             builder.Entity<ExamSessionSubject>()
