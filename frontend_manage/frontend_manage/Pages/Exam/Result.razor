@@ -1,228 +1,403 @@
-@page "/Exam/Result"
+@page "/Exam/Result/{studentExamSessionId:int}"
+@using frontend_manage.DTOs
 @inject NavigationManager Navigation
 @inject ISnackbar Snackbar
+@inject HttpClient Http
+@inject IJSRuntime JSRuntime
 
 <PageTitle>Kết quả bài thi</PageTitle>
 
 @code {
     [Parameter]
-    [SupplyParameterFromQuery]
-    public int? studentExamSessionId { get; set; }
+    public int studentExamSessionId { get; set; }
 
-    // Dữ liệu ảo trực tiếp
-    private bool success = true;
-    private string message = "Nộp bài thi thành công. Điểm: 0,00, Đúng: 0/16 câu";
-    private string studentCode = "028";
-    private int shuffledExamPaperId = 357;
-    private double score = 0;
-    private int correctAnswers = 0;
-    private int totalQuestions = 50;
-    private DateTime endTime = DateTime.Parse("2025-08-05T23:09:43.910037");
-    private string studentAnswersString = "(1,A);(2,B);(3,C);(4,D);(5,A);(6,-);(7,B);(8,C);(9,D);(10,A);(11,B);(12,-);(13,C);(14,D);(15,A);(16,B);(17,C);(18,-);(19,D);(20,A);(21,B);(22,C);(23,D);(24,-);(25,A);(26,B);(27,C);(28,D);(29,A);(30,B);(31,-);(32,C);(33,D);(34,A);(35,B);(36,C);(37,D);(38,-);(39,A);(40,B);(41,C);(42,D);(43,A);(44,-);(45,B);(46,C);(47,D);(48,A);(49,B);(50,C)";
+    private bool loading = true;
+    private SubmitExamResponse? examResult;
 
-    // Danh sách câu hỏi và đáp án
     private List<QuestionAnswer> questionAnswers = new();
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        ParseAnswers();
-    }
-
-    private void ParseAnswers()
-    {
-        questionAnswers.Clear();
-        
-        // Parse từ chuỗi đáp án
-        var answers = studentAnswersString.Trim('(', ')').Split(';');
-        
-        foreach (var answer in answers)
+        try
         {
-            var parts = answer.Trim('(', ')').Split(',');
-            if (parts.Length == 2)
+            // Thử đọc dữ liệu từ localStorage trước
+            var resultJson = await JSRuntime.InvokeAsync<string>("localStorage.getItem", $"examResult_{studentExamSessionId}");
+            
+            if (!string.IsNullOrEmpty(resultJson))
             {
-                questionAnswers.Add(new QuestionAnswer
+                try
                 {
-                    QuestionNumber = parts[0].Trim(),
-                    Answer = parts[1].Trim()
-                });
+                    // Parse dữ liệu từ localStorage
+                    var resultData = System.Text.Json.JsonSerializer.Deserialize<ExamResultData>(resultJson);
+                    if (resultData != null)
+                    {
+                        examResult = new SubmitExamResponse
+                        {
+                            Success = true,
+                            Message = "Kết quả bài thi",
+                            Data = new SubmitExamData
+                            {
+                                StudentCode = resultData.StudentCode ?? "",
+                                ShuffledExamPaperId = resultData.ShuffledExamPaperId,
+                                Score = resultData.Score,
+                                CorrectAnswers = resultData.CorrectAnswers,
+                                TotalQuestions = resultData.TotalQuestions,
+                                EndTime = resultData.EndTime,
+                                StudentAnswersString = resultData.StudentAnswersString ?? "",
+                                AnswerKey = resultData.AnswerKey ?? ""
+                            }
+                        };
+
+                        ParseAnswers(examResult.Data.StudentAnswersString, examResult.Data.AnswerKey);
+                        Console.WriteLine($"✅ Loaded exam result from localStorage for student: {examResult.Data.StudentCode}");
+                        
+                        // Xóa dữ liệu khỏi localStorage sau khi đã sử dụng
+                        await JSRuntime.InvokeVoidAsync("localStorage.removeItem", $"examResult_{studentExamSessionId}");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"❌ Error parsing localStorage data: {ex.Message}");
+                    // Nếu parse lỗi, gọi API
+                    await LoadFromApiAsync();
+                }
             }
+            else
+            {
+                // Nếu không có dữ liệu trong localStorage, gọi API
+                Console.WriteLine("⚠️ No localStorage data found, calling API...");
+                await LoadFromApiAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"❌ Exception loading exam result: {ex.Message}");
+            Snackbar.Add($"Không thể tải kết quả bài thi: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            loading = false;
         }
     }
 
-    private string GetScoreColor()
+    private async Task LoadFromApiAsync()
     {
-        if (score >= 8.0) return "success";
-        if (score >= 6.5) return "warning";
-        return "error";
+        try
+        {
+            // Gọi API submit-exam để lấy kết quả bài thi (fallback)
+            var submitRequest = new SubmitExamRequest
+            {
+                StudentExamSessionId = studentExamSessionId
+            };
+
+            Console.WriteLine($"🔄 Calling submit-exam API for StudentExamSessionId: {studentExamSessionId}");
+            
+            var response = await Http.PostAsJsonAsync("/api/Student/submit-exam", submitRequest);
+            var responseContent = await response.Content.ReadAsStringAsync();
+            
+            Console.WriteLine($"📄 API Response Status: {response.StatusCode}");
+            Console.WriteLine($"📄 API Response Content: {responseContent}");
+            
+            if (response.IsSuccessStatusCode)
+            {
+                var result = await response.Content.ReadFromJsonAsync<SubmitExamResponse>();
+                if (result != null && result.Data != null)
+                {
+                    examResult = result;
+                    ParseAnswers(examResult.Data.StudentAnswersString, examResult.Data.AnswerKey);
+                    Console.WriteLine($"✅ Successfully loaded exam result from API for student: {examResult.Data.StudentCode}");
+                }
+                else
+                {
+                    Console.WriteLine("❌ API returned success but no data");
+                    Snackbar.Add("Không tìm thấy kết quả bài thi", Severity.Warning);
+                }
+            }
+            else
+            {
+                Console.WriteLine($"❌ API Error: {response.StatusCode} - {responseContent}");
+                Snackbar.Add($"Lỗi khi tải kết quả bài thi: {response.StatusCode} - {responseContent}", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"❌ Exception in LoadFromApiAsync: {ex.Message}");
+            Snackbar.Add($"Không thể tải kết quả bài thi từ API: {ex.Message}", Severity.Error);
+        }
     }
 
-    private string GetScoreText()
+    private void ParseAnswers(string? studentAnswersString, string? answerKey)
     {
-        if (score >= 8.0) return "Xuất sắc";
-        if (score >= 6.5) return "Khá";
-        if (score >= 5.0) return "Trung bình";
-        return "Chưa đạt";
+        questionAnswers.Clear();
+        if (string.IsNullOrEmpty(studentAnswersString) || string.IsNullOrEmpty(answerKey))
+        {
+            Console.WriteLine($"⚠️ Empty data - StudentAnswersString: '{studentAnswersString}', AnswerKey: '{answerKey}'");
+            return;
+        }
+
+        try
+        {
+            Console.WriteLine($"🔄 Parsing answers - StudentAnswersString: {studentAnswersString}");
+            Console.WriteLine($"🔄 Parsing answers - AnswerKey: {answerKey}");
+            
+            // Remove outer parentheses and split by semicolon
+            var studentAnswers = studentAnswersString.Trim('(', ')').Split(';', StringSplitOptions.RemoveEmptyEntries);
+            var correctAnswers = answerKey.Trim('(', ')').Split(';', StringSplitOptions.RemoveEmptyEntries);
+
+            Console.WriteLine($"📊 Found {studentAnswers.Length} student answers and {correctAnswers.Length} correct answers");
+
+            // Parse student answers
+            var answerDict = new Dictionary<string, string>();
+            foreach (var answer in studentAnswers)
+            {
+                var trimmedAnswer = answer.Trim('(', ')');
+                var parts = trimmedAnswer.Split(',');
+                if (parts.Length == 2)
+                {
+                    var questionNumber = parts[0].Trim();
+                    var studentAnswer = parts[1].Trim();
+                    answerDict[questionNumber] = studentAnswer;
+                    Console.WriteLine($"📝 Parsed student answer: {questionNumber} = {studentAnswer}");
+                }
+                else
+                {
+                    Console.WriteLine($"⚠️ Invalid student answer format: {trimmedAnswer}");
+                }
+            }
+
+            // Parse correct answers and create question answers
+            foreach (var correctAnswer in correctAnswers)
+            {
+                var trimmedAnswer = correctAnswer.Trim('(', ')');
+                var parts = trimmedAnswer.Split(',');
+                if (parts.Length == 2)
+                {
+                    var questionNumber = parts[0].Trim();
+                    var correctAnswerValue = parts[1].Trim();
+                    
+                    answerDict.TryGetValue(questionNumber, out var studentAnswer);
+                    var isCorrect = !string.IsNullOrEmpty(studentAnswer) && studentAnswer == correctAnswerValue;
+                    
+                    var questionAnswer = new QuestionAnswer
+                    {
+                        QuestionNumber = questionNumber,
+                        StudentAnswer = studentAnswer ?? "-",
+                        CorrectAnswer = correctAnswerValue,
+                        IsCorrect = isCorrect
+                    };
+                    
+                    questionAnswers.Add(questionAnswer);
+                    Console.WriteLine($"✅ Added question {questionNumber}: Student={studentAnswer ?? "-"}, Correct={correctAnswerValue}, IsCorrect={isCorrect}");
+                }
+                else
+                {
+                    Console.WriteLine($"⚠️ Invalid correct answer format: {trimmedAnswer}");
+                }
+            }
+            
+            Console.WriteLine($"🎯 Total questions processed: {questionAnswers.Count}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"❌ Error parsing answers: {ex.Message}");
+            Console.WriteLine($"❌ Stack trace: {ex.StackTrace}");
+            Snackbar.Add("Lỗi khi xử lý dữ liệu câu trả lời", Severity.Error);
+        }
+    }
+
+    private Color GetAnswerColor(QuestionAnswer q)
+    {
+        if (q.StudentAnswer == "-") return Color.Default;
+        return q.IsCorrect ? Color.Success : Color.Error;
+    }
+
+    private string GetAnswerIcon(QuestionAnswer q)
+    {
+        if (q.StudentAnswer == "-") return Icons.Material.Filled.Remove;
+        return q.IsCorrect ? Icons.Material.Filled.Check : Icons.Material.Filled.Close;
+    }
+
+    private string GetAnswerText(QuestionAnswer q)
+    {
+        if (q.StudentAnswer == "-") return "-";
+        return q.StudentAnswer;
+    }
+
+    private string GetAnswerTooltip(QuestionAnswer q)
+    {
+        if (q.StudentAnswer == "-") return "Không trả lời";
+        if (q.IsCorrect) return $"Đúng! Đáp án: {q.CorrectAnswer}";
+        return $"Sai! Đáp án đúng: {q.CorrectAnswer}";
+    }
+
+    private string GetAnswerStyle(QuestionAnswer q)
+    {
+        if (q.StudentAnswer == "-") 
+            return "background-color: #f5f5f5; color: #666; border: 1px solid #ddd;"; // Không trả lời - xám nhạt
+        if (q.IsCorrect) 
+            return "background-color: #4caf50; color: white; border: 1px solid #4caf50;"; // Đúng - xanh lá
+        return "background-color: #f44336; color: white; border: 1px solid #f44336;"; // Sai - đỏ
+    }
+
+    private string GetAnswerClass(QuestionAnswer q)
+    {
+        if (q.StudentAnswer == "-") return "answer-not-answered";
+        if (q.IsCorrect) return "answer-correct";
+        return "answer-incorrect";
     }
 
     private string GetPercentage()
     {
-        if (totalQuestions == 0) return "0%";
-        var percentage = (double)correctAnswers / totalQuestions * 100;
+        if (examResult?.Data == null || examResult.Data.TotalQuestions == null || examResult.Data.TotalQuestions == 0) 
+            return "0%";
+        
+        if (examResult.Data.CorrectAnswers == null) 
+            return "0%";
+            
+        var percentage = (double)examResult.Data.CorrectAnswers / examResult.Data.TotalQuestions * 100;
         return $"{percentage:F1}%";
     }
 
-    private string GetAnswerStatus(string answer)
-    {
-        return answer == "-" ? "Chưa trả lời" : answer;
-    }
-
-    private Color GetAnswerColor(string answer)
-    {
-        if (answer == "-") return Color.Default;
-        if (answer == "A" || answer == "B" || answer == "C" || answer == "D") return Color.Primary;
-        return Color.Secondary;
-    }
-
-    private void GoToStudentDashboard()
-    {
-        Navigation.NavigateTo("/student-dashboard");
-    }
-
-    private void ViewDetailedResults()
-    {
-        // TODO: Navigate to detailed results page
-        Snackbar.Add("Tính năng xem chi tiết đang được phát triển", Severity.Info);
-    }
+    private void GoToStudentDashboard() => Navigation.NavigateTo("/student-dashboard");
 
     public class QuestionAnswer
     {
         public string QuestionNumber { get; set; } = "";
-        public string Answer { get; set; } = "";
+        public string StudentAnswer { get; set; } = "";
+        public string CorrectAnswer { get; set; } = "";
+        public bool IsCorrect { get; set; } = false;
+    }
+
+    // Class để deserialize dữ liệu từ localStorage
+    private class ExamResultData
+    {
+        public string? StudentCode { get; set; }
+        public int ShuffledExamPaperId { get; set; }
+        public double? Score { get; set; }
+        public int? CorrectAnswers { get; set; }
+        public int? TotalQuestions { get; set; }
+        public DateTime EndTime { get; set; }
+        public string? StudentAnswersString { get; set; }
+        public string? AnswerKey { get; set; }
     }
 }
 
-<MudContainer MaxWidth="MaxWidth.Large" Class="pa-4">
-    <MudPaper Elevation="4" Class="pa-6">
-        <!-- Header -->
-        <MudGrid Class="mb-6">
-            <MudItem xs="12" Class="text-center">
-                <MudIcon Icon="@Icons.Material.Filled.Assessment" Size="Size.Large" Color="Color.Primary" Class="mb-3" />
-                <MudText Typo="Typo.h4" Color="Color.Primary" Class="mb-2">
-                    Kết quả bài thi
-                </MudText>
-                <MudText Typo="Typo.body1" Color="Color.Secondary">
-                    @message
-                </MudText>
-            </MudItem>
-        </MudGrid>
-
-        <!-- Exam Details -->
-        <MudPaper Class="pa-4 mb-4" Elevation="1">
-            <MudText Typo="Typo.h6" Class="mb-3">
-                <MudIcon Icon="@Icons.Material.Filled.Info" Class="mr-2" />
-                Thông tin bài thi
-            </MudText>
-            <MudGrid>
-                <MudItem xs="12" md="6">
-                    <MudText Typo="Typo.body2" Color="Color.Secondary">Mã sinh viên:</MudText>
-                    <MudText Typo="Typo.body1" Class="mb-2">@studentCode</MudText>
-                </MudItem>
-                <MudItem xs="12" md="6">
-                    <MudText Typo="Typo.body2" Color="Color.Secondary">Mã đề thi:</MudText>
-                    <MudText Typo="Typo.body1" Class="mb-2">@shuffledExamPaperId</MudText>
-                </MudItem>
-                <MudItem xs="12" md="6">
-                    <MudText Typo="Typo.body2" Color="Color.Secondary">Tổng số câu:</MudText>
-                    <MudText Typo="Typo.body1" Class="mb-2">@totalQuestions</MudText>
-                </MudItem>
-                <MudItem xs="12" md="6">
-                    <MudText Typo="Typo.body2" Color="Color.Secondary">Thời gian nộp:</MudText>
-                    <MudText Typo="Typo.body1" Class="mb-2">@endTime.ToString("dd/MM/yyyy HH:mm:ss")</MudText>
-                </MudItem>
-            </MudGrid>
+@if (loading)
+{
+    <MudContainer MaxWidth="MaxWidth.Large" Class="pa-4">
+        <MudPaper Elevation="4" Class="pa-6">
+            <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Medium" />
+            <MudText Class="ml-3">Đang tải kết quả...</MudText>
         </MudPaper>
-
-        <!-- Answer Grid -->
-        <MudPaper Class="pa-4 mb-4" Elevation="1">
-            <MudText Typo="Typo.h6" Class="mb-3">
-                <MudIcon Icon="@Icons.Material.Filled.Assessment" Class="mr-2" />
-                Bảng câu trả lời
-            </MudText>
-            
-            <MudGrid Class="mt-4">
-                @for (int i = 0; i < questionAnswers.Count; i++)
-                {
-                    var answer = questionAnswers[i];
-                    var questionNumber = i + 1;
-                    
-                    <MudItem xs="1" sm="1" md="1" lg="1">
-                        <MudPaper Class="pa-1 text-center" Elevation="1" Style="min-height: 40px; display: flex; flex-direction: column; justify-content: center; margin-bottom: 2px;">
-                            <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-1" Style="font-size: 7px;">
-                                @questionNumber
-                            </MudText>
-                            @if (answer.Answer == "-")
-                            {
-                                <MudButton Variant="Variant.Outlined" 
-                                          Color="Color.Default" 
-                                          Size="Size.Small"
-                                          Disabled="true"
-                                          Class="mx-auto"
-                                          Style="min-width: 20px; min-height: 20px; border-radius: 4px; border: 1px dashed #ccc;">
-                                    <MudText Typo="Typo.caption" Color="Color.Default" Style="font-size: 8px;">
-                                        -
-                                    </MudText>
-                                </MudButton>
-                            }
-                            else
-                            {
-                                <MudButton Variant="Variant.Filled" 
-                                          Color="Color.Primary" 
-                                          Size="Size.Small"
-                                          Disabled="true"
-                                          Class="mx-auto"
-                                          Style="min-width: 20px; min-height: 20px; border-radius: 4px;">
-                                    <MudText Typo="Typo.caption" Color="Color.Surface" Style="font-weight: bold; font-size: 8px;">
-                                        @answer.Answer
-                                    </MudText>
-                                </MudButton>
-                            }
-                        </MudPaper>
+    </MudContainer>
+}
+else if (examResult?.Data != null)
+{
+    <MudContainer MaxWidth="MaxWidth.Large" Class="pa-4">
+        <MudPaper Elevation="4" Class="pa-6">
+            <!-- Exam Info -->
+            <MudPaper Class="pa-4 mb-4" Elevation="1">
+                <MudText Typo="Typo.h6" Class="mb-3">
+                    <MudIcon Icon="@Icons.Material.Filled.Info" Class="mr-2" />
+                    Thông tin bài thi
+                </MudText>
+                <MudGrid>
+                    <MudItem xs="12" md="6">
+                        <MudText Color="Color.Secondary">Mã sinh viên:</MudText>
+                        <MudText>@examResult.Data.StudentCode</MudText>
                     </MudItem>
-                }
+                    <MudItem xs="12" md="6">
+                        <MudText Color="Color.Secondary">Mã đề thi:</MudText>
+                        <MudText>@examResult.Data.ShuffledExamPaperId</MudText>
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <MudText Color="Color.Secondary">Điểm số:</MudText>
+                        <MudText Color="@(examResult.Data.Score.HasValue ? (examResult.Data.Score >= 8 ? Color.Success : examResult.Data.Score >= 6.5 ? Color.Warning : Color.Error) : Color.Default)">
+                            @(examResult.Data.Score?.ToString("F2") ?? "N/A")
+                        </MudText>
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <MudText Color="Color.Secondary">Số câu đúng:</MudText>
+                        <MudText>@(examResult.Data.CorrectAnswers?.ToString() ?? "0")/@(examResult.Data.TotalQuestions?.ToString() ?? "0") (@GetPercentage())</MudText>
+                    </MudItem>
+                </MudGrid>
+            </MudPaper>
+
+            <!-- Answers -->
+            @if (questionAnswers.Any())
+            {
+                <MudPaper Class="pa-4 mb-4" Elevation="1">
+                    <MudText Typo="Typo.h6" Class="mb-3">
+                        <MudIcon Icon="@Icons.Material.Filled.Assessment" Class="mr-2" />
+                        Bảng câu trả lời
+                    </MudText>
+                    <MudGrid Class="mb-3">
+                        <MudItem xs="4">
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">
+                                <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Small" Class="mr-1" />
+                                Đúng
+                            </MudText>
+                        </MudItem>
+                        <MudItem xs="4">
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">
+                                <MudIcon Icon="@Icons.Material.Filled.Cancel" Color="Color.Error" Size="Size.Small" Class="mr-1" />
+                                Sai
+                            </MudText>
+                        </MudItem>
+                        <MudItem xs="4">
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">
+                                <MudIcon Icon="@Icons.Material.Filled.Remove" Color="Color.Default" Size="Size.Small" Class="mr-1" />
+                                Không trả lời
+                            </MudText>
+                        </MudItem>
+                    </MudGrid>
+                    <MudGrid Class="mt-4">
+                        @for (int i = 0; i < questionAnswers.Count; i++)
+                        {
+                            var q = questionAnswers[i];
+                            var displayNumber = (i + 1).ToString();
+                            <MudItem xs="2" sm="1" md="1" lg="1">
+                                <MudPaper Class="pa-1 text-center" Elevation="1">
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">@displayNumber</MudText>
+                                    <MudButton Variant="Variant.Filled"
+                                               Color="@GetAnswerColor(q)"
+                                               Disabled="true"
+                                               Size="Size.Small"
+                                               StartIcon="@GetAnswerIcon(q)"
+                                               Title="@GetAnswerTooltip(q)"
+                                               Class="@GetAnswerClass(q)">
+                                        @GetAnswerText(q)
+                                    </MudButton>
+                                </MudPaper>
+                            </MudItem>
+                        }
+                    </MudGrid>
+                </MudPaper>
+            }
+
+            <!-- Actions -->
+            <MudGrid Class="mt-6">
+                <MudItem xs="12" md="6">
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true"
+                               OnClick="GoToStudentDashboard" StartIcon="@Icons.Material.Filled.Home">
+                        Về trang chủ
+                    </MudButton>
+                </MudItem>
             </MudGrid>
         </MudPaper>
-
-        <!-- Action Buttons -->
-        <MudGrid Class="mt-6">
-            <MudItem xs="12" md="6">
-                <MudButton Variant="Variant.Filled" 
-                          Color="Color.Primary" 
-                          FullWidth="true"
-                          OnClick="GoToStudentDashboard"
-                          StartIcon="@Icons.Material.Filled.Home">
-                    Về trang chủ
-                </MudButton>
-            </MudItem>
-        </MudGrid>
-    </MudPaper>
-</MudContainer>
-
-<style>
-    .mud-main-content {
-        padding: 0;
-    }
-    
-    .mud-table {
-        border-radius: 8px;
-        overflow: hidden;
-    }
-    
-    .mud-table th {
-        background-color: #f5f5f5 !important;
-        font-weight: 600 !important;
-    }
-    
-    .mud-chip {
-        font-weight: 500;
-    }
-</style> 
+    </MudContainer>
+}
+else
+{
+    <MudContainer MaxWidth="MaxWidth.Large" Class="pa-4">
+        <MudPaper Elevation="4" Class="pa-6">
+            <MudAlert Severity="Severity.Warning" Variant="Variant.Filled">
+                <MudText>Không tìm thấy kết quả bài thi hoặc có lỗi xảy ra.</MudText>
+            </MudAlert>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-4"
+                       OnClick="GoToStudentDashboard" StartIcon="@Icons.Material.Filled.Home">
+                Về trang chủ
+            </MudButton>
+        </MudPaper>
+    </MudContainer>
+}

@@ -26,6 +26,7 @@ public class AuthHeaderHandler : DelegatingHandler
         
         // Kiểm tra loại authentication
         var authType = await _jsRuntime.InvokeAsync<string>("localStorage.getItem", "authType");
+        Console.WriteLine($"🔄 AuthHeaderHandler: Auth type: {authType ?? "NULL"}");
         
         if (authType == "cookie")
         {
@@ -41,11 +42,11 @@ public class AuthHeaderHandler : DelegatingHandler
             if (!string.IsNullOrEmpty(token))
             {
                 request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
-                Console.WriteLine($"🔄 AuthHeaderHandler: Added Bearer token to request");
+                Console.WriteLine($"🔄 AuthHeaderHandler: Added Bearer token to request for {request.RequestUri}");
             }
             else
             {
-                Console.WriteLine($"❌ AuthHeaderHandler: No JWT token found in localStorage");
+                Console.WriteLine($"❌ AuthHeaderHandler: No JWT token found in localStorage for {request.RequestUri}");
             }
         }
 

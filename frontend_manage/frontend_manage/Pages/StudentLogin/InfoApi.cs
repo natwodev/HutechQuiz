@@ -1,5 +1,6 @@
 using System.Net.Http.Json;
 using frontend_manage.DTOs;
+using System.Linq;
 
 namespace frontend_manage.Pages.StudentLogin;
 
@@ -18,7 +19,9 @@ public class InfoApi
 
     public async Task<List<ExamSessionDto>?> GetStudentExamSessionsAsync()
     {
-        return await _httpClient.GetFromJsonAsync<List<ExamSessionDto>>("api/Student/exam-sessions");
+        var allExamSessions = await _httpClient.GetFromJsonAsync<List<ExamSessionDto>>("api/Student/exam-sessions");
+        
+        return allExamSessions ?? new List<ExamSessionDto>();
     }
 
     public async Task<StartExamResponseDto?> StartExamAsync(int studentExamSessionId)
