@@ -18,7 +18,7 @@ namespace backend_manage.Controllers
         }
 
         [HttpGet]
-        [Authorize(Policy = "AdminOnly")]
+        [Authorize(Policy = "AcademicAffairsOrAdmin")]
         public async Task<IActionResult> GetAll()
         {
             var result = await _examBatchDetailService.GetAllAsync();
@@ -26,7 +26,7 @@ namespace backend_manage.Controllers
         }
 
         [HttpGet("{id}")]
-        [Authorize(Policy = "AdminOnly")]
+        [Authorize(Policy = "AcademicAffairsOrAdmin")]
         public async Task<IActionResult> GetById(string id)
         {
             var result = await _examBatchDetailService.GetByIdAsync(id);
@@ -35,7 +35,7 @@ namespace backend_manage.Controllers
         }
 
         [HttpPost]
-        [Authorize(Policy = "AdminOnly")]
+        [Authorize(Policy = "AcademicAffairsOrAdmin")]
         public async Task<IActionResult> Create([FromBody] ExamBatchDetailCreateDto dto)
         {
             var result = await _examBatchDetailService.AddAsync(dto);
@@ -43,7 +43,7 @@ namespace backend_manage.Controllers
         }
 
         [HttpPut("{id}")]
-        [Authorize(Policy = "AdminOnly")]
+        [Authorize(Policy = "AcademicAffairsOrAdmin")]
         public async Task<IActionResult> Update(string id, [FromBody] ExamBatchDetailUpdateDto dto)
         {
             var result = await _examBatchDetailService.UpdateAsync(id, dto);
@@ -52,7 +52,7 @@ namespace backend_manage.Controllers
         }
 
         [HttpDelete("{id}")]
-        [Authorize(Policy = "AdminOnly")]
+        [Authorize(Policy = "AcademicAffairsOrAdmin")]
         public async Task<IActionResult> Delete(string id)
         {
             var success = await _examBatchDetailService.DeleteAsync(id);

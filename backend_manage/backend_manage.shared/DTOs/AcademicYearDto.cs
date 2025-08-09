@@ -10,13 +10,10 @@ namespace backend_manage.shared.DTOs
     public class AcademicYearCreateDto
     {
         public string YearName { get; set; }
-        public List<SemesterCreateDto> Semesters { get; set; }
-
     }
 
     public class AcademicYearUpdateDto
     {
         public string YearName { get; set; }
-        public List<SemesterUpdateDto> Semesters { get; set; }
     }
 } 

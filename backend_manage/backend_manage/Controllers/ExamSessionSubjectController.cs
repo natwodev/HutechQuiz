@@ -18,7 +18,7 @@ namespace backend_manage.Controllers
         }
 
         [HttpGet]
-        [Authorize(Policy = "AdminOnly")]
+        [Authorize(Policy = "AcademicAffairsOrAdmin")]
         public async Task<IActionResult> GetAll()
         {
             var result = await _examSessionSubjectService.GetAllAsync();
@@ -26,7 +26,7 @@ namespace backend_manage.Controllers
         }
 
         [HttpGet("{id}")]
-        [Authorize(Policy = "AdminOnly")]
+        [Authorize(Policy = "AcademicAffairsOrAdmin")]
         public async Task<IActionResult> GetById(string id)
         {
             var result = await _examSessionSubjectService.GetByIdAsync(id);
@@ -35,7 +35,7 @@ namespace backend_manage.Controllers
         }
 
         [HttpPost]
-        [Authorize(Policy = "AdminOnly")]
+        [Authorize(Policy = "AcademicAffairsOrAdmin")]
         public async Task<IActionResult> Create([FromBody] ExamSessionSubjectCreateDto dto)
         {
             var result = await _examSessionSubjectService.AddAsync(dto);
@@ -43,7 +43,7 @@ namespace backend_manage.Controllers
         }
 
         [HttpPut("{id}")]
-        [Authorize(Policy = "AdminOnly")]
+        [Authorize(Policy = "AcademicAffairsOrAdmin")]
         public async Task<IActionResult> Update(string id, [FromBody] ExamSessionSubjectUpdateDto dto)
         {
             var result = await _examSessionSubjectService.UpdateAsync(id, dto);
@@ -52,7 +52,7 @@ namespace backend_manage.Controllers
         }
 
         [HttpDelete("{id}")]
-        [Authorize(Policy = "AdminOnly")]
+        [Authorize(Policy = "AcademicAffairsOrAdmin")]
         public async Task<IActionResult> Delete(string id)
         {
             var success = await _examSessionSubjectService.DeleteAsync(id);
@@ -61,6 +61,7 @@ namespace backend_manage.Controllers
         }
 
         [HttpPatch("{id}/original-exam-paper/{originalExamPaperId}")]
+        [Authorize(Policy = "AcademicAffairsOrAdmin")]
         public async Task<IActionResult> UpdateOriginalExamPaperId(int id, int originalExamPaperId)
         {
             var success = await _examSessionSubjectService.UpdateOriginalExamPaperIdAsync(id, originalExamPaperId);
@@ -69,6 +70,7 @@ namespace backend_manage.Controllers
         }
 
         [HttpGet("with-rooms")]
+        [Authorize(Policy = "AcademicAffairsOrAdmin")]
         public async Task<IActionResult> GetAllWithRooms()
         {
             var result = await _examSessionSubjectService.GetAllWithRoomsAsync();
