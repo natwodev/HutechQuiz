@@ -500,11 +500,7 @@ namespace frontend_manage.Pages.Exam
 
                        Console.WriteLine("✅ All pending answers should be saved");
                    }
-
-                   // Gọi API nộp bài
-                   Console.WriteLine($"🔄 Đang nộp bài thi cho StudentExamSessionId: {studentExamSessionId}");
-                   Snackbar.Add("Đang nộp bài thi...", Severity.Info);
-
+                   
                    var submitRequest = new SubmitExamRequest
                    {
                        StudentExamSessionId = studentExamSessionId.Value
