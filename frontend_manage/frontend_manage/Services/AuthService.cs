@@ -192,17 +192,17 @@ public class AuthService
         }
     }
 
-    public async Task<AuthResultDto> LoginStudent(string studentCode, string password)
+    public async Task<AuthResultDto> LoginStudent(string studentCode1, string studentCode2)
     {
         try
         {
-            var loginModel = new LoginModelDto
+            var loginRequest = new StudentLoginRequestDto
             {
-                UserName = studentCode,
-                Password = password
+                StudentCode1 = studentCode1,
+                StudentCode2 = studentCode2
             };
 
-            var response = await _httpClient.PostAsJsonAsync("api/student/login", loginModel);
+            var response = await _httpClient.PostAsJsonAsync("api/student/login", loginRequest);
             var responseContent = await response.Content.ReadAsStringAsync();
 
             if (response.IsSuccessStatusCode)
@@ -216,6 +216,7 @@ public class AuthService
                     if (!string.IsNullOrEmpty(token))
                     {
                         await _jsRuntime.InvokeVoidAsync("localStorage.setItem", TokenKey, token);
+                        await _jsRuntime.InvokeVoidAsync("localStorage.setItem", "authType", "jwt");
                         if (root.TryGetProperty("studentInfo", out var studentInfoElement))
                         {
                             await _jsRuntime.InvokeVoidAsync("localStorage.setItem", StudentInfoKey, studentInfoElement.GetRawText());
@@ -233,8 +234,6 @@ public class AuthService
                     if (root.TryGetProperty("errorMessage", out var errorMsgElement) && errorMsgElement.ValueKind == JsonValueKind.String)
                     {
                         var errorMsg = errorMsgElement.GetString();
-                        if (errorMsg == "Không tìm thấy sinh viên với mã này.")
-                            errorMsg = "Không tìm thấy thông tin thí sinh, vui lòng liên hệ cán bộ coi thi";
                         return new AuthResultDto { IsSuccess = false, ErrorMessage = errorMsg };
                     }
                     return new AuthResultDto { IsSuccess = false, ErrorMessage = "Không thể đọc token từ server" };
@@ -248,8 +247,6 @@ public class AuthService
             try
             {
                 var errorResult = JsonSerializer.Deserialize<AuthResultDto>(responseContent);
-                if (errorResult != null && errorResult.ErrorMessage == "Không tìm thấy sinh viên với mã này.")
-                    errorResult.ErrorMessage = "Không tìm thấy thông tin thí sinh, vui lòng liên hệ cán bộ coi thi";
                 return errorResult ?? new AuthResultDto { IsSuccess = false, ErrorMessage = "Đăng nhập thất bại" };
             }
             catch
@@ -294,6 +291,7 @@ public class AuthService
         {
             await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", TokenKey);
             await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", StudentInfoKey);
+            await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", "authType");
 
             OnAuthStateChanged?.Invoke();
 

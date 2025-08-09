@@ -9,7 +9,5 @@ namespace backend_manage.core.Services.Interfaces
         Task<List<string>> GetUserRolesAsync(string userId);
         // Phương thức RoleClaim
         Task<ApplicationUser?> FindByEmailAsync(string email);
-        Task<List<string>> GetUserPermissionsAsync(ApplicationUser user);
-
     }
 }

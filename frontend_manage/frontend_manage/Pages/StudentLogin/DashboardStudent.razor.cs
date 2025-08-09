@@ -69,6 +69,7 @@ namespace frontend_manage.Pages.StudentLogin
             await JSRuntime.InvokeVoidAsync("localStorage.removeItem", "authToken");
             await JSRuntime.InvokeVoidAsync("localStorage.removeItem", "studentInfo");
             await JSRuntime.InvokeVoidAsync("localStorage.removeItem", "studentCode");
+            await JSRuntime.InvokeVoidAsync("localStorage.removeItem", "authType");
             Navigation.NavigateTo("/student-login", true);
         }
 

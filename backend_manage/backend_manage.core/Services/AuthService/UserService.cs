@@ -34,10 +34,5 @@ namespace backend_manage.core.Services.AuthService
         {
             return await _userRepository.FindByEmailAsync(email);
         }
-        
-        public async Task<List<string>> GetUserPermissionsAsync(ApplicationUser user)
-        {
-            return await _userRepository.GetUserPermissionsAsync(user);
-        }
     }
 }

@@ -9,6 +9,5 @@ namespace backend_manage.core.Repositories.Interfaces
         Task<ApplicationUser?> GetUserByIdAsync(string userId);
         Task<List<string>> GetUserRolesAsync(ApplicationUser user);
         Task<ApplicationUser?> FindByEmailAsync(string email);
-        Task<List<string>> GetUserPermissionsAsync(ApplicationUser user);
     }
 }

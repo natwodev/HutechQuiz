@@ -73,9 +73,8 @@ namespace backend_manage.Controllers
                     return BadRequest(new { message = "Tên đăng nhập hoặc mật khẩu không đúng." });
                 }
                 
-                // Lấy roles và permissions
+                // Lấy roles
                 var roles = await _authService.GetUserRolesAsync(user);
-                var permissions = await _authService.GetUserPermissionsAsync(user);
 
                 return Ok(new
                 {
@@ -85,8 +84,7 @@ namespace backend_manage.Controllers
                         id = user.Id,
                         username = user.UserName,
                         email = user.Email,
-                        roles = roles,
-                        permissions = permissions
+                        roles = roles
                     }
                 });
             }
@@ -182,7 +180,6 @@ namespace backend_manage.Controllers
                         if (user != null)
                         {
                             var roles = await _authService.GetUserRolesAsync(user);
-                            var permissions = await _authService.GetUserPermissionsAsync(user);
 
                             return Ok(new
                             {
@@ -192,8 +189,7 @@ namespace backend_manage.Controllers
                                     id = user.Id,
                                     username = user.UserName,
                                     email = user.Email,
-                                    roles = roles,
-                                    permissions = permissions
+                                    roles = roles
                                 }
                             });
                         }

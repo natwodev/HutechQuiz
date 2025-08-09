@@ -13,6 +13,17 @@
     <!-- Overlay -->
     <div style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.3); z-index: 2;"></div>
     
+    <!-- Error Message ở góc màn hình -->
+    @if (!string.IsNullOrEmpty(ErrorMessage))
+    {
+        <div style="position: fixed; top: 20px; right: 20px; z-index: 1000; max-width: 400px;">
+            <MudAlert Severity="Severity.Error" Variant="Variant.Filled" Style="border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
+                <MudText Style="font-weight: 700;">⚠️ Lỗi đăng nhập</MudText>
+                <MudText Style="font-size: 0.9rem;">@ErrorMessage</MudText>
+            </MudAlert>
+        </div>
+    }
+    
     <!-- Main Content căn giữa -->
     <MudGrid Justify="Justify.Center" AlignItems="AlignItems.Center" Style="height: 100vh; position: relative; z-index: 3; margin: 0; padding: 20px;">
         <MudItem xs="12" sm="10" md="8" lg="7" xl="6">
@@ -37,20 +48,12 @@
                             
                             <!-- Login Form -->
                             <MudStack Spacing="4">
-                                @if (!string.IsNullOrEmpty(ErrorMessage))
-                                {
-                                    <MudAlert Severity="Severity.Error" Variant="Variant.Filled" Style="border-radius: 16px;">
-                                        <MudText Style="font-weight: 700;">⚠️ Lỗi đăng nhập</MudText>
-                                        <MudText Style="font-size: 0.9rem;">@ErrorMessage</MudText>
-                                    </MudAlert>
-                                }
-                                
                                 <EditForm Model="loginModel" OnValidSubmit="HandleLogin">
                                     <DataAnnotationsValidator />
                                     
                                     <MudStack Spacing="3">
-                                        <!-- Student ID Field -->
-                                        <MudTextField @bind-Value="loginModel.UserName"
+                                        <!-- Student ID Field 1 -->
+                                        <MudTextField @bind-Value="loginModel.StudentCode1"
                                                      Label="Mã sinh viên"
                                                      Variant="Variant.Outlined"
                                                      Adornment="Adornment.Start"
@@ -60,7 +63,7 @@
                                                      Style="border-radius: 16px;" />
                                         
                                         <!-- Password Field -->
-                                        <MudTextField @bind-Value="loginModel.Password"
+                                        <MudTextField @bind-Value="loginModel.StudentCode2"
                                                      Label="Mật khẩu"
                                                      Variant="Variant.Outlined"
                                                      Adornment="Adornment.Start"

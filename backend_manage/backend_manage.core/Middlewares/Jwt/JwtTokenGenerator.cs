@@ -16,7 +16,7 @@ namespace backend_manage.core.Middlewares.Jwt
             _configuration = configuration;
         }
 
-        public string GenerateJwtToken(string userId, IEnumerable<string> roles, IEnumerable<string> permissions)
+        public string GenerateJwtToken(string userId, IEnumerable<string> roles)
         {
             var key = Encoding.ASCII.GetBytes(_configuration["JWT:key"] ?? "default_secret_key");
 
@@ -27,9 +27,6 @@ namespace backend_manage.core.Middlewares.Jwt
 
             // Thêm role claims
             claims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
-
-            // Thêm permission claims (custom claim type)
-            claims.AddRange(permissions.Select(permission => new Claim("permission", permission)));
 
             var tokenDescriptor = new SecurityTokenDescriptor
             {
