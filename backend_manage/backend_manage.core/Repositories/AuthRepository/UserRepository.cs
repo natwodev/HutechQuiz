@@ -35,34 +35,5 @@ namespace backend_manage.core.Repositories.AuthRepository
         {
             return await _userManager.Users.FirstOrDefaultAsync(u => u.Id == userId);
         }
-
-        public async Task<List<string>> GetUserPermissionsAsync(ApplicationUser user)
-        {
-            var permissions = new List<string>();
-
-            // Claims gắn trực tiếp với user
-            var userClaims = await _userManager.GetClaimsAsync(user);
-            permissions.AddRange(userClaims
-                .Where(c => c.Type == "permission")
-                .Select(c => c.Value));
-
-            // Claims từ các role
-            var roles = await _userManager.GetRolesAsync(user);
-            foreach (var roleName in roles)
-            {
-                var role = await _roleManager.FindByNameAsync(roleName);
-                if (role != null)
-                {
-                    var roleClaims = await _roleManager.GetClaimsAsync(role);
-                    permissions.AddRange(roleClaims
-                        .Where(c => c.Type == "permission")
-                        .Select(c => c.Value));
-                }
-            }
-
-            // Loại bỏ trùng lặp
-            return permissions.Distinct().ToList();
-        }
-
     }
 }

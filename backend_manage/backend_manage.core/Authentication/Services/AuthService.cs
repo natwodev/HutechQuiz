@@ -70,11 +70,10 @@ namespace backend_manage.core.Authentication.Services
                 };
             }
             
-            // ✅ Lấy role và permission giống như login thường
+            // ✅ Lấy role giống như login thường
             var roles = await _userRepository.GetUserRolesAsync(user);
-            var permissions = await _userRepository.GetUserPermissionsAsync(user);
-            // Tạo JWT với thông tin userName, roles và permissions
-            var tokenString = _jwtTokenGenerator.GenerateJwtToken(user.Id, roles, permissions);
+            // Tạo JWT với thông tin userName và roles
+            var tokenString = _jwtTokenGenerator.GenerateJwtToken(user.Id, roles);
             return new AuthResultDto
             {
                 IsSuccess = true,
@@ -138,12 +137,6 @@ namespace backend_manage.core.Authentication.Services
         public async Task<List<string>> GetUserRolesAsync(ApplicationUser user)
         {
             return await _userRepository.GetUserRolesAsync(user);
-        }
-
-        // Lấy permissions của user
-        public async Task<List<string>> GetUserPermissionsAsync(ApplicationUser user)
-        {
-            return await _userRepository.GetUserPermissionsAsync(user);
         }
 
         // Đăng xuất cookie

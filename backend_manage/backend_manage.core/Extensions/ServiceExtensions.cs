@@ -65,7 +65,8 @@ namespace backend_manage.core.Extensions
             
             // Đăng ký DbContext
             services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
+                options.UseSqlServer(configuration.GetConnectionString("DefaultConnection"), 
+                    b => b.MigrationsAssembly("backend_manage.core")));
 
             // Đăng ký CORS
             services.AddCors(options =>
