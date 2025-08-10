@@ -1,9 +1,14 @@
 using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption;
+using Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption.ConfigurationModel;
+using System.IO;
+using System;
 using backend_manage.core.Configurations;
 using backend_manage.core.Data;
 using backend_manage.core.Entities;
 using backend_manage.core.Mappings;
-using backend_manage.core.Middlewares.Authentication;
+using backend_manage.core.Middlewares.Jwt;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
@@ -60,13 +65,23 @@ namespace backend_manage.core.Extensions
                 options.UseSqlServer(configuration.GetConnectionString("DefaultConnection"), 
                     b => b.MigrationsAssembly("backend_manage.core")));
 
+            // Cấu hình Data Protection đơn giản với fixed application name
+            var dpConfig = configuration.GetSection("DataProtection");
+            var applicationName = dpConfig["ApplicationName"] ?? "HutechQuizApp";
+            
+            services.AddDataProtection()
+                .SetApplicationName(applicationName); // Chỉ cần application name cố định
+
             // Đăng ký CORS
             services.AddCors(options =>
             {
+                // Nếu frontend chạy domain khác và cần gửi cookie, phải bật AllowCredentials
                 options.AddPolicy("AllowAll", policy =>
-                    policy.AllowAnyOrigin()
+                    policy
                         .AllowAnyHeader()
-                        .AllowAnyMethod());
+                        .AllowAnyMethod()
+                        .SetIsOriginAllowed(_ => true)
+                        .AllowCredentials());
             });
 
 

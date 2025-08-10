@@ -106,8 +106,8 @@ namespace backend_manage.core.Authentication.Services
                 };
             }
 
-            // Kiểm tra mật khẩu
-            var signInResult = await _signInManager.PasswordSignInAsync(user, loginModel.Password, false, true);
+            // Chỉ kiểm tra mật khẩu (không sign-in ở đây để tự kiểm soát claims và tránh tạo nhiều cookie)
+            var signInResult = await _signInManager.CheckPasswordSignInAsync(user, loginModel.Password, true);
             if (!signInResult.Succeeded)
             {
                 return new AuthResultDto
@@ -134,9 +134,6 @@ namespace backend_manage.core.Authentication.Services
                 claims.Add(new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.Role, role));
             }
 
-            // Tạo cookie session với claims
-            await _signInManager.SignInAsync(user, isPersistent: false);
-            
             return new AuthResultDto
             {
                 IsSuccess = true,
@@ -165,7 +162,15 @@ namespace backend_manage.core.Authentication.Services
         // Đăng nhập với claims
         public async Task SignInWithClaimsAsync(ApplicationUser user, List<System.Security.Claims.Claim> claims)
         {
-            await _signInManager.SignInAsync(user, isPersistent: false);
+            var authProps = new Microsoft.AspNetCore.Authentication.AuthenticationProperties
+            {
+                IsPersistent = false,
+                ExpiresUtc = DateTimeOffset.UtcNow.AddHours(8),
+                AllowRefresh = true,
+                IssuedUtc = DateTimeOffset.UtcNow
+            };
+
+            await _signInManager.SignInWithClaimsAsync(user, authProps, claims);
         }
         
         public async Task LogoutAsync(string token)
