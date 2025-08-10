@@ -92,6 +92,9 @@ namespace backend_manage.Controllers
 
                 // Đăng nhập với claims
                 await _authService.SignInWithClaimsAsync(user, claims);
+                
+                // Log để debug
+                Console.WriteLine($"Signed in user: {user.UserName} with roles: {string.Join(", ", roles)}");
 
                 return Ok(new
                 {
@@ -203,6 +206,9 @@ namespace backend_manage.Controllers
                     var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
                     var username = User.Identity.Name;
                     var roles = User.FindAll(System.Security.Claims.ClaimTypes.Role).Select(c => c.Value).ToList();
+                    
+                    // Debug: Lấy tất cả claims để kiểm tra
+                    var allClaims = User.Claims.Select(c => new { Type = c.Type, Value = c.Value }).ToList();
 
                     return Ok(new
                     {
@@ -211,7 +217,9 @@ namespace backend_manage.Controllers
                         userId = userId,
                         username = username,
                         roles = roles,
-                        cookieName = Request.Cookies["HutechQuiz.Auth"]
+                        allClaims = allClaims, // Debug info
+                        cookieName = Request.Cookies["HutechQuiz.Auth"],
+                        authScheme = User.Identity.AuthenticationType
                     });
                 }
 
@@ -220,6 +228,44 @@ namespace backend_manage.Controllers
             catch (Exception ex)
             {
                 return StatusCode(500, new { message = "Lỗi: " + ex.Message });
+            }
+        }
+
+        // Lấy thông tin user hiện tại (endpoint /me)
+        [HttpGet("me")]
+        [Authorize]
+        public async Task<IActionResult> GetCurrentUser()
+        {
+            try
+            {
+                if (User.Identity?.IsAuthenticated == true)
+                {
+                    var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                    var username = User.Identity.Name;
+                    
+                    if (!string.IsNullOrEmpty(username))
+                    {
+                        var user = await _authService.GetUserByUsernameAsync(username);
+                        if (user != null)
+                        {
+                            var roles = await _authService.GetUserRolesAsync(user);
+
+                            return Ok(new
+                            {
+                                id = user.Id,
+                                username = user.UserName,
+                                email = user.Email,
+                                roles = roles
+                            });
+                        }
+                    }
+                }
+
+                return Unauthorized(new { message = "Chưa đăng nhập" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Đã xảy ra lỗi khi lấy thông tin người dùng." });
             }
         }
 
