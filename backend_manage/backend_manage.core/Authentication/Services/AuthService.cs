@@ -117,7 +117,24 @@ namespace backend_manage.core.Authentication.Services
                 };
             }
 
-            // Tạo cookie session
+            // Lấy roles của user
+            var roles = await _userRepository.GetUserRolesAsync(user);
+            
+            // Tạo claims cho user
+            var claims = new List<System.Security.Claims.Claim>
+            {
+                new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.NameIdentifier, user.Id),
+                new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.Name, user.UserName),
+                new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.Email, user.Email ?? "")
+            };
+            
+            // Thêm roles vào claims
+            foreach (var role in roles)
+            {
+                claims.Add(new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.Role, role));
+            }
+
+            // Tạo cookie session với claims
             await _signInManager.SignInAsync(user, isPersistent: false);
             
             return new AuthResultDto
@@ -143,6 +160,12 @@ namespace backend_manage.core.Authentication.Services
         public async Task SignOutAsync()
         {
             await _signInManager.SignOutAsync();
+        }
+        
+        // Đăng nhập với claims
+        public async Task SignInWithClaimsAsync(ApplicationUser user, List<System.Security.Claims.Claim> claims)
+        {
+            await _signInManager.SignInAsync(user, isPersistent: false);
         }
         
         public async Task LogoutAsync(string token)
