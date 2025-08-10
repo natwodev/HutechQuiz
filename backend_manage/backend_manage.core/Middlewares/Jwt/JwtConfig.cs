@@ -1,39 +1,31 @@
 using System.Text;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+using System.Linq;
+using backend_manage.core.Entities;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 
-namespace backend_manage.core.Middlewares.Authentication
+namespace backend_manage.core.Middlewares.Jwt
 {
     public static class AuthenticationConfig
     {
         public static void ConfigureAuthentication(this IServiceCollection services, IConfiguration configuration)
         {
-            var key = Encoding.ASCII.GetBytes(configuration["JWT:Key"]);
+            // Đồng bộ với appsettings.json (trường "JWT:key")
+            var key = Encoding.ASCII.GetBytes(configuration["JWT:key"] ?? "");
 
             services.AddAuthentication(options =>
                 {
-                    // Đặt Cookie làm scheme mặc định để hỗ trợ cookie authentication
-                    options.DefaultAuthenticateScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-                    options.DefaultChallengeScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-                    options.DefaultSignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-                    options.DefaultSignOutScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-                })
-                .AddCookie(options =>
-                {
-                    // Cấu hình cookie authentication
-                    options.LoginPath = "/api/auth/login-cookie";
-                    options.LogoutPath = "/api/auth/logout-cookie";
-                    options.AccessDeniedPath = "/api/auth/access-denied";
-                    options.Cookie.Name = "HutechQuiz.Auth";
-                    options.Cookie.HttpOnly = true;
-                    options.Cookie.SameSite = Microsoft.AspNetCore.Http.SameSiteMode.Strict;
-                    options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
-                    options.ExpireTimeSpan = TimeSpan.FromHours(8);
-                    options.SlidingExpiration = true;
+                    // Sử dụng đúng scheme cookie của Identity để đồng bộ với SignInManager
+                    options.DefaultAuthenticateScheme = IdentityConstants.ApplicationScheme;
+                    options.DefaultChallengeScheme = IdentityConstants.ApplicationScheme;
+                    options.DefaultSignInScheme = IdentityConstants.ApplicationScheme;
+                    options.DefaultSignOutScheme = IdentityConstants.ApplicationScheme;
                 })
                 .AddJwtBearer(options =>
                 {
@@ -48,6 +40,91 @@ namespace backend_manage.core.Middlewares.Authentication
                         ValidAudience = configuration["JWT:Audience"]
                     };
                 });
+
+            // Cấu hình cookie từ appsettings
+            var cookieConfig = configuration.GetSection("Cookie");
+            var cookieName = cookieConfig["Name"] ?? "HutechQuiz.Auth";
+            var expireHours = int.Parse(cookieConfig["ExpireTimeSpanHours"] ?? "8");
+            var slidingExpiration = bool.Parse(cookieConfig["SlidingExpiration"] ?? "true");
+            var httpOnly = bool.Parse(cookieConfig["HttpOnly"] ?? "true");
+            var sameSite = Enum.Parse<SameSiteMode>(cookieConfig["SameSite"] ?? "Lax");
+            var securePolicy = Enum.Parse<CookieSecurePolicy>(cookieConfig["SecurePolicy"] ?? "None");
+            
+            services.ConfigureApplicationCookie(options =>
+            {
+                options.LoginPath = "/api/auth/login-cookie";
+                options.LogoutPath = "/api/auth/logout-cookie";
+                options.AccessDeniedPath = "/api/auth/access-denied";
+                options.Cookie.Name = cookieName;
+                options.Cookie.HttpOnly = httpOnly;
+                options.Cookie.SameSite = sameSite;
+                options.Cookie.SecurePolicy = securePolicy;
+                options.Cookie.IsEssential = true; // Đảm bảo cookie không bị xóa bởi GDPR/privacy policies
+                
+                options.ExpireTimeSpan = TimeSpan.FromHours(expireHours);
+                options.SlidingExpiration = slidingExpiration;
+                options.DataProtectionProvider = null; // Sử dụng Data Protection provider mặc định (đã được cấu hình)
+
+                options.Events = new CookieAuthenticationEvents
+                {
+                    OnRedirectToLogin = context =>
+                    {
+                        context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                        return Task.CompletedTask;
+                    },
+                    OnRedirectToAccessDenied = context =>
+                    {
+                        context.Response.StatusCode = StatusCodes.Status403Forbidden;
+                        return Task.CompletedTask;
+                    },
+                    OnValidatePrincipal = async context =>
+                    {
+                        // Log để debug cookie validation
+                        var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<CookieAuthenticationEvents>>();
+                        
+                        try
+                        {
+                            logger.LogInformation("🍪 Cookie validation started");
+                            logger.LogInformation("🔍 Has Principal: {HasPrincipal}", context.Principal != null);
+                            logger.LogInformation("🔍 Principal Identity: {IdentityName}", context.Principal?.Identity?.Name ?? "NULL");
+                            logger.LogInformation("🔍 Is Authenticated: {IsAuthenticated}", context.Principal?.Identity?.IsAuthenticated ?? false);
+                            logger.LogInformation("🔍 Claims Count: {ClaimsCount}", context.Principal?.Claims?.Count() ?? 0);
+                            
+                            if (context.Principal?.Identity?.IsAuthenticated == true)
+                            {
+                                var roles = context.Principal.FindAll(System.Security.Claims.ClaimTypes.Role).Select(c => c.Value).ToList();
+                                logger.LogInformation("✅ Cookie validation successful for user: {UserName}, Roles: {Roles}", 
+                                    context.Principal.Identity.Name, string.Join(", ", roles));
+                                    
+                                // Kiểm tra xem user có tồn tại trong database không
+                                var userManager = context.HttpContext.RequestServices.GetRequiredService<UserManager<ApplicationUser>>();
+                                var userId = context.Principal.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+                                
+                                if (!string.IsNullOrEmpty(userId))
+                                {
+                                    var user = await userManager.FindByIdAsync(userId);
+                                    if (user == null)
+                                    {
+                                        logger.LogWarning("❌ User not found in database, rejecting cookie");
+                                        context.RejectPrincipal();
+                                        return;
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                logger.LogWarning("❌ Cookie validation failed - cookie may be expired or invalid");
+                                context.RejectPrincipal();
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            logger.LogError(ex, "❌ Error during cookie validation");
+                            context.RejectPrincipal();
+                        }
+                    }
+                };
+            });
         }
     }
 }

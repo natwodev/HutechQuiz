@@ -1,11 +1,15 @@
+using System.Linq;
 using backend_manage.core.Hubs;
 using backend_manage.core.Middlewares;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
 
 namespace backend_manage.core.Extensions
 {
+    public class AuthenticationDebugLogger { } // Class for logger category
+    
     public static class AppExtensions
     {
         public static void ConfigureMiddleware(this WebApplication app)
@@ -19,6 +23,26 @@ namespace backend_manage.core.Extensions
             // app.UseHttpsRedirection(); // Bật lại nếu dùng HTTPS
             
             app.UseStaticFiles(); // ✅ Bật để phục vụ file tĩnh từ wwwroot
+            
+            // Thêm middleware debug authentication
+            app.Use(async (context, next) =>
+            {
+                var logger = context.RequestServices.GetRequiredService<ILogger<AuthenticationDebugLogger>>();
+                
+                logger.LogInformation("🚀 Request: {Method} {Path}", context.Request.Method, context.Request.Path);
+                logger.LogInformation("🍪 Cookies received: {Cookies}", 
+                    string.Join(", ", context.Request.Cookies.Select(c => $"{c.Key}={c.Value?.Substring(0, Math.Min(20, c.Value.Length))}...")));
+                
+                await next();
+                
+                logger.LogInformation("🔐 User authenticated: {IsAuthenticated}", context.User?.Identity?.IsAuthenticated ?? false);
+                if (context.User?.Identity?.IsAuthenticated == true)
+                {
+                    var roles = context.User.FindAll(System.Security.Claims.ClaimTypes.Role).Select(c => c.Value).ToList();
+                    logger.LogInformation("👤 User: {UserName}, Roles: {Roles}", 
+                        context.User.Identity.Name, string.Join(", ", roles));
+                }
+            });
             
             app.UseAuthentication();
             app.UseAuthorization();
