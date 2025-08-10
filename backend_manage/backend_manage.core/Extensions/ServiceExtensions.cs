@@ -3,7 +3,7 @@ using backend_manage.core.Configurations;
 using backend_manage.core.Data;
 using backend_manage.core.Entities;
 using backend_manage.core.Mappings;
-using backend_manage.core.Middlewares.Jwt;
+using backend_manage.core.Middlewares.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
@@ -24,23 +24,15 @@ namespace backend_manage.core.Extensions
             services.AddControllers().AddJsonOptions(x =>
                 x.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles);
             
+            // Thêm HttpContextAccessor để các service có thể truy cập HttpContext
+            services.AddHttpContextAccessor();
+            
             services.AddIdentity<ApplicationUser, IdentityRole>()
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddDefaultTokenProviders();
             
-            // Cấu hình Cookie Authentication
-            services.ConfigureApplicationCookie(options =>
-            {
-                options.LoginPath = "/api/auth/login-cookie";
-                options.LogoutPath = "/api/auth/logout-cookie";
-                options.AccessDeniedPath = "/api/auth/access-denied";
-                options.Cookie.Name = "HutechQuiz.Auth";
-                options.Cookie.HttpOnly = true;
-                options.Cookie.SameSite = Microsoft.AspNetCore.Http.SameSiteMode.Strict;
-                options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
-                options.ExpireTimeSpan = TimeSpan.FromHours(8);
-                options.SlidingExpiration = true;
-            });
+            // Cấu hình Cookie Authentication đã được di chuyển vào JwtConfig.cs
+            // để tránh trùng lặp và đảm bảo hoạt động đúng
             
             services.AddSignalR();
             
@@ -81,8 +73,8 @@ namespace backend_manage.core.Extensions
             // Đăng ký các service khác
             services.ConfigureDependencies();
 
-            // Đăng ký xác thực JWT (được tách riêng)
-            services.ConfigureJwt(configuration);
+            // Đăng ký xác thực JWT và Cookie (đã được tách riêng)
+            services.ConfigureAuthentication(configuration);
             
             // Cấu hình Redis với kiểm tra kết nối ngay khi khởi động
             services.AddSingleton<IConnectionMultiplexer>(sp => {

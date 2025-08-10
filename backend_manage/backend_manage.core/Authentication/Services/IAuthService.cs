@@ -11,5 +11,6 @@ public interface IAuthService
     Task<ApplicationUser?> GetUserByUsernameAsync(string userName);
     Task<List<string>> GetUserRolesAsync(ApplicationUser user);
     Task SignOutAsync();
+    Task SignInWithClaimsAsync(ApplicationUser user, List<System.Security.Claims.Claim> claims);
     Task LogoutAsync(string token);
 }

@@ -7,6 +7,7 @@ using backend_manage.shared.Interfaces;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using IConfiguration = Microsoft.Extensions.Configuration.IConfiguration;
+using Microsoft.AspNetCore.Authorization;
 
 namespace backend_manage.Controllers
 {
@@ -76,6 +77,22 @@ namespace backend_manage.Controllers
                 // Lấy roles
                 var roles = await _authService.GetUserRolesAsync(user);
 
+                // Tạo claims và đăng nhập
+                var claims = new List<System.Security.Claims.Claim>
+                {
+                    new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.NameIdentifier, user.Id),
+                    new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.Name, user.UserName),
+                    new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.Email, user.Email ?? "")
+                };
+                
+                foreach (var role in roles)
+                {
+                    claims.Add(new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.Role, role));
+                }
+
+                // Đăng nhập với claims
+                await _authService.SignInWithClaimsAsync(user, claims);
+
                 return Ok(new
                 {
                     message = "Đăng nhập thành công",
@@ -109,36 +126,6 @@ namespace backend_manage.Controllers
             }
         }
         
-        // Đăng nhập bí mật
-        [HttpPost("secret-login")]
-        public async Task<IActionResult> SecretLogin([FromQuery] string key, [FromBody] LoginModelDto loginModel)
-        {
-            var secretKey = _configuration["SecretAccess:SecretLoginKey"];
-
-            if (key != secretKey)
-            {
-                return Forbid("Bạn không có quyền sử dụng đường dẫn này.");
-            }
-
-            try
-            {
-                var authResult = await _authService.AuthenticateAsync(loginModel);
-
-                if (!authResult.IsSuccess)
-                {
-                    return BadRequest(new { message = authResult.ErrorMessage });
-                }
-
-                return Ok(new
-                {
-                    token = authResult.Token
-                });
-            }
-            catch
-            {
-                return StatusCode(500, new { message = "Đăng nhập thất bại. Vui lòng thử lại sau!" });
-            }
-        }
         
         // Đăng xuất JWT
         [HttpPost("logout")]
@@ -201,6 +188,38 @@ namespace backend_manage.Controllers
             catch (Exception ex)
             {
                 return StatusCode(500, new { message = "Đã xảy ra lỗi khi kiểm tra trạng thái đăng nhập." });
+            }
+        }
+
+        // Test endpoint để kiểm tra cookie authentication
+        [HttpGet("test-cookie")]
+        [Authorize] // Yêu cầu đăng nhập
+        public IActionResult TestCookieAuth()
+        {
+            try
+            {
+                if (User.Identity?.IsAuthenticated == true)
+                {
+                    var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+                    var username = User.Identity.Name;
+                    var roles = User.FindAll(System.Security.Claims.ClaimTypes.Role).Select(c => c.Value).ToList();
+
+                    return Ok(new
+                    {
+                        message = "Cookie authentication hoạt động!",
+                        isAuthenticated = true,
+                        userId = userId,
+                        username = username,
+                        roles = roles,
+                        cookieName = Request.Cookies["HutechQuiz.Auth"]
+                    });
+                }
+
+                return Unauthorized(new { message = "Chưa đăng nhập" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Lỗi: " + ex.Message });
             }
         }
 
