@@ -109,6 +109,34 @@
             }
         }, 500);
 
+        // Fetch với credentials để gửi cookie
+        window.fetchWithCredentials = async function(url, method, body) {
+            try {
+                const options = {
+                    method: method,
+                    credentials: 'include', // Quan trọng: gửi cookie
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                };
+                
+                if (body && method !== 'GET') {
+                    options.body = body;
+                }
+
+                const response = await fetch(url, options);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                return await response.text();
+            } catch (error) {
+                console.error('Fetch error:', error);
+                throw error;
+            }
+        };
+
         // Chặn console.log
         console.log = function() {};
         console.info = function() {};

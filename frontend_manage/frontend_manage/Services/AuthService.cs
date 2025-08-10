@@ -22,6 +22,12 @@ public class AuthService
         _httpClient = httpClient;
         _navigationManager = navigationManager;
         _jsRuntime = jsRuntime;
+        
+        // Đảm bảo BaseAddress được set
+        if (_httpClient.BaseAddress == null)
+        {
+            _httpClient.BaseAddress = new Uri("http://localhost:5163/");
+        }
     }
 
     // JWT Authentication (cho các trường hợp khác)
@@ -328,9 +334,14 @@ public class AuthService
     {
         var authType = await _jsRuntime.InvokeAsync<string>("localStorage.getItem", "authType");
         
+        // Debug logging
+        Console.WriteLine($"Auth Type: {authType}");
+        
         if (authType == "cookie")
         {
             var cookieAuthJson = await _jsRuntime.InvokeAsync<string>("localStorage.getItem", CookieAuthKey);
+            Console.WriteLine($"Cookie Auth JSON: {cookieAuthJson}");
+            
             if (!string.IsNullOrEmpty(cookieAuthJson))
             {
                 try
@@ -339,11 +350,17 @@ public class AuthService
                     if (userInfo.RootElement.TryGetProperty("roles", out var rolesElement) && rolesElement.ValueKind == JsonValueKind.Array)
                     {
                         var roles = rolesElement.EnumerateArray().Select(r => r.GetString()).ToList();
+                        Console.WriteLine($"Roles found: {string.Join(", ", roles)}");
                         return roles.FirstOrDefault();
                     }
+                    else
+                    {
+                        Console.WriteLine("No roles property found or not an array");
+                    }
                 }
-                catch
+                catch (Exception ex)
                 {
+                    Console.WriteLine($"Error parsing cookie auth JSON: {ex.Message}");
                     return null;
                 }
             }
@@ -400,5 +417,59 @@ public class AuthService
     {
         var role = await GetUserRoleFromToken();
         return role == "Lecturer";
+    }
+
+    public async Task<bool> IsAcademicAffairs()
+    {
+        var role = await GetUserRoleFromToken();
+        return role == "AcademicAffairs";
+    }
+
+    public async Task<bool> HasRequiredRole()
+    {
+        var role = await GetUserRoleFromToken();
+        return role == "Admin" || role == "AcademicAffairs";
+    }
+
+    public async Task<string> GetDebugInfo()
+    {
+        var authType = await _jsRuntime.InvokeAsync<string>("localStorage.getItem", "authType");
+        var cookieAuth = await _jsRuntime.InvokeAsync<string>("localStorage.getItem", CookieAuthKey);
+        var token = await _jsRuntime.InvokeAsync<string>("localStorage.getItem", TokenKey);
+        var role = await GetUserRoleFromToken();
+        
+        // Test manual token extraction
+        string manualToken = "Not found";
+        if (!string.IsNullOrEmpty(cookieAuth))
+        {
+            try
+            {
+                using var document = System.Text.Json.JsonDocument.Parse(cookieAuth);
+                if (document.RootElement.TryGetProperty("token", out var tokenElement))
+                {
+                    manualToken = tokenElement.GetString() ?? "Empty token value";
+                }
+                else
+                {
+                    manualToken = "No token property found";
+                }
+            }
+            catch (Exception ex)
+            {
+                manualToken = $"Parse error: {ex.Message}";
+            }
+        }
+        
+        return $@"
+Debug Info:
+- Auth Type: {authType ?? "null"}
+- Has Cookie Auth: {!string.IsNullOrEmpty(cookieAuth)}
+- Cookie Auth Data: {cookieAuth ?? "null"}
+- Has Token: {!string.IsNullOrEmpty(token)}
+- Role: {role ?? "null"}
+- Is Authenticated: {await IsAuthenticated()}
+- Has Required Role: {await HasRequiredRole()}
+- Manual Token Extraction: {manualToken}
+        ";
     }
 }
