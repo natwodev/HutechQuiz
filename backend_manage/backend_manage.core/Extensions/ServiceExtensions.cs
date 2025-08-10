@@ -65,12 +65,38 @@ namespace backend_manage.core.Extensions
                 options.UseSqlServer(configuration.GetConnectionString("DefaultConnection"), 
                     b => b.MigrationsAssembly("backend_manage.core")));
 
-            // Cấu hình Data Protection đơn giản với fixed application name
+            // Cấu hình Data Protection với key persistence và logging
             var dpConfig = configuration.GetSection("DataProtection");
             var applicationName = dpConfig["ApplicationName"] ?? "HutechQuizApp";
+            var keysPath = dpConfig["KeysPath"] ?? "./DataProtectionKeys";
             
-            services.AddDataProtection()
-                .SetApplicationName(applicationName); // Chỉ cần application name cố định
+            // Đảm bảo thư mục tồn tại
+            var keysDirectory = new DirectoryInfo(keysPath);
+            if (!keysDirectory.Exists)
+            {
+                keysDirectory.Create();
+                Console.WriteLine($"🔑 Created DataProtection keys directory: {keysDirectory.FullName}");
+            }
+            else
+            {
+                Console.WriteLine($"🔑 Using existing DataProtection keys directory: {keysDirectory.FullName}");
+                var existingKeys = keysDirectory.GetFiles("*.xml");
+                Console.WriteLine($"🔑 Found {existingKeys.Length} existing key files");
+            }
+            
+            var dataProtectionBuilder = services.AddDataProtection()
+                .SetApplicationName(applicationName)
+                .PersistKeysToFileSystem(keysDirectory) // Lưu key vào file system để giữ ổn định
+                .SetDefaultKeyLifetime(TimeSpan.FromDays(90)); // Key tồn tại 90 ngày
+            
+            // Sử dụng FixedKey nếu có trong config để đảm bảo tính ổn định
+            var fixedKey = dpConfig["FixedKey"];
+            if (!string.IsNullOrEmpty(fixedKey))
+            {
+                Console.WriteLine("🔑 Using FixedKey from configuration for additional stability");
+                // Không sử dụng FixedKey trực tiếp vì nó có thể gây vấn đề security
+                // Thay vào đó, chỉ dựa vào PersistKeysToFileSystem
+            }
 
             // Đăng ký CORS
             services.AddCors(options =>

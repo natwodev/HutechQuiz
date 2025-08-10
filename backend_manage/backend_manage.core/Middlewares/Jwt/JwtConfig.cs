@@ -1,5 +1,6 @@
 using System.Text;
 using System.Linq;
+using backend_manage.core.Entities;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http;
@@ -58,9 +59,11 @@ namespace backend_manage.core.Middlewares.Jwt
                 options.Cookie.HttpOnly = httpOnly;
                 options.Cookie.SameSite = sameSite;
                 options.Cookie.SecurePolicy = securePolicy;
+                options.Cookie.IsEssential = true; // Đảm bảo cookie không bị xóa bởi GDPR/privacy policies
                 
                 options.ExpireTimeSpan = TimeSpan.FromHours(expireHours);
                 options.SlidingExpiration = slidingExpiration;
+                options.DataProtectionProvider = null; // Sử dụng Data Protection provider mặc định (đã được cấu hình)
 
                 options.Events = new CookieAuthenticationEvents
                 {
@@ -74,28 +77,51 @@ namespace backend_manage.core.Middlewares.Jwt
                         context.Response.StatusCode = StatusCodes.Status403Forbidden;
                         return Task.CompletedTask;
                     },
-                    OnValidatePrincipal = context =>
+                    OnValidatePrincipal = async context =>
                     {
                         // Log để debug cookie validation
                         var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<CookieAuthenticationEvents>>();
                         
-                        logger.LogInformation("🍪 Cookie validation started");
-                        logger.LogInformation("🔍 Has Principal: {HasPrincipal}", context.Principal != null);
-                        logger.LogInformation("🔍 Principal Identity: {IdentityName}", context.Principal?.Identity?.Name ?? "NULL");
-                        logger.LogInformation("🔍 Is Authenticated: {IsAuthenticated}", context.Principal?.Identity?.IsAuthenticated ?? false);
-                        logger.LogInformation("🔍 Claims Count: {ClaimsCount}", context.Principal?.Claims?.Count() ?? 0);
-                        
-                        if (context.Principal?.Identity?.IsAuthenticated == true)
+                        try
                         {
-                            var roles = context.Principal.FindAll(System.Security.Claims.ClaimTypes.Role).Select(c => c.Value).ToList();
-                            logger.LogInformation("✅ Cookie validation successful for user: {UserName}, Roles: {Roles}", 
-                                context.Principal.Identity.Name, string.Join(", ", roles));
+                            logger.LogInformation("🍪 Cookie validation started");
+                            logger.LogInformation("🔍 Has Principal: {HasPrincipal}", context.Principal != null);
+                            logger.LogInformation("🔍 Principal Identity: {IdentityName}", context.Principal?.Identity?.Name ?? "NULL");
+                            logger.LogInformation("🔍 Is Authenticated: {IsAuthenticated}", context.Principal?.Identity?.IsAuthenticated ?? false);
+                            logger.LogInformation("🔍 Claims Count: {ClaimsCount}", context.Principal?.Claims?.Count() ?? 0);
+                            
+                            if (context.Principal?.Identity?.IsAuthenticated == true)
+                            {
+                                var roles = context.Principal.FindAll(System.Security.Claims.ClaimTypes.Role).Select(c => c.Value).ToList();
+                                logger.LogInformation("✅ Cookie validation successful for user: {UserName}, Roles: {Roles}", 
+                                    context.Principal.Identity.Name, string.Join(", ", roles));
+                                    
+                                // Kiểm tra xem user có tồn tại trong database không
+                                var userManager = context.HttpContext.RequestServices.GetRequiredService<UserManager<ApplicationUser>>();
+                                var userId = context.Principal.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+                                
+                                if (!string.IsNullOrEmpty(userId))
+                                {
+                                    var user = await userManager.FindByIdAsync(userId);
+                                    if (user == null)
+                                    {
+                                        logger.LogWarning("❌ User not found in database, rejecting cookie");
+                                        context.RejectPrincipal();
+                                        return;
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                logger.LogWarning("❌ Cookie validation failed - cookie may be expired or invalid");
+                                context.RejectPrincipal();
+                            }
                         }
-                        else
+                        catch (Exception ex)
                         {
-                            logger.LogWarning("❌ Cookie validation failed - cookie may be expired or invalid");
+                            logger.LogError(ex, "❌ Error during cookie validation");
+                            context.RejectPrincipal();
                         }
-                        return Task.CompletedTask;
                     }
                 };
             });

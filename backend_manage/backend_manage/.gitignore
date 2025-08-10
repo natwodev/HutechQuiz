@@ -70,5 +70,9 @@ wwwroot/EPZ_DL/
 epz/
 epz_dl/
 
+# Data Protection Keys - không commit vào git vì chứa thông tin bảo mật
+DataProtectionKeys/
+**/DataProtectionKeys/
+
 # Git ignore files
 .gitignore

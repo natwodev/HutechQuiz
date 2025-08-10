@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using backend_manage.core.Authentication.Services;
+using backend_manage.core.Entities;
 using backend_manage.core.Middlewares.Jwt;
 using backend_manage.core.Services.Interfaces;
 using backend_manage.shared.DTOs;
@@ -19,14 +20,16 @@ namespace backend_manage.Controllers
         private readonly IConfiguration _configuration;
         private readonly IUserService _userService;
         private readonly JwtTokenGenerator _jwtTokenGenerator;
+        private readonly SignInManager<ApplicationUser> _signInManager;
 
         
-        public AuthController(IAuthService authService, IConfiguration configuration, IUserService userService)
+        public AuthController(IAuthService authService, IConfiguration configuration, IUserService userService, SignInManager<ApplicationUser> signInManager)
         {
             _authService = authService;
             _configuration = configuration;
             _userService = userService;
             _jwtTokenGenerator = new JwtTokenGenerator(configuration);
+            _signInManager = signInManager;
         }
         
         // Đăng nhập JWT
@@ -59,6 +62,9 @@ namespace backend_manage.Controllers
         {
             try
             {
+                // Đăng xuất session hiện tại trước khi tạo session mới (để tránh xung đột)
+               // await _signInManager.SignOutAsync();
+                
                 // Sử dụng AuthService để xác thực và tạo cookie
                 var authResult = await _authService.AuthenticateForCookieAsync(loginModel);
                 
@@ -77,21 +83,8 @@ namespace backend_manage.Controllers
                 // Lấy roles
                 var roles = await _authService.GetUserRolesAsync(user);
 
-                // Tạo claims và đăng nhập
-                var claims = new List<System.Security.Claims.Claim>
-                {
-                    new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.NameIdentifier, user.Id),
-                    new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.Name, user.UserName),
-                    new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.Email, user.Email ?? "")
-                };
-                
-                foreach (var role in roles)
-                {
-                    claims.Add(new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.Role, role));
-                }
-
-                // Đăng nhập với claims
-                await _authService.SignInWithClaimsAsync(user, claims);
+                // Đăng nhập với user (Identity sẽ tự động tạo claims cần thiết)
+                await _signInManager.SignInAsync(user, isPersistent: true);
                 
                 // Log để debug
                 Console.WriteLine($"Signed in user: {user.UserName} with roles: {string.Join(", ", roles)}");
