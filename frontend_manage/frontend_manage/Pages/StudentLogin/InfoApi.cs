@@ -17,11 +17,11 @@ public class InfoApi
         return await _httpClient.GetFromJsonAsync<StudentInfoDto>("api/student/profile");
     }
 
-    public async Task<List<ExamSessionDto>?> GetStudentExamSessionsAsync()
+    public async Task<List<StudentExamSessionDto>?> GetStudentExamSessionsAsync()
     {
-        var allExamSessions = await _httpClient.GetFromJsonAsync<List<ExamSessionDto>>("api/Student/exam-sessions");
+        var allExamSessions = await _httpClient.GetFromJsonAsync<List<StudentExamSessionDto>>("api/Student/exam-sessions");
         
-        return allExamSessions ?? new List<ExamSessionDto>();
+        return allExamSessions ?? new List<StudentExamSessionDto>();
     }
 
     public async Task<StartExamResponseDto?> StartExamAsync(int studentExamSessionId)
