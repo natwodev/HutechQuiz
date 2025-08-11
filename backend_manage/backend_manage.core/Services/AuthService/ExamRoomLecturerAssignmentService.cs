@@ -40,14 +40,14 @@ namespace backend_manage.core.Services.AuthService
             return entity == null ? null : _mapper.Map<ExamRoomLecturerAssignmentDto>(entity);
         }
         
-        public async Task<IEnumerable<ExamRoomLecturerAssignmentDto>> GetByLecturerIdAsync(string applicationUserId)
+        public async Task<IEnumerable<ExamRoomLecturerAssignmentDto>> GetByLecturerIdAsync(int lecturerId)
         {
             var entities = await _repository.GetQueryable()
                 .Include(x => x.ExamRoom)
                 .Include(x => x.ExamSessionSubject)
                 .ThenInclude(x => x.Subject)
                 .Include(x => x.Lecturer)
-                .Where(x => x.Lecturer.UserId == applicationUserId)
+                .Where(x => x.LecturerId == lecturerId)
                 .ToListAsync();
 
             return entities.Select(x => _mapper.Map<ExamRoomLecturerAssignmentDto>(x));

@@ -781,20 +781,12 @@ namespace backend_manage.core.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
-                    b.Property<string>("UserId")
-                        .HasMaxLength(450)
-                        .HasColumnType("nvarchar(450)");
-
                     b.Property<int>("Version")
                         .HasColumnType("int");
 
                     b.HasKey("LecturerId");
 
                     b.HasIndex("DepartmentId");
-
-                    b.HasIndex("UserId")
-                        .IsUnique()
-                        .HasFilter("[UserId] IS NOT NULL");
 
                     b.ToTable("Lecturers");
                 });
@@ -1494,13 +1486,6 @@ namespace backend_manage.core.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("backend_manage.core.Entities.ApplicationUser", "ApplicationUser")
-                        .WithOne("Lecturer")
-                        .HasForeignKey("backend_manage.core.Entities.Lecturer", "UserId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.Navigation("ApplicationUser");
-
                     b.Navigation("Department");
                 });
 
@@ -1645,11 +1630,6 @@ namespace backend_manage.core.Migrations
             modelBuilder.Entity("backend_manage.core.Entities.AcademicYear", b =>
                 {
                     b.Navigation("Semesters");
-                });
-
-            modelBuilder.Entity("backend_manage.core.Entities.ApplicationUser", b =>
-                {
-                    b.Navigation("Lecturer");
                 });
 
             modelBuilder.Entity("backend_manage.core.Entities.Chapter", b =>

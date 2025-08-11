@@ -2,9 +2,9 @@ using System.Text.Json.Serialization;
 using backend_manage.core.Configurations;
 using backend_manage.core.Data;
 using backend_manage.core.Entities;
+using backend_manage.core.Jwt;
 using backend_manage.core.Mappings;
-using backend_manage.core.Middlewares.Jwt;
-using Microsoft.AspNetCore.Authentication.Cookies;
+
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -27,20 +27,7 @@ namespace backend_manage.core.Extensions
             services.AddIdentity<ApplicationUser, IdentityRole>()
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddDefaultTokenProviders();
-            
-            // Cấu hình Cookie Authentication
-            services.ConfigureApplicationCookie(options =>
-            {
-                options.LoginPath = "/api/auth/login-cookie";
-                options.LogoutPath = "/api/auth/logout-cookie";
-                options.AccessDeniedPath = "/api/auth/access-denied";
-                options.Cookie.Name = "HutechQuiz.Auth";
-                options.Cookie.HttpOnly = true;
-                options.Cookie.SameSite = Microsoft.AspNetCore.Http.SameSiteMode.Strict;
-                options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
-                options.ExpireTimeSpan = TimeSpan.FromHours(8);
-                options.SlidingExpiration = true;
-            });
+
             
             services.AddSignalR();
             

@@ -444,7 +444,7 @@ public class StudentService : IStudentService
     #endregion
     
     #region AddExtraMinutesAsync
-    public async Task<bool> AddExtraMinutesAsync(string studentCode, int studentExamSessionId, int extraMinutes, string? reasonForExtra)
+    public async Task AddExtraMinutesAsync(string studentCode, int studentExamSessionId, int extraMinutes, string? reasonForExtra)
     {
         // 1. Tìm StudentExamSession cần cập nhật
         var session = await _studentExamSessionRepository.GetQueryable()
@@ -465,8 +465,6 @@ public class StudentService : IStudentService
 
         // 4. Lưu vào DB
         await _studentExamSessionRepository.UpdateAsync(session);
-
-        return true;
     }
     #endregion
     

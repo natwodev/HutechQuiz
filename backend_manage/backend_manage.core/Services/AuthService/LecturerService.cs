@@ -16,18 +16,16 @@ namespace backend_manage.core.Services.AuthService
         private readonly IRepository<Lecturer> _lecturerRepository;
         private readonly IMapper _mapper;
         private readonly IHttpContextAccessor _httpContextAccessor;
-        private readonly UserManager<ApplicationUser> _userManager;
+
 
         public LecturerService(
             IRepository<Lecturer> lecturerRepository, 
             IMapper mapper, 
-            IHttpContextAccessor httpContextAccessor,
-            UserManager<ApplicationUser> userManager)
+            IHttpContextAccessor httpContextAccessor)
         {
             _lecturerRepository = lecturerRepository;
             _mapper = mapper;
             _httpContextAccessor = httpContextAccessor;
-            _userManager = userManager;
         }
 
         public async Task<LecturerDto> AddLecturerAsync(LecturerCreateDto dto)
@@ -37,38 +35,8 @@ namespace backend_manage.core.Services.AuthService
             var userId = _httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
             lecturer.CreatedBy = userId;
             
-            // Lưu giảng viên trước
+            // Lưu giảng viên
             await _lecturerRepository.AddAsync(lecturer);
-
-            // Tạo ApplicationUser cho giảng viên
-            var appUser = new ApplicationUser
-            {
-                UserName = dto.LecturerCode, // Sử dụng LecturerCode làm UserName
-                Email = dto.Email,
-                EmailConfirmed = true,
-                FullName = $"{dto.LastName} {dto.FirstName}",
-                PhoneNumber = dto.PhoneNumber
-            };
-
-            // Sử dụng LecturerCode làm password
-            var password = dto.LecturerCode;
-            var result = await _userManager.CreateAsync(appUser, password);
-            
-            if (result.Succeeded)
-            {
-                // Cập nhật UserId cho giảng viên
-                lecturer.UserId = appUser.Id;
-                await _lecturerRepository.UpdateAsync(lecturer);
-                
-                // Gán role "Lecturer" cho user
-                await _userManager.AddToRoleAsync(appUser, "Lecturer");
-            }
-            else
-            {
-                // Nếu tạo user thất bại, xóa giảng viên đã tạo
-                await _lecturerRepository.DeleteAsync(lecturer);
-                throw new InvalidOperationException($"Không thể tạo tài khoản cho giảng viên: {string.Join(", ", result.Errors.Select(e => e.Description))}");
-            }
 
             return _mapper.Map<LecturerDto>(lecturer);
         }

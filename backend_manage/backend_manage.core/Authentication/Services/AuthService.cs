@@ -1,7 +1,7 @@
 using backend_manage.core.Authentication.Repositories;
 using backend_manage.core.Entities;
 using backend_manage.core.Hubs;
-using backend_manage.core.Middlewares.Jwt;
+using backend_manage.core.Jwt;
 using backend_manage.core.Repositories.Interfaces;
 using backend_manage.shared.DTOs;
 using Microsoft.AspNetCore.Identity;
@@ -81,51 +81,7 @@ namespace backend_manage.core.Authentication.Services
             };
         }
 
-        // Phương thức xác thực cho cookie
-        public async Task<AuthResultDto> AuthenticateForCookieAsync(LoginModelDto loginModel)
-        {
-            // Tìm kiếm người dùng theo tên đăng nhập
-            var user = await _authRepository.GetUserByUsernameAsync(loginModel.UserName);
 
-            if (user == null)
-            {
-                return new AuthResultDto
-                {
-                    IsSuccess = false,
-                    ErrorMessage = "Tài khoản không tồn tại"
-                };
-            }
-            
-            // Kiểm tra tài khoản có bị khóa không
-            if (user.LockoutEnabled && user.LockoutEnd > DateTimeHelper.GetVietnamTime())
-            {
-                return new AuthResultDto
-                {
-                    IsSuccess = false,
-                    ErrorMessage = "Tài khoản đã bị khóa. Vui lòng liên hệ phòng đào tạo để biết thêm chi tiết!"
-                };
-            }
-
-            // Kiểm tra mật khẩu
-            var signInResult = await _signInManager.PasswordSignInAsync(user, loginModel.Password, false, true);
-            if (!signInResult.Succeeded)
-            {
-                return new AuthResultDto
-                {
-                    IsSuccess = false,
-                    ErrorMessage = "Sai tài khoản hoặc mật khẩu."
-                };
-            }
-
-            // Tạo cookie session
-            await _signInManager.SignInAsync(user, isPersistent: false);
-            
-            return new AuthResultDto
-            {
-                IsSuccess = true,
-                Token = null // Không cần token cho cookie auth
-            };
-        }
 
         // Lấy thông tin user
         public async Task<ApplicationUser?> GetUserByUsernameAsync(string userName)
@@ -139,11 +95,7 @@ namespace backend_manage.core.Authentication.Services
             return await _userRepository.GetUserRolesAsync(user);
         }
 
-        // Đăng xuất cookie
-        public async Task SignOutAsync()
-        {
-            await _signInManager.SignOutAsync();
-        }
+
         
         public async Task LogoutAsync(string token)
         {

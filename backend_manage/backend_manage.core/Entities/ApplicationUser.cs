@@ -10,7 +10,5 @@ public class ApplicationUser : IdentityUser
     // Họ và tên đầy đủ của người dùng
     [MaxLength(100)]
     public string? FullName { get; set; }
-    
-    public Lecturer? Lecturer { get; set; }
 
 }
