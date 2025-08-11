@@ -150,10 +150,8 @@ public class StudentController : ControllerBase
     {
         try
         {
-            var success = await _studentService.AddExtraMinutesAsync(dto.StudentCode, dto.StudentExamSessionId, dto.ExtraMinutes, dto.ReasonForExtra);
-            if (success)
-                return Ok(new { message = "Cập nhật thời gian làm bài thêm thành công." });
-            return BadRequest(new { message = "Không thể cập nhật." });
+            await _studentService.AddExtraMinutesAsync(dto.StudentCode, dto.StudentExamSessionId, dto.ExtraMinutes, dto.ReasonForExtra);
+            return Ok(new { message = "Cập nhật thời gian làm bài thêm thành công." });
         }
         catch (Exception ex)
         {

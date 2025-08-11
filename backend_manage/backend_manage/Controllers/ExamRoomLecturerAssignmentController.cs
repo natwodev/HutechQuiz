@@ -16,14 +16,10 @@ namespace backend_manage.Controllers
             _service = service;
         }
 
-        [HttpGet("my-assignments")]
-        public async Task<IActionResult> GetRoomsByLecturer()
+        [HttpGet("my-assignments/{lecturerId}")]
+        public async Task<IActionResult> GetRoomsByLecturer(int lecturerId)
         {
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(userId))
-                return Unauthorized(new { message = "Token không hợp lệ!" });
-
-            var result = await _service.GetByLecturerIdAsync(userId);
+            var result = await _service.GetByLecturerIdAsync(lecturerId);
             return Ok(result);
         }
 

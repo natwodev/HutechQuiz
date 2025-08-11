@@ -24,6 +24,5 @@ namespace backend_manage.shared.DTOs
         public string? PhoneNumber { get; set; }
         public string DepartmentId { get; set; }
         public string DepartmentName { get; set; }
-        public string? UserId { get; set; }
     }
 } 
