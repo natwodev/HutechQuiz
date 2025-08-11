@@ -18,13 +18,15 @@ namespace backend_manage.Controllers
         private readonly IConfiguration _configuration;
         private readonly IUserService _userService;
         private readonly JwtTokenGenerator _jwtTokenGenerator;
+        private readonly ILecturerService _lecturerService;
 
         
-        public AuthController(IAuthService authService, IConfiguration configuration, IUserService userService)
+        public AuthController(IAuthService authService, IConfiguration configuration, IUserService userService, ILecturerService lecturerService)
         {
             _authService = authService;
             _configuration = configuration;
             _userService = userService;
+            _lecturerService = lecturerService;
             _jwtTokenGenerator = new JwtTokenGenerator(configuration);
         }
         
@@ -156,6 +158,30 @@ namespace backend_manage.Controllers
             return StatusCode(403, new { message = "Bạn không có quyền truy cập vào tài nguyên này." });
         }
 
+        // Đăng nhập cho giảng viên
+        [HttpPost("lecturer-login")]
+        public async Task<IActionResult> LecturerLogin([FromBody] LecturerLoginDto loginRequest)
+        {
+            try
+            {
+                var authResult = await _lecturerService.LoginAsync(loginRequest.LecturerCode1, loginRequest.LecturerCode2);
+
+                if (!authResult.IsSuccess)
+                {
+                    return BadRequest(new { message = authResult.ErrorMessage });
+                }
+
+                return Ok(new
+                {
+                    token = authResult.Token
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Đã xảy ra lỗi hệ thống. Vui lòng thử lại sau." });
+            }
+        }
+
     }
 }
 
@@ -164,3 +190,4 @@ namespace backend_manage.Controllers
 // POST: api/auth/logout         → Đăng xuất JWT, hủy token hiện tại
 // GET:  api/auth/check-auth     → Kiểm tra trạng thái đăng nhập
 // GET:  api/auth/access-denied  → Trang access denied
+// POST: api/auth/lecturer-login → Đăng nhập cho giảng viên, trả về token

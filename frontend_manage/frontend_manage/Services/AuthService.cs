@@ -266,19 +266,7 @@ public class AuthService
         }
     }
 
-    public async Task<StudentInfoDto?> GetStudentInfoAsync()
-    {
-        var studentInfoJson = await _jsRuntime.InvokeAsync<string>("localStorage.getItem", StudentInfoKey);
-        if (string.IsNullOrEmpty(studentInfoJson)) return null;
-        try
-        {
-            return JsonSerializer.Deserialize<StudentInfoDto>(studentInfoJson);
-        }
-        catch
-        {
-            return null;
-        }
-    }
+    
 
     public async Task Logout()
     {
@@ -291,28 +279,23 @@ public class AuthService
         }
 
         var role = await GetUserRoleFromToken();
-        var response = await _httpClient.PostAsync("api/auth/logout", null);
+        
+        // Xóa tất cả thông tin xác thực khỏi localStorage
+        await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", TokenKey);
+        await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", StudentInfoKey);
+        await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", "authType");
 
-        if (response.IsSuccessStatusCode)
+        // Thông báo thay đổi trạng thái xác thực
+        OnAuthStateChanged?.Invoke();
+
+        // Chuyển hướng dựa trên vai trò
+        if (role == "Student")
         {
-            await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", TokenKey);
-            await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", StudentInfoKey);
-            await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", "authType");
-
-            OnAuthStateChanged?.Invoke();
-
-            if (role == "Student")
-            {
-                _navigationManager.NavigateTo("/student-login");
-            }
-            else
-            {
-                _navigationManager.NavigateTo("/login");
-            }
+            _navigationManager.NavigateTo("/student-login");
         }
         else
         {
-            // Logout failed
+            _navigationManager.NavigateTo("/login");
         }
     }
 
@@ -429,47 +412,5 @@ public class AuthService
     {
         var role = await GetUserRoleFromToken();
         return role == "Admin" || role == "AcademicAffairs";
-    }
-
-    public async Task<string> GetDebugInfo()
-    {
-        var authType = await _jsRuntime.InvokeAsync<string>("localStorage.getItem", "authType");
-        var cookieAuth = await _jsRuntime.InvokeAsync<string>("localStorage.getItem", CookieAuthKey);
-        var token = await _jsRuntime.InvokeAsync<string>("localStorage.getItem", TokenKey);
-        var role = await GetUserRoleFromToken();
-        
-        // Test manual token extraction
-        string manualToken = "Not found";
-        if (!string.IsNullOrEmpty(cookieAuth))
-        {
-            try
-            {
-                using var document = System.Text.Json.JsonDocument.Parse(cookieAuth);
-                if (document.RootElement.TryGetProperty("token", out var tokenElement))
-                {
-                    manualToken = tokenElement.GetString() ?? "Empty token value";
-                }
-                else
-                {
-                    manualToken = "No token property found";
-                }
-            }
-            catch (Exception ex)
-            {
-                manualToken = $"Parse error: {ex.Message}";
-            }
-        }
-        
-        return $@"
-Debug Info:
-- Auth Type: {authType ?? "null"}
-- Has Cookie Auth: {!string.IsNullOrEmpty(cookieAuth)}
-- Cookie Auth Data: {cookieAuth ?? "null"}
-- Has Token: {!string.IsNullOrEmpty(token)}
-- Role: {role ?? "null"}
-- Is Authenticated: {await IsAuthenticated()}
-- Has Required Role: {await HasRequiredRole()}
-- Manual Token Extraction: {manualToken}
-        ";
     }
 }
