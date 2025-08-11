@@ -114,11 +114,15 @@ public class StudentImportHelper
                         CreatedAt = DateTimeHelper.GetVietnamTime(),
                         StudentAnswersString = "",
                         IsCompleted = false,
-                        Score = 0
+                        Score = 0,
+                        // Cache thời gian từ ExamSessionSubject để tránh join
+                        ExamSessionStartTime = examSessionSubject.StartTime,
+                        ExamSessionEndTime = examSessionSubject.EndTime
                     };
                     await _studentExamSessionRepository.AddAsync(studentExamSession);
                     studentExamSessionAdded++;
-                    _logger.LogDebug("Đã tạo StudentExamSession cho sinh viên: {StudentCode}", student.StudentCode);
+                    _logger.LogDebug("Đã tạo StudentExamSession cho sinh viên: {StudentCode} với thời gian {StartTime} - {EndTime}", 
+                        student.StudentCode, examSessionSubject.StartTime, examSessionSubject.EndTime);
                 }
             }
 

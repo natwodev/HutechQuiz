@@ -55,6 +55,31 @@ public class ExamPaperHelper
             _logger.LogWarning("Không tìm thấy phiên thi của sinh viên {StudentCode} với ID phiên thi {SessionId}", studentCode, studentExamSessionId);
             return (null, null);
         }
+
+        // Kiểm tra thời gian bắt đầu thi
+        var currentTime = DateTimeHelper.GetVietnamTime();
+        var examStartTime = studentExamSessionDto.ExamSessionStartTime;
+        var timeDifference = currentTime - examStartTime;
+
+        // Không được thi sớm hơn thời gian bắt đầu
+        if (currentTime < examStartTime)
+        {
+            var minutesEarly = Math.Abs(timeDifference.TotalMinutes);
+            _logger.LogWarning("Sinh viên {StudentCode} cố gắng thi sớm {Minutes} phút. Thời gian bắt đầu: {StartTime}, Thời gian hiện tại: {CurrentTime}", 
+                studentCode, minutesEarly, examStartTime, currentTime);
+            throw new InvalidOperationException($"Chưa đến thời gian làm bài. Ca thi bắt đầu lúc {examStartTime:HH:mm dd/MM/yyyy}");
+        }
+
+        // Không được thi muộn quá 15 phút
+        if (timeDifference.TotalMinutes > 15)
+        {
+            _logger.LogWarning("Sinh viên {StudentCode} cố gắng thi muộn {Minutes} phút. Thời gian bắt đầu: {StartTime}, Thời gian hiện tại: {CurrentTime}", 
+                studentCode, timeDifference.TotalMinutes, examStartTime, currentTime);
+            throw new InvalidOperationException($"Đã quá thời gian cho phép bắt đầu làm bài. Ca thi bắt đầu lúc {examStartTime:HH:mm dd/MM/yyyy}, chỉ được muộn tối đa 15 phút");
+        }
+
+        _logger.LogInformation("Sinh viên {StudentCode} bắt đầu thi đúng thời gian. Thời gian bắt đầu: {StartTime}, Thời gian hiện tại: {CurrentTime}, Chênh lệch: {Minutes} phút", 
+            studentCode, examStartTime, currentTime, timeDifference.TotalMinutes);
         
         if (!studentExamSessionDto.ShuffledExamPaperId.HasValue)
         {

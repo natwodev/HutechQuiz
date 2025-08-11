@@ -131,7 +131,9 @@ public class MappingProfile : Profile
         CreateMap<StudentExamSession, StudentExamSessionCacheDto>()
             .ForMember(dest => dest.SubjectName, opt => opt.MapFrom(src => src.ExamSessionSubject.Subject.SubjectName))
             .ForMember(dest => dest.RoomName, opt => opt.MapFrom(src => src.ExamRoom.RoomName))
-            .ForMember(dest => dest.Duration, opt => opt.MapFrom(src => src.ExamSessionSubject.Duration));
+            .ForMember(dest => dest.Duration, opt => opt.MapFrom(src => src.ExamSessionSubject.Duration))
+            .ForMember(dest => dest.ExamSessionStartTime, opt => opt.MapFrom(src => src.ExamSessionStartTime))
+            .ForMember(dest => dest.ExamSessionEndTime, opt => opt.MapFrom(src => src.ExamSessionEndTime));
 
         // Mapping ngược từ StudentExamSessionCacheDto về StudentExamSession
         CreateMap<StudentExamSessionCacheDto, StudentExamSession>();
@@ -147,7 +149,9 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.Duration, opt => opt.MapFrom(src => src.ExamSessionSubject.Duration))
             .ForMember(dest => dest.ExtraMinutes, opt => opt.MapFrom(src => src.ExtraMinutes))
             .ForMember(dest => dest.StartTime, opt => opt.MapFrom(src => src.StartTime))
-            .ForMember(dest => dest.EndTime, opt => opt.MapFrom(src => src.EndTime));
+            .ForMember(dest => dest.EndTime, opt => opt.MapFrom(src => src.EndTime))
+            .ForMember(dest => dest.ExamSessionStartTime, opt => opt.MapFrom(src => src.ExamSessionStartTime))
+            .ForMember(dest => dest.ExamSessionEndTime, opt => opt.MapFrom(src => src.ExamSessionEndTime));
 
         CreateMap<StudentExamSession, ExamSessionSubjectRoomDto>()
             .ForMember(dest => dest.ExamSessionSubjectId, opt => opt.MapFrom(src => src.ExamSessionSubjectId))

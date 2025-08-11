@@ -117,12 +117,28 @@ public class StudentController : ControllerBase
     [HttpPost("start-exam")]
     public async Task<IActionResult> StartExam([FromForm] int studentExamSessionId)
     {
-        var studentCode = User.FindFirst("studentCode")?.Value;
-        if (string.IsNullOrEmpty(studentCode))
-            return Unauthorized(new { message = "Token không hợp lệ!" });
-        var (result,pp) = await _studentService.StartExamAsync(studentCode, studentExamSessionId);
-        if (result == null) return BadRequest(new { message = "Không thể bắt đầu làm bài vì k có phiên thi." });
-        return Ok(new { studentSession = result, examPaper = pp });
+        try
+        {
+            var studentCode = User.FindFirst("studentCode")?.Value;
+            if (string.IsNullOrEmpty(studentCode))
+                return Unauthorized(new { message = "Token không hợp lệ!" });
+            
+            var (result, pp) = await _studentService.StartExamAsync(studentCode, studentExamSessionId);
+            if (result == null) 
+                return BadRequest(new { message = "Không thể bắt đầu làm bài vì không có phiên thi." });
+            
+            return Ok(new { studentSession = result, examPaper = pp });
+        }
+        catch (InvalidOperationException ex)
+        {
+            // Lỗi thời gian hoặc logic nghiệp vụ
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Lỗi khi bắt đầu thi cho sinh viên");
+            return StatusCode(500, new { message = "Đã xảy ra lỗi hệ thống. Vui lòng thử lại sau." });
+        }
     }
 
     [HttpGet("exam-sessions")]

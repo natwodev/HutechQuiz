@@ -199,6 +199,13 @@ public class StudentExamSessionCacheHelper
 
             cacheDto.SubjectName = examSessionSubject?.Subject?.SubjectName ?? string.Empty;
             cacheDto.Duration = examSessionSubject?.Duration ?? 0;
+            
+            // Đảm bảo thời gian ca thi được sync nếu chưa có trong entity
+            if (cacheDto.ExamSessionStartTime == default(DateTime) && examSessionSubject != null)
+            {
+                cacheDto.ExamSessionStartTime = examSessionSubject.StartTime;
+                cacheDto.ExamSessionEndTime = examSessionSubject.EndTime;
+            }
         }
 
         // Nếu thiếu RoomName, truy vấn lại ExamRoom

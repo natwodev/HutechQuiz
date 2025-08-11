@@ -1188,6 +1188,12 @@ namespace backend_manage.core.Migrations
                     b.Property<int?>("ExamRoomId")
                         .HasColumnType("int");
 
+                    b.Property<DateTime>("ExamSessionEndTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("ExamSessionStartTime")
+                        .HasColumnType("datetime2");
+
                     b.Property<int>("ExamSessionSubjectId")
                         .HasColumnType("int");
 

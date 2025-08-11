@@ -746,6 +746,8 @@ namespace backend_manage.core.Migrations
                     IsCompleted = table.Column<bool>(type: "bit", nullable: false),
                     ExamRoomId = table.Column<int>(type: "int", nullable: true),
                     StudentAnswersString = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    ExamSessionStartTime = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ExamSessionEndTime = table.Column<DateTime>(type: "datetime2", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     CreatedBy = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),

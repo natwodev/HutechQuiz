@@ -12,7 +12,7 @@ using backend_manage.core.Data;
 namespace backend_manage.core.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250811082514_InitialCreate")]
+    [Migration("20250811165133_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -1190,6 +1190,12 @@ namespace backend_manage.core.Migrations
 
                     b.Property<int?>("ExamRoomId")
                         .HasColumnType("int");
+
+                    b.Property<DateTime>("ExamSessionEndTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("ExamSessionStartTime")
+                        .HasColumnType("datetime2");
 
                     b.Property<int>("ExamSessionSubjectId")
                         .HasColumnType("int");

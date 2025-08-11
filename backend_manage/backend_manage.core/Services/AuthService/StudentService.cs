@@ -290,7 +290,10 @@ public class StudentService : IStudentService
                     CreatedAt = DateTimeHelper.GetVietnamTime(),
                     StudentAnswersString = "",
                     IsCompleted = false,
-                    Score = 0
+                    Score = 0,
+                    // Cache thời gian từ ExamSessionSubject để tránh join
+                    ExamSessionStartTime = examSessionSubject.StartTime,
+                    ExamSessionEndTime = examSessionSubject.EndTime
                 };
                 await _studentExamSessionRepository.AddAsync(studentExamSession);
                 studentExamSessionAdded++;
