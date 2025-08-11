@@ -7,8 +7,6 @@ public class NotificationService
     private HubConnection _hubConnection;
 
     public event Action<string, DateTime> OnExamReminderReceived;
-    public event Action 
-        RoomStatusUpdated;
 
     public async Task StartAsync()
     {
@@ -17,17 +15,27 @@ public class NotificationService
             .WithAutomaticReconnect()
             .Build();
 
-        _hubConnection.On<string, DateTime>("ExamReminder", (message, examTime) =>
+        _hubConnection.On<string, DateTime>("ReceiveMessage", (message, examTime) =>
         {
             OnExamReminderReceived?.Invoke(message, examTime);
         });
 
-        _hubConnection.On<object>("RoomStatusUpdated", (data) =>
-        {
-            RoomStatusUpdated?.Invoke();
-        });
-
         await _hubConnection.StartAsync();
     }
+
+    
+    // Gọi hàm JoinLecturerView bên backend
+    public async Task JoinLecturerView(int examRoomId, int examSessionSubjectId)
+    {
+        await _hubConnection.InvokeAsync("JoinLecturerView", examRoomId, examSessionSubjectId);
+    }
+    
+    // Gọi hàm LeaveLecturerView bên backend
+    public async Task LeaveLecturerView(int examRoomId, int examSessionSubjectId)
+    {
+        await _hubConnection.InvokeAsync("LeaveLecturerView", examRoomId, examSessionSubjectId);
+    }
+    
+
 }
 

@@ -121,8 +121,7 @@ public class StudentService : IStudentService
         
         // Cập nhật cache nếu cần
         await _studentCacheHelper.CacheStudent(student.StudentCode, student);
-        
-        // Gửi realtime trạng thái phòng thi cho tất cả session của sinh viên
+       
         var studentExamSessions = await _studentExamSessionRepository.GetQueryable()
             .Where(x => x.StudentCode == studentCode1)
             .ToListAsync();
@@ -132,14 +131,21 @@ public class StudentService : IStudentService
             if (session.ExamRoomId != null)
             {
                 var examRoomId = session.ExamRoomId.Value;
-                var examSessionSubjectId = session.ExamSessionSubjectId;
+                var examSessionSubjectId = session.ExamSessionSubjectId; 
+
                 var statusList = await GetStudentsByExamRoomAsync(examRoomId, examSessionSubjectId);
-                Console.WriteLine($"[SignalR] Gửi RoomStatusUpdated tới giám thị phòng {examRoomId} với {statusList.Count()} sinh viên.");
-                // Chỉ gửi cho giám thị, không gửi cho sinh viên
-                await _hubContext.Clients.Group($"lecturer_room_{examRoomId}")
+
+                var groupName = $"lecturer_room_{examRoomId}_{examSessionSubjectId}";
+
+                await _hubContext.Clients
+                    .Group(groupName)
                     .SendAsync("RoomStatusUpdated", statusList);
             }
         }
+
+        
+        
+        
         
         // Sinh JWT token như cũ, nhưng không có username
         var tokenHandler = new JwtSecurityTokenHandler();
@@ -609,3 +615,25 @@ public class StudentService : IStudentService
     #endregion
     
 } 
+
+
+/*
+ *  // Gửi realtime trạng thái phòng thi cho tất cả session của sinh viên
+          var studentExamSessions = await _studentExamSessionRepository.GetQueryable()
+              .Where(x => x.StudentCode == studentCode1)
+              .ToListAsync();
+
+          foreach (var session in studentExamSessions)
+          {
+              if (session.ExamRoomId != null)
+              {
+                  var examRoomId = session.ExamRoomId.Value;
+                  var examSessionSubjectId = session.ExamSessionSubjectId;
+                  var statusList = await GetStudentsByExamRoomAsync(examRoomId, examSessionSubjectId);
+                  Console.WriteLine($"[SignalR] Gửi RoomStatusUpdated tới giám thị phòng {examRoomId} với {statusList.Count()} sinh viên.");
+                  // Chỉ gửi cho giám thị, không gửi cho sinh viên
+                  await _hubContext.Clients.Group($"lecturer_room_{examRoomId}")
+                      .SendAsync("RoomStatusUpdated", statusList);
+              }
+          }
+*/

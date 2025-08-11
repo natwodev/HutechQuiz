@@ -12,156 +12,27 @@
                     <MudImage Src="images/exam/Logo.svg" Width="200" />
                     <MudDivider />
                     
-                    <!-- Layout 2 cột: Thông tin giảng viên bên trái, Danh sách phòng thi bên phải -->
-                    <MudGrid Style="width: 100%;">
-                        <!-- Cột trái: Thông tin giảng viên -->
-                        <MudItem xs="12" md="5">
-                            <MudCard Elevation="4" Style="height: 100%; border-radius: 16px; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);">
-                                <MudCardContent Style="padding: 20px;">
-                                    <MudStack Spacing="2">
-                                        <MudText Typo="Typo.body1" Color="Color.Primary" Class="mb-1" Style="font-weight: 600; text-align: center; letter-spacing: 0.3px;">
-                                            THÔNG TIN GIẢNG VIÊN
-                                        </MudText>
-                                        
-                                        <MudDivider Style="margin: 4px 0;" />
-                                        
-                                        <MudStack Spacing="1">
-                                            <MudPaper Elevation="2" Style="padding: 8px 12px; border-radius: 6px; background: white;">
-                                                <MudText Typo="Typo.body2" StartIcon="@Icons.Material.Filled.Badge" Style="font-weight: 500; font-size: 0.8rem;">
-                                                    <span style="color: #666; font-size: 0.75rem;">Mã giảng viên:</span>
-                                                    <span style="color: #1976d2; font-weight: 600; margin-left: 4px;">@lecturerInfo?.LecturerCode</span>
-                                                </MudText>
-                                            </MudPaper>
-                                            
-                                            <MudPaper Elevation="2" Style="padding: 8px 12px; border-radius: 6px; background: white;">
-                                                <MudText Typo="Typo.body2" StartIcon="@Icons.Material.Filled.Person" Style="font-weight: 500; font-size: 0.8rem;">
-                                                    <span style="color: #666; font-size: 0.75rem;">Họ và tên:</span>
-                                                    <span style="color: #1976d2; font-weight: 600; margin-left: 4px;">@lecturerInfo?.FirstName @lecturerInfo?.LastName</span>
-                                                </MudText>
-                                            </MudPaper>
-                                            
-                                            <MudPaper Elevation="2" Style="padding: 8px 12px; border-radius: 6px; background: white;">
-                                                <MudText Typo="Typo.body2" StartIcon="@Icons.Material.Filled.Business" Style="font-weight: 500; font-size: 0.8rem;">
-                                                    <span style="color: #666; font-size: 0.75rem;">Khoa:</span>
-                                                    <span style="color: #1976d2; font-weight: 600; margin-left: 4px;">@lecturerInfo?.DepartmentName</span>
-                                                </MudText>
-                                            </MudPaper>
-                                            
-                                            <MudPaper Elevation="2" Style="padding: 8px 12px; border-radius: 6px; background: white;">
-                                                <MudText Typo="Typo.body2" StartIcon="@Icons.Material.Filled.Schedule" Style="font-weight: 500; font-size: 0.8rem;">
-                                                    <span style="color: #666; font-size: 0.75rem;">Thời gian hiện tại:</span>
-                                                    <span style="color: #1976d2; font-weight: 600; margin-left: 4px;">@currentTime</span>
-                                                </MudText>
-                                            </MudPaper>
-                                            
-                                            <MudPaper Elevation="2" Style="padding: 8px 12px; border-radius: 6px; background: white;">
-                                                <MudText Typo="Typo.body2" StartIcon="@Icons.Material.Filled.Monitor" Style="font-weight: 500; font-size: 0.8rem;">
-                                                    <span style="color: #666; font-size: 0.75rem;">Vai trò:</span>
-                                                    <span style="color: #1976d2; font-weight: 600; margin-left: 4px;">Giám sát viên</span>
-                                                </MudText>
-                                            </MudPaper>
-                                        </MudStack>
-                                        
-                                        <MudDivider Class="my-2" />
-                                        
-                                        <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.Logout" OnClick="Logout" Style="border-radius: 12px; font-weight: 500; height: 36px; width: 100%;">
-                                            Đăng xuất
-                                        </MudButton>
-                                    </MudStack>
-                                </MudCardContent>
-                            </MudCard>
-                        </MudItem>
-                        
-                        <!-- Cột phải: Danh sách phòng thi cần giám sát -->
-                        <MudItem xs="12" md="7">
-                            <MudCard Elevation="4" Style="height: 100%; border-radius: 16px; background: linear-gradient(135deg, #f1f3f4 0%, #e8eaed 100%);">
-                                <MudCardContent Style="padding: 20px;">
-                                    <MudStack Spacing="2">
-                                        <MudText Typo="Typo.h6" Color="Color.Primary" Class="mb-2" Style="font-weight: 600; text-align: center; letter-spacing: 0.5px;">
-                                            PHÒNG THI CẦN GIÁM SÁT
-                                        </MudText>
-                                        
-                                        <MudDivider Style="margin: 6px 0;" />
-                                        
-                                        <!-- Nút refresh -->
-                                        <MudStack Direction="Direction.Row" Justify="Justify.Center" Spacing="2">
-                                            <MudButton Variant="Variant.Outlined" 
-                                                       Color="Color.Primary" 
-                                                       StartIcon="@Icons.Material.Filled.Refresh" 
-                                                       OnClick="RefreshAssignments" 
-                                                       Style="border-radius: 8px; font-weight: 500; height: 32px; font-size: 0.8rem;">
-                                                Làm mới
-                                            </MudButton>
-                                        </MudStack>
-                                        
-                                        <MudDivider Style="margin: 6px 0;" />
-                                        
-                                        @if (examRooms == null)
-                                        {
-                                            <MudStack AlignItems="AlignItems.Center" Spacing="2">
-                                                <MudProgressCircular Indeterminate Color="Color.Primary" Size="Size.Small" />
-                                                <MudText Style="font-weight: 500; font-size: 0.9rem;">Đang tải dữ liệu phòng thi...</MudText>
-                                            </MudStack>
-                                        }
-                                        else if (examRooms.Count == 0)
-                                        {
-                                            <MudAlert Severity="Severity.Info" Variant="Variant.Filled" Style="border-radius: 12px; font-size: 0.9rem;">
-                                                Bạn chưa được phân công giám sát phòng thi nào.
-                                            </MudAlert>
-                                        }
-                                        else
-                                        {
-                                            <MudList T="object" Dense="true" Style="width: 100%; max-height: 400px; overflow-y: auto;">
-                                                @foreach (var room in examRooms)
-                                                {
-                                                    <MudListItem T="object"
-                                                                 Style="@GetRoomStyle(room.ExamRoomId)"
-                                                                 @onclick="() => selectedExamRoomId = room.ExamRoomId">
-
-                                                        <MudCard Elevation="2" Style="width: 100%; border-radius: 10px; margin: 4px 0;">
-                                                            <MudCardContent Style="padding: 12px;">
-                                                                <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
-                                                                    <!-- Bên trái: thông tin phòng thi -->
-                                                                    <div style="display: flex; flex-direction: column; font-size: 0.8rem; flex: 1;">
-                                                                        <MudText Typo="Typo.body2" Color="Color.Primary" Style="font-weight: 600; font-size: 0.9rem;"><b>@room.RoomName</b></MudText>
-                                                                        <MudText Typo="Typo.caption" Style="font-weight: 500;">Môn thi: <b style="color: #1976d2;">@room.SubjectName</b></MudText>
-                                                                        <MudText Typo="Typo.caption" Style="font-weight: 500;">Ca thi: <b style="color: #1976d2;">@room.ExamSessionName</b></MudText>
-                                                                        <MudText Typo="Typo.caption" Style="font-weight: 500;">Số sinh viên: <b style="color: #1976d2;">@room.StudentCount</b></MudText>
-                                                                        <MudText Typo="Typo.caption" Style="font-weight: 500;">Bắt đầu: <b style="color: #1976d2;">@(room.ExamStartTime?.ToString("HH:mm dd/MM/yyyy") ?? "Chưa xác định")</b></MudText>
-                                                                        <MudText Typo="Typo.caption" Style="font-weight: 500;">Kết thúc: <b style="color: #1976d2;">@(room.ExamEndTime?.ToString("HH:mm dd/MM/yyyy") ?? "Chưa xác định")</b></MudText>
-                                                                        <MudText Typo="Typo.caption" Style="font-weight: 500;">
-                                                                            Trạng thái: 
-                                                                            <span style="color: @GetStatusColor(room.ExamStatus); font-weight: 600;">@GetRoomStatus(room.ExamStatus)</span>
-                                                                        </MudText>
-                                                                    </div>
-
-                                                                    <!-- Bên phải: nút Giám sát nếu là phòng đã chọn -->
-                                                                    @if (selectedExamRoomId == room.ExamRoomId)
-                                                                    {
-                                                                        <MudButton Disabled="@_processing" OnClick="@(() => StartMonitoring(room))" Variant="Variant.Filled" Color="Color.Success" Class="ml-3" Style="border-radius: 8px; font-weight: 500; min-width: 80px; height: 32px; font-size: 0.75rem;">
-                                                                            @if (_processing)
-                                                                            {
-                                                                                <MudProgressCircular Size="Size.Small" Indeterminate="true" Color="Color.Inherit" Class="me-1" />
-                                                                                <MudText Style="font-size: 0.7rem;">Đang xử lý...</MudText>
-                                                                            }
-                                                                            else
-                                                                            {
-                                                                                <MudText Style="font-size: 0.75rem;">Giám sát</MudText>
-                                                                            }
-                                                                        </MudButton>
-                                                                    }
-                                                                </div>
-                                                            </MudCardContent>
-                                                        </MudCard>
-                                                    </MudListItem>
-                                                }
-                                            </MudList>
-                                        }
-                                    </MudStack>
-                                </MudCardContent>
-                            </MudCard>
-                        </MudItem>
-                    </MudGrid>
+                    <MudText Typo="Typo.h5" Color="Color.Primary" Style="font-weight: 600; text-align: center; letter-spacing: 0.5px;">
+                        DASHBOARD GIÁM SÁT
+                    </MudText>
+                    
+                    <MudDivider Style="margin: 6px 0;" />
+                    
+                    <MudAlert Severity="Severity.Info" Variant="Variant.Filled" Style="border-radius: 12px; font-size: 0.9rem;">
+                        Bạn đã vào trang giám sát. Đây là nơi để theo dõi và quản lý quá trình thi.
+                    </MudAlert>
+                    
+                    <MudDivider Style="margin: 6px 0;" />
+                    
+                    <MudStack Direction="Direction.Row" Justify="Justify.Center" Spacing="2">
+                        <MudButton Variant="Variant.Filled" 
+                                   Color="Color.Primary" 
+                                   StartIcon="@Icons.Material.Filled.ArrowBack" 
+                                   OnClick="GoBackToExamRoomManagement" 
+                                   Style="border-radius: 12px; font-weight: 500; height: 40px; font-size: 0.9rem;">
+                            Quay lại quản lý phòng thi
+                        </MudButton>
+                    </MudStack>
                 </MudStack>
             </MudPaper>
         </MudItem>
@@ -169,5 +40,10 @@
 </MudContainer>
 
 @code {
-    // Đã chuyển toàn bộ logic sang Dashboard.razor.cs
+    [Inject] private NavigationManager Navigation { get; set; }
+
+    private void GoBackToExamRoomManagement()
+    {
+        Navigation.NavigateTo("/monitor/exam-room-management");
+    }
 }

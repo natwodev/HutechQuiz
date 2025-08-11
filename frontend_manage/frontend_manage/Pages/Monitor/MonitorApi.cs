@@ -101,4 +101,102 @@ public class MonitorApi
             return null;
         }
     }
+
+    public async Task<List<StudentExamRoomStatusDto>?> GetStudentsByExamRoomAsync(int examRoomId, int examSessionSubjectId)
+    {
+        try
+        {
+            var result = await _httpClient.GetFromJsonAsync<StudentListResponse>($"/api/Student/by-exam-room?examRoomId={examRoomId}&examSessionSubjectId={examSessionSubjectId}");
+            return result?.Students;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error getting students by exam room: {ex.Message}");
+            return null;
+        }
+    }
+
+    public async Task<string> AddExtraMinutesAsync(string studentCode, int studentExamSessionId, int extraMinutes, string? reasonForExtra)
+    {
+        try
+        {
+            var request = new AddExtraMinutesRequest
+            {
+                StudentCode = studentCode,
+                StudentExamSessionId = studentExamSessionId,
+                ExtraMinutes = extraMinutes,
+                ReasonForExtra = reasonForExtra
+            };
+
+            var response = await _httpClient.PostAsJsonAsync("/api/Student/extra-minutes", request);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var result = await response.Content.ReadFromJsonAsync<Dictionary<string, string>>();
+                if (result != null && result.TryGetValue("message", out var message))
+                    return message;
+                return "Thêm phút thành công.";
+            }
+            else
+            {
+                var errorResult = await response.Content.ReadFromJsonAsync<Dictionary<string, string>>();
+                if (errorResult != null && errorResult.TryGetValue("message", out var errorMessage))
+                    return errorMessage;
+                return "Lỗi không xác định từ server.";
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error adding extra minutes: {ex.Message}");
+            return $"Lỗi: {ex.Message}";
+        }
+    }
+
+    public class AddExtraMinutesRequest
+    {
+        public string StudentCode { get; set; } = string.Empty;
+        public int StudentExamSessionId { get; set; }
+        public int ExtraMinutes { get; set; }
+        public string? ReasonForExtra { get; set; }
+    }
+
+    public async Task<string> ActiveLoginAsync(string studentCode, bool isLogin)
+    {
+        try
+        {
+            var request = new ActiveLoginRequest
+            {
+                StudentCode = studentCode,
+                IsLogin = isLogin
+            };
+
+            var response = await _httpClient.PostAsJsonAsync("/api/student/active-login", request);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var result = await response.Content.ReadFromJsonAsync<Dictionary<string, string>>();
+                if (result != null && result.TryGetValue("message", out var message))
+                    return message;
+                return "Cập nhật trạng thái đăng nhập thành công.";
+            }
+            else
+            {
+                var errorResult = await response.Content.ReadFromJsonAsync<Dictionary<string, string>>();
+                if (errorResult != null && errorResult.TryGetValue("message", out var errorMessage))
+                    return errorMessage;
+                return "Lỗi không xác định từ server.";
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error updating login status: {ex.Message}");
+            return $"Lỗi: {ex.Message}";
+        }
+    }
+
+    public class ActiveLoginRequest
+    {
+        public string StudentCode { get; set; } = string.Empty;
+        public bool IsLogin { get; set; }
+    }
 }

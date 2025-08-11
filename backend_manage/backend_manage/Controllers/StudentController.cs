@@ -140,11 +140,10 @@ public class StudentController : ControllerBase
     {
         var result = await _studentService.GetStudentsByExamRoomAsync(examRoomId, examSessionSubjectId);
         return Ok(new {
-            students = result,
-            signalrEndpoint = "/notificationHub",
-            groupName = $"room_{examRoomId}"
+            students = result
         });
     }
+    
     [HttpPost("extra-minutes")]
     public async Task<IActionResult> AddExtraMinutes([FromBody] AddExtraMinutesDto dto)
     {

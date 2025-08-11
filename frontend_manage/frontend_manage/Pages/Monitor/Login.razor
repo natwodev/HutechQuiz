@@ -114,7 +114,7 @@
             var role = await AuthService.GetUserRoleFromToken();
             if (role == "Lecturer")
             {
-                Navigation.NavigateTo("/monitor/dashboard");
+                Navigation.NavigateTo("/monitor/exam-room-management");
             }
             else
             {
@@ -148,7 +148,7 @@
                 // Chỉ cho phép role Lecturer truy cập monitor
                 if (role == "Lecturer")
                 {
-                    Navigation.NavigateTo("/monitor/dashboard");
+                    Navigation.NavigateTo("/monitor/exam-room-management");
                 }
                 else
                 {
