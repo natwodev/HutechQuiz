@@ -93,7 +93,29 @@
                                                                  Style="@GetSessionStyle(session.ExamSessionSubjectId)"
                                                                  @onclick="() => selectedExamSessionId = session.ExamSessionSubjectId">
 
-                                                        <MudCard Elevation="2" Style="width: 100%; border-radius: 10px; margin: 4px 0;">
+                                                        <MudCard Elevation="2" Style="width: 100%; border-radius: 10px; margin: 4px 0; position: relative;">
+                                                            <!-- Sticker thời gian ở trên đầu -->
+                                                            @{
+                                                                var timeStatus = GetTimeStatus(session);
+                                                            }
+                                                            @if (timeStatus.isTooEarly || timeStatus.isTooLate)
+                                                            {
+                                                                <div style="position: absolute; top: -8px; left: 12px; z-index: 10;">
+                                                                    @if (timeStatus.isTooEarly)
+                                                                    {
+                                                                        <MudChip Color="Color.Warning" Variant="Variant.Filled" Size="Size.Small" Icon="@Icons.Material.Filled.Schedule" Style="font-size: 0.65rem; height: 20px; padding: 0 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+                                                                            Chưa đến giờ
+                                                                        </MudChip>
+                                                                    }
+                                                                    else if (timeStatus.isTooLate)
+                                                                    {
+                                                                        <MudChip Color="Color.Error" Variant="Variant.Filled" Size="Size.Small" Icon="@Icons.Material.Filled.Block" Style="font-size: 0.65rem; height: 20px; padding: 0 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+                                                                            Đã quá giờ
+                                                                        </MudChip>
+                                                                    }
+                                                                </div>
+                                                            }
+                                                            
                                                             <MudCardContent Style="padding: 12px;">
                                                                 <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
                                                                     <!-- Bên trái: thông tin ca thi -->
@@ -102,24 +124,29 @@
                                                                         <MudText Typo="Typo.caption" Style="font-weight: 500;">Phòng: <b style="color: #1976d2;">@session.RoomName</b></MudText>
                                                                         <MudText Typo="Typo.caption" Style="font-weight: 500;">Thời lượng: <b style="color: #1976d2;">@session.Duration phút</b></MudText>
                                                                         <MudText Typo="Typo.caption" Style="font-weight: 500;">Cộng thêm: <b style="color: #1976d2;">@session.ExtraMinutes phút</b></MudText>
-                                                                        <MudText Typo="Typo.caption" Style="font-weight: 500;">Bắt đầu: <b style="color: #1976d2;">@FormatExamTime(session.StartTime)</b></MudText>
-                                                                        <MudText Typo="Typo.caption" Style="font-weight: 500;">Kết thúc: <b style="color: #1976d2;">@FormatExamTime(session.EndTime)</b></MudText>
+                                                                        <MudText Typo="Typo.caption" Style="font-weight: 500;">Bắt đầu: <b style="color: #1976d2;">@FormatExamTime(session.ExamSessionStartTime)</b></MudText>
+                                                                        <MudText Typo="Typo.caption" Style="font-weight: 500;">Kết thúc: <b style="color: #1976d2;">@FormatExamTime(session.ExamSessionEndTime)</b></MudText>
                                                                     </div>
 
                                                                     <!-- Bên phải: nút Bắt đầu nếu là phiên đã chọn -->
                                                                 @if (selectedExamSessionId == session.ExamSessionSubjectId)
                                                                 {
-                                                                        <MudButton Disabled="@_processing" OnClick="@(() => ProcessSomething(session))" Variant="Variant.Filled" Color="Color.Success" Class="ml-3" Style="border-radius: 8px; font-weight: 500; min-width: 80px; height: 32px; font-size: 0.75rem;">
-                                                                            @if (_processing)
+                                                                        <div style="display:flex; align-items:center; gap:8px;">
+                                                                            @if (timeStatus.isInValidTime)
                                                                             {
-                                                                                <MudProgressCircular Size="Size.Small" Indeterminate="true" Color="Color.Inherit" Class="me-1" />
-                                                                                <MudText Style="font-size: 0.7rem;">Đang xử lý...</MudText>
+                                                                                <MudButton Disabled="@_processing" OnClick="@(() => ProcessSomething(session))" Variant="Variant.Filled" Color="Color.Success" Class="ml-3" Style="border-radius: 8px; font-weight: 500; min-width: 80px; height: 32px; font-size: 0.75rem;">
+                                                                                    @if (_processing)
+                                                                                    {
+                                                                                        <MudProgressCircular Size="Size.Small" Indeterminate="true" Color="Color.Inherit" Class="me-1" />
+                                                                                        <MudText Style="font-size: 0.7rem;">Đang xử lý...</MudText>
+                                                                                    }
+                                                                                    else
+                                                                                    {
+                                                                                        <MudText Style="font-size: 0.75rem;">Bắt đầu</MudText>
+                                                                                    }
+                                                                                </MudButton>
                                                                             }
-                                                                            else
-                                                                            {
-                                                                                <MudText Style="font-size: 0.75rem;">Bắt đầu</MudText>
-                                                                            }
-                                                                        </MudButton>
+                                                                        </div>
                                                                 }
 
                                                                 </div>

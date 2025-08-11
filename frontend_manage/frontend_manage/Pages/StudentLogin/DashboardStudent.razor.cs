@@ -1,6 +1,7 @@
 using frontend_manage.DTOs;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
+using MudBlazor;
 
 namespace frontend_manage.Pages.StudentLogin
 {
@@ -12,6 +13,7 @@ namespace frontend_manage.Pages.StudentLogin
         [Inject] private IJSRuntime JSRuntime { get; set; }
         // [Inject] private HttpClient Http { get; set; }
         [Inject] private InfoApi InfoApi { get; set; }
+        [Inject] private ISnackbar Snackbar { get; set; }
 
         private bool isStudent;
         private bool isStudentChecked = false;
@@ -75,6 +77,30 @@ namespace frontend_manage.Pages.StudentLogin
 
         private async Task StartExam(StudentExamSessionDto session)
         {
+            // Kiểm tra thời gian bắt đầu ca thi
+            var now = DateTime.Now;
+            if (now < session.ExamSessionStartTime)
+            {
+                Snackbar.Add($"Chưa đến giờ bắt đầu ca thi. Vui lòng quay lại lúc {session.ExamSessionStartTime:HH:mm dd/MM/yyyy}.", Severity.Warning, config =>
+                {
+                    config.ShowCloseIcon = true;
+                    config.VisibleStateDuration = 4000;
+                });
+                return;
+            }
+
+            // Kiểm tra thời gian quá 15 phút từ ExamSessionStartTime
+            var timeLimit = session.ExamSessionStartTime.AddMinutes(15);
+            if (now > timeLimit)
+            {
+                Snackbar.Add($"Đã quá thời gian cho phép làm bài thi. Thời gian bắt đầu: {session.ExamSessionStartTime:HH:mm dd/MM/yyyy}, Thời gian giới hạn: {timeLimit:HH:mm dd/MM/yyyy}.", Severity.Error, config =>
+                {
+                    config.ShowCloseIcon = true;
+                    config.VisibleStateDuration = 6000;
+                });
+                return;
+            }
+
             // Chuyển hướng sang trang làm bài thi với studentExamSessionId
             Navigation.NavigateTo($"/Exam?studentExamSessionId={session.StudentExamSessionId}");
         }
@@ -84,6 +110,17 @@ namespace frontend_manage.Pages.StudentLogin
             if (selectedExamSessionId == sessionId)
                 return "cursor:pointer; background-color:#e3f2fd; box-shadow:0 4px 16px rgba(33,150,243,0.15); border-radius:12px;";
             return "cursor:pointer;";
+        }
+
+        private (bool isTooEarly, bool isTooLate, bool isInValidTime) GetTimeStatus(StudentExamSessionDto session)
+        {
+            var now = DateTime.Now;
+            var timeLimit = session.ExamSessionStartTime.AddMinutes(15);
+            var isTooEarly = now < session.ExamSessionStartTime;
+            var isTooLate = now > timeLimit;
+            var isInValidTime = !isTooEarly && !isTooLate;
+            
+            return (isTooEarly, isTooLate, isInValidTime);
         }
 
         private string FormatExamTime(DateTime time)

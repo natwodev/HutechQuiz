@@ -12,5 +12,7 @@ namespace frontend_manage.DTOs
         public int StudentExamSessionId { get; set; }
         public int? ShuffledExamPaperId { get; set; }
         public string StudentAnswersString { get; set; }
+        public DateTime ExamSessionStartTime { get; set; }
+        public DateTime ExamSessionEndTime { get; set; }
     }
 }
