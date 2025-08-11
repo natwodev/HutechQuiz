@@ -158,7 +158,17 @@ public class MappingProfile : Profile
         CreateMap<ExamRoomLecturerAssignment, ExamRoomLecturerAssignmentDto>()
             .ForMember(dest => dest.RoomName, opt => opt.MapFrom(src => src.ExamRoom.RoomName))
             .ForMember(dest => dest.SubjectName, opt => opt.MapFrom(src => src.ExamSessionSubject.Subject.SubjectName))
-            .ForMember(dest => dest.LecturerName, opt => opt.MapFrom(src => src.Lecturer.LastName + " " + src.Lecturer.FirstName));
+            .ForMember(dest => dest.LecturerName, opt => opt.MapFrom(src => src.Lecturer.LastName + " " + src.Lecturer.FirstName))
+            .ForMember(dest => dest.StudentCount, opt => opt.MapFrom(src => 
+                src.ExamSessionSubject.StudentExamSessions
+                    .Count(s => s.ExamSessionSubjectId == src.ExamSessionSubjectId && 
+                               s.ExamRoomId == src.ExamRoomId && 
+                               !s.IsDeleted)))
+            .ForMember(dest => dest.StartTime, opt => opt.MapFrom(src => src.ExamSessionSubject.StartTime))
+            .ForMember(dest => dest.EndTime, opt => opt.MapFrom(src => src.ExamSessionSubject.EndTime));
+
+        // Mapping cho ExamRoomLecturerAssignmentCreateDto
+        CreateMap<ExamRoomLecturerAssignmentCreateDto, ExamRoomLecturerAssignment>();
 
         // Lecturer
         CreateMap<LecturerCreateDto, Lecturer>();

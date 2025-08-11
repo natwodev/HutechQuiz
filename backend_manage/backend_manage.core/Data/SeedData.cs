@@ -392,6 +392,52 @@ namespace backend_manage.core.Data
                 await context.SaveChangesAsync();
                 logger.LogInformation("✅ Đã seed 4 phòng thi: A101, A102, B201, B202.");
             }
+
+            // Seed giảng viên nếu chưa có
+            if (!context.Lecturers.Any())
+            {
+                var now = DateTimeHelper.GetVietnamTime();
+                var lecturers = new[]
+                {
+                    new Lecturer
+                    {
+                        LecturerCode = "GV001",
+                        FirstName = "Nguyễn",
+                        LastName = "Văn A",
+                        Gender = true,
+                        DateOfBirth = new DateTime(1980, 1, 15),
+                        Email = "gv001@hutech.edu.vn",
+                        PhoneNumber = "0123456789",
+                        DepartmentId = "CNTT",
+                        CreatedBy = "seed",
+                        CreatedAt = now,
+                        UpdatedBy = "seed",
+                        UpdatedAt = now,
+                        IsDeleted = false,
+                        Version = 1
+                    },
+                    new Lecturer
+                    {
+                        LecturerCode = "GV002",
+                        FirstName = "Trần",
+                        LastName = "Thị B",
+                        Gender = false,
+                        DateOfBirth = new DateTime(1985, 5, 20),
+                        Email = "gv002@hutech.edu.vn",
+                        PhoneNumber = "0987654321",
+                        DepartmentId = "KINHTE",
+                        CreatedBy = "seed",
+                        CreatedAt = now,
+                        UpdatedBy = "seed",
+                        UpdatedAt = now,
+                        IsDeleted = false,
+                        Version = 1
+                    }
+                };
+                context.Lecturers.AddRange(lecturers);
+                await context.SaveChangesAsync();
+                logger.LogInformation("✅ Đã seed 2 giảng viên: GV001 (CNTT) và GV002 (KINHTE).");
+            }
         }
     }
 }
