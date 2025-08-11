@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="utf-8" />
     <title>Hutech.Exam</title>
@@ -18,13 +17,20 @@
     <!--Tải MudBlazor-->
     <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" rel="stylesheet" />
     <link href="_content/MudBlazor/MudBlazor.min.css" rel="stylesheet" />
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet" />
     <!-- If you add any scoped CSS files, uncomment the following to load them
     <link href="Hutech.Exam.Client.styles.css" rel="stylesheet" /> -->
+    <style>
+        .warm-filter {
+            filter: invert(0.03) hue-rotate(1deg);
+        }
+    </style>
 </head>
 
-<body class="warm-filter">
-    <div id="app">
-        <div class="progress" style="height: 5px;">
+<body class="warm-filter" style="margin: 0; padding: 0; overflow-x: hidden;">
+    <div id="app" style="margin: 0; padding: 0;">
+        <div class="progress" style="height: 5px; margin: 0;">
             <div class="progress-bar" role="progressbar" style="width: var(--blazor-load-percentage, 0%); background-color: rgb(0,107,179)" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100"></div>
         </div>
         <div class="vh-100 d-flex align-items-center justify-content-center gap-3" style="font-family: Segoe UI-Bold, Helvetica;">
@@ -112,13 +118,23 @@
         // Fetch với credentials để gửi cookie
         window.fetchWithCredentials = async function(url, method, body) {
             try {
+                // Get token from localStorage
+                const token = localStorage.getItem('authToken');
+                const authType = localStorage.getItem('authType');
+                
                 const options = {
                     method: method,
-                    credentials: 'include', // Quan trọng: gửi cookie
+                    credentials: 'include', // Try with include to ensure cookies are sent
                     headers: {
                         'Content-Type': 'application/json',
+                        'Accept': 'application/json',
                     },
                 };
+                
+                // Add Authorization header with token if available
+                if (token) {
+                    options.headers['Authorization'] = `Bearer ${token}`;
+                }
                 
                 if (body && method !== 'GET') {
                     options.body = body;
@@ -126,14 +142,53 @@
 
                 const response = await fetch(url, options);
                 
+                // Store original URL for debugging
+                const originalUrl = url;
+                
+                // Only for debugging - override console.log is below
+                const originalConsoleLog = console.log;
+                originalConsoleLog(`[fetchWithCredentials] ${method} ${url} - Status: ${response.status}`);
+                
+                // DO NOT automatically redirect - return error object instead
+                // This prevents redirect loops
                 if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                    const errorText = await response.text();
+                    originalConsoleLog(`[fetchWithCredentials] Error response: ${errorText}`);
+                    
+                    // Return error object instead of redirecting
+                    if (response.status === 401) {
+                        return JSON.stringify({
+                            error: "Unauthorized",
+                            status: 401,
+                            message: "Authentication required"
+                        });
+                    }
+                    
+                    // For other errors, return error details
+                    return JSON.stringify({
+                        error: "HttpError",
+                        status: response.status,
+                        message: errorText
+                    });
                 }
                 
-                return await response.text();
+                // Try to parse as JSON, return empty string if no content
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    const text = await response.text();
+                    return text || '{}'; // Return empty JSON object if no content
+                } else {
+                    return '{}';
+                }
             } catch (error) {
-                console.error('Fetch error:', error);
-                throw error;
+                // For debugging - override console.error is below
+                const originalConsoleError = console.error;
+                originalConsoleError('Fetch error:', error);
+                
+                return JSON.stringify({
+                    error: "FetchError",
+                    message: error.message
+                });
             }
         };
 
@@ -147,9 +202,3 @@
 </body>
 
 </html>
-
-<style>
-    .warm-filter {
-        filter: invert(0.03) hue-rotate(1deg);
-    }
-</style>

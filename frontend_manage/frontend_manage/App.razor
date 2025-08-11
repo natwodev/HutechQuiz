@@ -1,11 +1,63 @@
-﻿@code {
+﻿@using Microsoft.AspNetCore.Components.WebAssembly.Services
+@using frontend_manage.Services
+
+@inject AuthService AuthService
+
+@code {
     [Microsoft.AspNetCore.Components.RouteAttribute("/")]
     public partial class RedirectToLogin : Microsoft.AspNetCore.Components.ComponentBase
     {
         [Inject] private NavigationManager Navigation { get; set; }
-        protected override void OnInitialized()
+        [Inject] private AuthService AuthService { get; set; }
+
+        protected override async Task OnInitializedAsync()
         {
-            Navigation.NavigateTo("/student-login", true);
+            // TEMPORARY CODE FOR UI TESTING: Allow access to monitor dashboard for testing
+            var path = Navigation.Uri.Replace(Navigation.BaseUri, "").ToLower();
+            if (path.StartsWith("monitor/dashboard"))
+            {
+                // Do nothing if already on monitor dashboard - allow access without auth for testing
+                return;
+            }
+            
+            // Check if already authenticated and redirect accordingly
+            var isAuthenticated = await AuthService.IsAuthenticated();
+            
+            if (isAuthenticated)
+            {
+                var role = await AuthService.GetUserRoleFromToken();
+                
+                if (role == "Admin")
+                {
+                    Navigation.NavigateTo("/dashboard", true);
+                }
+                else if (role == "Lecturer")
+                {
+                    Navigation.NavigateTo("/lecturer/dashboard", true);
+                }
+                else if (role == "AcademicAffairs")
+                {
+                    Navigation.NavigateTo("/academicaffairs/dashboard", true);
+                }
+                else if (role == "ExamManager")
+                {
+                    Navigation.NavigateTo("/exammanager/dashboard", true);
+                }
+                else if (role == "ITManager")
+                {
+                    Navigation.NavigateTo("/itmanager/dashboard", true);
+                }
+                else
+                {
+                    // Default student login
+                    Navigation.NavigateTo("/student-login", true);
+                }
+            }
+            else
+            {
+                // Not authenticated, go to student login
+                Navigation.NavigateTo("/student-login", true);
+            }
         }
     }
 }

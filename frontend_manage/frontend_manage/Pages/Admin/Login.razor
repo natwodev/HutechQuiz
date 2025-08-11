@@ -44,56 +44,111 @@
 
     protected override async Task OnInitializedAsync()
     {
-        // Kiểm tra xem đã đăng nhập bằng cookie chưa
-        var authResult = await AuthService.CheckCookieAuth();
-        if (authResult.IsSuccess)
+        try
         {
-            await NavigateBasedOnRole();
+            // Check if already authenticated
+            var isAuth = await AuthService.IsAuthenticated();
+            if (isAuth)
+            {
+                await NavigateBasedOnRole();
+                return;
+            }
+            
+            // Kiểm tra xem đã đăng nhập bằng cookie chưa
+            var authResult = await AuthService.CheckCookieAuth();
+            if (authResult.IsSuccess)
+            {
+                await NavigateBasedOnRole();
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Lỗi kiểm tra xác thực: {ex.Message}";
         }
     }
 
     private async Task HandleLogin()
     {
-        ErrorMessage = null;
-        
-        // Sử dụng cookie login cho admin
-        var result = await AuthService.LoginWithCookie(loginModel.UserName, loginModel.Password);
-        if (result.IsSuccess)
+        try
         {
-            await NavigateBasedOnRole();
+            ErrorMessage = null;
+            
+            // Sử dụng cookie login cho admin
+            var result = await AuthService.LoginWithCookie(loginModel.UserName, loginModel.Password);
+            if (result.IsSuccess)
+            {
+                // Check authentication state immediately after login
+                var isAuth = await AuthService.IsAuthenticated();
+                if (isAuth)
+                {
+                    await NavigateBasedOnRole();
+                }
+                else
+                {
+                    // Try with JWT login as fallback
+                    var jwtResult = await AuthService.Login(loginModel.UserName, loginModel.Password);
+                    if (jwtResult.IsSuccess)
+                    {
+                        await NavigateBasedOnRole();
+                    }
+                    else
+                    {
+                        ErrorMessage = jwtResult.ErrorMessage;
+                    }
+                }
+            }
+            else
+            {
+                ErrorMessage = result.ErrorMessage;
+            }
         }
-        else
+        catch (Exception ex)
         {
-            ErrorMessage = result.ErrorMessage;
+            ErrorMessage = $"Lỗi đăng nhập: {ex.Message}";
         }
     }
 
     private async Task NavigateBasedOnRole()
     {
-        var role = await AuthService.GetUserRoleFromToken();
-        if (role == "Admin")
+        try
         {
-            Navigation.NavigateTo("/dashboard");
+            // Get the role from the token
+            var role = await AuthService.GetUserRoleFromToken();
+            Console.WriteLine($"[Login] NavigateBasedOnRole - User role: {role ?? "null"}");
+            
+            // Display the correct dashboard based on role
+            if (role == "Admin")
+            {
+                // Force reload to ensure page gets fresh data with authentication
+                Navigation.NavigateTo("/dashboard", forceLoad: true);
+            }
+            else if (role == "Lecturer")
+            {
+                Navigation.NavigateTo("/lecturer/dashboard", forceLoad: true);
+            }
+            else if (role == "AcademicAffairs")
+            {
+                Navigation.NavigateTo("/academicaffairs/dashboard", forceLoad: true);
+            }
+            else if (role == "ExamManager")
+            {
+                Navigation.NavigateTo("/exammanager/dashboard", forceLoad: true);
+            }
+            else if (role == "ITManager")
+            {
+                Navigation.NavigateTo("/itmanager/dashboard", forceLoad: true);
+            }
+            else
+            {
+                // Default route if role is unknown
+                Console.WriteLine("[Login] NavigateBasedOnRole - Unknown role, navigating to root");
+                Navigation.NavigateTo("/", forceLoad: true);
+            }
         }
-        else if (role == "Lecturer")
+        catch (Exception ex)
         {
-            Navigation.NavigateTo("/lecturer/dashboard");
-        }
-        else if (role == "AcademicAffairs")
-        {
-            Navigation.NavigateTo("/academicaffairs/dashboard");
-        }
-        else if (role == "ExamManager")
-        {
-            Navigation.NavigateTo("/exammanager/dashboard");
-        }
-        else if (role == "ITManager")
-        {
-            Navigation.NavigateTo("/itmanager/dashboard");
-        }
-        else
-        {
-            Navigation.NavigateTo("/");
+            Console.WriteLine($"[Login] NavigateBasedOnRole - Error: {ex.Message}");
+            ErrorMessage = $"Lỗi chuyển trang: {ex.Message}";
         }
     }
 } 

@@ -23,7 +23,13 @@ builder.RootComponents.Add<HeadOutlet>("head::after");
 builder.Services.AddMudServices();
 
 builder.Services.AddScoped<AuthService>();
-builder.Services.AddScoped<CookieHttpService>();
+// Register CookieHttpService with AuthService
+builder.Services.AddScoped(sp => 
+    new CookieHttpService(
+        sp.GetRequiredService<IJSRuntime>(), 
+        sp.GetRequiredService<AuthService>()
+    )
+);
 builder.Services.AddScoped<InfoApi>();
 builder.Services.AddScoped<ExamApi>();
 builder.Services.AddSingleton<NotificationService>();

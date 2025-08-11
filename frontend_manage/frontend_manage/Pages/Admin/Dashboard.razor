@@ -85,14 +85,26 @@
 
     protected override async Task OnInitializedAsync()
     {
-        isAdmin = await AuthService.IsAdmin();
-        isAdminChecked = true;
-        if (!isAdmin)
+        try 
         {
-            Navigation.NavigateTo("/");
-        }
-        else
-        {
+            // Check if authenticated first
+            var isAuthenticated = await AuthService.IsAuthenticated();
+            if (!isAuthenticated)
+            {
+                Navigation.NavigateTo("/login");
+                return;
+            }
+            
+            // Check if is admin
+            isAdmin = await AuthService.IsAdmin();
+            isAdminChecked = true;
+            if (!isAdmin)
+            {
+                Navigation.NavigateTo("/");
+                return;
+            }
+            
+            // Load data
             isLoading = true;
             errorMessage = null;
             try
@@ -101,9 +113,24 @@
             }
             catch (Exception ex)
             {
+                // Check if the error is due to authentication
+                if (ex.Message.Contains("401") || ex.Message.Contains("Unauthorized"))
+                {
+                    Navigation.NavigateTo("/login");
+                    return;
+                }
+                
                 errorMessage = ex.Message;
                 examRooms = null;
             }
+            finally
+            {
+                isLoading = false;
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Lỗi không xác định: {ex.Message}";
             isLoading = false;
         }
     }

@@ -282,6 +282,12 @@
 
     protected override async Task OnInitializedAsync()
     {
+        // Initialize services before using them
+        if (AcademicYearService != null)
+        {
+            await (AcademicYearService as AcademicYearService)?.Initialize();
+        }
+        
         await RefreshData();
     }
 
@@ -292,13 +298,27 @@
 
         try
         {
-            _academicYears = await AcademicYearService.GetAllAsync();
-            _semesters = await SemesterService.GetAllAsync();
-            _examBatches = await ExamBatchService.GetAllAsync();
-            _examBatchDetails = await ExamBatchDetailService.GetAllAsync();
-            _examSessions = await ExamSessionService.GetAllAsync();
-            _examSessionDepartments = await ExamSessionDepartmentService.GetAllAsync();
-            _examSessionSubjects = await ExamSessionSubjectService.GetAllAsync();
+            // Use a try-catch for each service call to handle potential errors independently
+            try { _academicYears = await AcademicYearService.GetAllAsync(); } 
+            catch (Exception ex) { Snackbar.Add($"Lỗi khi tải năm học: {ex.Message}", Severity.Warning); }
+            
+            try { _semesters = await SemesterService.GetAllAsync(); } 
+            catch (Exception ex) { Snackbar.Add($"Lỗi khi tải học kỳ: {ex.Message}", Severity.Warning); }
+            
+            try { _examBatches = await ExamBatchService.GetAllAsync(); } 
+            catch (Exception ex) { Snackbar.Add($"Lỗi khi tải đợt thi: {ex.Message}", Severity.Warning); }
+            
+            try { _examBatchDetails = await ExamBatchDetailService.GetAllAsync(); } 
+            catch (Exception ex) { Snackbar.Add($"Lỗi khi tải chi tiết đợt thi: {ex.Message}", Severity.Warning); }
+            
+            try { _examSessions = await ExamSessionService.GetAllAsync(); } 
+            catch (Exception ex) { Snackbar.Add($"Lỗi khi tải ca thi: {ex.Message}", Severity.Warning); }
+            
+            try { _examSessionDepartments = await ExamSessionDepartmentService.GetAllAsync(); } 
+            catch (Exception ex) { Snackbar.Add($"Lỗi khi tải khoa ca thi: {ex.Message}", Severity.Warning); }
+            
+            try { _examSessionSubjects = await ExamSessionSubjectService.GetAllAsync(); } 
+            catch (Exception ex) { Snackbar.Add($"Lỗi khi tải môn học ca thi: {ex.Message}", Severity.Warning); }
 
             // Update chart data
             UpdateExamSessionsPerBatchChart();

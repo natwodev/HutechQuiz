@@ -1,0 +1,362 @@
+@page "/monitor/dashboard"
+@using frontend_manage.DTOs
+@using frontend_manage.Services
+@inject AuthService AuthService
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Hutech - Hệ thống giám sát thi</PageTitle>
+
+<link href="/css/monitor-dashboard.css" rel="stylesheet" />
+
+<div class="monitor-dashboard" style="margin:0; padding:0">
+    <!-- Header -->
+    <div class="monitor-header">
+        <div class="header-content">
+            <div class="logo-container">
+                <img src="/images/logo-dai-hoc-hutech_012634748.png" alt="Hutech Logo" class="hutech-logo" />
+                <div class="header-title">
+                    <h2>TRƯỜNG ĐẠI HỌC CÔNG NGHỆ THÀNH PHỐ HỒ CHÍ MINH (HUTECH)</h2>
+                    <div class="subtitle-container">
+                        <h3>EXAM SUITE - MONITOR</h3>
+                        <div class="subtitle-badge">Professional Edition</div>
+                    </div>
+                    <p>Hệ thống quản lý và theo dõi Ca thi</p>
+                </div>
+            </div>
+            <div class="user-info">
+                <div class="user-avatar">
+                    <i class="fas fa-user-circle"></i>
+                </div>
+                <div class="user-details">
+                    <span class="user-name">@userName</span>
+                    <div class="user-actions">
+                        <button class="btn btn-sm btn-icon" title="Thông báo"><i class="fas fa-bell"></i></button>
+                        <button class="btn btn-sm btn-icon" title="Cài đặt"><i class="fas fa-cog"></i></button>
+                        <button class="btn btn-sm btn-logout" @onclick="Logout"><i class="fas fa-sign-out-alt"></i> Thoát</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="nav-tabs-container">
+        <div class="nav-inner-container">
+            <div class="nav nav-tabs" id="nav-tab" role="tablist">
+                <button class="nav-link active" id="nav-students-tab" data-bs-toggle="tab" data-bs-target="#nav-students" type="button" 
+                        role="tab" aria-controls="nav-students" aria-selected="true">
+                    <i class="fas fa-user-graduate"></i> Danh sách sinh viên
+                </button>
+                <button class="nav-link" id="nav-info-tab" data-bs-toggle="tab" data-bs-target="#nav-info" type="button" 
+                        role="tab" aria-controls="nav-info" aria-selected="false">
+                    <i class="fas fa-info-circle"></i> Thông tin ca thi
+                </button>
+                <button class="nav-link" id="nav-stats-tab" data-bs-toggle="tab" data-bs-target="#nav-stats" type="button" 
+                        role="tab" aria-controls="nav-stats" aria-selected="false">
+                    <i class="fas fa-chart-bar"></i> Thống kê
+                </button>
+                <button class="nav-link" id="nav-help-tab" data-bs-toggle="tab" data-bs-target="#nav-help" type="button" 
+                        role="tab" aria-controls="nav-help" aria-selected="false">
+                    <i class="fas fa-question-circle"></i> Trợ giúp
+                </button>
+            </div>
+            
+            <div class="current-time">
+                <i class="fas fa-clock"></i> <span id="current-time">@DateTime.Now.ToString("HH:mm:ss - dd/MM/yyyy")</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tab Content -->
+    <div class="tab-content" id="nav-tabContent">
+        <!-- Students List Tab -->
+        <div class="tab-pane fade show active" id="nav-students" role="tabpanel" aria-labelledby="nav-students-tab">
+            <div class="content-container">
+                <div class="content-header">
+                    <div class="content-header-left">
+                        <h4 class="content-title">DANH SÁCH SINH VIÊN</h4>
+                        <div class="content-subtitle">Phòng thi: <strong>B502</strong> | Môn thi: <strong>Lập trình TTBDD</strong></div>
+                    </div>
+                    <div class="content-header-right">
+                        <div class="search-box">
+                            <div class="search-input-wrapper">
+                                <i class="fas fa-search search-icon"></i>
+                                <input type="text" class="form-control search-input" placeholder="Tìm kiếm theo mã SV hoặc họ tên..." @bind-value="searchTerm" @bind-value:event="oninput" />
+                            </div>
+                            <button class="btn btn-primary" @onclick="Search">Tìm kiếm</button>
+                        </div>
+                        <div class="action-buttons">
+                            <button class="btn btn-outline-primary btn-icon" title="Xuất danh sách"><i class="fas fa-file-export"></i></button>
+                            <button class="btn btn-outline-primary btn-icon" title="In danh sách"><i class="fas fa-print"></i></button>
+                            <button class="btn btn-outline-primary btn-icon" title="Làm mới"><i class="fas fa-sync-alt"></i></button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="dashboard-stats">
+                    <div class="stat-card">
+                        <div class="stat-icon stat-blue">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="stat-info">
+                            <div class="stat-value">45</div>
+                            <div class="stat-label">Tổng số SV</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon stat-green">
+                            <i class="fas fa-user-check"></i>
+                        </div>
+                        <div class="stat-info">
+                            <div class="stat-value">38</div>
+                            <div class="stat-label">Đã đăng nhập</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon stat-orange">
+                            <i class="fas fa-user-clock"></i>
+                        </div>
+                        <div class="stat-info">
+                            <div class="stat-value">15</div>
+                            <div class="stat-label">Đang thi</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon stat-purple">
+                            <i class="fas fa-clipboard-check"></i>
+                        </div>
+                        <div class="stat-info">
+                            <div class="stat-value">25</div>
+                            <div class="stat-label">Đã nộp bài</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Student list table -->
+                <div class="table-container">
+                    <table class="table table-hover custom-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 3%" data-field="stt">STT</th>
+                                <th style="width: 8%" data-field="studentCode">Mã SV</th>
+                                <th style="width: 20%" data-field="student">Họ tên</th>
+                                <th style="width: 15%" data-field="status">Trạng thái thi</th>
+                                <th style="width: 15%" data-field="loginStatus">Trạng thái đăng nhập</th>
+                                <th style="width: 6%" data-field="extraTime">Giờ cộng</th>
+                                <th style="width: 8%" data-field="score">Điểm số</th>
+                                <th style="width: 15%" data-field="actions">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (loading)
+                            {
+                                <tr>
+                                    <td colspan="8" class="text-center">
+                                        <div class="spinner-border text-primary" role="status">
+                                            <span class="visually-hidden">Đang tải...</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                            else if (students == null || !students.Any())
+                            {
+                                <tr>
+                                    <td colspan="8" class="text-center">Không có sinh viên nào</td>
+                                </tr>
+                            }
+                            else
+                            {
+                                @for (int i = 0; i < students.Count; i++)
+                                {
+                                    var student = students[i];
+                                    <tr>
+                                        <td class="text-center">@(i + 1)</td>
+                                        <td class="text-center">
+                                            <span class="student-code">@student.StudentCode</span>
+                                        </td>
+                                        <td>
+                                            <div class="@(student.Score >= 5 ? "student-name student-name-pass" : "student-name student-name-fail")">
+                                                @student.FullName
+                                            </div>
+                                        </td>
+                                        <td>
+                                            @if (student.ExamStatus == "Chưa thi hoặc bỏ thi")
+                                            {
+                                                <span class="status-tag not-taken"><i class="fas fa-times-circle"></i> Chưa thi hoặc bỏ thi</span>
+                                            }
+                                            else if (student.ExamStatus == "Đang thi")
+                                            {
+                                                <span class="status-tag in-progress"><i class="fas fa-spinner fa-spin"></i> Đang thi</span>
+                                            }
+                                            else if (student.ExamStatus == "Đã nộp bài")
+                                            {
+                                                <span class="status-tag completed"><i class="fas fa-check-circle"></i> Đã nộp bài</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            @if (student.IsLoggedIn)
+                                            {
+                                                <span class="login-status logged-in"><i class="fas fa-circle"></i> Đã đăng nhập</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="login-status not-logged-in"><i class="fas fa-circle"></i> Chưa đăng nhập</span>
+                                            }
+                                        </td>
+                                        <td class="text-center">@student.ExtraTime</td>
+                                        <td class="text-center">
+                                            @if(student.Score != null && student.Score < 5)
+                                            {
+                                                <span class="score-badge score-fail" title="Không đạt">
+                                                    @student.Score
+                                                </span>
+                                            }
+                                            else if(student.Score != null)
+                                            {
+                                                <span class="score-badge score-pass" title="Đạt">
+                                                    @student.Score
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">-</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            <div class="action-buttons-container">
+                                                <button class="btn btn-sm btn-primary action-btn" title="Thêm thời gian">
+                                                    <i class="fas fa-clock"></i>
+                                                </button>
+                                                <button class="btn btn-sm btn-info action-btn" title="Xem chi tiết">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                                <button class="btn btn-sm btn-secondary action-btn" title="Khởi động lại">
+                                                    <i class="fas fa-redo"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Simple status footer -->
+                <div class="table-footer">
+                    <div class="table-info">
+                        <span>Hiển thị <strong>@(students?.Count ?? 0)</strong> trong tổng số <strong>45</strong> sinh viên</span>
+                    </div>
+                    <div class="table-actions">
+                        <button class="btn btn-sm btn-primary" @onclick="RefreshData">
+                            <i class="fas fa-sync-alt"></i> Làm mới
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Exam Info Tab -->
+        <div class="tab-pane fade" id="nav-info" role="tabpanel" aria-labelledby="nav-info-tab">
+            <div class="content-container">
+                <h4 class="content-title">THÔNG TIN CA THI</h4>
+
+                @if (loading)
+                {
+                    <div class="text-center p-4">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Đang tải...</span>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="exam-info-card">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="info-group">
+                                    <label>Môn thi:</label>
+                                    <span>Lập trình thiết bị di động</span>
+                                </div>
+                                <div class="info-group">
+                                    <label>Mã môn:</label>
+                                    <span>IT082IU</span>
+                                </div>
+                                <div class="info-group">
+                                    <label>Ngày thi:</label>
+                                    <span>11/08/2025</span>
+                                </div>
+                                <div class="info-group">
+                                    <label>Giờ bắt đầu:</label>
+                                    <span>13:30</span>
+                                </div>
+                                <div class="info-group">
+                                    <label>Thời gian thi:</label>
+                                    <span>90 phút</span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="info-group">
+                                    <label>Phòng thi:</label>
+                                    <span>B502</span>
+                                </div>
+                                <div class="info-group">
+                                    <label>Giảng viên coi thi:</label>
+                                    <span>Nguyễn Văn A</span>
+                                </div>
+                                <div class="info-group">
+                                    <label>Số lượng sinh viên:</label>
+                                    <span>45 sinh viên</span>
+                                </div>
+                                <div class="info-group">
+                                    <label>Số sinh viên đã đăng nhập:</label>
+                                    <span>38 sinh viên</span>
+                                </div>
+                                <div class="info-group">
+                                    <label>Số sinh viên đã nộp bài:</label>
+                                    <span>25 sinh viên</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="monitor-footer">
+        <div class="footer-content">
+            <div class="footer-section">
+                <div class="footer-logo">
+                    <img src="/images/logo-dai-hoc-hutech_012634748.png" alt="Hutech Logo" height="35" />
+                </div>
+                <div class="footer-info">
+                    <div>Exam Suite 2025 Pro Edition</div>
+                    <div>Phần mềm quản lý & giám sát thi cử</div>
+                </div>
+            </div>
+            <div class="footer-section">
+                <div class="copyright">
+                    <i class="fas fa-copyright"></i> Bản quyền 2025 HUTECH
+                </div>
+                <div class="developers">
+                    <i class="fas fa-code"></i> Phát triển bởi <strong>natwo</strong> và <strong>Juo</strong>
+                </div>
+            </div>
+            <div class="footer-section">
+                <div class="browser-info">
+                    <i class="fas fa-globe"></i> Tương thích: Chrome, Firefox, Edge, Safari
+                </div>
+                <div class="version-info">
+                    <i class="fas fa-code-branch"></i> Phiên bản 2.5.1
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
