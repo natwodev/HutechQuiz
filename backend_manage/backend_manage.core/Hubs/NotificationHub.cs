@@ -27,6 +27,12 @@ public class NotificationHub : Hub
         // Thêm user vào group phòng thi
         await Groups.AddToGroupAsync(Context.ConnectionId, $"room_{examRoomId}");
         
+        // Nếu là giám thị, thêm vào group riêng cho giám thị
+        if (userType == "lecturer")
+        {
+            await Groups.AddToGroupAsync(Context.ConnectionId, $"lecturer_room_{examRoomId}");
+        }
+        
         // Lưu thông tin kết nối
         var userInfo = new UserConnectionInfo
         {
@@ -47,6 +53,26 @@ public class NotificationHub : Hub
             studentCode = studentCode,
             connectionId = Context.ConnectionId
         });
+    }
+
+    public async Task JoinLecturerRoom(int examRoomId, string userId)
+    {
+        // Chỉ giám thị mới có thể join vào group này
+        await Groups.AddToGroupAsync(Context.ConnectionId, $"lecturer_room_{examRoomId}");
+        
+        // Lưu thông tin kết nối
+        var userInfo = new UserConnectionInfo
+        {
+            ConnectionId = Context.ConnectionId,
+            UserId = userId,
+            UserType = "lecturer",
+            ExamRoomId = examRoomId,
+            StudentCode = null
+        };
+        
+        _userConnections.TryAdd(Context.ConnectionId, userInfo);
+        
+        Console.WriteLine($"[SignalR] Giám thị {userId} đã join vào lecturer_room_{examRoomId}");
     }
 
     public async Task LeaveRoom(int examRoomId)
