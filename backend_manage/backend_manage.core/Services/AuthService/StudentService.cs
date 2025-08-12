@@ -423,19 +423,23 @@ public class StudentService : IStudentService
             var cachedSessions = await _sessionCacheHelper.GetListStudentExamSessionsFromRedisAsync(studentCode);
             if (cachedSessions != null && cachedSessions.Any())
             {
-                _logger.LogDebug("Đã lấy {Count} phiên thi chưa hoàn thành từ Redis cache cho sinh viên {StudentCode}", 
+                _logger.LogDebug("Đã lấy {Count} phiên thi chưa hoàn thành và còn thời gian làm bài từ Redis cache cho sinh viên {StudentCode}", 
                     cachedSessions.Count(), studentCode);
                 return cachedSessions;
             }
             
-            _logger.LogDebug("Không tìm thấy phiên thi chưa hoàn thành trong Redis cache cho sinh viên {StudentCode}, kiểm tra database", studentCode);
+            _logger.LogDebug("Không tìm thấy phiên thi chưa hoàn thành và còn thời gian làm bài trong Redis cache cho sinh viên {StudentCode}, kiểm tra database", studentCode);
             
             // Fallback về database
             var student = await _repository.GetQueryable().FirstOrDefaultAsync(x => x.StudentCode == studentCode);
             if (student == null) return Enumerable.Empty<StudentExamSessionDto>();
             
+            var currentTime = DateTimeHelper.GetVietnamTime();
+            
             var sessions = await _studentExamSessionRepository.GetQueryable()
-                .Where(x => x.StudentId == student.StudentId && x.IsCompleted == false)
+                .Where(x => x.StudentId == student.StudentId && 
+                           x.IsCompleted == false &&
+                           currentTime < x.ExamSessionStartTime.AddMinutes(x.ExamSessionSubject.Duration + x.ExtraMinutes))
                 .Include(x => x.ExamSessionSubject)
                     .ThenInclude(x => x.Subject)
                 .Include(x => x.ExamRoom)
