@@ -93,32 +93,45 @@ namespace frontend_manage.Pages.StudentLogin
 
         private async Task StartExam(StudentExamSessionDto session)
         {
-            // Kiểm tra thời gian bắt đầu ca thi
-            var now = DateTime.Now;
-            if (now < session.ExamSessionStartTime)
+            var timeStatus = GetTimeStatus(session);
+
+            if (timeStatus.isTooEarly)
             {
-                Snackbar.Add($"Chưa đến giờ bắt đầu ca thi. Vui lòng quay lại lúc {session.ExamSessionStartTime:HH:mm dd/MM/yyyy}.", Severity.Warning, config =>
-                {
-                    config.ShowCloseIcon = true;
-                    config.VisibleStateDuration = 4000;
-                });
+                Snackbar.Add(
+                    $"Chưa đến giờ bắt đầu ca thi. Vui lòng quay lại lúc {session.ExamSessionStartTime:HH:mm dd/MM/yyyy}.",
+                    Severity.Warning,
+                    config =>
+                    {
+                        config.ShowCloseIcon = true;
+                        config.VisibleStateDuration = 4000;
+                    }
+                );
                 return;
             }
 
-            // Kiểm tra thời gian quá 15 phút từ ExamSessionStartTime
-            var timeLimit = session.ExamSessionStartTime.AddMinutes(15);
-            if (now > timeLimit)
+            if (timeStatus.isTooLate)
             {
-                Snackbar.Add($"Đã quá thời gian cho phép làm bài thi. Thời gian bắt đầu: {session.ExamSessionStartTime:HH:mm dd/MM/yyyy}, Thời gian giới hạn: {timeLimit:HH:mm dd/MM/yyyy}.", Severity.Error, config =>
-                {
-                    config.ShowCloseIcon = true;
-                    config.VisibleStateDuration = 6000;
-                });
+                var limitTime = session.StartTime.HasValue
+                    ? session.ExamSessionStartTime.AddMinutes(session.Duration + session.ExtraMinutes)
+                    : session.ExamSessionStartTime.AddMinutes(15);
+
+                Snackbar.Add(
+                    $"Đã quá thời gian cho phép làm bài thi. Thời gian bắt đầu: {session.ExamSessionStartTime:HH:mm dd/MM/yyyy}, Thời gian giới hạn: {limitTime:HH:mm dd/MM/yyyy}.",
+                    Severity.Error,
+                    config =>
+                    {
+                        config.ShowCloseIcon = true;
+                        config.VisibleStateDuration = 6000;
+                    }
+                );
                 return;
             }
 
-            // Chuyển hướng sang trang làm bài thi với studentExamSessionId
-            Navigation.NavigateTo($"/Exam?studentExamSessionId={session.StudentExamSessionId}");
+            if (timeStatus.isInValidTime)
+            {
+                // Chuyển hướng sang trang làm bài thi
+                Navigation.NavigateTo($"/Exam?studentExamSessionId={session.StudentExamSessionId}");
+            }
         }
 
         private string GetSessionStyle(int sessionId)
@@ -130,15 +143,40 @@ namespace frontend_manage.Pages.StudentLogin
 
         private (bool isTooEarly, bool isTooLate, bool isInValidTime) GetTimeStatus(StudentExamSessionDto session)
         {
-            var now = DateTime.Now;
-            var timeLimit = session.ExamSessionStartTime.AddMinutes(15);
-            var isTooEarly = now < session.ExamSessionStartTime;
-            var isTooLate = now > timeLimit;
-            var isInValidTime = !isTooEarly && !isTooLate;
-            
+            bool isTooEarly = false, isTooLate = false, isInValidTime = false;
+    
+            var currentTime = DateTimeHelper.GetVietnamTime();
+            var examStartTime = session.ExamSessionStartTime;
+            var timeDifference = currentTime - examStartTime;
+
+            // Sớm
+            if (currentTime < examStartTime)
+            {
+                isTooEarly = true;
+            }
+            else if (session.StartTime.HasValue)
+            {
+                // Đã bắt đầu
+                var totalDuration = session.Duration + session.ExtraMinutes;
+                var expectedEndTime = examStartTime.AddMinutes(totalDuration);
+                if (currentTime <= expectedEndTime)
+                    isInValidTime = true;
+                else
+                    isTooLate = true;
+            }
+            else
+            {
+                // Chưa bắt đầu, trễ quá 15 phút
+                if (timeDifference.TotalMinutes > 15)
+                    isTooLate = true;
+                else
+                    isInValidTime = true;
+            }
+
             return (isTooEarly, isTooLate, isInValidTime);
         }
-
+        
+        
         private string FormatExamTime(DateTime time)
         {
             // Thời gian từ backend đã được lưu theo múi giờ Việt Nam
