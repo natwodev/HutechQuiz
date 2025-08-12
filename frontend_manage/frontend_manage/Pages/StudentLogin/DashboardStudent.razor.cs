@@ -44,12 +44,28 @@ namespace frontend_manage.Pages.StudentLogin
                 }
 
                 // Fetch exam sessions
-                examSessions = await InfoApi.GetStudentExamSessionsAsync();
+                var allExamSessions = await InfoApi.GetStudentExamSessionsAsync();
+                
+                // Lọc và sắp xếp để chỉ hiển thị 2 ca thi có ExamSessionStartTime gần nhất
+                if (allExamSessions != null && allExamSessions.Count > 0)
+                {
+                    var now = DateTime.Now;
+                    
+                    // Sắp xếp theo thời gian gần nhất với thời gian hiện tại
+                    examSessions = allExamSessions
+                        .OrderBy(session => Math.Abs((session.ExamSessionStartTime - now).TotalMinutes))
+                        .Take(2)
+                        .ToList();
+                }
+                else
+                {
+                    examSessions = new List<StudentExamSessionDto>();
+                }
             }
             catch
             {
                 studentInfo = null;
-                examSessions = null;
+                examSessions = new List<StudentExamSessionDto>();
             }
             currentTime = DateTime.Now.ToString("HH:mm:ss");
             timer = new Timer(UpdateTime, null, 0, 1000);
