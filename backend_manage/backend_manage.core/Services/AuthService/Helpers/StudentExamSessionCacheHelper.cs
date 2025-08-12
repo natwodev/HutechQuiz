@@ -49,7 +49,7 @@ public class StudentExamSessionCacheHelper
         var (redisAvailable, cacheSessions) = await GetListStudentExamSessionsFromCache(studentCode);
         if (cacheSessions != null && cacheSessions.Any())
         {
-            _logger.LogInformation("Tìm thấy danh sách các phiên thi của sinh viên: {key} ở redis ", studentCode);
+            _logger.LogInformation("Tìm thấy danh sách các phiên thi chưa hoàn thành của sinh viên: {key} ở redis ", studentCode);
             var result = cacheSessions.Select(x => _mapper.Map<StudentExamSessionDto>(x)).ToList();
             return result;
         }
@@ -88,11 +88,11 @@ public class StudentExamSessionCacheHelper
 
         if(sessions.Any())
         {
-            _logger.LogInformation("Tìm thấy phiên thi của sinh viên {StudentCode} từ database", studentCode);
+            _logger.LogInformation("Tìm thấy {Count} phiên thi chưa hoàn thành của sinh viên {StudentCode} từ database", sessions.Count, studentCode);
         }
         else
         {
-            _logger.LogInformation("Không tìm thấy phiên thi nào cho sinh viên {StudentCode} từ database", studentCode);
+            _logger.LogInformation("Không tìm thấy phiên thi chưa hoàn thành nào cho sinh viên {StudentCode} từ database", studentCode);
         }
 
       
@@ -120,7 +120,7 @@ public class StudentExamSessionCacheHelper
                 try
                 {
                     var session = JsonSerializer.Deserialize<StudentExamSessionCacheDto>(kvp.Value);
-                    if (session != null)
+                    if (session != null && !session.IsCompleted)
                     {
                         sessions.Add(session);
                     }
@@ -132,7 +132,7 @@ public class StudentExamSessionCacheHelper
                 }
             }
 
-            _logger.LogDebug("Lấy {Count} phiên thi từ Redis cho sinh viên {StudentCode}", sessions.Count, studentCode);
+            _logger.LogDebug("Lấy {Count} phiên thi chưa hoàn thành từ Redis cho sinh viên {StudentCode}", sessions.Count, studentCode);
             return (true, sessions);
         }
         catch (Exception ex)
@@ -230,8 +230,17 @@ public class StudentExamSessionCacheHelper
             if (cachedValue.HasValue)
             {
                 session = JsonSerializer.Deserialize<StudentExamSessionCacheDto>(cachedValue);
-                _logger.LogInformation("Đã lấy phiên thi {SessionId} từ Redis cho sinh viên {StudentCode}", studentExamSessionId, studentCode);
-                return (true, session);
+                // Kiểm tra xem phiên thi có hoàn thành không
+                if (session != null && !session.IsCompleted)
+                {
+                    _logger.LogInformation("Đã lấy phiên thi {SessionId} chưa hoàn thành từ Redis cho sinh viên {StudentCode}", studentExamSessionId, studentCode);
+                    return (true, session);
+                }
+                else if (session != null && session.IsCompleted)
+                {
+                    _logger.LogWarning("Phiên thi {SessionId} đã hoàn thành cho sinh viên {StudentCode}", studentExamSessionId, studentCode);
+                    return (true, null);
+                }
             }
            
             _logger.LogWarning("Không tìm thấy phiên thi {SessionId} trong Redis cho sinh viên {StudentCode}", studentExamSessionId, studentCode);
@@ -246,7 +255,7 @@ public class StudentExamSessionCacheHelper
         try
         {
             var sessionEntity = await _studentExamSessionRepository.GetQueryable()
-                .Where(x => x.StudentCode == studentCode && x.StudentExamSessionId == studentExamSessionId)
+                .Where(x => x.StudentCode == studentCode && x.StudentExamSessionId == studentExamSessionId && x.IsCompleted == false)
                 .Include(x => x.ExamSessionSubject)
                 .ThenInclude(x => x.Subject)
                 .Include(x => x.ExamRoom)
@@ -254,8 +263,8 @@ public class StudentExamSessionCacheHelper
 
             if (sessionEntity != null)
             {
-                session = _mapper.Map<StudentExamSessionCacheDto>(sessionEntity);
-                _logger.LogInformation("Đã lấy phiên thi {SessionId} từ DB cho sinh viên {StudentCode}", studentExamSessionId, studentCode);
+                session = await ConvertToCacheDtoAsync(sessionEntity);
+                _logger.LogInformation("Đã lấy phiên thi {SessionId} chưa hoàn thành từ DB cho sinh viên {StudentCode}", studentExamSessionId, studentCode);
 
                 if (redisAvailable)
                 {
@@ -266,6 +275,7 @@ public class StudentExamSessionCacheHelper
                         string field = studentExamSessionId.ToString();
                         var sessionJson = JsonSerializer.Serialize(session);
                         await db.HashSetAsync(redisHashKey, field, sessionJson);
+                        await db.KeyExpireAsync(redisHashKey, TimeSpan.FromHours(6));
                     }
                     catch (Exception ex)
                     {
@@ -276,6 +286,7 @@ public class StudentExamSessionCacheHelper
                 return (redisAvailable, session);
             }
 
+            _logger.LogWarning("Không tìm thấy phiên thi {SessionId} chưa hoàn thành cho sinh viên {StudentCode}", studentExamSessionId, studentCode);
             return (redisAvailable, null);
         }
         catch (Exception ex)

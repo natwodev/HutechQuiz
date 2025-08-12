@@ -6,6 +6,5 @@ namespace backend_manage.core.Authentication.Repositories
     {
         // Method to get user by ID
         Task<ApplicationUser?> GetUserByUsernameAsync(string username);
-        // Method to get permissions by user ID
     }
 }

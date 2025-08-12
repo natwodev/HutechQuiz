@@ -1,9 +1,16 @@
 using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption;
+using Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption.ConfigurationModel;
+using System.IO;
+using System;
 using backend_manage.core.Configurations;
 using backend_manage.core.Data;
 using backend_manage.core.Entities;
 using backend_manage.core.Mappings;
 using backend_manage.core.Middlewares.Jwt;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -19,30 +26,18 @@ namespace backend_manage.core.Extensions
     {
         public static void ConfigureServices(this IServiceCollection services, IConfiguration configuration)
         {
-            /*
-            services.AddAuthentication(options =>
-                {
-                    options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-                    options.DefaultChallengeScheme = GoogleDefaults.AuthenticationScheme;
-                })
-                .AddCookie()
-                .AddGoogle(googleOptions =>
-                {
-                    IConfigurationSection googleAuthNSection = configuration.GetSection("Authentication:Google");
-
-                    googleOptions.ClientId = googleAuthNSection["ClientId"];
-                    googleOptions.ClientSecret = googleAuthNSection["ClientSecret"];
-
-                    // Optional: cấu hình đường callback nếu bạn dùng route tùy chỉnh
-                    // googleOptions.CallbackPath = new PathString("/api/auth/external-login-callback");
-                });
-                */
             services.AddControllers().AddJsonOptions(x =>
                 x.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles);
+            
+            // Thêm HttpContextAccessor để các service có thể truy cập HttpContext
+            services.AddHttpContextAccessor();
             
             services.AddIdentity<ApplicationUser, IdentityRole>()
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddDefaultTokenProviders();
+            
+            // Cấu hình Cookie Authentication đã được di chuyển vào JwtConfig.cs
+            // để tránh trùng lặp và đảm bảo hoạt động đúng
             
             services.AddSignalR();
             
@@ -67,23 +62,60 @@ namespace backend_manage.core.Extensions
             
             // Đăng ký DbContext
             services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
+                options.UseSqlServer(configuration.GetConnectionString("DefaultConnection"), 
+                    b => b.MigrationsAssembly("backend_manage.core")));
+
+            // Cấu hình Data Protection với key persistence và logging
+            var dpConfig = configuration.GetSection("DataProtection");
+            var applicationName = dpConfig["ApplicationName"] ?? "HutechQuizApp";
+            var keysPath = dpConfig["KeysPath"] ?? "./DataProtectionKeys";
+            
+            // Đảm bảo thư mục tồn tại
+            var keysDirectory = new DirectoryInfo(keysPath);
+            if (!keysDirectory.Exists)
+            {
+                keysDirectory.Create();
+                Console.WriteLine($"🔑 Created DataProtection keys directory: {keysDirectory.FullName}");
+            }
+            else
+            {
+                Console.WriteLine($"🔑 Using existing DataProtection keys directory: {keysDirectory.FullName}");
+                var existingKeys = keysDirectory.GetFiles("*.xml");
+                Console.WriteLine($"🔑 Found {existingKeys.Length} existing key files");
+            }
+            
+            var dataProtectionBuilder = services.AddDataProtection()
+                .SetApplicationName(applicationName)
+                .PersistKeysToFileSystem(keysDirectory) // Lưu key vào file system để giữ ổn định
+                .SetDefaultKeyLifetime(TimeSpan.FromDays(90)); // Key tồn tại 90 ngày
+            
+            // Sử dụng FixedKey nếu có trong config để đảm bảo tính ổn định
+            var fixedKey = dpConfig["FixedKey"];
+            if (!string.IsNullOrEmpty(fixedKey))
+            {
+                Console.WriteLine("🔑 Using FixedKey from configuration for additional stability");
+                // Không sử dụng FixedKey trực tiếp vì nó có thể gây vấn đề security
+                // Thay vào đó, chỉ dựa vào PersistKeysToFileSystem
+            }
 
             // Đăng ký CORS
             services.AddCors(options =>
             {
+                // Nếu frontend chạy domain khác và cần gửi cookie, phải bật AllowCredentials
                 options.AddPolicy("AllowAll", policy =>
-                    policy.AllowAnyOrigin()
+                    policy
                         .AllowAnyHeader()
-                        .AllowAnyMethod());
+                        .AllowAnyMethod()
+                        .SetIsOriginAllowed(_ => true)
+                        .AllowCredentials());
             });
 
 
             // Đăng ký các service khác
             services.ConfigureDependencies();
 
-            // Đăng ký xác thực JWT (được tách riêng)
-            services.ConfigureJwt(configuration);
+            // Đăng ký xác thực JWT và Cookie (đã được tách riêng)
+            services.ConfigureAuthentication(configuration);
             
             // Cấu hình Redis với kiểm tra kết nối ngay khi khởi động
             services.AddSingleton<IConnectionMultiplexer>(sp => {

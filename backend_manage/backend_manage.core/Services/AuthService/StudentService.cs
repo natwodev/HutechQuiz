@@ -18,6 +18,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using OfficeOpenXml;
 using StackExchange.Redis;
+using backend_manage.core.Services.AuthService.Helpers;
 
 namespace backend_manage.core.Services.AuthService;
 
@@ -99,6 +100,27 @@ public class StudentService : IStudentService
                 ErrorMessage = "Không tìm thấy sinh viên với mã này."
             };
         }
+
+        // Kiểm tra nếu sinh viên đã đăng nhập rồi
+        if (student.IsLogin)
+        {
+            return new StudentAuthResultDto
+            {
+                IsSuccess = false,
+                ErrorMessage = "Sinh viên này đã đăng nhập. Vui lòng liên hệ giám thị để mở phiên."
+            };
+        }
+        
+        // Cập nhật trạng thái đăng nhập
+        student.IsLogin = true;
+        student.LastLoggedIn = DateTimeHelper.GetVietnamTime();
+        student.UpdatedAt = DateTimeHelper.GetVietnamTime();
+        
+        // Lưu vào database
+        await _repository.UpdateAsync(student);
+        
+        // Cập nhật cache nếu cần
+        await _studentCacheHelper.CacheStudent(student.StudentCode, student);
         
         // Sinh JWT token như cũ, nhưng không có username
         var tokenHandler = new JwtSecurityTokenHandler();
@@ -373,12 +395,12 @@ public class StudentService : IStudentService
             var cachedSessions = await _sessionCacheHelper.GetListStudentExamSessionsFromRedisAsync(studentCode);
             if (cachedSessions != null && cachedSessions.Any())
             {
-                _logger.LogDebug("Đã lấy {Count} phiên thi từ Redis cache cho sinh viên {StudentCode}", 
+                _logger.LogDebug("Đã lấy {Count} phiên thi chưa hoàn thành từ Redis cache cho sinh viên {StudentCode}", 
                     cachedSessions.Count(), studentCode);
                 return cachedSessions;
             }
             
-            _logger.LogDebug("Không tìm thấy phiên thi trong Redis cache cho sinh viên {StudentCode}, kiểm tra database", studentCode);
+            _logger.LogDebug("Không tìm thấy phiên thi chưa hoàn thành trong Redis cache cho sinh viên {StudentCode}, kiểm tra database", studentCode);
             
             // Fallback về database
             var student = await _repository.GetQueryable().FirstOrDefaultAsync(x => x.StudentCode == studentCode);
@@ -512,7 +534,7 @@ public class StudentService : IStudentService
         try
         {
             // Sử dụng ExamPaperHelper để nộp bài thi
-            var (success, score, message, studentExamSessionDto) = await _examPaperHelper.SubmitExam(studentCode, studentExamSessionId);
+            var (success, score, message, studentExamSessionDto, answerKey) = await _examPaperHelper.SubmitExam(studentCode, studentExamSessionId);
             
             if (!success)
             {
@@ -534,7 +556,8 @@ public class StudentService : IStudentService
                 CorrectAnswers = studentExamSessionDto.CorrectAnswers,
                 TotalQuestions = studentExamSessionDto.TotalQuestions,
                 EndTime = studentExamSessionDto.EndTime ?? DateTimeHelper.GetVietnamTime(),
-                StudentAnswersString = studentExamSessionDto.StudentAnswersString
+                StudentAnswersString = studentExamSessionDto.StudentAnswersString,
+                AnswerKey = answerKey
             };
 
             _logger.LogInformation("✅ Hoàn thành nộp bài thi cho sinh viên {StudentCode}. Điểm: {Score}", studentCode, score);
@@ -548,43 +571,5 @@ public class StudentService : IStudentService
         }
     }
     #endregion
-
-    #region GetStudentAnswersAsync
-    public async Task<string?> GetStudentAnswersAsync(string studentCode, int studentExamSessionId)
-    {
-        try
-        {
-            _logger.LogInformation("🔄 Bắt đầu lấy đáp án cho sinh viên {StudentCode}, session {SessionId}", 
-                studentCode, studentExamSessionId);
-
-            // Lấy thông tin session từ cache hoặc database
-            var (redisAvailable, studentExamSessionDto) = await _sessionCacheHelper.GetStudentExamSessionAsync(studentCode, studentExamSessionId);
-            if (studentExamSessionDto == null)
-            {
-                _logger.LogWarning("⚠️ Không tìm thấy phiên thi cho sinh viên {StudentCode}, session {SessionId}", 
-                    studentCode, studentExamSessionId);
-                return null;
-            }
-
-            if (!studentExamSessionDto.ShuffledExamPaperId.HasValue)
-            {
-                _logger.LogWarning("⚠️ Phiên thi của sinh viên {StudentCode} chưa có đề thi được phân công", studentCode);
-                return null;
-            }
-
-            // Trả về chuỗi đáp án đã lưu
-            var answersString = studentExamSessionDto.StudentAnswersString ?? "";
-            
-            _logger.LogInformation("✅ Đã lấy đáp án cho sinh viên {StudentCode}: {AnswersString}", 
-                studentCode, answersString);
-
-            return answersString;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "❌ Lỗi khi lấy đáp án cho sinh viên {StudentCode}", studentCode);
-            return null;
-        }
-    }
-    #endregion
+    
 } 

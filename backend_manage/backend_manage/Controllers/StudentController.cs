@@ -33,10 +33,10 @@ public class StudentController : ControllerBase
     }
 
 
- [HttpPost("login")]
+     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
-        var result = await _studentService.LoginAsync(request.Username, request.Password);
+        var result = await _studentService.LoginAsync(request.StudentCode1, request.StudentCode2);
         return Ok(result);
     }
 
@@ -92,6 +92,7 @@ public class StudentController : ControllerBase
     
     // GET: api/students/profile
     [HttpGet("profile")]
+    [Authorize(Policy = "StudentOnly")]
     public async Task<ActionResult<StudentDto>> GetProfile()
     {
         try
@@ -284,56 +285,7 @@ public async Task<IActionResult> UpdateAnswer([FromBody] SaveAnswerDto request)
             return StatusCode(500, new { success = false, message = "Lỗi server khi nộp bài thi" });
         }
     }
-
-    [HttpGet("answers/{studentExamSessionId}")]
-    [Authorize(Policy = "StudentOnly")]
-    public async Task<IActionResult> GetStudentAnswers(int studentExamSessionId)
-    {
-        try
-        {
-            var studentCode = User.FindFirst("studentCode")?.Value;
-            if (string.IsNullOrEmpty(studentCode))
-            {
-                return Unauthorized(new { success = false, message = "Không tìm thấy thông tin sinh viên" });
-            }
-
-            if (studentExamSessionId <= 0)
-            {
-                return BadRequest(new { success = false, message = "ID phiên thi không hợp lệ" });
-            }
-
-            _logger.LogInformation("🔄 Sinh viên {StudentCode} yêu cầu lấy đáp án đã lưu cho phiên {SessionId}", 
-                studentCode, studentExamSessionId);
-
-            var answersString = await _studentService.GetStudentAnswersAsync(studentCode, studentExamSessionId);
-
-            if (answersString != null)
-            {
-                _logger.LogInformation("✅ Đã lấy đáp án cho sinh viên {StudentCode}: {AnswersString}", 
-                    studentCode, answersString);
-
-                return Ok(new
-                {
-                    success = true,
-                    data = answersString
-                });
-            }
-            else
-            {
-                _logger.LogWarning("⚠️ Không tìm thấy đáp án cho sinh viên {StudentCode} phiên {SessionId}", 
-                    studentCode, studentExamSessionId);
-
-                return NotFound(new { success = false, message = "Không tìm thấy đáp án đã lưu" });
-            }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "❌ Lỗi khi lấy đáp án cho sinh viên {StudentCode}", 
-                User.FindFirst("studentCode")?.Value);
-
-            return StatusCode(500, new { success = false, message = "Lỗi server khi lấy đáp án" });
-        }
-    }
+    
 
     [HttpPost("active-login")]
     public async Task<IActionResult> ActiveLogin([FromBody] ActiveLoginRequest request)
@@ -362,6 +314,6 @@ public class SubmitExamRequest
 
 public class LoginRequest
 {
-    public string Username { get; set; }
-    public string Password { get; set; }
+    public string StudentCode1 { get; set; }
+    public string StudentCode2 { get; set; }
 } 

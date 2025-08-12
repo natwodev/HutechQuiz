@@ -284,19 +284,6 @@ else
                                        Size="Size.Large" OnClick="OnSubmitExamAsync">
                                 Nộp Bài
                             </MudButton>
-                            <MudButton Style="margin: 5px" Variant="Variant.Filled" Color="Color.Primary"
-                                       Size="Size.Small" OnClick="@(async () => await SaveProgressAsync())"
-                                       Disabled="@isSavingProgress">
-                                @if (isSavingProgress)
-                                {
-                                    <MudProgressCircular Color="Color.Secondary" Size="Size.Small" Indeterminate="true" Class="mr-1" />
-                                }
-                                else
-                                {
-                                    <MudIcon Icon="Icons.Material.Filled.Save" Class="mr-1" />
-                                }
-                                Lưu bài thi
-                            </MudButton>
                         </MudItem>
                     </MudGrid>
                 </MudPaper>
@@ -305,6 +292,7 @@ else
                 <MudPaper Class="pa-4" Style="text-align: center; border: 1px solid #ccc; margin-bottom: 15%;">
                     <MudImage Src="images/exam/Ellipse 1.svg" Width="120" Class="mb-2" />
                     <MudDivider Class="mb-2" />
+                    <MudText Typo="Typo.subtitle2"><b>Mã sinh viên:</b> @studentSession.StudentCode</MudText>
                     <MudText Typo="Typo.subtitle2"><b>Mã đề:</b> @shuffledExam.ShuffledExamPaperCore</MudText>
                     <MudText Typo="Typo.subtitle2"><b>Môn học:</b> @shuffledExam.SubjectName (@shuffledExam.SubjectCode)</MudText>
                     <MudText Typo="Typo.subtitle2"><b>Phòng thi:</b> @studentSession.RoomName</MudText>
@@ -337,8 +325,8 @@ else
                                         var isChildAnswered = !string.IsNullOrEmpty(GetSelectedChildAnswer(childQ.ShuffledExamPaperDetailId));
 
                                         <MudItem xs="2" md="3" Style="padding-left: 15px">
-                                            <MudButton Size="Size.Small" Variant="Variant.Outlined"
-                                                       Color="@(isChildAnswered ? Color.Success : Color.Secondary)"
+                                            <MudButton Size="Size.Small" Variant="Variant.Filled"
+                                                       Color="@(isChildAnswered ? Color.Success : Color.Default)"
                                                        OnClick="@(async () => await ScrollToQuestionAsync(childQuestionNumber.ToString()))"
                                                        Style="font-size: 0.8em;">
                                                 @childQuestionNumber
@@ -508,40 +496,33 @@ else
     // Debouncing cho answer selection
     window.answerDebouncer = {
         timers: {},
-        debounceDelay: 3000, // 3 giây
+        debounceDelay: 2000, // 2 giây
 
         // Debounce function cho answer selection
         debounce: function(questionId, callbackRef) {
             // Clear timer cũ nếu có
             if (this.timers[questionId]) {
                 clearTimeout(this.timers[questionId]);
-                console.log(`⏰ Cleared previous timer for question ${questionId}`);
             }
 
             // Set timer mới
             this.timers[questionId] = setTimeout(async () => {
-                console.log(`💾 Executing delayed save for question ${questionId} after ${this.debounceDelay}ms`);
                 try {
                     await callbackRef.invokeMethodAsync('ExecuteSave');
                 } catch (error) {
-                    console.error(`❌ Error executing save for question ${questionId}:`, error);
+                    // Error executing save
                 }
                 delete this.timers[questionId];
             }, this.debounceDelay);
-
-            console.log(`⏱️ Set new timer for question ${questionId}, will execute in ${this.debounceDelay}ms`);
         },
 
         // Force save tất cả pending answers (khi submit hoặc hết giờ)
         saveAllPending: async function(callbackMap) {
-            console.log(`🚀 Force saving all pending answers: ${Object.keys(this.timers).length} pending`);
-
             const promises = [];
             Object.keys(this.timers).forEach(questionId => {
                 if (this.timers[questionId]) {
                     clearTimeout(this.timers[questionId]);
                     if (callbackMap[questionId]) {
-                        console.log(`💾 Force executing save for question ${questionId}`);
                         promises.push(callbackMap[questionId].invokeMethodAsync('ExecuteSave'));
                     }
                     delete this.timers[questionId];
@@ -550,7 +531,6 @@ else
 
             if (promises.length > 0) {
                 await Promise.all(promises);
-                console.log(`✅ Completed force saving ${promises.length} pending answers`);
             }
         },
 

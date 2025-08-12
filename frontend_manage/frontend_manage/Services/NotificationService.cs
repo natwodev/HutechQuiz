@@ -24,12 +24,10 @@ public class NotificationService
 
         _hubConnection.On<object>("RoomStatusUpdated", (data) =>
         {
-            Console.WriteLine("[SignalR] Đã nhận RoomStatusUpdated từ SignalR (NotificationService)");
             RoomStatusUpdated?.Invoke();
         });
 
         await _hubConnection.StartAsync();
-        Console.WriteLine("[SignalR] Đã kết nối tới notificationHub!");
     }
 }
 

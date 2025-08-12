@@ -53,7 +53,7 @@ namespace backend_manage.core.Services.AuthService
             return _mapper.Map<AcademicYearDto>(result);
         }
 
-        public async Task<AcademicYearDto> UpdateAsync(string id, AcademicYearUpdateDto dto)
+        public async Task<AcademicYearDto> UpdateAsync(int id, AcademicYearUpdateDto dto)
         {
             var entity = await _academicYearRepository.GetByIdAsync(id);
             if (entity == null) return null;

@@ -1,228 +1,159 @@
 @page "/Exam/Result"
-@inject NavigationManager Navigation
-@inject ISnackbar Snackbar
+
 
 <PageTitle>Kết quả bài thi</PageTitle>
 
-@code {
-    [Parameter]
-    [SupplyParameterFromQuery]
-    public int? studentExamSessionId { get; set; }
-
-    // Dữ liệu ảo trực tiếp
-    private bool success = true;
-    private string message = "Nộp bài thi thành công. Điểm: 0,00, Đúng: 0/16 câu";
-    private string studentCode = "028";
-    private int shuffledExamPaperId = 357;
-    private double score = 0;
-    private int correctAnswers = 0;
-    private int totalQuestions = 50;
-    private DateTime endTime = DateTime.Parse("2025-08-05T23:09:43.910037");
-    private string studentAnswersString = "(1,A);(2,B);(3,C);(4,D);(5,A);(6,-);(7,B);(8,C);(9,D);(10,A);(11,B);(12,-);(13,C);(14,D);(15,A);(16,B);(17,C);(18,-);(19,D);(20,A);(21,B);(22,C);(23,D);(24,-);(25,A);(26,B);(27,C);(28,D);(29,A);(30,B);(31,-);(32,C);(33,D);(34,A);(35,B);(36,C);(37,D);(38,-);(39,A);(40,B);(41,C);(42,D);(43,A);(44,-);(45,B);(46,C);(47,D);(48,A);(49,B);(50,C)";
-
-    // Danh sách câu hỏi và đáp án
-    private List<QuestionAnswer> questionAnswers = new();
-
-    protected override void OnInitialized()
-    {
-        ParseAnswers();
-    }
-
-    private void ParseAnswers()
-    {
-        questionAnswers.Clear();
-        
-        // Parse từ chuỗi đáp án
-        var answers = studentAnswersString.Trim('(', ')').Split(';');
-        
-        foreach (var answer in answers)
-        {
-            var parts = answer.Trim('(', ')').Split(',');
-            if (parts.Length == 2)
-            {
-                questionAnswers.Add(new QuestionAnswer
-                {
-                    QuestionNumber = parts[0].Trim(),
-                    Answer = parts[1].Trim()
-                });
-            }
-        }
-    }
-
-    private string GetScoreColor()
-    {
-        if (score >= 8.0) return "success";
-        if (score >= 6.5) return "warning";
-        return "error";
-    }
-
-    private string GetScoreText()
-    {
-        if (score >= 8.0) return "Xuất sắc";
-        if (score >= 6.5) return "Khá";
-        if (score >= 5.0) return "Trung bình";
-        return "Chưa đạt";
-    }
-
-    private string GetPercentage()
-    {
-        if (totalQuestions == 0) return "0%";
-        var percentage = (double)correctAnswers / totalQuestions * 100;
-        return $"{percentage:F1}%";
-    }
-
-    private string GetAnswerStatus(string answer)
-    {
-        return answer == "-" ? "Chưa trả lời" : answer;
-    }
-
-    private Color GetAnswerColor(string answer)
-    {
-        if (answer == "-") return Color.Default;
-        if (answer == "A" || answer == "B" || answer == "C" || answer == "D") return Color.Primary;
-        return Color.Secondary;
-    }
-
-    private void GoToStudentDashboard()
-    {
-        Navigation.NavigateTo("/student-dashboard");
-    }
-
-    private void ViewDetailedResults()
-    {
-        // TODO: Navigate to detailed results page
-        Snackbar.Add("Tính năng xem chi tiết đang được phát triển", Severity.Info);
-    }
-
-    public class QuestionAnswer
-    {
-        public string QuestionNumber { get; set; } = "";
-        public string Answer { get; set; } = "";
-    }
+@if (loading)
+{
+    <MudContainer MaxWidth="MaxWidth.Large" Class="pa-4">
+        <MudPaper Elevation="4" Class="pa-6">
+            <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Medium" />
+            <MudText Class="ml-3">Đang tải kết quả...</MudText>
+        </MudPaper>
+    </MudContainer>
 }
-
-<MudContainer MaxWidth="MaxWidth.Large" Class="pa-4">
-    <MudPaper Elevation="4" Class="pa-6">
-        <!-- Header -->
-        <MudGrid Class="mb-6">
-            <MudItem xs="12" Class="text-center">
-                <MudIcon Icon="@Icons.Material.Filled.Assessment" Size="Size.Large" Color="Color.Primary" Class="mb-3" />
-                <MudText Typo="Typo.h4" Color="Color.Primary" Class="mb-2">
-                    Kết quả bài thi
+else if (examResult?.Data != null)
+{
+    <MudContainer MaxWidth="MaxWidth.Large" Class="pa-4">
+        <MudPaper Elevation="4" Class="pa-6">
+            <!-- Exam Info -->
+            <MudPaper Class="pa-4 mb-4" Elevation="1">
+                <MudText Typo="Typo.h6" Class="mb-3">
+                    <MudIcon Icon="@Icons.Material.Filled.Info" Class="mr-2" />
+                    Thông tin bài thi
                 </MudText>
-                <MudText Typo="Typo.body1" Color="Color.Secondary">
-                    @message
-                </MudText>
-            </MudItem>
-        </MudGrid>
-
-        <!-- Exam Details -->
-        <MudPaper Class="pa-4 mb-4" Elevation="1">
-            <MudText Typo="Typo.h6" Class="mb-3">
-                <MudIcon Icon="@Icons.Material.Filled.Info" Class="mr-2" />
-                Thông tin bài thi
-            </MudText>
-            <MudGrid>
-                <MudItem xs="12" md="6">
-                    <MudText Typo="Typo.body2" Color="Color.Secondary">Mã sinh viên:</MudText>
-                    <MudText Typo="Typo.body1" Class="mb-2">@studentCode</MudText>
-                </MudItem>
-                <MudItem xs="12" md="6">
-                    <MudText Typo="Typo.body2" Color="Color.Secondary">Mã đề thi:</MudText>
-                    <MudText Typo="Typo.body1" Class="mb-2">@shuffledExamPaperId</MudText>
-                </MudItem>
-                <MudItem xs="12" md="6">
-                    <MudText Typo="Typo.body2" Color="Color.Secondary">Tổng số câu:</MudText>
-                    <MudText Typo="Typo.body1" Class="mb-2">@totalQuestions</MudText>
-                </MudItem>
-                <MudItem xs="12" md="6">
-                    <MudText Typo="Typo.body2" Color="Color.Secondary">Thời gian nộp:</MudText>
-                    <MudText Typo="Typo.body1" Class="mb-2">@endTime.ToString("dd/MM/yyyy HH:mm:ss")</MudText>
-                </MudItem>
-            </MudGrid>
-        </MudPaper>
-
-        <!-- Answer Grid -->
-        <MudPaper Class="pa-4 mb-4" Elevation="1">
-            <MudText Typo="Typo.h6" Class="mb-3">
-                <MudIcon Icon="@Icons.Material.Filled.Assessment" Class="mr-2" />
-                Bảng câu trả lời
-            </MudText>
-            
-            <MudGrid Class="mt-4">
-                @for (int i = 0; i < questionAnswers.Count; i++)
-                {
-                    var answer = questionAnswers[i];
-                    var questionNumber = i + 1;
-                    
-                    <MudItem xs="1" sm="1" md="1" lg="1">
-                        <MudPaper Class="pa-1 text-center" Elevation="1" Style="min-height: 40px; display: flex; flex-direction: column; justify-content: center; margin-bottom: 2px;">
-                            <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-1" Style="font-size: 7px;">
-                                @questionNumber
-                            </MudText>
-                            @if (answer.Answer == "-")
-                            {
-                                <MudButton Variant="Variant.Outlined" 
-                                          Color="Color.Default" 
-                                          Size="Size.Small"
-                                          Disabled="true"
-                                          Class="mx-auto"
-                                          Style="min-width: 20px; min-height: 20px; border-radius: 4px; border: 1px dashed #ccc;">
-                                    <MudText Typo="Typo.caption" Color="Color.Default" Style="font-size: 8px;">
-                                        -
-                                    </MudText>
-                                </MudButton>
-                            }
-                            else
-                            {
-                                <MudButton Variant="Variant.Filled" 
-                                          Color="Color.Primary" 
-                                          Size="Size.Small"
-                                          Disabled="true"
-                                          Class="mx-auto"
-                                          Style="min-width: 20px; min-height: 20px; border-radius: 4px;">
-                                    <MudText Typo="Typo.caption" Color="Color.Surface" Style="font-weight: bold; font-size: 8px;">
-                                        @answer.Answer
-                                    </MudText>
-                                </MudButton>
-                            }
-                        </MudPaper>
+                <MudGrid>
+                    <MudItem xs="12" md="6">
+                        <MudCard Class="ma-2" Elevation="2">
+                            <MudCardContent>
+                                <MudText Typo="Typo.caption" Color="Color.Info" Class="mb-1">
+                                    <MudIcon Icon="@Icons.Material.Filled.Person" Size="Size.Small" Class="mr-1" />
+                                    Mã sinh viên
+                                </MudText>
+                                <MudText Typo="Typo.h6" Color="Color.Primary" Class="font-weight-bold">
+                                    @examResult.Data.StudentCode
+                                </MudText>
+                            </MudCardContent>
+                        </MudCard>
                     </MudItem>
-                }
+                    <MudItem xs="12" md="6">
+                        <MudCard Class="ma-2" Elevation="2">
+                            <MudCardContent>
+                                <MudText Typo="Typo.caption" Color="Color.Info" Class="mb-1">
+                                    <MudIcon Icon="@Icons.Material.Filled.Assignment" Size="Size.Small" Class="mr-1" />
+                                    Mã đề thi
+                                </MudText>
+                                <MudText Typo="Typo.h6" Color="Color.Primary" Class="font-weight-bold">
+                                    @examResult.Data.ShuffledExamPaperId
+                                </MudText>
+                            </MudCardContent>
+                        </MudCard>
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <MudCard Class="ma-2" Elevation="2">
+                            <MudCardContent>
+                                <MudText Typo="Typo.caption" Color="Color.Info" Class="mb-1">
+                                    <MudIcon Icon="@Icons.Material.Filled.Grade" Size="Size.Small" Class="mr-1" />
+                                    Điểm số
+                                </MudText>
+                                <MudText Typo="Typo.h6" Color="@(examResult.Data.Score.HasValue ? (examResult.Data.Score >= 8 ? Color.Success : examResult.Data.Score >= 6.5 ? Color.Warning : Color.Error) : Color.Default)" Class="font-weight-bold">
+                                    @(examResult.Data.Score?.ToString("F2") ?? "N/A")
+                                </MudText>
+                            </MudCardContent>
+                        </MudCard>
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <MudCard Class="ma-2" Elevation="2">
+                            <MudCardContent>
+                                <MudText Typo="Typo.caption" Color="Color.Info" Class="mb-1">
+                                    <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Size="Size.Small" Class="mr-1" />
+                                    Số câu đúng
+                                </MudText>
+                                <MudText Typo="Typo.h6" Color="Color.Info" Class="font-weight-bold">
+                                    @(examResult.Data.CorrectAnswers?.ToString() ?? "0")/@(examResult.Data.TotalQuestions?.ToString() ?? "0")
+                                </MudText>
+                            </MudCardContent>
+                        </MudCard>
+                    </MudItem>
+                </MudGrid>
+            </MudPaper>
+
+            <!-- Answers -->
+            @if (questionAnswers.Any())
+            {
+                <MudPaper Class="pa-4 mb-4" Elevation="1">
+                    <MudText Typo="Typo.h6" Class="mb-3">
+                        <MudIcon Icon="@Icons.Material.Filled.Assessment" Class="mr-2" />
+                        Bảng câu trả lời
+                    </MudText>
+                    <MudGrid Class="mt-4">
+                        @for (int i = 0; i < questionAnswers.Count; i++)
+                        {
+                            var q = questionAnswers[i];
+                            var displayNumber = (i + 1).ToString();
+                            <MudItem xs="2" sm="1" md="1" lg="1">
+                                <MudPaper Class="pa-1 text-center" Elevation="1">
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">@displayNumber</MudText>
+                                    <MudButton Variant="Variant.Filled"
+                                               Color="@GetAnswerColor(q)"
+                                               StartIcon="@GetAnswerIcon(q)"
+                                               Class="mud-width-full">
+                                        @GetAnswerText(q)
+                                    </MudButton>
+
+                                </MudPaper>
+                            </MudItem>
+                        }
+                    </MudGrid>
+                    
+                    <!-- Legend - Di chuyển xuống dưới bảng câu trả lời -->
+                    <MudDivider Class="my-4" />
+                    <MudGrid Class="mt-4">
+                        <MudItem xs="4">
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">
+                                <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Small" Class="mr-1" />
+                                Đúng
+                            </MudText>
+                        </MudItem>
+                        <MudItem xs="4">
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">
+                                <MudIcon Icon="@Icons.Material.Filled.Cancel" Color="Color.Error" Size="Size.Small" Class="mr-1" />
+                                Sai
+                            </MudText>
+                        </MudItem>
+                        <MudItem xs="4">
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">
+                                <MudIcon Icon="@Icons.Material.Filled.Remove" Color="Color.Default" Size="Size.Small" Class="mr-1" />
+                                Không trả lời
+                            </MudText>
+                        </MudItem>
+                    </MudGrid>
+                </MudPaper>
+            }
+
+            <!-- Actions -->
+            <MudGrid Class="mt-6">
+                <MudItem xs="12" md="6">
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true"
+                               OnClick="GoToStudentDashboard" StartIcon="@Icons.Material.Filled.Home">
+                        Về trang chủ
+                    </MudButton>
+                </MudItem>
             </MudGrid>
         </MudPaper>
-
-        <!-- Action Buttons -->
-        <MudGrid Class="mt-6">
-            <MudItem xs="12" md="6">
-                <MudButton Variant="Variant.Filled" 
-                          Color="Color.Primary" 
-                          FullWidth="true"
-                          OnClick="GoToStudentDashboard"
-                          StartIcon="@Icons.Material.Filled.Home">
-                    Về trang chủ
-                </MudButton>
-            </MudItem>
-        </MudGrid>
-    </MudPaper>
-</MudContainer>
-
-<style>
-    .mud-main-content {
-        padding: 0;
-    }
-    
-    .mud-table {
-        border-radius: 8px;
-        overflow: hidden;
-    }
-    
-    .mud-table th {
-        background-color: #f5f5f5 !important;
-        font-weight: 600 !important;
-    }
-    
-    .mud-chip {
-        font-weight: 500;
-    }
-</style> 
+    </MudContainer>
+}
+else
+{
+    <MudContainer MaxWidth="MaxWidth.Large" Class="pa-4">
+        <MudPaper Elevation="4" Class="pa-6">
+            <MudAlert Severity="Severity.Warning" Variant="Variant.Filled">
+                <MudText>Không tìm thấy kết quả bài thi hoặc có lỗi xảy ra.</MudText>
+            </MudAlert>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-4"
+                       OnClick="GoToStudentDashboard" StartIcon="@Icons.Material.Filled.Home">
+                Về trang chủ
+            </MudButton>
+        </MudPaper>
+    </MudContainer>
+}

@@ -6,7 +6,7 @@ namespace backend_manage.shared.Interfaces;
 
 public interface IStudentService
 {
-    Task<StudentAuthResultDto> LoginAsync(string username, string password);
+    Task<StudentAuthResultDto> LoginAsync(string studentCode1, string studentCode2);
     Task<IEnumerable<Student>> GetAllAsync();
     Task<Student> AddAsync(StudentCreateDto dto);
     Task<Student> UpdateAsync(string id, Student student);
@@ -32,6 +32,4 @@ public interface IStudentService
     // Method để nộp bài thi
     Task<(bool Success, string Message, ExamSubmissionDto? SubmissionData)> SubmitExamAsync(string studentCode, int studentExamSessionId);
     
-    // Method để lấy đáp án đã lưu
-    Task<string?> GetStudentAnswersAsync(string studentCode, int studentExamSessionId);
 } 

@@ -435,7 +435,7 @@ public class ExamPaperHelper
     }
 
 
-    public async Task<(bool s, double core, string message,StudentExamSessionCacheDto? dto)> SubmitExam(string studentCode, int studentExamSessionId)
+    public async Task<(bool s, double core, string message, StudentExamSessionCacheDto? dto, string? answerKey)> SubmitExam(string studentCode, int studentExamSessionId)
     {
         try
         {
@@ -446,19 +446,19 @@ public class ExamPaperHelper
             if (studentExamSessionDto == null)
             {
                 _logger.LogWarning("❌ Không tìm thấy phiên thi của sinh viên {StudentCode} với ID phiên thi {SessionId}", studentCode, studentExamSessionId);
-                return (false, 0, "Không tìm thấy phiên thi",null);
+                return (false, 0, "Không tìm thấy phiên thi", null, null);
             }
 
             if (studentExamSessionDto.IsCompleted)
             {
                 _logger.LogWarning("⚠️ Sinh viên {StudentCode} đã nộp bài thi trước đó", studentCode);
-                return (false, 0, "Đã nộp bài thi trước đó",null);
+                return (false, 0, "Đã nộp bài thi trước đó", null, null);
             }
 
             if (!studentExamSessionDto.ShuffledExamPaperId.HasValue)
             {
                 _logger.LogWarning("❌ Sinh viên {StudentCode} chưa có đề thi được gán", studentCode);
-                return (false, 0, "Chưa có đề thi được gán",null);
+                return (false, 0, "Chưa có đề thi được gán", null, null);
             }
 
             // Lấy đề thi từ Redis, nếu không có thì lấy từ database
@@ -472,14 +472,14 @@ public class ExamPaperHelper
                     if (paperDto == null)
                     {
                         _logger.LogError("❌ Không thể lấy đề thi từ database cho ShuffledExamPaperId {PaperId}", studentExamSessionDto.ShuffledExamPaperId.Value);
-                        return (false, 0, "Không thể lấy đề thi", null);
+                        return (false, 0, "Không thể lấy đề thi", null, null);
                     }
                     _logger.LogInformation("✅ Đã lấy được đề thi từ database cho ShuffledExamPaperId {PaperId}", studentExamSessionDto.ShuffledExamPaperId.Value);
                 }
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "❌ Lỗi khi lấy đề thi từ database cho ShuffledExamPaperId {PaperId}", studentExamSessionDto.ShuffledExamPaperId.Value);
-                    return (false, 0, "Không thể lấy đề thi", null);
+                    return (false, 0, "Không thể lấy đề thi", null, null);
                 }
             }
 
@@ -488,7 +488,7 @@ public class ExamPaperHelper
             if (string.IsNullOrEmpty(paperDto.AnswerKey))
             {
                 _logger.LogError("❌ Đề thi không có đáp án chuẩn");
-                return (false, 0, "Đề thi không có đáp án chuẩn",null);
+                return (false, 0, "Đề thi không có đáp án chuẩn", null, null);
             }
 
             // Tính điểm và đếm câu đúng
@@ -528,12 +528,12 @@ public class ExamPaperHelper
             _logger.LogInformation("✅ Hoàn thành nộp bài thi cho sinh viên {StudentCode}. Điểm: {Score}, Đúng: {CorrectAnswers}/{TotalQuestions}", 
                 studentCode, score, correctAnswers, totalQuestions);
 
-            return (true, score, $"Nộp bài thi thành công. Điểm: {score:F2}, Đúng: {correctAnswers}/{totalQuestions} câu",studentExamSessionDto);
+            return (true, score, $"Nộp bài thi thành công. Điểm: {score:F2}, Đúng: {correctAnswers}/{totalQuestions} câu", studentExamSessionDto, paperDto.AnswerKey);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "❌ Lỗi khi nộp bài thi cho sinh viên {StudentCode}", studentCode);
-            return (false, 0, $"Lỗi hệ thống: {ex.Message}",null);
+            return (false, 0, $"Lỗi hệ thống: {ex.Message}", null, null);
         }
     }
 
