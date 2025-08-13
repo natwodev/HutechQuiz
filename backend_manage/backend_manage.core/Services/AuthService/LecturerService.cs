@@ -3,6 +3,9 @@ using System.Security.Claims;
 using System.Text;
 using AutoMapper;
 using backend_manage.core.Entities;
+using backend_manage.core.Repositories.Interfaces;
+using backend_manage.shared.Interfaces;
+using Microsoft.EntityFrameworkCore;
 using backend_manage.core.Hubs;
 using backend_manage.core.Repositories.Interfaces;
 using backend_manage.core.Services.Interfaces;
@@ -18,21 +21,27 @@ namespace backend_manage.core.Services.AuthService
     public class LecturerService : ILecturerService
     {
         private readonly IRepository<Lecturer> _lecturerRepository;
+        private readonly IRepository<StudentExamSession> _studentExamSessionRepository;
+        private readonly IStudentService _studentService;
         private readonly IMapper _mapper;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IConfiguration _configuration;
 
 
         public LecturerService(
-            IRepository<Lecturer> lecturerRepository, 
-            IMapper mapper, 
+            IRepository<Lecturer> lecturerRepository,
+            IMapper mapper,
             IHttpContextAccessor httpContextAccessor,
-            IConfiguration configuration)
+            IConfiguration configuration,
+            IRepository<StudentExamSession> studentExamSessionRepository,
+            IStudentService studentService)
         {
             _lecturerRepository = lecturerRepository;
             _mapper = mapper;
             _httpContextAccessor = httpContextAccessor;
             _configuration = configuration;
+            _studentExamSessionRepository = studentExamSessionRepository;
+            _studentService = studentService;
         }
 
         public async Task<LecturerDto> AddLecturerAsync(LecturerCreateDto dto)
@@ -127,6 +136,23 @@ namespace backend_manage.core.Services.AuthService
             
             return lecturer == null ? null : _mapper.Map<LecturerDto>(lecturer);
         }
+
+        // ============ Monitor actions ============
+        public async Task<(bool Success, string Message, ExamSubmissionDto? Submission)> ForceSubmitAsync(int studentExamSessionId, string studentCode)
+        {
+            var session = await _studentExamSessionRepository.GetQueryable()
+                .FirstOrDefaultAsync(s => s.StudentExamSessionId == studentExamSessionId && s.StudentCode == studentCode);
+
+            if (session == null)
+                return (false, "Không tìm thấy phiên thi của sinh viên.", null);
+
+            if (session.IsCompleted)
+                return (true, "Phiên thi đã được nộp trước đó.", null);
+            var (success, message, submission) = await _studentService.SubmitExamAsync(studentCode, studentExamSessionId);
+            return (success, message, submission);
+        }
+
+        
     }
 } 
 
