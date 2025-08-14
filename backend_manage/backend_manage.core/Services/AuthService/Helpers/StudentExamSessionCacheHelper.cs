@@ -1,6 +1,7 @@
 using System.Text.Json;
 using AutoMapper;
 using backend_manage.core.Entities;
+using backend_manage.core.Hubs;
 using backend_manage.core.Repositories.Interfaces;
 using backend_manage.core.Services.Interfaces;
 using backend_manage.shared.DTOs;
@@ -43,13 +44,13 @@ public class StudentExamSessionCacheHelper
     //Hoàn thành 
     #region GetStudentExamSessionsFromRedisAsync
     
-    //phương thức chính dùng cho lúc đăng nhập(lấy danh sách)
+    //phương thức chính dùng cho lúc đăng nhập(lấy danh sách phiên thi chưa hoàn thành và còn thời gian)
     public async Task<IEnumerable<StudentExamSessionDto>?> GetListStudentExamSessionsFromRedisAsync(string studentCode)
     {
         var (redisAvailable, cacheSessions) = await GetListStudentExamSessionsFromCache(studentCode);
         if (cacheSessions != null && cacheSessions.Any())
         {
-            _logger.LogInformation("Tìm thấy danh sách các phiên thi chưa hoàn thành của sinh viên: {key} ở redis ", studentCode);
+            _logger.LogInformation("Tìm thấy danh sách các phiên thi chưa hoàn thành và còn thời gian làm bài của sinh viên: {key} ở redis ", studentCode);
             var result = cacheSessions.Select(x => _mapper.Map<StudentExamSessionDto>(x)).ToList();
             return result;
         }
@@ -79,8 +80,12 @@ public class StudentExamSessionCacheHelper
             _logger.LogWarning("Không tìm thấy sinh viên với mã {StudentCode}", studentCode);
             return null;
         }
+        var currentTime = DateTimeHelper.GetVietnamTime();
+        
         var sessions = await _studentExamSessionRepository.GetQueryable()
-            .Where(x => x.StudentId == student.StudentId && x.IsCompleted == false)
+            .Where(x => x.StudentId == student.StudentId && 
+                       x.IsCompleted == false &&
+                       currentTime < x.ExamSessionStartTime.AddMinutes(x.ExamSessionSubject.Duration + x.ExtraMinutes))
             .Include(x => x.ExamSessionSubject)
             .ThenInclude(x => x.Subject)
             .Include(x => x.ExamRoom)
@@ -88,11 +93,11 @@ public class StudentExamSessionCacheHelper
 
         if(sessions.Any())
         {
-            _logger.LogInformation("Tìm thấy {Count} phiên thi chưa hoàn thành của sinh viên {StudentCode} từ database", sessions.Count, studentCode);
+            _logger.LogInformation("Tìm thấy {Count} phiên thi chưa hoàn thành và còn thời gian làm bài của sinh viên {StudentCode} từ database", sessions.Count, studentCode);
         }
         else
         {
-            _logger.LogInformation("Không tìm thấy phiên thi chưa hoàn thành nào cho sinh viên {StudentCode} từ database", studentCode);
+            _logger.LogInformation("Không tìm thấy phiên thi chưa hoàn thành và còn thời gian làm bài nào cho sinh viên {StudentCode} từ database", studentCode);
         }
 
       
@@ -199,6 +204,13 @@ public class StudentExamSessionCacheHelper
 
             cacheDto.SubjectName = examSessionSubject?.Subject?.SubjectName ?? string.Empty;
             cacheDto.Duration = examSessionSubject?.Duration ?? 0;
+            
+            // Đảm bảo thời gian ca thi được sync nếu chưa có trong entity
+            if (cacheDto.ExamSessionStartTime == default(DateTime) && examSessionSubject != null)
+            {
+                cacheDto.ExamSessionStartTime = examSessionSubject.StartTime;
+                cacheDto.ExamSessionEndTime = examSessionSubject.EndTime;
+            }
         }
 
         // Nếu thiếu RoomName, truy vấn lại ExamRoom

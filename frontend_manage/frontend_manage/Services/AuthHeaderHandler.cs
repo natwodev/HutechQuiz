@@ -1,5 +1,7 @@
 using System.Net.Http.Headers;
+using System.Text.Json;
 using Microsoft.JSInterop;
+using System.Diagnostics;
 
 namespace frontend_manage.Services;
 
@@ -7,6 +9,7 @@ public class AuthHeaderHandler : DelegatingHandler
 {
     private readonly IJSRuntime _jsRuntime;
     private const string TokenKey = "authToken";
+    private const string CookieAuthKey = "cookieAuth";
 
     public AuthHeaderHandler(IJSRuntime jsRuntime)
     {
@@ -15,30 +18,49 @@ public class AuthHeaderHandler : DelegatingHandler
 
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
+        Debug.WriteLine($"[AuthHeaderHandler] Called for: {request.RequestUri}");
+        
         // Bỏ qua các API authentication
         if (request.RequestUri?.AbsolutePath.Contains("api/auth/", StringComparison.OrdinalIgnoreCase) ?? false)
         {
+            Debug.WriteLine("[AuthHeaderHandler] Skipping auth header for auth API");
             return await base.SendAsync(request, cancellationToken);
         }
-        
-        // Kiểm tra loại authentication
-        var authType = await _jsRuntime.InvokeAsync<string>("localStorage.getItem", "authType");
-        
-        if (authType == "cookie")
+
+        try
         {
-            // Cookie authentication - không cần thêm header, cookie sẽ tự động gửi
-        }
-        else
-        {
-            // JWT authentication - thêm Bearer token
-            var token = await _jsRuntime.InvokeAsync<string>("localStorage.getItem", TokenKey);
-            
-            if (!string.IsNullOrEmpty(token))
+            // Kiểm tra loại authentication
+            var authType = await _jsRuntime.InvokeAsync<string>("localStorage.getItem", "authType");
+            Debug.WriteLine($"[AuthHeaderHandler] Auth Type: {authType ?? "null"}");
+
+            if (authType == "cookie")
             {
-                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                // Cookie authentication - Blazor WebAssembly sẽ sử dụng JavaScript fetch
+                // HttpClient bình thường không thể gửi cookie tự động
+                Debug.WriteLine("[AuthHeaderHandler] Cookie auth detected - consider using CookieHttpService for API calls");
             }
+            else
+            {
+                // JWT authentication - thêm Bearer token
+                var token = await _jsRuntime.InvokeAsync<string>("localStorage.getItem", TokenKey);
+                Debug.WriteLine($"[AuthHeaderHandler] JWT Token: {token ?? "null"}");
+
+                if (!string.IsNullOrEmpty(token))
+                {
+                    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                    Debug.WriteLine($"[AuthHeaderHandler] Added Bearer token from JWT auth");
+                }
+            }
+            
+            // Log final authorization header
+            var authHeader = request.Headers.Authorization?.ToString();
+            Debug.WriteLine($"[AuthHeaderHandler] Final Authorization Header: {authHeader ?? "None"}");
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[AuthHeaderHandler] Error: {ex.Message}");
         }
 
         return await base.SendAsync(request, cancellationToken);
     }
-} 
+}

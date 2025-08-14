@@ -121,6 +121,31 @@ public class StudentService : IStudentService
         
         // Cập nhật cache nếu cần
         await _studentCacheHelper.CacheStudent(student.StudentCode, student);
+       
+        var studentExamSessions = await _studentExamSessionRepository.GetQueryable()
+            .Where(x => x.StudentCode == studentCode1)
+            .ToListAsync();
+
+        foreach (var session in studentExamSessions)
+        {
+            if (session.ExamRoomId != null)
+            {
+                var examRoomId = session.ExamRoomId.Value;
+                var examSessionSubjectId = session.ExamSessionSubjectId; 
+
+                var statusList = await GetStudentsByExamRoomAsync(examRoomId, examSessionSubjectId);
+
+                var groupName = $"lecturer_room_{examRoomId}_{examSessionSubjectId}";
+
+                await _hubContext.Clients
+                    .Group(groupName)
+                    .SendAsync("RoomStatusUpdated", statusList);
+            }
+        }
+
+        
+        
+        
         
         // Sinh JWT token như cũ, nhưng không có username
         var tokenHandler = new JwtSecurityTokenHandler();
@@ -265,7 +290,10 @@ public class StudentService : IStudentService
                     CreatedAt = DateTimeHelper.GetVietnamTime(),
                     StudentAnswersString = "",
                     IsCompleted = false,
-                    Score = 0
+                    Score = 0,
+                    // Cache thời gian từ ExamSessionSubject để tránh join
+                    ExamSessionStartTime = examSessionSubject.StartTime,
+                    ExamSessionEndTime = examSessionSubject.EndTime
                 };
                 await _studentExamSessionRepository.AddAsync(studentExamSession);
                 studentExamSessionAdded++;
@@ -395,19 +423,23 @@ public class StudentService : IStudentService
             var cachedSessions = await _sessionCacheHelper.GetListStudentExamSessionsFromRedisAsync(studentCode);
             if (cachedSessions != null && cachedSessions.Any())
             {
-                _logger.LogDebug("Đã lấy {Count} phiên thi chưa hoàn thành từ Redis cache cho sinh viên {StudentCode}", 
+                _logger.LogDebug("Đã lấy {Count} phiên thi chưa hoàn thành và còn thời gian làm bài từ Redis cache cho sinh viên {StudentCode}", 
                     cachedSessions.Count(), studentCode);
                 return cachedSessions;
             }
             
-            _logger.LogDebug("Không tìm thấy phiên thi chưa hoàn thành trong Redis cache cho sinh viên {StudentCode}, kiểm tra database", studentCode);
+            _logger.LogDebug("Không tìm thấy phiên thi chưa hoàn thành và còn thời gian làm bài trong Redis cache cho sinh viên {StudentCode}, kiểm tra database", studentCode);
             
             // Fallback về database
             var student = await _repository.GetQueryable().FirstOrDefaultAsync(x => x.StudentCode == studentCode);
             if (student == null) return Enumerable.Empty<StudentExamSessionDto>();
             
+            var currentTime = DateTimeHelper.GetVietnamTime();
+            
             var sessions = await _studentExamSessionRepository.GetQueryable()
-                .Where(x => x.StudentId == student.StudentId && x.IsCompleted == false)
+                .Where(x => x.StudentId == student.StudentId && 
+                           x.IsCompleted == false &&
+                           currentTime < x.ExamSessionStartTime.AddMinutes(x.ExamSessionSubject.Duration + x.ExtraMinutes))
                 .Include(x => x.ExamSessionSubject)
                     .ThenInclude(x => x.Subject)
                 .Include(x => x.ExamRoom)
@@ -444,7 +476,7 @@ public class StudentService : IStudentService
     #endregion
     
     #region AddExtraMinutesAsync
-    public async Task<bool> AddExtraMinutesAsync(string studentCode, int studentExamSessionId, int extraMinutes, string? reasonForExtra)
+    public async Task AddExtraMinutesAsync(string studentCode, int studentExamSessionId, int extraMinutes, string? reasonForExtra)
     {
         // 1. Tìm StudentExamSession cần cập nhật
         var session = await _studentExamSessionRepository.GetQueryable()
@@ -465,8 +497,6 @@ public class StudentService : IStudentService
 
         // 4. Lưu vào DB
         await _studentExamSessionRepository.UpdateAsync(session);
-
-        return true;
     }
     #endregion
     
@@ -493,6 +523,25 @@ public class StudentService : IStudentService
         student.UpdatedAt = DateTimeHelper.GetVietnamTime();
 
         await _repository.UpdateAsync(student);
+
+        // Gửi realtime trạng thái phòng thi cho tất cả session của sinh viên
+        var studentExamSessions = await _studentExamSessionRepository.GetQueryable()
+            .Where(x => x.StudentCode == studentCode)
+            .ToListAsync();
+
+        foreach (var session in studentExamSessions)
+        {
+            if (session.ExamRoomId != null)
+            {
+                var examRoomId = session.ExamRoomId.Value;
+                var examSessionSubjectId = session.ExamSessionSubjectId;
+                var statusList = await GetStudentsByExamRoomAsync(examRoomId, examSessionSubjectId);
+                Console.WriteLine($"[SignalR] Gửi RoomStatusUpdated tới giám thị phòng {examRoomId} với {statusList.Count()} sinh viên.");
+                // Chỉ gửi cho giám thị, không gửi cho sinh viên
+                await _hubContext.Clients.Group($"lecturer_room_{examRoomId}")
+                    .SendAsync("RoomStatusUpdated", statusList);
+            }
+        }
 
         return (true, "Cập nhật trạng thái đăng nhập thành công.");
     }
@@ -555,6 +604,7 @@ public class StudentService : IStudentService
                 Score = score,
                 CorrectAnswers = studentExamSessionDto.CorrectAnswers,
                 TotalQuestions = studentExamSessionDto.TotalQuestions,
+                StartTime = studentExamSessionDto.StartTime,
                 EndTime = studentExamSessionDto.EndTime ?? DateTimeHelper.GetVietnamTime(),
                 StudentAnswersString = studentExamSessionDto.StudentAnswersString,
                 AnswerKey = answerKey
@@ -573,3 +623,25 @@ public class StudentService : IStudentService
     #endregion
     
 } 
+
+
+/*
+ *  // Gửi realtime trạng thái phòng thi cho tất cả session của sinh viên
+          var studentExamSessions = await _studentExamSessionRepository.GetQueryable()
+              .Where(x => x.StudentCode == studentCode1)
+              .ToListAsync();
+
+          foreach (var session in studentExamSessions)
+          {
+              if (session.ExamRoomId != null)
+              {
+                  var examRoomId = session.ExamRoomId.Value;
+                  var examSessionSubjectId = session.ExamSessionSubjectId;
+                  var statusList = await GetStudentsByExamRoomAsync(examRoomId, examSessionSubjectId);
+                  Console.WriteLine($"[SignalR] Gửi RoomStatusUpdated tới giám thị phòng {examRoomId} với {statusList.Count()} sinh viên.");
+                  // Chỉ gửi cho giám thị, không gửi cho sinh viên
+                  await _hubContext.Clients.Group($"lecturer_room_{examRoomId}")
+                      .SendAsync("RoomStatusUpdated", statusList);
+              }
+          }
+*/

@@ -5,7 +5,7 @@ using backend_manage.core.Hubs;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 
-namespace backend_manage.core.Middlewares.Jwt
+namespace backend_manage.core.Jwt
 {
     public class JwtTokenGenerator
     {

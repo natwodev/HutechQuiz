@@ -62,6 +62,14 @@ public class StudentExamSession : BaseEntity
     // Chuỗi lưu đáp án của sinh viên, ví dụ: "A,B,C,D,..." hoặc JSON
     public string StudentAnswersString { get; set; }
 
+    // Thời gian bắt đầu được phép làm bài (cached từ ExamSessionSubject.StartTime)
+    // Dùng để validation và tránh phải join với ExamSessionSubject
+    public DateTime ExamSessionStartTime { get; set; }
+
+    // Thời gian kết thúc được phép làm bài (cached từ ExamSessionSubject.EndTime)  
+    // Dùng để validation và tránh phải join với ExamSessionSubject
+    public DateTime ExamSessionEndTime { get; set; }
+
     
     // Navigation property đến entity Student
     public Student Student { get; set; }

@@ -55,6 +55,56 @@ public class ExamPaperHelper
             _logger.LogWarning("Không tìm thấy phiên thi của sinh viên {StudentCode} với ID phiên thi {SessionId}", studentCode, studentExamSessionId);
             return (null, null);
         }
+
+        // Kiểm tra thời gian bắt đầu thi
+        var currentTime = DateTimeHelper.GetVietnamTime();
+        var examStartTime = studentExamSessionDto.ExamSessionStartTime;
+        var timeDifference = currentTime - examStartTime;
+
+        // Không được thi sớm hơn thời gian bắt đầu
+        if (currentTime < examStartTime)
+        {
+            var minutesEarly = Math.Abs(timeDifference.TotalMinutes);
+            _logger.LogWarning("Sinh viên {StudentCode} cố gắng thi sớm {Minutes} phút. Thời gian bắt đầu: {StartTime}, Thời gian hiện tại: {CurrentTime}", 
+                studentCode, minutesEarly, examStartTime, currentTime);
+            throw new InvalidOperationException($"Chưa đến thời gian làm bài. Ca thi bắt đầu lúc {examStartTime:HH:mm dd/MM/yyyy}");
+        }
+
+        // Kiểm tra logic mới: nếu sinh viên đã bắt đầu làm bài (StartTime != null) và phiên thi vẫn còn hiệu lực
+        if (studentExamSessionDto.StartTime.HasValue)
+        {
+            // Tính thời gian kết thúc dự kiến dựa trên thời gian bắt đầu làm bài của sinh viên
+            var studentStartTime = studentExamSessionDto.StartTime.Value;
+            var totalDuration = studentExamSessionDto.Duration + studentExamSessionDto.ExtraMinutes;
+            var expectedEndTime = examStartTime.AddMinutes(totalDuration);
+
+            // Kiểm tra xem phiên thi có còn hiệu lực không
+            if (currentTime <= expectedEndTime)
+            {
+                _logger.LogInformation("Sinh viên {StudentCode} đã bắt đầu làm bài từ {StudentStartTime} và vẫn còn trong thời gian hiệu lực. Thời gian hiện tại: {CurrentTime}, Dự kiến kết thúc: {ExpectedEndTime}", 
+                    studentCode, studentStartTime, currentTime, expectedEndTime);
+            }
+            else
+            {
+                _logger.LogWarning("Sinh viên {StudentCode} đã hết thời gian làm bài. Bắt đầu: {StudentStartTime}, Kết thúc dự kiến: {ExpectedEndTime}, Thời gian hiện tại: {CurrentTime}", 
+                    studentCode, studentStartTime, expectedEndTime, currentTime);
+                throw new InvalidOperationException($"Đã hết thời gian làm bài. Bạn đã bắt đầu làm bài lúc {studentStartTime:HH:mm dd/MM/yyyy} và thời gian làm bài đã kết thúc lúc {expectedEndTime:HH:mm dd/MM/yyyy}");
+            }
+        }
+        else
+        {
+            // Logic cũ: chỉ áp dụng cho sinh viên chưa bắt đầu làm bài (StartTime == null)
+            // Không được thi muộn quá 15 phút khi lần đầu tiên bắt đầu
+            if (timeDifference.TotalMinutes > 15)
+            {
+                _logger.LogWarning("Sinh viên {StudentCode} cố gắng thi muộn {Minutes} phút. Thời gian bắt đầu: {StartTime}, Thời gian hiện tại: {CurrentTime}", 
+                    studentCode, timeDifference.TotalMinutes, examStartTime, currentTime);
+                throw new InvalidOperationException($"Đã quá thời gian cho phép bắt đầu làm bài. Ca thi bắt đầu lúc {examStartTime:HH:mm dd/MM/yyyy}, chỉ được muộn tối đa 15 phút");
+            }
+        }
+
+        _logger.LogInformation("Sinh viên {StudentCode} bắt đầu thi đúng thời gian. Thời gian bắt đầu: {StartTime}, Thời gian hiện tại: {CurrentTime}, Chênh lệch: {Minutes} phút", 
+            studentCode, examStartTime, currentTime, timeDifference.TotalMinutes);
         
         if (!studentExamSessionDto.ShuffledExamPaperId.HasValue)
         {

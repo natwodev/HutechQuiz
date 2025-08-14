@@ -27,6 +27,10 @@ namespace backend_manage.shared.DTOs
         public string RoomName { get; set; }
         public int Duration { get; set; }
         
+        // Thời gian được phép làm bài (cached từ ExamSessionSubject)
+        public DateTime ExamSessionStartTime { get; set; }
+        public DateTime ExamSessionEndTime { get; set; }
+        
         // Audit fields từ BaseEntity
         public DateTime CreatedAt { get; set; }
         public string? CreatedBy { get; set; }

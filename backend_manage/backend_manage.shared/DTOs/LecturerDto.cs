@@ -24,6 +24,19 @@ namespace backend_manage.shared.DTOs
         public string? PhoneNumber { get; set; }
         public string DepartmentId { get; set; }
         public string DepartmentName { get; set; }
-        public string? UserId { get; set; }
+    }
+
+    public class LecturerAuthResultDto
+    {
+        public string Token { get; set; }
+        public string Role { get; set; }
+        public bool IsSuccess { get; set; }
+        public string ErrorMessage { get; set; }
+    }
+
+    public class LecturerLoginDto
+    {
+        public string LecturerCode1 { get; set; }
+        public string LecturerCode2 { get; set; }
     }
 } 

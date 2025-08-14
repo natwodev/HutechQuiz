@@ -197,11 +197,23 @@ namespace backend_manage.core.Data
                         UpdatedAt = now,
                         UpdatedBy = "seed",
                         Version = 1
+                    },
+                    new Subject
+                    {
+                        SubjectCore = "CNTT002",
+                        SubjectName = "Cơ sở dữ liệu",
+                        DepartmentId = "CNTT",
+                        CreatedBy = "seed",
+                        CreatedAt = now,
+                        IsDeleted = false,
+                        UpdatedAt = now,
+                        UpdatedBy = "seed",
+                        Version = 1
                     }
                 };
                 context.Subjects.AddRange(subjects);
                 await context.SaveChangesAsync();
-                logger.LogInformation("✅ Đã seed 2 môn học: Lập trình C# và Kinh tế vi mô.");
+                logger.LogInformation("✅ Đã seed 3 môn học: Lập trình C#, Kinh tế vi mô và Cơ sở dữ liệu.");
             }
 
             // Seed AcademicYear nếu chưa có
@@ -330,9 +342,10 @@ namespace backend_manage.core.Data
                 var kinhteSessionDept = examSessionDepartments.FirstOrDefault(x => x.DepartmentId == "KINHTE");
 
                 var cnttSubject = context.Subjects.FirstOrDefault(x => x.SubjectCore == "CNTT001");
+                var cnttSubject2 = context.Subjects.FirstOrDefault(x => x.SubjectCore == "CNTT002");
                 var kinhteSubject = context.Subjects.FirstOrDefault(x => x.SubjectCore == "KT001");
 
-                if (cnttSessionDept != null && cnttSubject != null && kinhteSessionDept != null && kinhteSubject != null)
+                if (cnttSessionDept != null && cnttSubject != null && cnttSubject2 != null && kinhteSessionDept != null && kinhteSubject != null)
                 {
                     var examSessionSubjects = new[]
                     {
@@ -365,11 +378,26 @@ namespace backend_manage.core.Data
                             UpdatedAt = now,
                             UpdatedBy = "seed",
                             Version = 1
+                        },
+                        new ExamSessionSubject
+                        {
+                            ExamSessionDepartmentId = cnttSessionDept.ExamSessionDepartmentId,
+                            SubjectId = cnttSubject2.SubjectId,
+                            ExamSessionSubjectCore = $"{cnttSubject2.SubjectCore}-{now:yyyyMMddHHmmss}",
+                            Duration = 90,
+                            StartTime = now.AddHours(2), // Thi sau ca đầu 2 tiếng
+                            EndTime = now.AddHours(2).AddMinutes(90),
+                            CreatedBy = "seed",
+                            CreatedAt = now,
+                            IsDeleted = false,
+                            UpdatedAt = now,
+                            UpdatedBy = "seed",
+                            Version = 1
                         }
                     };
                     context.ExamSessionSubjects.AddRange(examSessionSubjects);
                     await context.SaveChangesAsync();
-                    logger.LogInformation("✅ Đã seed ExamSessionSubject cho 2 khoa với 2 môn học tương ứng.");
+                    logger.LogInformation("✅ Đã seed 3 ExamSessionSubject: Lập trình C# (120 phút), Kinh tế vi mô (120 phút), Cơ sở dữ liệu (90 phút).");
                 }
             }
             else
@@ -391,6 +419,52 @@ namespace backend_manage.core.Data
                 context.ExamRooms.AddRange(rooms);
                 await context.SaveChangesAsync();
                 logger.LogInformation("✅ Đã seed 4 phòng thi: A101, A102, B201, B202.");
+            }
+
+            // Seed giảng viên nếu chưa có
+            if (!context.Lecturers.Any())
+            {
+                var now = DateTimeHelper.GetVietnamTime();
+                var lecturers = new[]
+                {
+                    new Lecturer
+                    {
+                        LecturerCode = "GV001",
+                        FirstName = "Nguyễn",
+                        LastName = "Văn A",
+                        Gender = true,
+                        DateOfBirth = new DateTime(1980, 1, 15),
+                        Email = "gv001@hutech.edu.vn",
+                        PhoneNumber = "0123456789",
+                        DepartmentId = "CNTT",
+                        CreatedBy = "seed",
+                        CreatedAt = now,
+                        UpdatedBy = "seed",
+                        UpdatedAt = now,
+                        IsDeleted = false,
+                        Version = 1
+                    },
+                    new Lecturer
+                    {
+                        LecturerCode = "GV002",
+                        FirstName = "Trần",
+                        LastName = "Thị B",
+                        Gender = false,
+                        DateOfBirth = new DateTime(1985, 5, 20),
+                        Email = "gv002@hutech.edu.vn",
+                        PhoneNumber = "0987654321",
+                        DepartmentId = "KINHTE",
+                        CreatedBy = "seed",
+                        CreatedAt = now,
+                        UpdatedBy = "seed",
+                        UpdatedAt = now,
+                        IsDeleted = false,
+                        Version = 1
+                    }
+                };
+                context.Lecturers.AddRange(lecturers);
+                await context.SaveChangesAsync();
+                logger.LogInformation("✅ Đã seed 2 giảng viên: GV001 (CNTT) và GV002 (KINHTE).");
             }
         }
     }

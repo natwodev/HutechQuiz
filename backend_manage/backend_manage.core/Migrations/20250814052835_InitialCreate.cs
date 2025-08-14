@@ -279,7 +279,6 @@ namespace backend_manage.core.Migrations
                     Email = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
                     PhoneNumber = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: true),
                     DepartmentId = table.Column<string>(type: "nvarchar(10)", maxLength: 10, nullable: false),
-                    UserId = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     CreatedBy = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
@@ -290,12 +289,6 @@ namespace backend_manage.core.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Lecturers", x => x.LecturerId);
-                    table.ForeignKey(
-                        name: "FK_Lecturers_AspNetUsers_UserId",
-                        column: x => x.UserId,
-                        principalTable: "AspNetUsers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_Lecturers_Departments_DepartmentId",
                         column: x => x.DepartmentId,
@@ -753,6 +746,8 @@ namespace backend_manage.core.Migrations
                     IsCompleted = table.Column<bool>(type: "bit", nullable: false),
                     ExamRoomId = table.Column<int>(type: "int", nullable: true),
                     StudentAnswersString = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    ExamSessionStartTime = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ExamSessionEndTime = table.Column<DateTime>(type: "datetime2", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     CreatedBy = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
@@ -898,13 +893,6 @@ namespace backend_manage.core.Migrations
                 column: "DepartmentId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Lecturers_UserId",
-                table: "Lecturers",
-                column: "UserId",
-                unique: true,
-                filter: "[UserId] IS NOT NULL");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_OriginalExamPaperDetails_ChapterId",
                 table: "OriginalExamPaperDetails",
                 column: "ChapterId");
@@ -1021,6 +1009,9 @@ namespace backend_manage.core.Migrations
                 name: "AspNetRoles");
 
             migrationBuilder.DropTable(
+                name: "AspNetUsers");
+
+            migrationBuilder.DropTable(
                 name: "Lecturers");
 
             migrationBuilder.DropTable(
@@ -1034,9 +1025,6 @@ namespace backend_manage.core.Migrations
 
             migrationBuilder.DropTable(
                 name: "Students");
-
-            migrationBuilder.DropTable(
-                name: "AspNetUsers");
 
             migrationBuilder.DropTable(
                 name: "Chapters");

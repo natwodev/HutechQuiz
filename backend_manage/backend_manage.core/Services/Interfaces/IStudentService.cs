@@ -22,7 +22,7 @@ public interface IStudentService
     Task<IEnumerable<StudentExamSessionDto>> GetStudentExamSessionsAsync(string studentCode);
     Task<IEnumerable<StudentExamRoomStatusDto>> GetStudentsByExamRoomAsync(int examRoomId, int examSessionSubjectId);
     Task<(bool Success, string Message)> AvtiveLoginAsync(string studentCode, bool isLogin);
-    Task<bool> AddExtraMinutesAsync(string studentCode, int studentExamSessionId, int extraMinutes, string? reasonForExtra);
+    Task AddExtraMinutesAsync(string studentCode, int studentExamSessionId, int extraMinutes, string? reasonForExtra);
     
     Task<(bool Success, string Message, string? NewAnswersString)> UpdateSingleAnswerAsync(string studentCode, int studentExamSessionId, int index,int? SubIndex, string answer);
     

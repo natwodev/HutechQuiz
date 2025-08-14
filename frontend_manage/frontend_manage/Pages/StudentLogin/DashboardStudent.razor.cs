@@ -1,6 +1,7 @@
 using frontend_manage.DTOs;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
+using MudBlazor;
 
 namespace frontend_manage.Pages.StudentLogin
 {
@@ -12,13 +13,14 @@ namespace frontend_manage.Pages.StudentLogin
         [Inject] private IJSRuntime JSRuntime { get; set; }
         // [Inject] private HttpClient Http { get; set; }
         [Inject] private InfoApi InfoApi { get; set; }
+        [Inject] private ISnackbar Snackbar { get; set; }
 
         private bool isStudent;
         private bool isStudentChecked = false;
-        private string currentTime = DateTime.Now.ToString("hh:mm:ss tt");
+        private string currentTime = DateTime.Now.ToString("HH:mm:ss");
         private Timer? timer;
         private StudentInfoDto? studentInfo;
-        private List<ExamSessionDto>? examSessions;
+        private List<StudentExamSessionDto>? examSessions;
         private int? selectedExamSessionId = null;
         private bool _processing = false;
 
@@ -42,20 +44,36 @@ namespace frontend_manage.Pages.StudentLogin
                 }
 
                 // Fetch exam sessions
-                examSessions = await InfoApi.GetStudentExamSessionsAsync();
+                var allExamSessions = await InfoApi.GetStudentExamSessionsAsync();
+                
+                // Lọc và sắp xếp để chỉ hiển thị 2 ca thi có ExamSessionStartTime gần nhất
+                if (allExamSessions != null && allExamSessions.Count > 0)
+                {
+                    var now = DateTime.Now;
+                    
+                    // Sắp xếp theo thời gian gần nhất với thời gian hiện tại
+                    examSessions = allExamSessions
+                        .OrderBy(session => Math.Abs((session.ExamSessionStartTime - now).TotalMinutes))
+                        .Take(2)
+                        .ToList();
+                }
+                else
+                {
+                    examSessions = new List<StudentExamSessionDto>();
+                }
             }
             catch
             {
                 studentInfo = null;
-                examSessions = null;
+                examSessions = new List<StudentExamSessionDto>();
             }
-            currentTime = DateTime.Now.ToString("hh:mm:ss tt");
+            currentTime = DateTime.Now.ToString("HH:mm:ss");
             timer = new Timer(UpdateTime, null, 0, 1000);
         }
 
         private void UpdateTime(object? state)
         {
-            currentTime = DateTime.Now.ToString("hh:mm:ss tt");
+            currentTime = DateTime.Now.ToString("HH:mm:ss");
             InvokeAsync(StateHasChanged);
         }
 
@@ -73,10 +91,47 @@ namespace frontend_manage.Pages.StudentLogin
             Navigation.NavigateTo("/student-login", true);
         }
 
-        private async Task StartExam(ExamSessionDto session)
+        private async Task StartExam(StudentExamSessionDto session)
         {
-            // Chuyển hướng sang trang làm bài thi với studentExamSessionId
-            Navigation.NavigateTo($"/Exam?studentExamSessionId={session.StudentExamSessionId}");
+            var timeStatus = GetTimeStatus(session);
+
+            if (timeStatus.isTooEarly)
+            {
+                Snackbar.Add(
+                    $"Chưa đến giờ bắt đầu ca thi. Vui lòng quay lại lúc {session.ExamSessionStartTime:HH:mm dd/MM/yyyy}.",
+                    Severity.Warning,
+                    config =>
+                    {
+                        config.ShowCloseIcon = true;
+                        config.VisibleStateDuration = 4000;
+                    }
+                );
+                return;
+            }
+
+            if (timeStatus.isTooLate)
+            {
+                var limitTime = session.StartTime.HasValue
+                    ? session.ExamSessionStartTime.AddMinutes(session.Duration + session.ExtraMinutes)
+                    : session.ExamSessionStartTime.AddMinutes(15);
+
+                Snackbar.Add(
+                    $"Đã quá thời gian cho phép làm bài thi. Thời gian bắt đầu: {session.ExamSessionStartTime:HH:mm dd/MM/yyyy}, Thời gian giới hạn: {limitTime:HH:mm dd/MM/yyyy}.",
+                    Severity.Error,
+                    config =>
+                    {
+                        config.ShowCloseIcon = true;
+                        config.VisibleStateDuration = 6000;
+                    }
+                );
+                return;
+            }
+
+            if (timeStatus.isInValidTime)
+            {
+                // Chuyển hướng sang trang làm bài thi
+                Navigation.NavigateTo($"/Exam?studentExamSessionId={session.StudentExamSessionId}");
+            }
         }
 
         private string GetSessionStyle(int sessionId)
@@ -86,7 +141,50 @@ namespace frontend_manage.Pages.StudentLogin
             return "cursor:pointer;";
         }
 
-        private async Task ProcessSomething(ExamSessionDto session)
+        private (bool isTooEarly, bool isTooLate, bool isInValidTime) GetTimeStatus(StudentExamSessionDto session)
+        {
+            bool isTooEarly = false, isTooLate = false, isInValidTime = false;
+    
+            var currentTime = DateTimeHelper.GetVietnamTime();
+            var examStartTime = session.ExamSessionStartTime;
+            var timeDifference = currentTime - examStartTime;
+
+            // Sớm
+            if (currentTime < examStartTime)
+            {
+                isTooEarly = true;
+            }
+            else if (session.StartTime.HasValue)
+            {
+                // Đã bắt đầu
+                var totalDuration = session.Duration + session.ExtraMinutes;
+                var expectedEndTime = examStartTime.AddMinutes(totalDuration);
+                if (currentTime <= expectedEndTime)
+                    isInValidTime = true;
+                else
+                    isTooLate = true;
+            }
+            else
+            {
+                // Chưa bắt đầu, trễ quá 15 phút
+                if (timeDifference.TotalMinutes > 15)
+                    isTooLate = true;
+                else
+                    isInValidTime = true;
+            }
+
+            return (isTooEarly, isTooLate, isInValidTime);
+        }
+        
+        
+        private string FormatExamTime(DateTime time)
+        {
+            // Thời gian từ backend đã được lưu theo múi giờ Việt Nam
+            // Hiển thị theo múi giờ địa phương của người dùng
+            return time.ToString("HH:mm dd/MM/yyyy");
+        }
+
+        private async Task ProcessSomething(StudentExamSessionDto session)
         {
             _processing = true;
             StateHasChanged(); // cập nhật giao diện ngay khi bắt đầu xử lý

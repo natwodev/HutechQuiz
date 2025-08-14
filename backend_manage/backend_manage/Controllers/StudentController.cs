@@ -117,12 +117,28 @@ public class StudentController : ControllerBase
     [HttpPost("start-exam")]
     public async Task<IActionResult> StartExam([FromForm] int studentExamSessionId)
     {
-        var studentCode = User.FindFirst("studentCode")?.Value;
-        if (string.IsNullOrEmpty(studentCode))
-            return Unauthorized(new { message = "Token không hợp lệ!" });
-        var (result,pp) = await _studentService.StartExamAsync(studentCode, studentExamSessionId);
-        if (result == null) return BadRequest(new { message = "Không thể bắt đầu làm bài vì k có phiên thi." });
-        return Ok(new { studentSession = result, examPaper = pp });
+        try
+        {
+            var studentCode = User.FindFirst("studentCode")?.Value;
+            if (string.IsNullOrEmpty(studentCode))
+                return Unauthorized(new { message = "Token không hợp lệ!" });
+            
+            var (result, pp) = await _studentService.StartExamAsync(studentCode, studentExamSessionId);
+            if (result == null) 
+                return BadRequest(new { message = "Không thể bắt đầu làm bài vì không có phiên thi." });
+            
+            return Ok(new { studentSession = result, examPaper = pp });
+        }
+        catch (InvalidOperationException ex)
+        {
+            // Lỗi thời gian hoặc logic nghiệp vụ
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Lỗi khi bắt đầu thi cho sinh viên");
+            return StatusCode(500, new { message = "Đã xảy ra lỗi hệ thống. Vui lòng thử lại sau." });
+        }
     }
 
     [HttpGet("exam-sessions")]
@@ -140,20 +156,17 @@ public class StudentController : ControllerBase
     {
         var result = await _studentService.GetStudentsByExamRoomAsync(examRoomId, examSessionSubjectId);
         return Ok(new {
-            students = result,
-            signalrEndpoint = "/notificationHub",
-            groupName = $"room_{examRoomId}"
+            students = result
         });
     }
+    
     [HttpPost("extra-minutes")]
     public async Task<IActionResult> AddExtraMinutes([FromBody] AddExtraMinutesDto dto)
     {
         try
         {
-            var success = await _studentService.AddExtraMinutesAsync(dto.StudentCode, dto.StudentExamSessionId, dto.ExtraMinutes, dto.ReasonForExtra);
-            if (success)
-                return Ok(new { message = "Cập nhật thời gian làm bài thêm thành công." });
-            return BadRequest(new { message = "Không thể cập nhật." });
+            await _studentService.AddExtraMinutesAsync(dto.StudentCode, dto.StudentExamSessionId, dto.ExtraMinutes, dto.ReasonForExtra);
+            return Ok(new { message = "Cập nhật thời gian làm bài thêm thành công." });
         }
         catch (Exception ex)
         {

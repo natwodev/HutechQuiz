@@ -75,6 +75,7 @@ public partial class Result : ComponentBase
                                 Score = resultData.Score,
                                 CorrectAnswers = resultData.CorrectAnswers,
                                 TotalQuestions = resultData.TotalQuestions,
+                                StartTime = resultData.StartTime,
                                 EndTime = resultData.EndTime,
                                 StudentAnswersString = resultData.StudentAnswersString ?? "",
                                 AnswerKey = resultData.AnswerKey ?? ""
@@ -265,6 +266,7 @@ public partial class Result : ComponentBase
         public double? Score { get; set; }
         public int? CorrectAnswers { get; set; }
         public int? TotalQuestions { get; set; }
+        public DateTime StartTime { get; set; }
         public DateTime EndTime { get; set; }
         public string? StudentAnswersString { get; set; }
         public string? AnswerKey { get; set; }

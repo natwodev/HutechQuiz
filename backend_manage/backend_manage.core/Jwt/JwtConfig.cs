@@ -4,7 +4,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 
-namespace backend_manage.core.Middlewares.Jwt
+namespace backend_manage.core.Jwt
 {
     public static class JwtConfig
     {

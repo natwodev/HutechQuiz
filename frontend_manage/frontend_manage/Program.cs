@@ -7,8 +7,11 @@ using frontend_manage.Pages.Monitor;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using MudBlazor.Services;
+using Microsoft.Extensions.Http;
+using Microsoft.JSInterop;
 
 using frontend_manage.Services;
+using frontend_manage.Services.AcademicAffairs;
 
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
@@ -22,22 +25,32 @@ builder.Services.AddMudServices();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<InfoApi>();
 builder.Services.AddScoped<ExamApi>();
+builder.Services.AddScoped<MonitorApi>();
 builder.Services.AddSingleton<NotificationService>();
 builder.Services.AddScoped<Api>();
 
-// Đăng ký AuthHeaderHandler
-builder.Services.AddTransient<AuthHeaderHandler>();
+// Academic Affairs Services
+builder.Services.AddScoped<AcademicYearService>();
+builder.Services.AddScoped<SemesterService>();
+builder.Services.AddScoped<ExamBatchService>();
+builder.Services.AddScoped<ExamBatchDetailService>();
+builder.Services.AddScoped<ExamSessionService>();
+builder.Services.AddScoped<ExamSessionDepartmentService>();
+builder.Services.AddScoped<ExamSessionSubjectService>();
 
-// Cấu hình HttpClient với AuthHeaderHandler
-builder.Services.AddScoped(sp =>
+// Đăng ký AuthHeaderHandler
+builder.Services.AddScoped<AuthHeaderHandler>();
+
+// Cấu hình HttpClient với AuthHeaderHandler cho Blazor WebAssembly
+builder.Services.AddHttpClient("API", client =>
 {
-    var handler = sp.GetRequiredService<AuthHeaderHandler>();
-    handler.InnerHandler = new HttpClientHandler(); // Thêm inner handler
-    return new HttpClient(handler)
-    {
-        BaseAddress = new Uri("http://localhost:5163/")
-    };
-});
+    client.BaseAddress = new Uri("http://localhost:5163/");
+    // Đảm bảo gửi credentials (cookies) với mọi request
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+}).AddHttpMessageHandler<AuthHeaderHandler>();
+
+// Đăng ký HttpClient mặc định
+builder.Services.AddScoped(sp => sp.GetRequiredService<IHttpClientFactory>().CreateClient("API"));
 
 
 

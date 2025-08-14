@@ -13,5 +13,7 @@ namespace backend_manage.shared.DTOs
         public int ExtraMinutes { get; set; }
         public DateTime? StartTime { get; set; }
         public DateTime? EndTime { get; set; }
+        public DateTime ExamSessionStartTime { get; set; }
+        public DateTime ExamSessionEndTime { get; set; }
     }
 } 

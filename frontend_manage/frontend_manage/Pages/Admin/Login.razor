@@ -55,6 +55,8 @@
     private async Task HandleLogin()
     {
         ErrorMessage = null;
+        
+        // Sử dụng cookie login cho admin
         var result = await AuthService.LoginWithCookie(loginModel.UserName, loginModel.Password);
         if (result.IsSuccess)
         {

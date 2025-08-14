@@ -5,7 +5,9 @@
 
 <PageTitle>Đăng nhập Sinh viên</PageTitle>
 
-<MudContainer MaxWidth="MaxWidth.False" Style="height: 100vh; margin: 0; padding: 0; position: relative; overflow: hidden;">
+<ExamNotification />
+
+<MudContainer MaxWidth="MaxWidth.False" Style="margin: 0; padding: 0; position: relative; overflow: hidden;">
     
     <!-- Background Image phủ full trang -->
     <div style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-image: url('/images/Home_Page2.jpg'); background-size: cover; background-position: center; background-repeat: no-repeat; z-index: 1;"></div>
@@ -25,15 +27,15 @@
     }
     
     <!-- Main Content căn giữa -->
-    <MudGrid Justify="Justify.Center" AlignItems="AlignItems.Center" Style="height: 100vh; position: relative; z-index: 3; margin: 0; padding: 20px;">
+    <MudGrid Justify="Justify.Center" AlignItems="AlignItems.Center" Style="position: relative; z-index: 3; margin: 0; padding: 40px 20px;">
         <MudItem xs="12" sm="10" md="8" lg="7" xl="6">
             <MudPaper Elevation="25" Style="border-radius: 32px; max-width: 900px; background: rgba(255, 255, 255, 0.98); backdrop-filter: blur(20px); overflow: hidden;">
                 
-                <MudGrid Style="height: 580px;">
+                <MudGrid>
                     
                     <!-- Left Column - Login Form -->
                     <MudItem xs="12" md="6">
-                        <MudContainer Style="padding: 40px 30px; height: 100%; display: flex; flex-direction: column; justify-content: center;">
+                        <MudContainer Style="padding: 40px 30px; display: flex; flex-direction: column; justify-content: center;">
                             
                             <!-- Header -->
                             <MudStack Spacing="4" AlignItems="AlignItems.Center" Style="margin-bottom: 30px;">
@@ -99,7 +101,7 @@
                     
                     <!-- Right Column - Rules & Info -->
                     <MudItem xs="12" md="6">
-                        <MudContainer Style="height: 100%; background: linear-gradient(135deg, #1976d2 0%, #42a5f5 50%, #64b5f6 100%); padding: 15px 15px 10px 15px; display: flex; flex-direction: column; justify-content: space-between; position: relative; border-radius: 0 32px 32px 0;">
+                        <MudContainer Style="background: linear-gradient(135deg, #1976d2 0%, #42a5f5 50%, #64b5f6 100%); padding: 15px 15px 10px 15px; display: flex; flex-direction: column; justify-content: space-between; position: relative; border-radius: 0 32px 32px 0;">
                             
                             <!-- Content -->
                             <MudStack Spacing="2">

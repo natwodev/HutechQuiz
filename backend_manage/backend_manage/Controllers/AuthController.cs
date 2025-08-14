@@ -1,6 +1,6 @@
 using System.Security.Claims;
 using backend_manage.core.Authentication.Services;
-using backend_manage.core.Middlewares.Jwt;
+using backend_manage.core.Jwt;
 using backend_manage.core.Services.Interfaces;
 using backend_manage.shared.DTOs;
 using backend_manage.shared.Interfaces;
@@ -18,13 +18,15 @@ namespace backend_manage.Controllers
         private readonly IConfiguration _configuration;
         private readonly IUserService _userService;
         private readonly JwtTokenGenerator _jwtTokenGenerator;
+        private readonly ILecturerService _lecturerService;
 
         
-        public AuthController(IAuthService authService, IConfiguration configuration, IUserService userService)
+        public AuthController(IAuthService authService, IConfiguration configuration, IUserService userService, ILecturerService lecturerService)
         {
             _authService = authService;
             _configuration = configuration;
             _userService = userService;
+            _lecturerService = lecturerService;
             _jwtTokenGenerator = new JwtTokenGenerator(configuration);
         }
         
@@ -52,62 +54,7 @@ namespace backend_manage.Controllers
             }
         }
        
-        // Đăng nhập Identity với Cookie
-        [HttpPost("login-cookie")]
-        public async Task<IActionResult> LoginWithCookie([FromBody] LoginModelDto loginModel)
-        {
-            try
-            {
-                // Sử dụng AuthService để xác thực và tạo cookie
-                var authResult = await _authService.AuthenticateForCookieAsync(loginModel);
-                
-                if (!authResult.IsSuccess)
-                {
-                    return BadRequest(new { message = authResult.ErrorMessage });
-                }
 
-                // Lấy thông tin user
-                var user = await _authService.GetUserByUsernameAsync(loginModel.UserName);
-                if (user == null)
-                {
-                    return BadRequest(new { message = "Tên đăng nhập hoặc mật khẩu không đúng." });
-                }
-                
-                // Lấy roles
-                var roles = await _authService.GetUserRolesAsync(user);
-
-                return Ok(new
-                {
-                    message = "Đăng nhập thành công",
-                    user = new
-                    {
-                        id = user.Id,
-                        username = user.UserName,
-                        email = user.Email,
-                        roles = roles
-                    }
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { message = "Đã xảy ra lỗi hệ thống. Vui lòng thử lại sau." });
-            }
-        }
-
-        // Đăng xuất Cookie
-        [HttpPost("logout-cookie")]
-        public async Task<IActionResult> LogoutWithCookie()
-        {
-            try
-            {
-                await _authService.SignOutAsync();
-                return Ok(new { message = "Đăng xuất thành công" });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { message = "Đã xảy ra lỗi khi đăng xuất." });
-            }
-        }
         
         // Đăng nhập bí mật
         [HttpPost("secret-login")]
@@ -211,13 +158,36 @@ namespace backend_manage.Controllers
             return StatusCode(403, new { message = "Bạn không có quyền truy cập vào tài nguyên này." });
         }
 
+        // Đăng nhập cho giảng viên
+        [HttpPost("lecturer-login")]
+        public async Task<IActionResult> LecturerLogin([FromBody] LecturerLoginDto loginRequest)
+        {
+            try
+            {
+                var authResult = await _lecturerService.LoginAsync(loginRequest.LecturerCode1, loginRequest.LecturerCode2);
+
+                if (!authResult.IsSuccess)
+                {
+                    return BadRequest(new { message = authResult.ErrorMessage });
+                }
+
+                return Ok(new
+                {
+                    token = authResult.Token
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Đã xảy ra lỗi hệ thống. Vui lòng thử lại sau." });
+            }
+        }
+
     }
 }
 
 // POST: api/auth/login          → Đăng nhập JWT, trả về token
-// POST: api/auth/login-cookie   → Đăng nhập Identity với Cookie
 // POST: api/auth/secret-login   → Đăng nhập bí mật (cần key), trả về token
 // POST: api/auth/logout         → Đăng xuất JWT, hủy token hiện tại
-// POST: api/auth/logout-cookie  → Đăng xuất Cookie
 // GET:  api/auth/check-auth     → Kiểm tra trạng thái đăng nhập
 // GET:  api/auth/access-denied  → Trang access denied
+// POST: api/auth/lecturer-login → Đăng nhập cho giảng viên, trả về token

@@ -45,12 +45,6 @@ namespace backend_manage.core.Entities
         // Navigation property đến Department
         [ForeignKey("DepartmentId")]
         public Department Department { get; set; }
-        
-        [MaxLength(450)]
-        [ForeignKey("ApplicationUser")]
-        public string? UserId { get; set; }
-        [JsonIgnore]
-        public ApplicationUser? ApplicationUser { get; set; }
 
         public ICollection<ExamRoomLecturerAssignment> ExamRoomLecturerAssignments { get; set; }
     }
