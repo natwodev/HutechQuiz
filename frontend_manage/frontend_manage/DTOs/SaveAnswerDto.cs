@@ -71,6 +71,9 @@ public class SubmitExamData
     [JsonPropertyName("totalQuestions")]
     public int? TotalQuestions { get; set; }
     
+    [JsonPropertyName("startTime")]
+    public DateTime StartTime { get; set; }
+    
     [JsonPropertyName("endTime")]
     public DateTime EndTime { get; set; }
     

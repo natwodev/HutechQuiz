@@ -604,6 +604,7 @@ public class StudentService : IStudentService
                 Score = score,
                 CorrectAnswers = studentExamSessionDto.CorrectAnswers,
                 TotalQuestions = studentExamSessionDto.TotalQuestions,
+                StartTime = studentExamSessionDto.StartTime,
                 EndTime = studentExamSessionDto.EndTime ?? DateTimeHelper.GetVietnamTime(),
                 StudentAnswersString = studentExamSessionDto.StudentAnswersString,
                 AnswerKey = answerKey
