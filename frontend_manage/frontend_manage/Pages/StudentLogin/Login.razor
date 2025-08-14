@@ -20,14 +20,13 @@
     {
         <div style="position: fixed; top: 20px; right: 20px; z-index: 1000; max-width: 400px;">
             <MudAlert Severity="Severity.Error" Variant="Variant.Filled" Style="border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
-                <MudText Style="font-weight: 700;">Lỗi đăng nhập</MudText>
                 <MudText Style="font-size: 0.9rem;">@ErrorMessage</MudText>
             </MudAlert>
         </div>
     }
     
     <!-- Main Content căn giữa -->
-    <MudGrid Justify="Justify.Center" AlignItems="AlignItems.Center" Style="position: relative; z-index: 3; margin: 0; padding: 40px 20px;">
+    <MudGrid Justify="Justify.Center" AlignItems="AlignItems.Center" Style="position: relative; z-index: 3; margin: 0; padding: 20px 20px;">
         <MudItem xs="12" sm="10" md="8" lg="7" xl="6">
             <MudPaper Elevation="25" Style="border-radius: 32px; max-width: 900px; background: rgba(255, 255, 255, 0.98); backdrop-filter: blur(20px); overflow: hidden;">
                 
@@ -38,13 +37,10 @@
                         <MudContainer Style="padding: 40px 30px; display: flex; flex-direction: column; justify-content: center;">
                             
                             <!-- Header -->
-                            <MudStack Spacing="4" AlignItems="AlignItems.Center" Style="margin-bottom: 30px;">
-                                <MudImage Src="/images/exam/Logo.svg" Width="120" Alt="HUTECH Logo" />
+                            <MudStack Spacing="4" AlignItems="AlignItems.Center" Style="margin-bottom: 15px;">
+                                <MudImage Src="/images/exam/Logo.svg" Width="185" Alt="HUTECH Logo" />
                                 <MudText Typo="Typo.h6" Color="Color.Primary" Style="font-weight: 800; text-align: center; letter-spacing: 2px; text-transform: uppercase;">
                                     Đăng nhập sinh viên
-                                </MudText>
-                                <MudText Typo="Typo.caption" Color="Color.Secondary" Style="text-align: center; opacity: 0.8; font-weight: 500;">
-                                    Hệ thống thi trực tuyến HUTECH
                                 </MudText>
                             </MudStack>
                             
@@ -92,8 +88,11 @@
                             
                             <!-- Footer -->
                             <MudStack Spacing="2" AlignItems="AlignItems.Center" Style="margin-top: 25px;">
-                                <MudText Typo="Typo.caption" Color="Color.Secondary" Style="text-align: center; opacity: 0.7;">
-                                    © 2024 HUTECH - Hệ thống quản lý thi trực tuyến
+                                <MudText Typo="Typo.caption" Color="Color.Default" Style="text-align: center; opacity: 0.7;">
+                                    © 2024 HUTECH - Hệ thống thi trực tuyến
+                                </MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Default" Style="text-align: center; opacity: 0.6; font-size: 0.7rem;">
+                                    Development Team: natwo + jou
                                 </MudText>
                             </MudStack>
                         </MudContainer>

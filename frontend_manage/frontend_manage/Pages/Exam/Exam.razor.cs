@@ -510,7 +510,8 @@ namespace frontend_manage.Pages.Exam
         {
             if (studentSession?.Duration > 0)
             {
-                remainingMinutes = studentSession.Duration;
+                // Cộng thêm ExtraMinutes vào thời gian làm bài
+                remainingMinutes = studentSession.Duration + studentSession.ExtraMinutes;
                 remainingSeconds = 0;
                 
                 // Start timer that ticks every second
@@ -718,66 +719,40 @@ namespace frontend_manage.Pages.Exam
         }
 
        private string ProcessQuestionContent(string content)
-       {
-           if (string.IsNullOrEmpty(content))
-               return content;
+        {
+            if (string.IsNullOrEmpty(content))
+                return content;
 
-           // Tìm và thay thế thẻ audio
-           var audioPattern = @"<audio>([^<]+)</audio>";
-           var match = Regex.Match(content, audioPattern);
-           
-           if (match.Success)
-           {
-               var audioPath = match.Groups[1].Value;
-               var fullAudioPath = GetAudioPath(audioPath);
+            // Tìm và thay thế thẻ audio
+            var audioPattern = @"<audio>([^<]+)</audio>";
+            var match = Regex.Match(content, audioPattern);
+            
+            if (match.Success)
+            {
+                var audioPath = match.Groups[1].Value;
+                var fullAudioPath = GetAudioPath(audioPath);
+                
+                // Debug: Log đường dẫn audio
+                Console.WriteLine($"Audio path: {audioPath}");
+                Console.WriteLine($"Full audio path: {fullAudioPath}");
+                
+                if (!string.IsNullOrEmpty(fullAudioPath))
+                {
+                    // Thay thế thẻ audio bằng HTML audio player
+                    var audioPlayer = $@"<div class=""audio-player mb-3"">
+                        <audio controls style=""width: 100%; max-width: 400px;"">
+                            <source src=""{fullAudioPath}"" type=""audio/mpeg"">
+                            Your browser does not support the audio element.
+                        </audio>
+                    </div>";
+                    
+                    return Regex.Replace(content, audioPattern, audioPlayer);
+                }
+            }
+            
+            return content;
+        }
 
-               if (!string.IsNullOrEmpty(fullAudioPath))
-               {
-                   // ID ngẫu nhiên để tránh trùng
-                   var audioId = "audio_" + Guid.NewGuid().ToString("N");
-                   
-                   // Thêm custom player (không thanh tua) + đếm số lần nghe
-                   var audioPlayer = $@"
-                <div class=""audio-player mb-3"">
-                    <button id=""btn_{audioId}"" onclick=""playLimitedAudio('{audioId}', 5)"" 
-                        style=""padding:6px 12px;background:#1976d2;color:#fff;border:none;border-radius:4px;"">
-                        ▶ Nghe
-                    </button>
-                    <audio id=""{audioId}"" preload=""auto"" controlsList=""nodownload noplaybackrate"" style=""display:none;"">
-                        <source src=""{fullAudioPath}"" type=""audio/mpeg"">
-                        Trình duyệt không hỗ trợ audio.
-                    </audio>
-                    <span id=""count_{audioId}"" style=""margin-left:10px;color:#555;""></span>
-                </div>
-                <script>
-window.playLimitedAudio = function(audioId, maxPlays) {{
-                        var audio = document.getElementById(audioId);
-                        var btn = document.getElementById('btn_' + audioId);
-                        var counter = document.getElementById('count_' + audioId);
-                        if (!audio.playCount) audio.playCount = 0;
-
-                        if (audio.playCount >= maxPlays) {{
-                            alert('Bạn đã nghe hết số lần cho phép.');
-                            return;
-                        }}
-
-                        audio.currentTime = 0; // không cho tua
-                        audio.play();
-                        audio.playCount++;
-                        counter.textContent = '(Đã nghe ' + audio.playCount + '/' + maxPlays + ' lần)';
-
-                        audio.onended = function() {{
-                            audio.pause();
-                            audio.currentTime = 0;
-                        }};
-                    }}
-                </script>";
-            return Regex.Replace(content, audioPattern, audioPlayer);
-               }
-           }
-           
-           return content;
-       }
 
 
         private string GetAnswerFromValue(string value)

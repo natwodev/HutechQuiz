@@ -555,8 +555,8 @@ public class ExamPaperHelper
             studentExamSessionDto.TotalQuestions = totalQuestions;
             studentExamSessionDto.IsCompleted = true;
 
-            // Cập nhật vào Redis
-            await _sessionCacheHelper.UpdateStudentExamSessionAsync(studentCode, studentExamSessionDto);
+            // Xóa phiên khỏi Redis sau khi nộp bài
+            await _sessionCacheHelper.RemoveStudentExamSessionAsync(studentCode, studentExamSessionDto.StudentExamSessionId);
 
             // Tạo message để lưu vào database
             var examSubmissionMessage = new ExamSubmissionMessage

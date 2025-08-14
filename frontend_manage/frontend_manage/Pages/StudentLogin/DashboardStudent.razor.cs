@@ -17,7 +17,7 @@ namespace frontend_manage.Pages.StudentLogin
 
         private bool isStudent;
         private bool isStudentChecked = false;
-        private string currentTime = DateTime.Now.ToString("HH:mm:ss");
+        private string currentTime = DateTimeHelper.GetVietnamTime().ToString("HH:mm:ss");
         private Timer? timer;
         private StudentInfoDto? studentInfo;
         private List<StudentExamSessionDto>? examSessions;
@@ -67,13 +67,13 @@ namespace frontend_manage.Pages.StudentLogin
                 studentInfo = null;
                 examSessions = new List<StudentExamSessionDto>();
             }
-            currentTime = DateTime.Now.ToString("HH:mm:ss");
+            currentTime = DateTimeHelper.GetVietnamTime().ToString("HH:mm:ss");
             timer = new Timer(UpdateTime, null, 0, 1000);
         }
 
         private void UpdateTime(object? state)
         {
-            currentTime = DateTime.Now.ToString("HH:mm:ss");
+            currentTime = DateTimeHelper.GetVietnamTime().ToString("HH:mm:ss");
             InvokeAsync(StateHasChanged);
         }
 
