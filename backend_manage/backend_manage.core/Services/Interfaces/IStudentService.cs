@@ -20,7 +20,7 @@ public interface IStudentService
         StartExamAsync(string studentCode,
             int studentExamSessionId);
     Task<IEnumerable<StudentExamSessionDto>> GetStudentExamSessionsAsync(string studentCode);
-    Task<IEnumerable<StudentExamRoomStatusDto>> GetStudentsByExamRoomAsync(int examRoomId, int examSessionSubjectId);
+    Task<(IEnumerable<StudentExamRoomStatusDto> Students, SubjectExamRoomStatusDto SubjectInfo)> GetStudentsByExamRoomAsync(int examRoomId, int examSessionSubjectId);
     Task<(bool Success, string Message)> AvtiveLoginAsync(string studentCode, bool isLogin);
     Task AddExtraMinutesAsync(string studentCode, int studentExamSessionId, int extraMinutes, string? reasonForExtra);
     

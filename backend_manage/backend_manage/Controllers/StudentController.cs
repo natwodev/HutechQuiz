@@ -154,9 +154,11 @@ public class StudentController : ControllerBase
     [HttpGet("by-exam-room")]
     public async Task<IActionResult> GetStudentsByExamRoom([FromQuery] int examRoomId, [FromQuery] int examSessionSubjectId)
     {
-        var result = await _studentService.GetStudentsByExamRoomAsync(examRoomId, examSessionSubjectId);
+        var (students, subject) = await _studentService.GetStudentsByExamRoomAsync(examRoomId, examSessionSubjectId);
         return Ok(new {
-            students = result
+            subject,
+            students
+           
         });
     }
     

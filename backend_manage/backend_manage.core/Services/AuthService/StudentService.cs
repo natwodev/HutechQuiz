@@ -133,13 +133,13 @@ public class StudentService : IStudentService
                 var examRoomId = session.ExamRoomId.Value;
                 var examSessionSubjectId = session.ExamSessionSubjectId; 
 
-                var statusList = await GetStudentsByExamRoomAsync(examRoomId, examSessionSubjectId);
+                var (statusList, subjectInfo) = await GetStudentsByExamRoomAsync(examRoomId, examSessionSubjectId);
 
                 var groupName = $"lecturer_room_{examRoomId}_{examSessionSubjectId}";
 
                 await _hubContext.Clients
                     .Group(groupName)
-                    .SendAsync("RoomStatusUpdated", statusList);
+                    .SendAsync("RoomStatusUpdated", new { students = statusList, subject = subjectInfo });
             }
         }
 
@@ -462,16 +462,54 @@ public class StudentService : IStudentService
 
 
     #region GetStudentsByExamRoomAsync
-    public async Task<IEnumerable<StudentExamRoomStatusDto>> GetStudentsByExamRoomAsync(int examRoomId, int examSessionSubjectId)
+    public async Task<(IEnumerable<StudentExamRoomStatusDto> Students, SubjectExamRoomStatusDto SubjectInfo)> GetStudentsByExamRoomAsync(int examRoomId, int examSessionSubjectId)
     {
-        var sessions = await _studentExamSessionRepository.GetQueryable()
+        var query = _studentExamSessionRepository.GetQueryable()
             .Where(ses => ses.ExamRoomId == examRoomId && ses.ExamSessionSubjectId == examSessionSubjectId)
             .Include(ses => ses.Student)
             .Include(ses => ses.ExamSessionSubject)
                 .ThenInclude(ess => ess.Subject)
-            .AsSplitQuery()
-            .ToListAsync();
-        return sessions.Select(x => _mapper.Map<StudentExamRoomStatusDto>(x));
+            .Include(ses => ses.ExamRoom)
+            .AsSplitQuery();
+
+        var sessions = await query.ToListAsync();
+
+        var students = sessions.Select(x => _mapper.Map<StudentExamRoomStatusDto>(x)).ToList();
+
+        var anySession = sessions.FirstOrDefault();
+        SubjectExamRoomStatusDto subjectInfo;
+        if (anySession != null)
+        {
+            subjectInfo = new SubjectExamRoomStatusDto
+            {
+                SubjectId = anySession.ExamSessionSubject.SubjectId,
+                SubjectCode = anySession.ExamSessionSubject.Subject.SubjectCore,
+                SubjectName = anySession.ExamSessionSubject.Subject.SubjectName,
+                RoomName = anySession.ExamRoom?.RoomName,
+                Duration = anySession.ExamSessionSubject.Duration,
+                ExamSessionStartTime = anySession.ExamSessionStartTime,
+                ExamSessionEndTime = anySession.ExamSessionEndTime
+            };
+        }
+        else
+        {
+            // Fallback: query subject info directly
+            var ess = await _examSessionSubjectRepository.GetQueryable()
+                .Include(x => x.Subject)
+                .FirstOrDefaultAsync(x => x.ExamSessionSubjectId == examSessionSubjectId);
+            subjectInfo = new SubjectExamRoomStatusDto
+            {
+                SubjectId = ess?.SubjectId ?? 0,
+                SubjectCode = ess?.Subject?.SubjectCore,
+                SubjectName = ess?.Subject?.SubjectName,
+                RoomName = null,
+                Duration = ess?.Duration ?? 0,
+                ExamSessionStartTime = ess?.StartTime ?? DateTimeHelper.GetVietnamTime(),
+                ExamSessionEndTime = ess?.EndTime ?? DateTimeHelper.GetVietnamTime()
+            };
+        }
+
+        return (students, subjectInfo);
     }
     #endregion
     
@@ -535,11 +573,11 @@ public class StudentService : IStudentService
             {
                 var examRoomId = session.ExamRoomId.Value;
                 var examSessionSubjectId = session.ExamSessionSubjectId;
-                var statusList = await GetStudentsByExamRoomAsync(examRoomId, examSessionSubjectId);
+                var (statusList, subjectInfo) = await GetStudentsByExamRoomAsync(examRoomId, examSessionSubjectId);
                 Console.WriteLine($"[SignalR] Gửi RoomStatusUpdated tới giám thị phòng {examRoomId} với {statusList.Count()} sinh viên.");
                 // Chỉ gửi cho giám thị, không gửi cho sinh viên
                 await _hubContext.Clients.Group($"lecturer_room_{examRoomId}")
-                    .SendAsync("RoomStatusUpdated", statusList);
+                    .SendAsync("RoomStatusUpdated", new { students = statusList, subject = subjectInfo });
             }
         }
 

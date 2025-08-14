@@ -145,13 +145,11 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.IsLogin, opt => opt.MapFrom(src => src.Student.IsLogin))
             .ForMember(dest => dest.IsCompleted, opt => opt.MapFrom(src => src.IsCompleted))
             .ForMember(dest => dest.ExamSessionSubjectId, opt => opt.MapFrom(src => src.ExamSessionSubjectId))
-            .ForMember(dest => dest.SubjectName, opt => opt.MapFrom(src => src.ExamSessionSubject.Subject.SubjectName))
             .ForMember(dest => dest.Duration, opt => opt.MapFrom(src => src.ExamSessionSubject.Duration))
             .ForMember(dest => dest.ExtraMinutes, opt => opt.MapFrom(src => src.ExtraMinutes))
+            .ForMember(dest => dest.Score, opt => opt.MapFrom(src => src.Score))
             .ForMember(dest => dest.StartTime, opt => opt.MapFrom(src => src.StartTime))
-            .ForMember(dest => dest.EndTime, opt => opt.MapFrom(src => src.EndTime))
-            .ForMember(dest => dest.ExamSessionStartTime, opt => opt.MapFrom(src => src.ExamSessionStartTime))
-            .ForMember(dest => dest.ExamSessionEndTime, opt => opt.MapFrom(src => src.ExamSessionEndTime));
+            .ForMember(dest => dest.EndTime, opt => opt.MapFrom(src => src.EndTime));
 
         CreateMap<StudentExamSession, ExamSessionSubjectRoomDto>()
             .ForMember(dest => dest.ExamSessionSubjectId, opt => opt.MapFrom(src => src.ExamSessionSubjectId))

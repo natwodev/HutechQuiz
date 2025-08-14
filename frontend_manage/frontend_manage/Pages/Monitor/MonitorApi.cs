@@ -102,12 +102,16 @@ public class MonitorApi
         }
     }
 
-    public async Task<List<StudentExamRoomStatusDto>?> GetStudentsByExamRoomAsync(int examRoomId, int examSessionSubjectId)
+    public async Task<StudentListResponse?> GetStudentsByExamRoomAsync(int examRoomId, int examSessionSubjectId)
     {
         try
         {
-            var result = await _httpClient.GetFromJsonAsync<StudentListResponse>($"/api/Student/by-exam-room?examRoomId={examRoomId}&examSessionSubjectId={examSessionSubjectId}");
-            return result?.Students;
+            var result = await _httpClient
+                .GetFromJsonAsync<StudentListResponse>(
+                    $"/api/Student/by-exam-room?examRoomId={examRoomId}&examSessionSubjectId={examSessionSubjectId}"
+                );
+
+            return result;
         }
         catch (Exception ex)
         {
@@ -115,6 +119,7 @@ public class MonitorApi
             return null;
         }
     }
+
 
     public async Task<string> AddExtraMinutesAsync(string studentCode, int studentExamSessionId, int extraMinutes, string? reasonForExtra)
     {
@@ -194,6 +199,8 @@ public class MonitorApi
         }
     }
 
+    
+    
     public class ActiveLoginRequest
     {
         public string StudentCode { get; set; } = string.Empty;

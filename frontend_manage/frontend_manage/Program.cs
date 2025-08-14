@@ -28,7 +28,6 @@ builder.Services.AddScoped<ExamApi>();
 builder.Services.AddScoped<MonitorApi>();
 builder.Services.AddSingleton<NotificationService>();
 builder.Services.AddScoped<Api>();
-builder.Services.AddScoped<ExamMonitorService>();
 
 // Academic Affairs Services
 builder.Services.AddScoped<AcademicYearService>();

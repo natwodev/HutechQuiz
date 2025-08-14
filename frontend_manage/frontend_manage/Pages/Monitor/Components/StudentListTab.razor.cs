@@ -12,7 +12,6 @@ namespace frontend_manage.Pages.Monitor.Components
     {
         [Inject]
         private ISnackbar Snackbar { get; set; }
-
         private string searchText = "";
         private List<StudentDto> Students = new List<StudentDto>();
         private int currentPage = 1;
