@@ -3,8 +3,48 @@
   "WorkspaceRootPath": "C:\\Users\\Juo\\source\\repos\\HutechQuiz\\frontend_manage\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{FF4E83A3-C7DA-4B41-BD64-76160243B163}|frontend_manage\\frontend_manage.csproj|c:\\users\\juo\\source\\repos\\hutechquiz\\frontend_manage\\frontend_manage\\pages\\exam\\exam.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{FF4E83A3-C7DA-4B41-BD64-76160243B163}|frontend_manage\\frontend_manage.csproj|solutionrelative:frontend_manage\\pages\\exam\\exam.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+      "AbsoluteMoniker": "D:0:0:{FF4E83A3-C7DA-4B41-BD64-76160243B163}|frontend_manage\\frontend_manage.csproj|c:\\users\\juo\\source\\repos\\hutechquiz\\frontend_manage\\frontend_manage\\pages\\monitor\\components\\examinfotab.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{FF4E83A3-C7DA-4B41-BD64-76160243B163}|frontend_manage\\frontend_manage.csproj|solutionrelative:frontend_manage\\pages\\monitor\\components\\examinfotab.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{FF4E83A3-C7DA-4B41-BD64-76160243B163}|frontend_manage\\frontend_manage.csproj|c:\\users\\juo\\source\\repos\\hutechquiz\\frontend_manage\\frontend_manage\\pages\\monitor\\monitorpage.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{FF4E83A3-C7DA-4B41-BD64-76160243B163}|frontend_manage\\frontend_manage.csproj|solutionrelative:frontend_manage\\pages\\monitor\\monitorpage.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{FF4E83A3-C7DA-4B41-BD64-76160243B163}|frontend_manage\\frontend_manage.csproj|c:\\users\\juo\\source\\repos\\hutechquiz\\frontend_manage\\frontend_manage\\pages\\monitor\\components\\studentlisttab.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{FF4E83A3-C7DA-4B41-BD64-76160243B163}|frontend_manage\\frontend_manage.csproj|solutionrelative:frontend_manage\\pages\\monitor\\components\\studentlisttab.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{FF4E83A3-C7DA-4B41-BD64-76160243B163}|frontend_manage\\frontend_manage.csproj|c:\\users\\juo\\source\\repos\\hutechquiz\\frontend_manage\\frontend_manage\\pages\\monitor\\components\\studentlisttab.razor.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{FF4E83A3-C7DA-4B41-BD64-76160243B163}|frontend_manage\\frontend_manage.csproj|solutionrelative:frontend_manage\\pages\\monitor\\components\\studentlisttab.razor.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{FF4E83A3-C7DA-4B41-BD64-76160243B163}|frontend_manage\\frontend_manage.csproj|c:\\users\\juo\\source\\repos\\hutechquiz\\frontend_manage\\frontend_manage\\pages\\monitor\\monitorpage.razor.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{FF4E83A3-C7DA-4B41-BD64-76160243B163}|frontend_manage\\frontend_manage.csproj|solutionrelative:frontend_manage\\pages\\monitor\\monitorpage.razor.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{FF4E83A3-C7DA-4B41-BD64-76160243B163}|frontend_manage\\frontend_manage.csproj|c:\\users\\juo\\source\\repos\\hutechquiz\\frontend_manage\\frontend_manage\\wwwroot\\css\\monitor\\examinfopage.css||{A5401142-F49D-43DB-90B1-F57BA349E55C}",
+      "RelativeMoniker": "D:0:0:{FF4E83A3-C7DA-4B41-BD64-76160243B163}|frontend_manage\\frontend_manage.csproj|solutionrelative:frontend_manage\\wwwroot\\css\\monitor\\examinfopage.css||{A5401142-F49D-43DB-90B1-F57BA349E55C}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{FF4E83A3-C7DA-4B41-BD64-76160243B163}|frontend_manage\\frontend_manage.csproj|c:\\users\\juo\\source\\repos\\hutechquiz\\frontend_manage\\frontend_manage\\pages\\monitor\\examroommanagement.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{FF4E83A3-C7DA-4B41-BD64-76160243B163}|frontend_manage\\frontend_manage.csproj|solutionrelative:frontend_manage\\pages\\monitor\\examroommanagement.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{FF4E83A3-C7DA-4B41-BD64-76160243B163}|frontend_manage\\frontend_manage.csproj|c:\\users\\juo\\source\\repos\\hutechquiz\\frontend_manage\\frontend_manage\\services\\exammonitorservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{FF4E83A3-C7DA-4B41-BD64-76160243B163}|frontend_manage\\frontend_manage.csproj|solutionrelative:frontend_manage\\services\\exammonitorservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{FF4E83A3-C7DA-4B41-BD64-76160243B163}|frontend_manage\\frontend_manage.csproj|c:\\users\\juo\\source\\repos\\hutechquiz\\frontend_manage\\frontend_manage\\pages\\monitor\\_imports.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{FF4E83A3-C7DA-4B41-BD64-76160243B163}|frontend_manage\\frontend_manage.csproj|solutionrelative:frontend_manage\\pages\\monitor\\_imports.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{FF4E83A3-C7DA-4B41-BD64-76160243B163}|frontend_manage\\frontend_manage.csproj|c:\\users\\juo\\source\\repos\\hutechquiz\\frontend_manage\\frontend_manage\\pages\\monitor\\login.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{FF4E83A3-C7DA-4B41-BD64-76160243B163}|frontend_manage\\frontend_manage.csproj|solutionrelative:frontend_manage\\pages\\monitor\\login.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{FF4E83A3-C7DA-4B41-BD64-76160243B163}|frontend_manage\\frontend_manage.csproj|c:\\users\\juo\\source\\repos\\hutechquiz\\frontend_manage\\frontend_manage\\pages\\monitor\\monitorapi.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{FF4E83A3-C7DA-4B41-BD64-76160243B163}|frontend_manage\\frontend_manage.csproj|solutionrelative:frontend_manage\\pages\\monitor\\monitorapi.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -14,20 +54,140 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 0,
+          "SelectedChildIndex": 3,
           "Children": [
             {
               "$type": "Document",
-              "DocumentIndex": 0,
-              "Title": "Exam.razor",
-              "DocumentMoniker": "C:\\Users\\Juo\\source\\repos\\HutechQuiz\\frontend_manage\\frontend_manage\\Pages\\Exam\\Exam.razor",
-              "RelativeDocumentMoniker": "frontend_manage\\Pages\\Exam\\Exam.razor",
-              "ToolTip": "C:\\Users\\Juo\\source\\repos\\HutechQuiz\\frontend_manage\\frontend_manage\\Pages\\Exam\\Exam.razor",
-              "RelativeToolTip": "frontend_manage\\Pages\\Exam\\Exam.razor",
-              "ViewState": "AgIAADECAAAAAAAAAAAAAFICAAAAAAAAAAAAAA==",
+              "DocumentIndex": 5,
+              "Title": "ExamInfoPage.css",
+              "DocumentMoniker": "C:\\Users\\Juo\\source\\repos\\HutechQuiz\\frontend_manage\\frontend_manage\\wwwroot\\css\\monitor\\ExamInfoPage.css",
+              "RelativeDocumentMoniker": "frontend_manage\\wwwroot\\css\\monitor\\ExamInfoPage.css",
+              "ToolTip": "C:\\Users\\Juo\\source\\repos\\HutechQuiz\\frontend_manage\\frontend_manage\\wwwroot\\css\\monitor\\ExamInfoPage.css",
+              "RelativeToolTip": "frontend_manage\\wwwroot\\css\\monitor\\ExamInfoPage.css",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAPsAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003000|",
+              "WhenOpened": "2025-08-14T11:39:18.583Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "MonitorPage.razor.cs",
+              "DocumentMoniker": "C:\\Users\\Juo\\source\\repos\\HutechQuiz\\frontend_manage\\frontend_manage\\Pages\\Monitor\\MonitorPage.razor.cs",
+              "RelativeDocumentMoniker": "frontend_manage\\Pages\\Monitor\\MonitorPage.razor.cs",
+              "ToolTip": "C:\\Users\\Juo\\source\\repos\\HutechQuiz\\frontend_manage\\frontend_manage\\Pages\\Monitor\\MonitorPage.razor.cs",
+              "RelativeToolTip": "frontend_manage\\Pages\\Monitor\\MonitorPage.razor.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-08-14T11:24:39.376Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "MonitorPage.razor",
+              "DocumentMoniker": "C:\\Users\\Juo\\source\\repos\\HutechQuiz\\frontend_manage\\frontend_manage\\Pages\\Monitor\\MonitorPage.razor",
+              "RelativeDocumentMoniker": "frontend_manage\\Pages\\Monitor\\MonitorPage.razor",
+              "ToolTip": "C:\\Users\\Juo\\source\\repos\\HutechQuiz\\frontend_manage\\frontend_manage\\Pages\\Monitor\\MonitorPage.razor",
+              "RelativeToolTip": "frontend_manage\\Pages\\Monitor\\MonitorPage.razor",
+              "ViewState": "AgIAAD8AAAAAAAAAAAAAADIAAAAjAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-08-08T06:46:59.879Z",
+              "WhenOpened": "2025-08-14T11:04:28.131Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "ExamInfoTab.razor",
+              "DocumentMoniker": "C:\\Users\\Juo\\source\\repos\\HutechQuiz\\frontend_manage\\frontend_manage\\Pages\\Monitor\\Components\\ExamInfoTab.razor",
+              "RelativeDocumentMoniker": "frontend_manage\\Pages\\Monitor\\Components\\ExamInfoTab.razor",
+              "ToolTip": "C:\\Users\\Juo\\source\\repos\\HutechQuiz\\frontend_manage\\frontend_manage\\Pages\\Monitor\\Components\\ExamInfoTab.razor",
+              "RelativeToolTip": "frontend_manage\\Pages\\Monitor\\Components\\ExamInfoTab.razor",
+              "ViewState": "AgIAAGAAAAAAAAAAAAAAAGcAAAASAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2025-08-14T10:38:34.817Z",
               "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "StudentListTab.razor",
+              "DocumentMoniker": "C:\\Users\\Juo\\source\\repos\\HutechQuiz\\frontend_manage\\frontend_manage\\Pages\\Monitor\\Components\\StudentListTab.razor",
+              "RelativeDocumentMoniker": "frontend_manage\\Pages\\Monitor\\Components\\StudentListTab.razor",
+              "ToolTip": "C:\\Users\\Juo\\source\\repos\\HutechQuiz\\frontend_manage\\frontend_manage\\Pages\\Monitor\\Components\\StudentListTab.razor",
+              "RelativeToolTip": "frontend_manage\\Pages\\Monitor\\Components\\StudentListTab.razor",
+              "ViewState": "AgIAABIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2025-08-14T11:24:23.439Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "StudentListTab.razor.cs",
+              "DocumentMoniker": "C:\\Users\\Juo\\source\\repos\\HutechQuiz\\frontend_manage\\frontend_manage\\Pages\\Monitor\\Components\\StudentListTab.razor.cs",
+              "RelativeDocumentMoniker": "frontend_manage\\Pages\\Monitor\\Components\\StudentListTab.razor.cs",
+              "ToolTip": "C:\\Users\\Juo\\source\\repos\\HutechQuiz\\frontend_manage\\frontend_manage\\Pages\\Monitor\\Components\\StudentListTab.razor.cs",
+              "RelativeToolTip": "frontend_manage\\Pages\\Monitor\\Components\\StudentListTab.razor.cs",
+              "ViewState": "AgIAACIAAAAAAAAAAADgvzEAAAAWAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-08-14T11:24:27.951Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "ExamRoomManagement.razor",
+              "DocumentMoniker": "C:\\Users\\Juo\\source\\repos\\HutechQuiz\\frontend_manage\\frontend_manage\\Pages\\Monitor\\ExamRoomManagement.razor",
+              "RelativeDocumentMoniker": "frontend_manage\\Pages\\Monitor\\ExamRoomManagement.razor",
+              "ToolTip": "C:\\Users\\Juo\\source\\repos\\HutechQuiz\\frontend_manage\\frontend_manage\\Pages\\Monitor\\ExamRoomManagement.razor",
+              "RelativeToolTip": "frontend_manage\\Pages\\Monitor\\ExamRoomManagement.razor",
+              "ViewState": "AgIAAGwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2025-08-14T08:02:26.808Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "ExamMonitorService.cs",
+              "DocumentMoniker": "C:\\Users\\Juo\\source\\repos\\HutechQuiz\\frontend_manage\\frontend_manage\\Services\\ExamMonitorService.cs",
+              "RelativeDocumentMoniker": "frontend_manage\\Services\\ExamMonitorService.cs",
+              "ToolTip": "C:\\Users\\Juo\\source\\repos\\HutechQuiz\\frontend_manage\\frontend_manage\\Services\\ExamMonitorService.cs",
+              "RelativeToolTip": "frontend_manage\\Services\\ExamMonitorService.cs",
+              "ViewState": "AgIAAKwAAAAAAAAAAAAewMwAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-08-14T10:23:48.084Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "_Imports.razor",
+              "DocumentMoniker": "C:\\Users\\Juo\\source\\repos\\HutechQuiz\\frontend_manage\\frontend_manage\\Pages\\Monitor\\_Imports.razor",
+              "RelativeDocumentMoniker": "frontend_manage\\Pages\\Monitor\\_Imports.razor",
+              "ToolTip": "C:\\Users\\Juo\\source\\repos\\HutechQuiz\\frontend_manage\\frontend_manage\\Pages\\Monitor\\_Imports.razor",
+              "RelativeToolTip": "frontend_manage\\Pages\\Monitor\\_Imports.razor",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2025-08-14T10:26:47.7Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
+              "Title": "Login.razor",
+              "DocumentMoniker": "C:\\Users\\Juo\\source\\repos\\HutechQuiz\\frontend_manage\\frontend_manage\\Pages\\Monitor\\Login.razor",
+              "RelativeDocumentMoniker": "frontend_manage\\Pages\\Monitor\\Login.razor",
+              "ToolTip": "C:\\Users\\Juo\\source\\repos\\HutechQuiz\\frontend_manage\\frontend_manage\\Pages\\Monitor\\Login.razor",
+              "RelativeToolTip": "frontend_manage\\Pages\\Monitor\\Login.razor",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2025-08-14T08:02:25.707Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 10,
+              "Title": "MonitorApi.cs",
+              "DocumentMoniker": "C:\\Users\\Juo\\source\\repos\\HutechQuiz\\frontend_manage\\frontend_manage\\Pages\\Monitor\\MonitorApi.cs",
+              "RelativeDocumentMoniker": "frontend_manage\\Pages\\Monitor\\MonitorApi.cs",
+              "ToolTip": "C:\\Users\\Juo\\source\\repos\\HutechQuiz\\frontend_manage\\frontend_manage\\Pages\\Monitor\\MonitorApi.cs",
+              "RelativeToolTip": "frontend_manage\\Pages\\Monitor\\MonitorApi.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-08-14T08:02:24.536Z"
             }
           ]
         }
