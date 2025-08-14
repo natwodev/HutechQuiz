@@ -116,7 +116,7 @@
                                                 {
                                                     <MudListItem T="object"
                                                                  Style="cursor:pointer;"
-                                                                 @onclick="() => selectedExamRoomId = room.ExamRoomId">
+                                                                 @onclick="() => { selectedExamRoomId = room.ExamRoomId; selectedExamSessionSubjectId = room.ExamSessionSubjectId; }">
 
                                                         <MudCard Elevation="2" Style="width: 100%; border-radius: 10px; margin: 4px 0;">
                                                             <MudCardContent Style="padding: 12px;">

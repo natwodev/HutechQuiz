@@ -19,6 +19,7 @@ namespace frontend_manage.Pages.Monitor
         private LecturerDto? lecturerInfo;
         private List<LecturerExamRoomDto>? examRooms;
         private int? selectedExamRoomId = null;
+        private int? selectedExamSessionSubjectId = null;
         private bool _processing = false;
         private bool _disposed = false;
         
@@ -93,6 +94,7 @@ namespace frontend_manage.Pages.Monitor
                         StudentCount = a.StudentCount, // Sử dụng StudentCount từ API
                         ExamStartTime = a.StartTime, // Sử dụng StartTime từ API
                         ExamEndTime = a.EndTime, // Sử dụng EndTime từ API
+                        ExamSessionSubjectId = a.ExamSessionSubjectId, // Lưu trữ ExamSessionSubjectId
                        // ExamStatus = "pending" // Mặc định là pending
                     }).ToList();
                 }
@@ -116,8 +118,11 @@ namespace frontend_manage.Pages.Monitor
 
         public async Task NavigateToDashboard()
         {
-            // Chuyển đến trang dashboard của monitor
-            Navigation.NavigateTo("/monitor/dashboard");
+            if (selectedExamRoomId.HasValue && selectedExamSessionSubjectId.HasValue)
+            {
+                // Chuyển đến trang monitor với tham số examRoomId và examSessionSubjectId
+                Navigation.NavigateTo($"/monitor?examRoomId={selectedExamRoomId.Value}&examSessionSubjectId={selectedExamSessionSubjectId.Value}");
+            }
         }
 
 
