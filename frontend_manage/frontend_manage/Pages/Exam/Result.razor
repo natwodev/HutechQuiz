@@ -75,6 +75,32 @@ else if (examResult?.Data != null)
                             </MudCardContent>
                         </MudCard>
                     </MudItem>
+                    <MudItem xs="12" md="6">
+                        <MudCard Class="ma-2" Elevation="2">
+                            <MudCardContent>
+                                <MudText Typo="Typo.caption" Color="Color.Info" Class="mb-1">
+                                    <MudIcon Icon="@Icons.Material.Filled.Schedule" Size="Size.Small" Class="mr-1" />
+                                    Thời gian bắt đầu
+                                </MudText>
+                                <MudText Typo="Typo.h6" Color="Color.Primary" Class="font-weight-bold">
+                                    @examResult.Data.StartTime.ToString("HH:mm:ss - dd/MM/yyyy")
+                                </MudText>
+                            </MudCardContent>
+                        </MudCard>
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <MudCard Class="ma-2" Elevation="2">
+                            <MudCardContent>
+                                <MudText Typo="Typo.caption" Color="Color.Info" Class="mb-1">
+                                    <MudIcon Icon="@Icons.Material.Filled.Timer" Size="Size.Small" Class="mr-1" />
+                                    Thời gian nộp bài
+                                </MudText>
+                                <MudText Typo="Typo.h6" Color="Color.Primary" Class="font-weight-bold">
+                                    @examResult.Data.EndTime.ToString("HH:mm:ss - dd/MM/yyyy")
+                                </MudText>
+                            </MudCardContent>
+                        </MudCard>
+                    </MudItem>
                 </MudGrid>
             </MudPaper>
 

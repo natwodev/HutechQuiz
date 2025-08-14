@@ -473,6 +473,7 @@ namespace frontend_manage.Pages.Exam
                            Score = submissionData.Score,
                            CorrectAnswers = submissionData.CorrectAnswers,
                            TotalQuestions = submissionData.TotalQuestions,
+                           StartTime = submissionData.StartTime,
                            EndTime = submissionData.EndTime,
                            StudentAnswersString = submissionData.StudentAnswersString,
                            AnswerKey = submissionData.AnswerKey
