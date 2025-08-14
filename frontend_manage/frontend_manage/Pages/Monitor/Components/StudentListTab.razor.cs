@@ -1,10 +1,10 @@
-using frontend_manage.Pages.Monitor.Models;
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using frontend_manage.DTOs;
 
 namespace frontend_manage.Pages.Monitor.Components
 {
