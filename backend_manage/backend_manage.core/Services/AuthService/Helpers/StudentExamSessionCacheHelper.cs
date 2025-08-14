@@ -190,6 +190,28 @@ public class StudentExamSessionCacheHelper
         }
     }
     
+    public async Task RemoveStudentExamSessionAsync(string studentCode, int studentExamSessionId)
+    {
+        try
+        {
+            string redisHashKey = $"student_exam_sessions:{studentCode}";
+            string field = studentExamSessionId.ToString();
+            var removed = await _redisService.HashDeleteAsync(redisHashKey, field);
+            if (removed)
+            {
+                _logger.LogInformation("Đã xóa phiên thi {SessionId} của sinh viên {StudentCode} khỏi Redis", studentExamSessionId, studentCode);
+            }
+            else
+            {
+                _logger.LogDebug("Không xóa được hoặc không tồn tại phiên thi {SessionId} trong Redis cho sinh viên {StudentCode}", studentExamSessionId, studentCode);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Lỗi khi xóa phiên thi {SessionId} của sinh viên {StudentCode} khỏi Redis", studentExamSessionId, studentCode);
+        }
+    }
+    
     private async Task<StudentExamSessionCacheDto> ConvertToCacheDtoAsync(StudentExamSession session)
     {
         // Map cơ bản từ entity sang DTO

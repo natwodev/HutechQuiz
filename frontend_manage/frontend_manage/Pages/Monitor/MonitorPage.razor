@@ -1,0 +1,87 @@
+@page "/monitor"
+@using Microsoft.AspNetCore.Components
+@using MudBlazor
+@using System.Collections.Generic
+@using frontend_manage.Pages.Monitor.Components
+@inherits ComponentBase
+@implements IDisposable
+
+<link href="css/monitor/MonitorPage.css" rel="stylesheet" />
+
+<div class="monitor-page">
+    <!-- Header -->
+    <div class="monitor-header">
+        <div class="header-left">
+            <div class="logo-container">
+                <img src="/images/logo-dai-hoc-hutech_012634748.png" alt="HUTECH" class="logo" />
+            </div>
+            <div class="header-titles">
+                <h1>TRƯỜNG ĐẠI HỌC CÔNG NGHỆ THÀNH PHỐ HỒ CHÍ MINH (HUTECH)</h1>
+                <div class="subtitle">
+                    EXAM SUITE - MONITOR <span class="edition-tag">Professional Edition</span>
+                </div>
+                <div class="header-description">Hệ thống quản lý và theo dõi Ca thi</div>
+            </div>
+        </div>
+        <div class="header-right">
+            <span class="mode-tag">Monitor (Testing Mode)</span>
+            <MudIconButton Icon="@Icons.Material.Filled.AccountCircle" Color="Color.Inherit" />
+            <MudIconButton Icon="@Icons.Material.Filled.Notifications" Color="Color.Inherit" />
+            <MudIconButton Icon="@Icons.Material.Filled.Settings" Color="Color.Inherit" />
+            <MudIconButton Icon="@Icons.Material.Filled.ExitToApp" Color="Color.Inherit" />
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <div class="monitor-nav">
+        <div class="nav-item @(activeTab == 0 ? "active" : "")" @onclick="() => ActivateTab(0)">
+            <MudIcon Icon="@Icons.Material.Filled.PeopleAlt" />
+            <span>DANH SÁCH SINH VIÊN</span>
+        </div>
+        <div class="nav-item @(activeTab == 1 ? "active" : "")" @onclick="() => ActivateTab(1)">
+            <MudIcon Icon="@Icons.Material.Filled.Info" />
+            <span>THÔNG TIN CA THI</span>
+        </div>
+    </div>
+
+    <!-- Content Area -->
+    <div class="monitor-content">
+        <div class="@(activeTab == 0 ? "tab-content-active" : "tab-content-hidden")">
+            @if (activeTab == 0 || previousTab == 0)
+            {
+                <StudentListTab />
+            }
+        </div>
+        <div class="@(activeTab == 1 ? "tab-content-active" : "tab-content-hidden")">
+            @if (activeTab == 1 || previousTab == 1)
+            {
+                <ExamInfoTab />
+            }
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="monitor-footer">
+        <div class="footer-left">
+            <MudIcon Icon="@Icons.Material.Filled.AccessTime" Size="Size.Small" Class="footer-icon" />
+            <span class="footer-time">@currentTime</span>
+            <span class="footer-date">@currentDate</span>
+        </div>
+        <div class="footer-center">
+            <div class="footer-logo">
+                <span class="footer-brand">HUTECH</span>
+                <span class="footer-divider">|</span>
+                <span>Exam Monitoring System</span>
+            </div>
+            <div class="footer-copyright">© 2025 Trường Đại học Công nghệ TP.HCM. All rights reserved.</div>
+        </div>
+        <div class="footer-right">
+            <span class="footer-version">Version 1.0.2</span>
+            <span class="footer-divider">|</span>
+            <span class="footer-developers">Developed by Natwodev & Juo</span>
+            <MudIcon Icon="@Icons.Custom.Brands.GitHub" Size="Size.Small" Class="footer-icon ms-1" />
+        </div>
+    </div>
+</div>
+
+@* Code is now in MonitorPage.razor.cs *@

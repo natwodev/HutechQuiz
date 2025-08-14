@@ -1,0 +1,126 @@
+@using MudBlazor
+@using System.Collections.Generic
+<link href="css/monitor/ExamInfoPage.css" rel="stylesheet" />
+<div class="exam-info-tab">
+    <div class="exam-info-header">
+        <h2>THÔNG TIN CA THI</h2>
+    </div>
+
+    <div class="exam-info-content">
+        <MudGrid>
+            <MudItem xs="12" sm="6" md="6">
+                <MudCard Elevation="2" Class="exam-details-card">
+                    <MudCardHeader>
+                        <CardHeaderContent>
+                            <MudText Typo="Typo.h6">Thông tin chung</MudText>
+                        </CardHeaderContent>
+                        <CardHeaderActions>
+                            <MudIcon Icon="@Icons.Material.Filled.Info" Color="Color.Primary" />
+                        </CardHeaderActions>
+                    </MudCardHeader>
+                    <MudCardContent>
+                        <div class="info-grid">
+                            <div class="info-label">Kỳ thi:</div>
+                            <div class="info-value">Giữa kỳ HK2 (2023-2024)</div>
+                            
+                            <div class="info-label">Phòng thi:</div>
+                            <div class="info-value">B502</div>
+                            
+                            <div class="info-label">Môn thi:</div>
+                            <div class="info-value">Lập trình thiết bị di động</div>
+                            
+                            <div class="info-label">Mã môn:</div>
+                            <div class="info-value">COMP1714</div>
+                            
+                            <div class="info-label">Ngày thi:</div>
+                            <div class="info-value">17/07/2023</div>
+                            
+                            <div class="info-label">Thời gian:</div>
+                            <div class="info-value">13:00 - 14:30 (90 phút)</div>
+                            
+                            <div class="info-label">Khoa:</div>
+                            <div class="info-value">Công nghệ thông tin</div>
+                        </div>
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+
+            <MudItem xs="12" sm="6" md="6">
+                <MudCard Elevation="2" Class="exam-session-card">
+                    <MudCardHeader>
+                        <CardHeaderContent>
+                            <MudText Typo="Typo.h6">Thời gian</MudText>
+                        </CardHeaderContent>
+                        <CardHeaderActions>
+                            <MudIcon Icon="@Icons.Material.Filled.Timer" Color="Color.Secondary" />
+                        </CardHeaderActions>
+                    </MudCardHeader>
+                    <MudCardContent>
+                        <div class="time-status">
+                            <div class="time-status-item">
+                                <div class="time-status-label">Trạng thái:</div>
+                                <div class="time-status-value status-active">ĐANG DIỄN RA</div>
+                            </div>
+                            <div class="time-status-item">
+                                <div class="time-status-label">Thời gian còn lại:</div>
+                                <div class="time-status-value time-remaining">00:45:12</div>
+                            </div>
+                        </div>
+                        
+                        <MudProgressLinear Color="Color.Info" Value="50" Class="mud-progress-linear-striped" />
+                        
+                        <div class="time-marks">
+                            <div>13:00</div>
+                            <div>Đang thi</div>
+                            <div>14:30</div>
+                        </div>
+                        
+                        <div class="time-controls">
+                            <MudButton Variant="Variant.Filled" 
+                                      Color="Color.Primary"
+                                      StartIcon="@Icons.Material.Filled.Pause"
+                                      Size="Size.Small"
+                                      OnClick="@(() => PauseExam())">
+                                Tạm dừng
+                            </MudButton>
+                            <MudButton Variant="Variant.Outlined" 
+                                      Color="Color.Error"
+                                      StartIcon="@Icons.Material.Filled.Stop"
+                                      Size="Size.Small"
+                                      OnClick="@(() => EndExamEarly())">
+                                Kết thúc sớm
+                            </MudButton>
+                            <MudButton Variant="Variant.Outlined" 
+                                      Color="Color.Warning"
+                                      StartIcon="@Icons.Material.Filled.AddAlarm"
+                                      Size="Size.Small"
+                                      OnClick="@(() => ExtendTime())">
+                                Gia hạn
+                            </MudButton>
+                        </div>
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+        </MudGrid>
+    </div>
+</div>
+
+@code {
+    
+    
+    private void PauseExam()
+    {
+        // Logic to pause the exam
+    }
+    
+    private void EndExamEarly()
+    {
+        // Logic to end exam early
+    }
+    
+    private void ExtendTime()
+    {
+        // Logic to extend exam time
+    }
+    
+}

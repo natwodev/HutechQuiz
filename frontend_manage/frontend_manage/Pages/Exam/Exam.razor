@@ -275,9 +275,17 @@ else
                 <MudPaper Style="text-align: center; border: 1px solid #ccc; margin-bottom: 15%;">
                     <MudGrid>
                         <MudItem xs="6" Style="align-content: center">
-                            <MudText Typo="Typo.h4" Color="@(isTimeUp? Color.Error: remainingMinutes <= 5 ? Color.Warning : Color.Primary)" id="time-clock">
-                                @GetFormattedTime()
-                            </MudText>
+                            <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+                                <MudText Typo="Typo.h4" Color="@(isTimeUp? Color.Error: remainingMinutes <= 5 ? Color.Warning : Color.Primary)" id="time-clock">
+                                    @GetFormattedTime()
+                                </MudText>
+                                @if (studentSession.ExtraMinutes > 0)
+                                {
+                                    <MudText Typo="Typo.h6" Color="Color.Primary">
+                                        +@studentSession.ExtraMinutes
+                                    </MudText>
+                                }
+                            </div>
                         </MudItem>
                         <MudItem xs="6">
                             <MudButton Style="margin: 5px" Variant="Variant.Outlined" Color="Color.Success"
@@ -299,7 +307,7 @@ else
                     <MudText Typo="Typo.subtitle2"><b>Thời gian:</b> @studentSession.Duration phút</MudText>
                     @if (studentSession.ExtraMinutes > 0)
                     {
-                        <MudText Typo="Typo.subtitle2"><b>Thêm:</b> @studentSession.ExtraMinutes phút</MudText>
+                        <MudText Typo="Typo.subtitle2"><b>Thêm:</b> +@studentSession.ExtraMinutes phút</MudText>
                     }
                 </MudPaper>
 
