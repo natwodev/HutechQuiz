@@ -7,6 +7,14 @@ using frontend_manage.DTOs;
 
 namespace frontend_manage.Pages.Exam
 {
+    // Class để lưu trữ thông tin timer
+    public class ExamTimerData
+    {
+        public int StudentExamSessionId { get; set; }
+        public DateTime StartTime { get; set; }
+        public double Duration { get; set; } // Thời gian còn lại tính bằng phút
+    }
+    
     // Class để handle delayed save callback từ JavaScript
     public class DelayedSaveCallback : IDisposable
     {
@@ -62,6 +70,8 @@ namespace frontend_manage.Pages.Exam
         private int remainingMinutes;
         private int remainingSeconds;
         private bool isTimeUp = false;
+        private DateTime examStartTime;
+        private const string TIMER_STORAGE_KEY = "exam_timer_data";
 
         protected override async Task OnInitializedAsync()
         {
@@ -91,7 +101,7 @@ namespace frontend_manage.Pages.Exam
                     await LoadExistingAnswersAsync();
                     
                     // Initialize timer
-                    InitializeTimer();
+                    await InitializeTimerAsync();
                 }
             }
             catch (Exception ex)
@@ -432,14 +442,24 @@ namespace frontend_manage.Pages.Exam
 
        private async Task OnSubmitExamAsync()
        {
-           // Stop timer
-           examTimer?.Stop();
+           // Lấy chuỗi thời gian dạng "mm:ss"
+           var formattedTime = GetFormattedTime();
+           // Tách phút (phần trước dấu :)
+           var minutesOnly = formattedTime.Split(':')[0];
+           // Tạo message chỉ với phút
+           var timeMessage = $"⏰ Thời gian còn lại: {minutesOnly} phút";
 
-           var dialog = await Dialog.ShowMessageBox("Xác nhận", "Bạn có chắc chắn muốn nộp bài thi này?", "Nộp bài", "Hủy");
+           var dialog = await Dialog.ShowMessageBox("Bạn có chắc chắn muốn nộp bài thi này?", timeMessage, "Nộp bài", "Hủy");
            if (dialog == true)
            {
                try
                {
+                   // Stop timer chỉ khi thực sự nộp bài
+                   examTimer?.Stop();
+                   
+                   // Xóa dữ liệu timer khỏi localStorage khi nộp bài
+                   await JSRuntime.InvokeVoidAsync("localStorage.removeItem", TIMER_STORAGE_KEY);
+                   
                    // Force save tất cả pending answers trước khi submit
                    var hasPending = await JSRuntime.InvokeAsync<bool>("window.answerDebouncer.hasPendingSaves");
                    if (hasPending)
@@ -506,21 +526,79 @@ namespace frontend_manage.Pages.Exam
             await JSRuntime.InvokeVoidAsync("scrollToElement", $"question-{questionIdentifier}");
         }
 
-        private void InitializeTimer()
+        private async Task InitializeTimerAsync()
         {
             if (studentSession?.Duration > 0)
             {
-                // Cộng thêm ExtraMinutes vào thời gian làm bài
+                // Kiểm tra xem có thời gian đã lưu trong localStorage không
+                var savedTimerData = await JSRuntime.InvokeAsync<string>("localStorage.getItem", TIMER_STORAGE_KEY);
+                
+                if (!string.IsNullOrEmpty(savedTimerData))
+                {
+                    try
+                    {
+                        // Parse dữ liệu timer đã lưu
+                        var timerData = System.Text.Json.JsonSerializer.Deserialize<ExamTimerData>(savedTimerData);
+                        
+                        if (timerData != null && timerData.StudentExamSessionId == studentExamSessionId)
+                        {
+                            // Tính thời gian còn lại dựa trên thời gian bắt đầu và thời gian đã trôi qua
+                            var elapsedTime = DateTime.Now - timerData.StartTime;
+                            var totalDuration = studentSession.Duration + studentSession.ExtraMinutes;
+                            var remainingTimeInMinutes = totalDuration - elapsedTime.TotalMinutes;
+                            
+                            if (remainingTimeInMinutes > 0)
+                            {
+                                // Khôi phục thời gian còn lại
+                                remainingMinutes = (int)remainingTimeInMinutes;
+                                remainingSeconds = Math.Max(0, (int)((remainingTimeInMinutes - remainingMinutes) * 60));
+                                examStartTime = timerData.StartTime;
+                                
+                                // Start timer
+                                StartTimer();
+                                return;
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        // Nếu có lỗi parse, xóa dữ liệu cũ và khởi tạo mới
+                        await JSRuntime.InvokeVoidAsync("localStorage.removeItem", TIMER_STORAGE_KEY);
+                    }
+                }
+                
+                // Khởi tạo timer mới
                 remainingMinutes = studentSession.Duration + studentSession.ExtraMinutes;
                 remainingSeconds = 0;
+                examStartTime = DateTime.Now;
                 
-                // Start timer that ticks every second
-                examTimer = new System.Timers.Timer(1000);
-                examTimer.Elapsed += OnTimerElapsed;
-                examTimer.Start();
+                // Lưu thông tin timer vào localStorage
+                await SaveTimerDataToLocalStorage();
                 
-                // BỎ AUTO-SAVE TIMER - Chỉ dùng manual save
+                // Start timer
+                StartTimer();
             }
+        }
+        
+        private void StartTimer()
+        {
+            // Start timer that ticks every second
+            examTimer = new System.Timers.Timer(1000);
+            examTimer.Elapsed += OnTimerElapsed;
+            examTimer.Start();
+        }
+        
+        private async Task SaveTimerDataToLocalStorage()
+        {
+            var timerData = new ExamTimerData
+            {
+                StudentExamSessionId = studentExamSessionId.Value,
+                StartTime = examStartTime,
+                Duration = remainingMinutes + remainingSeconds / 60.0
+            };
+            
+            var jsonData = System.Text.Json.JsonSerializer.Serialize(timerData);
+            await JSRuntime.InvokeVoidAsync("localStorage.setItem", TIMER_STORAGE_KEY, jsonData);
         }
 
         private void OnAutoSaveElapsed(object? sender, System.Timers.ElapsedEventArgs e)
@@ -556,7 +634,7 @@ namespace frontend_manage.Pages.Exam
             });
         }
 
-        private void OnTimerElapsed(object? sender, System.Timers.ElapsedEventArgs e)
+        private async void OnTimerElapsed(object? sender, System.Timers.ElapsedEventArgs e)
         {
             if (remainingSeconds > 0)
             {
@@ -573,15 +651,31 @@ namespace frontend_manage.Pages.Exam
                 isTimeUp = true;
                 examTimer?.Stop();
                 
+                // Xóa dữ liệu timer khỏi localStorage khi hết thời gian
+                await InvokeAsync(async () =>
+                {
+                    await JSRuntime.InvokeVoidAsync("localStorage.removeItem", TIMER_STORAGE_KEY);
+                });
+                
                 // Auto submit exam
-                InvokeAsync(async () =>
+                await InvokeAsync(async () =>
                 {
                     await OnSubmitExamAsync();
                 });
+                return;
             }
             
-            // Update UI
-            InvokeAsync(StateHasChanged);
+            // Cập nhật localStorage mỗi 4 giây để tránh lag
+            if (remainingSeconds % 4 == 0)
+            {
+                await InvokeAsync(async () =>
+                {
+                    await SaveTimerDataToLocalStorage();
+                });
+            }
+            
+            // Update UI mỗi giây
+            await InvokeAsync(StateHasChanged);
         }
 
         public void Dispose()
@@ -591,6 +685,20 @@ namespace frontend_manage.Pages.Exam
             
             autoSaveTimer?.Stop();
             autoSaveTimer?.Dispose();
+            
+            // Xóa dữ liệu timer khỏi localStorage khi dispose component
+            // Sử dụng Task.Run để tránh async void
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    await JSRuntime.InvokeVoidAsync("localStorage.removeItem", TIMER_STORAGE_KEY);
+                }
+                catch
+                {
+                    // Ignore errors during disposal
+                }
+            });
         }
 
         private string GetFormattedTime()
