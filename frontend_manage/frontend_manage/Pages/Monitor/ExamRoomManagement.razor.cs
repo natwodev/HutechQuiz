@@ -95,7 +95,7 @@ namespace frontend_manage.Pages.Monitor
                         ExamStartTime = a.StartTime, // Sử dụng StartTime từ API
                         ExamEndTime = a.EndTime, // Sử dụng EndTime từ API
                         ExamSessionSubjectId = a.ExamSessionSubjectId, // Lưu trữ ExamSessionSubjectId
-                       // ExamStatus = "pending" // Mặc định là pending
+                        ExamStatus = "pending" // Mặc định là pending
                     }).ToList();
                 }
                 else
@@ -120,8 +120,12 @@ namespace frontend_manage.Pages.Monitor
         {
             if (selectedExamRoomId.HasValue && selectedExamSessionSubjectId.HasValue)
             {
-                // Chuyển đến trang monitor với tham số examRoomId và examSessionSubjectId
-                Navigation.NavigateTo($"/monitor?examRoomId={selectedExamRoomId.Value}&examSessionSubjectId={selectedExamSessionSubjectId.Value}");
+                // Lưu dữ liệu vào session storage thay vì truyền qua URL
+                await JSRuntime.InvokeVoidAsync("sessionStorage.setItem", "examRoomId", selectedExamRoomId.Value.ToString());
+                await JSRuntime.InvokeVoidAsync("sessionStorage.setItem", "examSessionSubjectId", selectedExamSessionSubjectId.Value.ToString());
+                
+                // Chuyển đến trang monitor không có tham số
+                Navigation.NavigateTo("/monitor");
             }
         }
 
@@ -136,6 +140,18 @@ namespace frontend_manage.Pages.Monitor
         {
             _disposed = true;
             timer?.Dispose();
+            
+            try
+            {
+                // Xóa dữ liệu khỏi session storage khi đăng xuất
+                await JSRuntime.InvokeVoidAsync("sessionStorage.removeItem", "examRoomId");
+                await JSRuntime.InvokeVoidAsync("sessionStorage.removeItem", "examSessionSubjectId");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error clearing session storage: {ex.Message}");
+            }
+            
             await AuthService.Logout();
             Navigation.NavigateTo("/monitor/login", true);
         }

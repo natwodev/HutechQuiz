@@ -16,13 +16,9 @@ namespace frontend_manage.Pages.Monitor
         [Inject] private MonitorApi MonitorApi { get; set; }
         [Inject] private IJSRuntime JSRuntime { get; set; }
 
-        [Parameter]
-        [SupplyParameterFromQuery]
-        public int? ExamRoomId { get; set; }
-
-        [Parameter]
-        [SupplyParameterFromQuery]
-        public int? ExamSessionSubjectId { get; set; }
+        // Không còn sử dụng query string parameters
+        private int? ExamRoomId { get; set; }
+        private int? ExamSessionSubjectId { get; set; }
 
         private int activeTab = 0;
         private int previousTab = 0;
@@ -44,10 +40,42 @@ namespace frontend_manage.Pages.Monitor
                 InvokeAsync(StateHasChanged);
             }, null, 0, 1000);
 
-            // Nếu có ExamRoomId, gọi API để lấy dữ liệu
-            if (ExamRoomId.HasValue)
+            // Đọc dữ liệu từ session storage thay vì query string
+            await LoadDataFromSessionStorage();
+        }
+
+        private async Task LoadDataFromSessionStorage()
+        {
+            try
             {
-                await LoadExamData();
+                // Đọc dữ liệu từ session storage
+                var examRoomIdStr = await JSRuntime.InvokeAsync<string>("sessionStorage.getItem", "examRoomId");
+                var examSessionSubjectIdStr = await JSRuntime.InvokeAsync<string>("sessionStorage.getItem", "examSessionSubjectId");
+
+                if (!string.IsNullOrEmpty(examRoomIdStr) && int.TryParse(examRoomIdStr, out int examRoomId))
+                {
+                    ExamRoomId = examRoomId;
+                    
+                    if (!string.IsNullOrEmpty(examSessionSubjectIdStr) && int.TryParse(examSessionSubjectIdStr, out int examSessionSubjectId))
+                    {
+                        ExamSessionSubjectId = examSessionSubjectId;
+                    }
+
+                    // Nếu có ExamRoomId, gọi API để lấy dữ liệu
+                    await LoadExamData();
+                }
+                else
+                {
+                    // Nếu không có dữ liệu trong session storage, chuyển về trang exam room management
+                    // Điều này ngăn người dùng truy cập trực tiếp vào /monitor
+                    Navigation.NavigateTo("/monitor/exam-room-management", true);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading data from session storage: {ex.Message}");
+                // Nếu có lỗi, chuyển về trang exam room management
+                Navigation.NavigateTo("/monitor/exam-room-management", true);
             }
         }
 
@@ -89,6 +117,29 @@ namespace frontend_manage.Pages.Monitor
         public void Dispose()
         {
             timer?.Dispose();
+        }
+
+        protected override async Task OnAfterRenderAsync(bool firstRender)
+        {
+            // Không cần gọi LoadDataFromSessionStorage ở đây nữa vì đã gọi trong OnInitializedAsync
+        }
+
+        private async Task GoBackToExamRoomManagement()
+        {
+            try
+            {
+                // Xóa dữ liệu khỏi session storage
+                await JSRuntime.InvokeVoidAsync("sessionStorage.removeItem", "examRoomId");
+                await JSRuntime.InvokeVoidAsync("sessionStorage.removeItem", "examSessionSubjectId");
+                
+                // Chuyển về trang exam room management
+                Navigation.NavigateTo("/monitor/exam-room-management");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error going back to exam room management: {ex.Message}");
+                Navigation.NavigateTo("/monitor/exam-room-management");
+            }
         }
     }
 }
