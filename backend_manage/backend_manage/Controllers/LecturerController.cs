@@ -19,18 +19,15 @@ namespace backend_manage.Controllers
         private readonly ILecturerService _lecturerService;
         private readonly IStudentService _studentService;
         private readonly IRepository<StudentExamSession> _studentExamSessionRepository;
-        private readonly IRepository<ExamRoomLecturerAssignment> _assignmentRepository;
 
         public LecturerController(
             ILecturerService lecturerService,
             IStudentService studentService,
-            IRepository<StudentExamSession> studentExamSessionRepository,
-            IRepository<ExamRoomLecturerAssignment> assignmentRepository)
+            IRepository<StudentExamSession> studentExamSessionRepository)
         {
             _lecturerService = lecturerService;
             _studentService = studentService;
             _studentExamSessionRepository = studentExamSessionRepository;
-            _assignmentRepository = assignmentRepository;
         }
 
         [HttpPost]

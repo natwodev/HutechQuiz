@@ -4,3 +4,48 @@ GET {{backend_manage_HostAddress}}/weatherforecast/
 Accept: application/json
 
 ###
+
+### Test API phân công giảng viên cho ExamSessionSubject
+
+### 1. Phân công giảng viên vào ExamSessionSubject (không trả về dữ liệu)
+POST {{baseUrl}}/api/ExamSessionSubject/assign-lecturer
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "examSessionSubjectId": 1,
+  "lecturerId": 123
+}
+
+### 2. Hủy phân công giảng viên khỏi ExamSessionSubject (không trả về dữ liệu)
+POST {{baseUrl}}/api/ExamSessionSubject/unassign-lecturer
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "examSessionSubjectId": 1
+}
+
+### 3. Lấy danh sách ExamSessionSubject theo giảng viên
+GET {{baseUrl}}/api/ExamSessionSubject/lecturer/123
+Authorization: Bearer {{authToken}}
+
+### 4. Lấy ExamSessionSubject theo ID (bao gồm thông tin giảng viên)
+GET {{baseUrl}}/api/ExamSessionSubject/1
+Authorization: Bearer {{authToken}}
+
+### 5. Cập nhật ExamSessionSubject với MonitorId
+PUT {{baseUrl}}/api/ExamSessionSubject/1
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "examSessionId": 1,
+  "subjectId": 1,
+  "duration": 120,
+  "startTime": "2024-01-15T08:00:00",
+  "endTime": "2024-01-15T10:00:00",
+  "examSessionSubjectCore": "ESS-1-20240115080000",
+  "examRoomId": 1,
+  "monitorId": 123
+}

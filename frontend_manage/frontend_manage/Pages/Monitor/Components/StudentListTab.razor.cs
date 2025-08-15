@@ -19,6 +19,9 @@ namespace frontend_manage.Pages.Monitor.Components
         [Parameter]
         public int? ExamSessionSubjectId { get; set; }
 
+        [Parameter]
+        public string? ExamSessionName { get; set; }
+
         private string searchText = "";
         private int currentPage = 1;
         private int pageSize = 10;

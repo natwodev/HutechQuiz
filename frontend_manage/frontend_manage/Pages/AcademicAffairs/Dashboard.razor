@@ -8,7 +8,6 @@
 @inject ExamBatchService ExamBatchService
 @inject ExamBatchDetailService ExamBatchDetailService
 @inject ExamSessionService ExamSessionService
-@inject ExamSessionDepartmentService ExamSessionDepartmentService
 @inject ExamSessionSubjectService ExamSessionSubjectService
 @inject frontend_manage.Services.AuthService AuthService
 @inject ISnackbar Snackbar
@@ -297,7 +296,6 @@
             _examBatches = await ExamBatchService.GetAllAsync();
             _examBatchDetails = await ExamBatchDetailService.GetAllAsync();
             _examSessions = await ExamSessionService.GetAllAsync();
-            _examSessionDepartments = await ExamSessionDepartmentService.GetAllAsync();
             _examSessionSubjects = await ExamSessionSubjectService.GetAllAsync();
 
             // Update chart data

@@ -35,7 +35,6 @@ builder.Services.AddScoped<SemesterService>();
 builder.Services.AddScoped<ExamBatchService>();
 builder.Services.AddScoped<ExamBatchDetailService>();
 builder.Services.AddScoped<ExamSessionService>();
-builder.Services.AddScoped<ExamSessionDepartmentService>();
 builder.Services.AddScoped<ExamSessionSubjectService>();
 
 // Đăng ký AuthHeaderHandler

@@ -89,11 +89,11 @@ public class MonitorApi
         }
     }
 
-    public async Task<List<ExamRoomLecturerAssignmentDto>?> GetMyAssignmentsAsync()
+    public async Task<List<SubjectExamRoomStatusDto>?> GetMyAssignmentsAsync()
     {
         try
         {
-            return await _httpClient.GetFromJsonAsync<List<ExamRoomLecturerAssignmentDto>>("/api/ExamRoomLecturerAssignment/my-assignments");
+            return await _httpClient.GetFromJsonAsync<List<SubjectExamRoomStatusDto>>("/api/ExamSessionSubject/lecturer/subject-exam-room-status");
         }
         catch (Exception ex)
         {
@@ -102,13 +102,13 @@ public class MonitorApi
         }
     }
 
-    public async Task<StudentListResponse?> GetStudentsByExamRoomAsync(int examRoomId, int examSessionSubjectId)
+    public async Task<StudentListResponse?> GetStudentsByExamRoomAsync(int examSessionSubjectId)
     {
         try
         {
             var result = await _httpClient
                 .GetFromJsonAsync<StudentListResponse>(
-                    $"/api/Student/by-exam-room?examRoomId={examRoomId}&examSessionSubjectId={examSessionSubjectId}"
+                    $"/api/ExamSessionSubject/{examSessionSubjectId}/with-students"
                 );
 
             return result;

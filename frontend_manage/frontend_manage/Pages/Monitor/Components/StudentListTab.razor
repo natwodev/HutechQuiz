@@ -18,7 +18,7 @@
             @if (Students != null && Students.Any())
             {
                 <div class="exam-info">
-                    Ca thi: <strong>@(ExamSessionSubjectId?.ToString() ?? "N/A")</strong> | 
+                    Ca thi: <strong>@(ExamSessionName ?? ExamSessionSubjectId?.ToString() ?? "N/A")</strong> | 
                     Số sinh viên: <strong>@Students.Count</strong>
                 </div>
             }

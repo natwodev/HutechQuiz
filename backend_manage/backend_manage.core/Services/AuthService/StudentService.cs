@@ -128,12 +128,17 @@ public class StudentService : IStudentService
 
         foreach (var session in studentExamSessions)
         {
-            if (session.ExamRoomId != null)
+            var examSessionSubjectId = session.ExamSessionSubjectId;
+            
+            // Lấy thông tin phòng thi từ ExamSessionSubject
+            var examSessionSubject = await _examSessionSubjectRepository.GetQueryable()
+                .Include(x => x.ExamRoom)
+                .FirstOrDefaultAsync(x => x.ExamSessionSubjectId == examSessionSubjectId);
+                
+            if (examSessionSubject?.ExamRoomId != null)
             {
-                var examRoomId = session.ExamRoomId.Value;
-                var examSessionSubjectId = session.ExamSessionSubjectId; 
-
-                var (statusList, subjectInfo) = await GetStudentsByExamRoomAsync(examRoomId, examSessionSubjectId);
+                var examRoomId = examSessionSubject.ExamRoomId.Value;
+                var (statusList, subjectInfo) = await GetStudentsByExamSessionSubjectAsync(examSessionSubjectId);
 
                 var groupName = $"lecturer_room_{examRoomId}_{examSessionSubjectId}";
 
@@ -215,7 +220,7 @@ public class StudentService : IStudentService
     #endregion
     
     
-      public async Task<StudentImportResultDto> ImportFromExcelAsyncs(IFormFile file, string examSessionSubjectCore, int examRoomId)
+      public async Task<StudentImportResultDto> ImportFromExcelAsyncs(IFormFile file, string examSessionSubjectCore)
     {
         if (file == null || file.Length == 0)
             return new StudentImportResultDto { StudentsAdded = 0, StudentExamSessionsAdded = 0 };
@@ -255,7 +260,9 @@ public class StudentService : IStudentService
         var examSessionSubject = await _examSessionSubjectRepository.GetQueryable().FirstOrDefaultAsync(x => x.ExamSessionSubjectCore == examSessionSubjectCore);
         if (examSessionSubject == null)
             throw new Exception($"Không tìm thấy ExamSessionSubject với core: {examSessionSubjectCore}");
-        int? examRoomIdValue = examRoomId;
+        
+
+        
         int addedCount = 0;
         int studentExamSessionAdded = 0;
         foreach (var student in students)
@@ -285,7 +292,6 @@ public class StudentService : IStudentService
                     StudentId = dbStudent.StudentId,
                     StudentCode = student.StudentCode,
                     ExamSessionSubjectId = examSessionSubject.ExamSessionSubjectId,
-                    ExamRoomId = examRoomIdValue,
                     CreatedBy = userId,
                     CreatedAt = DateTimeHelper.GetVietnamTime(),
                     StudentAnswersString = "",
@@ -304,7 +310,7 @@ public class StudentService : IStudentService
     
     //đã tối ưu
     #region ImportFromExcelAsync
-    public async Task<StudentImportResultDto> ImportFromExcelAsync(IFormFile file, string examSessionSubjectCore, int examRoomId)
+    public async Task<StudentImportResultDto> ImportFromExcelAsync(IFormFile file, string examSessionSubjectCore)
     {
         if (file == null || file.Length == 0)
             return new StudentImportResultDto { StudentsAdded = 0, StudentExamSessionsAdded = 0 };
@@ -321,6 +327,8 @@ public class StudentService : IStudentService
         await file.CopyToAsync(ms);
         var fileContent = Convert.ToBase64String(ms.ToArray());
         
+
+        
         // Tạo message
         var message = new StudentImportMessage
         {
@@ -328,7 +336,6 @@ public class StudentService : IStudentService
             FileContent = fileContent,
             FileName = file.FileName,
             ExamSessionSubjectCore = examSessionSubjectCore,
-            ExamRoomId = examRoomId,
             UserId = userId,
             CreatedAt = DateTime.UtcNow
         };
@@ -351,9 +358,9 @@ public class StudentService : IStudentService
     
     //đã tối ưu
     #region ImportFromExcelStreamAsync
-    public async Task<StudentImportResultDto> ImportFromExcelStreamAsync(Stream stream, string examSessionSubjectCore, int examRoomId, string userId)
+    public async Task<StudentImportResultDto> ImportFromExcelStreamAsync(Stream stream, string examSessionSubjectCore, string userId)
     {
-        return await _importHelper.ImportFromExcelStreamAsync(stream, examSessionSubjectCore, examRoomId, userId);
+        return await _importHelper.ImportFromExcelStreamAsync(stream, examSessionSubjectCore, userId);
     }
     #endregion
     
@@ -382,32 +389,6 @@ public class StudentService : IStudentService
 
         return (studentExamSessionCacheDto,shuffledExamPaperDto);
     }
-
-    
-
-    private string CreateEmptyAnswersString(ShuffledExamPaperDto paperDto)
-    {
-        if (paperDto.Details == null || !paperDto.Details.Any())
-        {
-            _logger.LogWarning("Không có chi tiết đề thi để tạo chuỗi đáp án rỗng");
-            return "";
-        }
-
-        // Sử dụng Order thực tế từ Details thay vì Range
-        var orderedDetails = paperDto.Details
-            .Where(d => d.Order > 0) // Chỉ lấy câu hỏi có Order hợp lệ
-            .OrderBy(d => d.Order)
-            .ToList();
-
-        var emptyAnswers = string.Join(";", 
-            orderedDetails.Select(d => $"({d.Order},-)")) + ";";
-
-        _logger.LogInformation("Đã tạo chuỗi đáp án rỗng với {Count} câu hỏi: {EmptyAnswers}", 
-            orderedDetails.Count, emptyAnswers);
-
-        return emptyAnswers;
-    }
-    
     #endregion
    
 
@@ -442,7 +423,8 @@ public class StudentService : IStudentService
                            currentTime < x.ExamSessionStartTime.AddMinutes(x.ExamSessionSubject.Duration + x.ExtraMinutes))
                 .Include(x => x.ExamSessionSubject)
                     .ThenInclude(x => x.Subject)
-                .Include(x => x.ExamRoom)
+                .Include(x => x.ExamSessionSubject)
+                    .ThenInclude(x => x.ExamRoom)
                 .AsSplitQuery()
                 .ToListAsync();
             
@@ -461,15 +443,16 @@ public class StudentService : IStudentService
 
 
 
-    #region GetStudentsByExamRoomAsync
-    public async Task<(IEnumerable<StudentExamRoomStatusDto> Students, SubjectExamRoomStatusDto SubjectInfo)> GetStudentsByExamRoomAsync(int examRoomId, int examSessionSubjectId)
+    #region GetStudentsByExamSessionSubjectAsync
+    public async Task<(IEnumerable<StudentExamRoomStatusDto> Students, SubjectExamRoomStatusDto SubjectInfo)> GetStudentsByExamSessionSubjectAsync(int examSessionSubjectId)
     {
         var query = _studentExamSessionRepository.GetQueryable()
-            .Where(ses => ses.ExamRoomId == examRoomId && ses.ExamSessionSubjectId == examSessionSubjectId)
+            .Where(ses => ses.ExamSessionSubjectId == examSessionSubjectId)
             .Include(ses => ses.Student)
             .Include(ses => ses.ExamSessionSubject)
                 .ThenInclude(ess => ess.Subject)
-            .Include(ses => ses.ExamRoom)
+            .Include(ses => ses.ExamSessionSubject)
+                .ThenInclude(ess => ess.ExamRoom)
             .AsSplitQuery();
 
         var sessions = await query.ToListAsync();
@@ -485,7 +468,7 @@ public class StudentService : IStudentService
                 SubjectId = anySession.ExamSessionSubject.SubjectId,
                 SubjectCode = anySession.ExamSessionSubject.Subject.SubjectCore,
                 SubjectName = anySession.ExamSessionSubject.Subject.SubjectName,
-                RoomName = anySession.ExamRoom?.RoomName,
+                RoomName = anySession.ExamSessionSubject.ExamRoom?.RoomName,
                 Duration = anySession.ExamSessionSubject.Duration,
                 ExamSessionStartTime = anySession.ExamSessionStartTime,
                 ExamSessionEndTime = anySession.ExamSessionEndTime
@@ -569,11 +552,17 @@ public class StudentService : IStudentService
 
         foreach (var session in studentExamSessions)
         {
-            if (session.ExamRoomId != null)
+            var examSessionSubjectId = session.ExamSessionSubjectId;
+            
+            // Lấy thông tin phòng thi từ ExamSessionSubject
+            var examSessionSubject = await _examSessionSubjectRepository.GetQueryable()
+                .Include(x => x.ExamRoom)
+                .FirstOrDefaultAsync(x => x.ExamSessionSubjectId == examSessionSubjectId);
+                
+            if (examSessionSubject?.ExamRoomId != null)
             {
-                var examRoomId = session.ExamRoomId.Value;
-                var examSessionSubjectId = session.ExamSessionSubjectId;
-                var (statusList, subjectInfo) = await GetStudentsByExamRoomAsync(examRoomId, examSessionSubjectId);
+                var examRoomId = examSessionSubject.ExamRoomId.Value;
+                var (statusList, subjectInfo) = await GetStudentsByExamSessionSubjectAsync(examSessionSubjectId);
                 Console.WriteLine($"[SignalR] Gửi RoomStatusUpdated tới giám thị phòng {examRoomId} với {statusList.Count()} sinh viên.");
                 // Chỉ gửi cho giám thị, không gửi cho sinh viên
                 await _hubContext.Clients.Group($"lecturer_room_{examRoomId}")
@@ -675,7 +664,7 @@ public class StudentService : IStudentService
               {
                   var examRoomId = session.ExamRoomId.Value;
                   var examSessionSubjectId = session.ExamSessionSubjectId;
-                  var statusList = await GetStudentsByExamRoomAsync(examRoomId, examSessionSubjectId);
+                  var (statusList, subjectInfo) = await GetStudentsByExamSessionSubjectAsync(examSessionSubjectId);
                   Console.WriteLine($"[SignalR] Gửi RoomStatusUpdated tới giám thị phòng {examRoomId} với {statusList.Count()} sinh viên.");
                   // Chỉ gửi cho giám thị, không gửi cho sinh viên
                   await _hubContext.Clients.Group($"lecturer_room_{examRoomId}")
