@@ -307,51 +307,18 @@ namespace backend_manage.core.Data
                 await context.SaveChangesAsync();
                 logger.LogInformation("✅ Đã seed ExamSession 'Ca thi 1' cho ExamBatchDetail 'Lần 1'.");
 
-                // Seed 2 ExamSessionDepartment cho ExamSession này (CNTT, KINHTE)
-                var examSessionDepartments = new[]
-                {
-                    new ExamSessionDepartment
-                    {
-                        ExamSessionId = examSession.ExamSessionId,
-                        DepartmentId = "CNTT",
-                        CreatedBy = "seed",
-                        CreatedAt = now,
-                        IsDeleted = false,
-                        UpdatedAt = now,
-                        UpdatedBy = "seed",
-                        Version = 1
-                    },
-                    new ExamSessionDepartment
-                    {
-                        ExamSessionId = examSession.ExamSessionId,
-                        DepartmentId = "KINHTE",
-                        CreatedBy = "seed",
-                        CreatedAt = now,
-                        IsDeleted = false,
-                        UpdatedAt = now,
-                        UpdatedBy = "seed",
-                        Version = 1
-                    }
-                };
-                context.ExamSessionDepartments.AddRange(examSessionDepartments);
-                await context.SaveChangesAsync();
-                logger.LogInformation("✅ Đã seed ExamSessionDepartment cho 2 khoa CNTT và KINHTE.");
-
-                // Seed ExamSessionSubject cho mỗi ExamSessionDepartment với môn học tương ứng
-                var cnttSessionDept = examSessionDepartments.FirstOrDefault(x => x.DepartmentId == "CNTT");
-                var kinhteSessionDept = examSessionDepartments.FirstOrDefault(x => x.DepartmentId == "KINHTE");
-
+                // Seed ExamSessionSubject trực tiếp với ExamSession
                 var cnttSubject = context.Subjects.FirstOrDefault(x => x.SubjectCore == "CNTT001");
                 var cnttSubject2 = context.Subjects.FirstOrDefault(x => x.SubjectCore == "CNTT002");
                 var kinhteSubject = context.Subjects.FirstOrDefault(x => x.SubjectCore == "KT001");
 
-                if (cnttSessionDept != null && cnttSubject != null && cnttSubject2 != null && kinhteSessionDept != null && kinhteSubject != null)
+                if (cnttSubject != null && cnttSubject2 != null && kinhteSubject != null)
                 {
                     var examSessionSubjects = new[]
                     {
                         new ExamSessionSubject
                         {
-                            ExamSessionDepartmentId = cnttSessionDept.ExamSessionDepartmentId,
+                            ExamSessionId = examSession.ExamSessionId,
                             SubjectId = cnttSubject.SubjectId,
                             ExamSessionSubjectCore = $"{cnttSubject.SubjectCore}-{now:yyyyMMddHHmmss}",
                             Duration = 120,
@@ -366,7 +333,7 @@ namespace backend_manage.core.Data
                         },
                         new ExamSessionSubject
                         {
-                            ExamSessionDepartmentId = kinhteSessionDept.ExamSessionDepartmentId,
+                            ExamSessionId = examSession.ExamSessionId,
                             SubjectId = kinhteSubject.SubjectId,
                             ExamSessionSubjectCore = $"{kinhteSubject.SubjectCore}-{now:yyyyMMddHHmmss}",
                             Duration = 120,
@@ -381,7 +348,7 @@ namespace backend_manage.core.Data
                         },
                         new ExamSessionSubject
                         {
-                            ExamSessionDepartmentId = cnttSessionDept.ExamSessionDepartmentId,
+                            ExamSessionId = examSession.ExamSessionId,
                             SubjectId = cnttSubject2.SubjectId,
                             ExamSessionSubjectCore = $"{cnttSubject2.SubjectCore}-{now:yyyyMMddHHmmss}",
                             Duration = 90,

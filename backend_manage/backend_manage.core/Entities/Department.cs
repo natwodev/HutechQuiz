@@ -17,9 +17,5 @@ namespace backend_manage.core.Entities
         // Collection các môn học thuộc khoa này
         // Mối quan hệ one-to-many với Subject
         public ICollection<Subject> Subjects { get; set; } = new List<Subject>();
-        
-        // Collection các ca thi mà khoa tham gia
-        // Mối quan hệ many-to-many với ExamSession
-        public ICollection<ExamSessionDepartment> ExamSessionDepartments { get; set; } = new List<ExamSessionDepartment>();
     }
 }

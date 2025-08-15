@@ -13,7 +13,7 @@ namespace backend_manage.core.Entities
         [StringLength(50)]
         public string RoomName { get; set; } // Ví dụ: "A101", "B202"
 
-        // Navigation: mỗi phòng có nhiều sinh viên
-        public ICollection<StudentExamSession> StudentExamSessions { get; set; } = new List<StudentExamSession>();
+        // Navigation: mỗi phòng có thể được sử dụng cho nhiều ExamSessionSubject
+        public ICollection<ExamSessionSubject> ExamSessionSubjects { get; set; } = new List<ExamSessionSubject>();
     }
 } 

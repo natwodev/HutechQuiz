@@ -55,10 +55,6 @@ public class StudentExamSession : BaseEntity
     // true: đã hoàn thành, false: chưa hoàn thành
     public bool IsCompleted { get; set; }
     
-    // Khóa ngoại liên kết với bảng ExamRoom (phòng thi)
-    [ForeignKey("ExamRoom")]
-    public int? ExamRoomId { get; set; }
-    
     // Chuỗi lưu đáp án của sinh viên, ví dụ: "A,B,C,D,..." hoặc JSON
     public string StudentAnswersString { get; set; }
 
@@ -79,9 +75,6 @@ public class StudentExamSession : BaseEntity
     
     // Navigation property đến entity ShuffledExamPaper
     public ShuffledExamPaper ShuffledExamPaper { get; set; }
-
-    // Navigation property đến entity ExamRoom
-    public ExamRoom ExamRoom { get; set; }
 
 }
 

@@ -33,11 +33,9 @@ namespace backend_manage.core.Configurations
             services.AddScoped<IExamBatchService, ExamBatchService>();
             services.AddScoped<IExamBatchDetailService, ExamBatchDetailService>();
             services.AddScoped<IExamSessionService, ExamSessionService>();
-            services.AddScoped<IExamSessionDepartmentService, ExamSessionDepartmentService>();
             services.AddScoped<IExamSessionSubjectService, ExamSessionSubjectService>();
             services.AddScoped<IOriginalExamPaperService, OriginalExamPaperService>();
             services.AddScoped<IShuffledExamPaperService, ShuffledExamPaperService>();
-            services.AddScoped<IExamRoomLecturerAssignmentService, ExamRoomLecturerAssignmentService>();
             services.AddScoped<ILecturerService, LecturerService>();
             
             // Register Helper Classes

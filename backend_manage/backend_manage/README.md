@@ -181,17 +181,7 @@ Hệ thống sử dụng JWT (JSON Web Token) để xác thực. Các endpoint �
 | PUT | `/api/ExamSession/{id}` | Admin | Cập nhật ca thi |
 | DELETE | `/api/ExamSession/{id}` | Admin | Xóa ca thi |
 
-### 6. API Khoa tham gia ca thi (ExamSessionDepartment)
-
-| Method | Endpoint | Quyền | Mô tả |
-|--------|----------|-------|-------|
-| GET | `/api/ExamSessionDepartment` | Admin | Lấy danh sách khoa tham gia ca thi |
-| GET | `/api/ExamSessionDepartment/{id}` | Admin | Lấy chi tiết khoa tham gia ca thi |
-| POST | `/api/ExamSessionDepartment` | Admin | Thêm khoa tham gia ca thi |
-| PUT | `/api/ExamSessionDepartment/{id}` | Admin | Cập nhật khoa tham gia ca thi |
-| DELETE | `/api/ExamSessionDepartment/{id}` | Admin | Xóa khoa tham gia ca thi |
-
-### 7. API Ca thi môn học (ExamSessionSubject)
+### 6. API Ca thi môn học (ExamSessionSubject)
 
 | Method | Endpoint | Quyền | Mô tả |
 |--------|----------|-------|-------|
@@ -203,6 +193,18 @@ Hệ thống sử dụng JWT (JSON Web Token) để xác thực. Các endpoint �
 | PATCH | `/api/ExamSessionSubject/{id}/original-exam-paper/{originalExamPaperId}` | Admin | Cập nhật đề thi gốc |
 | GET | `/api/ExamSessionSubject/with-rooms` | Admin | Lấy ca thi môn học với phòng thi |
 
+### 7. API Sinh viên (Student)
+
+| Method | Endpoint | Quyền | Mô tả |
+|--------|----------|-------|-------|
+| POST | `/api/Student/login` | Public | Đăng nhập sinh viên |
+| GET | `/api/Student/profile` | Student | Lấy thông tin profile sinh viên |
+| GET | `/api/Student/by-exam-session-subject` | Admin | Lấy danh sách sinh viên theo ca thi môn học |
+| POST | `/api/Student/extra-minutes` | Admin | Thêm thời gian làm bài cho sinh viên |
+| POST | `/api/Student/save-answer` | Student | Lưu đáp án bài thi |
+| POST | `/api/Student/start-exam` | Student | Bắt đầu làm bài thi |
+| POST | `/api/Student/submit-exam` | Student | Nộp bài thi |
+
 ## 🔄 Quy trình tạo ca thi
 
 1. **Tạo năm học** → Định nghĩa năm học mới
@@ -210,8 +212,7 @@ Hệ thống sử dụng JWT (JSON Web Token) để xác thực. Các endpoint �
 3. **Tạo đợt thi** → Thiết lập đợt thi cho học kỳ
 4. **Tạo chi tiết đợt thi** → Cấu hình các thông tin chi tiết
 5. **Tạo ca thi** → Thiết lập ca thi cho đợt thi
-6. **Thêm khoa tham gia** → Gán khoa vào ca thi
-7. **Tạo ca thi môn học** → Thiết lập môn học cho ca thi
+6. **Tạo ca thi môn học** → Thiết lập môn học trực tiếp cho ca thi
 
 ## 🐳 Deployment
 

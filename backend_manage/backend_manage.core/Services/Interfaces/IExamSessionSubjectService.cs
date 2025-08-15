@@ -11,5 +11,7 @@ namespace backend_manage.core.Services.Interfaces
         Task<bool> DeleteAsync(string id);
         Task<bool> UpdateOriginalExamPaperIdAsync(int examSessionSubjectId, int originalExamPaperId);
         Task<IEnumerable<ExamSessionSubjectRoomDto>> GetAllWithRoomsAsync();
+        Task<bool> UpdateExamRoomIdAsync(int examSessionSubjectId, int? examRoomId);
+        Task<IEnumerable<ExamSessionSubjectDto>> GetByExamRoomIdAsync(int examRoomId);
     }
 } 

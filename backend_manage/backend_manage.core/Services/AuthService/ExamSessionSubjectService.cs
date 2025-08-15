@@ -32,6 +32,7 @@ namespace backend_manage.core.Services.AuthService
             var entities = await _repository.GetQueryable()
                 .Include(x => x.Subject)
                 .Include(x => x.OriginalExamPaper)
+                .Include(x => x.ExamRoom)
                 .AsSplitQuery()
                 .ToListAsync();
             return _mapper.Map<IEnumerable<ExamSessionSubjectDto>>(entities);
@@ -43,6 +44,7 @@ namespace backend_manage.core.Services.AuthService
             var entity = await _repository.GetQueryable()
                 .Include(x => x.Subject)
                 .Include(x => x.OriginalExamPaper)
+                .Include(x => x.ExamRoom)
                 .AsSplitQuery()
                 .FirstOrDefaultAsync(x => x.ExamSessionSubjectId == entityId);
             return entity == null ? null : _mapper.Map<ExamSessionSubjectDto>(entity);
@@ -66,6 +68,7 @@ namespace backend_manage.core.Services.AuthService
             var fullEntity = await _repository.GetQueryable()
                 .Include(x => x.Subject)
                 .Include(x => x.OriginalExamPaper)
+                .Include(x => x.ExamRoom)
                 .FirstOrDefaultAsync(x => x.ExamSessionSubjectId == result.ExamSessionSubjectId);
 
             return _mapper.Map<ExamSessionSubjectDto>(fullEntity);
@@ -117,13 +120,40 @@ namespace backend_manage.core.Services.AuthService
 
         public async Task<IEnumerable<ExamSessionSubjectRoomDto>> GetAllWithRoomsAsync()
         {
-            var studentExamSessions = await _repository.GetQueryable()
-                .SelectMany(x => x.StudentExamSessions)
+            var entities = await _repository.GetQueryable()
+                .Include(x => x.Subject)
                 .Include(x => x.ExamRoom)
-                .Include(x => x.ExamSessionSubject)
-                    .ThenInclude(ess => ess.Subject)
+                .AsSplitQuery()
                 .ToListAsync();
-            return studentExamSessions.Select(x => _mapper.Map<ExamSessionSubjectRoomDto>(x)).DistinctBy(x => new { x.ExamSessionSubjectId, x.ExamRoomId });
+            return entities.Select(x => _mapper.Map<ExamSessionSubjectRoomDto>(x));
+        }
+
+        public async Task<bool> UpdateExamRoomIdAsync(int examSessionSubjectId, int? examRoomId)
+        {
+            var entity = await _repository.GetByIdAsync(examSessionSubjectId);
+            if (entity == null) return false;
+            
+            entity.ExamRoomId = examRoomId;
+            var userId = _httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+                throw new UnauthorizedAccessException("Không thể xác định người dùng cập nhật ExamSessionSubject.");
+            
+            entity.UpdatedBy = userId;
+            entity.UpdatedAt = DateTimeHelper.GetVietnamTime();
+            await _repository.UpdateAsync(entity);
+            return true;
+        }
+
+        public async Task<IEnumerable<ExamSessionSubjectDto>> GetByExamRoomIdAsync(int examRoomId)
+        {
+            var entities = await _repository.GetQueryable()
+                .Where(x => x.ExamRoomId == examRoomId)
+                .Include(x => x.Subject)
+                .Include(x => x.OriginalExamPaper)
+                .Include(x => x.ExamRoom)
+                .AsSplitQuery()
+                .ToListAsync();
+            return _mapper.Map<IEnumerable<ExamSessionSubjectDto>>(entities);
         }
     }
 } 
