@@ -15,8 +15,10 @@ namespace backend_manage.shared.DTOs
         public string ExamSessionSubjectCore { get; set; }
         public int? ExamRoomId { get; set; }
         public string RoomName { get; set; }
+        public int? MonitorId { get; set; }
+        public string MonitorName { get; set; }
     }
-
+    
     public class ExamSessionSubjectCreateDto
     {
         public int ExamSessionId { get; set; }
@@ -28,6 +30,7 @@ namespace backend_manage.shared.DTOs
         public DateTime? EndTime { get; set; }
         public string ExamSessionSubjectCore { get; set; }
         public int? ExamRoomId { get; set; }
+        public int? MonitorId { get; set; }
     }
 
     public class ExamSessionSubjectUpdateDto
@@ -41,5 +44,19 @@ namespace backend_manage.shared.DTOs
         public DateTime? EndTime { get; set; }
         public string ExamSessionSubjectCore { get; set; }
         public int? ExamRoomId { get; set; }
+        public int? MonitorId { get; set; }
+    }
+
+    // DTO cho việc phân công giảng viên
+    public class AssignLecturerDto
+    {
+        public int ExamSessionSubjectId { get; set; }
+        public int LecturerId { get; set; }
+    }
+
+    // DTO cho việc hủy phân công giảng viên
+    public class UnassignLecturerDto
+    {
+        public int ExamSessionSubjectId { get; set; }
     }
 } 

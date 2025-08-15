@@ -129,6 +129,13 @@ namespace backend_manage.core.Data
                 .HasForeignKey(es => es.OriginalExamPaperId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            // ExamSessionSubject → Lecturer (Monitor)
+            builder.Entity<ExamSessionSubject>()
+                .HasOne(es => es.Monitor)
+                .WithMany()
+                .HasForeignKey(es => es.MonitorId)
+                .OnDelete(DeleteBehavior.Restrict);
+
             // ShuffledExamPaper → OriginalExamPaper
             builder.Entity<ShuffledExamPaper>()
                 .HasOne(e => e.OriginalExamPaper)

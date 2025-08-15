@@ -22,8 +22,11 @@ namespace backend_manage.shared.DTOs
         public string SubjectName { get; set; }
         public string RoomName { get; set; }
         public int Duration { get; set; }
+        public bool IsCompleted { get; set; }
         public DateTime ExamSessionStartTime { get; set; }
         public DateTime ExamSessionEndTime { get; set; }
+        public string ExamSessionName { get; set; }
+        public string LecturerCode { get; set; }
     }
     
 } 

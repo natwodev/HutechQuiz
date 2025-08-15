@@ -47,6 +47,10 @@ namespace backend_manage.core.Entities
         // Khóa ngoại liên kết với bảng ExamRoom (phòng thi)
         [ForeignKey("ExamRoom")]
         public int? ExamRoomId { get; set; }
+
+        // Khóa ngoại liên kết với bảng Lecturer (giảng viên giám sát)
+        [ForeignKey("Monitor")]
+        public int? MonitorId { get; set; }
         
         // Navigation property đến entity ExamSession
         public ExamSession ExamSession { get; set; }
@@ -60,6 +64,9 @@ namespace backend_manage.core.Entities
 
         // Navigation property đến entity ExamRoom
         public ExamRoom? ExamRoom { get; set; }
+
+        // Navigation property đến entity Lecturer (giảng viên giám sát)
+        public Lecturer? Monitor { get; set; }
 
         // Collection các đề thi hoán vị của môn học này trong ca thi
         // Mối quan hệ one-to-many với ShuffledExamPaper
