@@ -17,7 +17,6 @@ namespace frontend_manage.Pages.Monitor
         [Inject] private IJSRuntime JSRuntime { get; set; }
 
         // Không còn sử dụng query string parameters
-        private int? ExamRoomId { get; set; }
         private int? ExamSessionSubjectId { get; set; }
 
         private int activeTab = 0;
@@ -49,19 +48,13 @@ namespace frontend_manage.Pages.Monitor
             try
             {
                 // Đọc dữ liệu từ session storage
-                var examRoomIdStr = await JSRuntime.InvokeAsync<string>("sessionStorage.getItem", "examRoomId");
                 var examSessionSubjectIdStr = await JSRuntime.InvokeAsync<string>("sessionStorage.getItem", "examSessionSubjectId");
 
-                if (!string.IsNullOrEmpty(examRoomIdStr) && int.TryParse(examRoomIdStr, out int examRoomId))
+                if (!string.IsNullOrEmpty(examSessionSubjectIdStr) && int.TryParse(examSessionSubjectIdStr, out int examSessionSubjectId))
                 {
-                    ExamRoomId = examRoomId;
+                    ExamSessionSubjectId = examSessionSubjectId;
                     
-                    if (!string.IsNullOrEmpty(examSessionSubjectIdStr) && int.TryParse(examSessionSubjectIdStr, out int examSessionSubjectId))
-                    {
-                        ExamSessionSubjectId = examSessionSubjectId;
-                    }
-
-                    // Nếu có ExamRoomId, gọi API để lấy dữ liệu
+                    // Gọi API để lấy dữ liệu
                     await LoadExamData();
                 }
                 else
@@ -81,7 +74,7 @@ namespace frontend_manage.Pages.Monitor
 
         private async Task LoadExamData()
         {
-            if (!ExamRoomId.HasValue) return;
+            if (!ExamSessionSubjectId.HasValue) return;
 
             try
             {
@@ -89,7 +82,7 @@ namespace frontend_manage.Pages.Monitor
                 errorMessage = null;
                 
                 // Gọi API để lấy dữ liệu sinh viên và thông tin môn thi
-                examData = await MonitorApi.GetStudentsByExamRoomAsync(ExamRoomId.Value, ExamSessionSubjectId ?? 0);
+                examData = await MonitorApi.GetStudentsByExamRoomAsync(ExamSessionSubjectId.Value);
                 
                 if (examData == null)
                 {
@@ -129,7 +122,6 @@ namespace frontend_manage.Pages.Monitor
             try
             {
                 // Xóa dữ liệu khỏi session storage
-                await JSRuntime.InvokeVoidAsync("sessionStorage.removeItem", "examRoomId");
                 await JSRuntime.InvokeVoidAsync("sessionStorage.removeItem", "examSessionSubjectId");
                 
                 // Chuyển về trang exam room management

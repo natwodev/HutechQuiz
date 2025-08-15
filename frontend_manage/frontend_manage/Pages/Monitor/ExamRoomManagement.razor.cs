@@ -17,7 +17,7 @@ namespace frontend_manage.Pages.Monitor
         private string currentTime = DateTime.Now.ToString("hh:mm:ss tt");
         private Timer? timer;
         private LecturerDto? lecturerInfo;
-        private List<LecturerExamRoomDto>? examRooms;
+        private List<SubjectExamRoomStatusDto>? examRooms;
         private int? selectedExamRoomId = null;
         private int? selectedExamSessionSubjectId = null;
         private bool _processing = false;
@@ -83,30 +83,16 @@ namespace frontend_manage.Pages.Monitor
                 var assignments = await MonitorApi.GetMyAssignmentsAsync();
                 if (assignments != null && assignments.Count > 0)
                 {
-                    // Chuyển đổi từ ExamRoomLecturerAssignmentDto sang LecturerExamRoomDto
-                    examRooms = assignments.Select(a => new LecturerExamRoomDto
-                    {
-                       // ExamRoomLecturerAssignmentId = a.ExamRoomLecturerAssignmentId,
-                        ExamRoomId = a.ExamRoomId,
-                        RoomName = a.RoomName,
-                        SubjectName = a.SubjectName,
-                        ExamSessionName = $"Ca thi {a.ExamSessionSubjectId}", // Có thể cần thêm thông tin này từ API
-                        StudentCount = a.StudentCount, // Sử dụng StudentCount từ API
-                        ExamStartTime = a.StartTime, // Sử dụng StartTime từ API
-                        ExamEndTime = a.EndTime, // Sử dụng EndTime từ API
-                        ExamSessionSubjectId = a.ExamSessionSubjectId, // Lưu trữ ExamSessionSubjectId
-                        ExamStatus = "pending" // Mặc định là pending
-                    }).ToList();
+                    examRooms = assignments;
                 }
                 else
                 {
-                    examRooms = new List<LecturerExamRoomDto>();
+                    examRooms = new List<SubjectExamRoomStatusDto>();
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error loading exam room assignments: {ex.Message}");
-                examRooms = new List<LecturerExamRoomDto>();
+                
             }
         }
 
@@ -118,10 +104,9 @@ namespace frontend_manage.Pages.Monitor
 
         public async Task NavigateToDashboard()
         {
-            if (selectedExamRoomId.HasValue && selectedExamSessionSubjectId.HasValue)
+            if (selectedExamSessionSubjectId.HasValue)
             {
                 // Lưu dữ liệu vào session storage thay vì truyền qua URL
-                await JSRuntime.InvokeVoidAsync("sessionStorage.setItem", "examRoomId", selectedExamRoomId.Value.ToString());
                 await JSRuntime.InvokeVoidAsync("sessionStorage.setItem", "examSessionSubjectId", selectedExamSessionSubjectId.Value.ToString());
                 
                 // Chuyển đến trang monitor không có tham số
@@ -144,7 +129,6 @@ namespace frontend_manage.Pages.Monitor
             try
             {
                 // Xóa dữ liệu khỏi session storage khi đăng xuất
-                await JSRuntime.InvokeVoidAsync("sessionStorage.removeItem", "examRoomId");
                 await JSRuntime.InvokeVoidAsync("sessionStorage.removeItem", "examSessionSubjectId");
             }
             catch (Exception ex)

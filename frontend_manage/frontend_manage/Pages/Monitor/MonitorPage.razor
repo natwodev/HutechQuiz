@@ -101,7 +101,7 @@
             <div class="@(activeTab == 0 ? "tab-content-active" : "tab-content-hidden")">
                 @if (activeTab == 0 || previousTab == 0)
                 {
-                    <StudentListTab Students="@examData.Students" ExamSessionSubjectId="@ExamSessionSubjectId" />
+                    <StudentListTab Students="@examData.Students" ExamSessionSubjectId="@ExamSessionSubjectId" ExamSessionName="@examData.Subject?.ExamSessionName" />
                 }
             </div>
             <div class="@(activeTab == 1 ? "tab-content-active" : "tab-content-hidden")">

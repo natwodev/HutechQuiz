@@ -1,17 +1,5 @@
 namespace frontend_manage.DTOs
 {
-    public class StudentDto
-    {
-        public int Id { get; set; }
-        public int Index { get; set; }
-        public string StudentCode { get; set; }
-        public string FullName { get; set; }
-        public ExamStatus ExamStatus { get; set; }
-        public LoginStatus LoginStatus { get; set; }
-        public int ExtraTime { get; set; }
-        public double? Score { get; set; }
-    }
-
     public enum ExamStatus
     {
         NotStarted,
@@ -26,7 +14,7 @@ namespace frontend_manage.DTOs
     }
     
     
-    public class StudentExamRoomStatusDto
+     public class StudentExamRoomStatusDto
     {
         public string StudentCode { get; set; }
         public string FirstName { get; set; }
@@ -48,8 +36,11 @@ namespace frontend_manage.DTOs
         public string SubjectName { get; set; }
         public string RoomName { get; set; }
         public int Duration { get; set; }
+        public bool IsCompleted { get; set; }
         public DateTime ExamSessionStartTime { get; set; }
         public DateTime ExamSessionEndTime { get; set; }
+        public string ExamSessionName { get; set; }
+        public string LecturerCode { get; set; }
     }
 
     public class StudentListResponse
