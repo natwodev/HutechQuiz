@@ -32,5 +32,6 @@ namespace backend_manage.core.Services.Interfaces
         
         // Phương thức lấy danh sách OriginalExamDto theo SubjectId
         Task<IEnumerable<OriginalExamDto>> GetOriginalExamDtosBySubjectIdAsync(int subjectId);
+        Task<OriginalExamPaperDto> GetWithDetailsAsync(string originalExamPaperCore);
     }
 } 

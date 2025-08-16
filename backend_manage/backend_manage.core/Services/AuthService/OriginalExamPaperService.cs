@@ -840,5 +840,15 @@ namespace backend_manage.core.Services.AuthService
             return _mapper.Map<IEnumerable<OriginalExamDto>>(originalExamPapers);
         }
 
+        public async Task<OriginalExamPaperDto> GetWithDetailsAsync(string originalExamPaperCore)
+        {
+            var examPaper = await _originalExamPaperRepository.GetQueryable()
+                .Where(x => x.OriginalExamPaperCore == originalExamPaperCore)
+                .Include(x => x.OriginalExamPaperDetails)
+                .ThenInclude(d => d.ChildQuestions)
+                .FirstOrDefaultAsync();
+            if (examPaper == null) return null;
+            return _mapper.Map<OriginalExamPaperDto>(examPaper);
+        }
     }
 }
