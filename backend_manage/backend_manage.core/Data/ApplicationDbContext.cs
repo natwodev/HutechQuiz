@@ -22,13 +22,11 @@ namespace backend_manage.core.Data
         public DbSet<OriginalExamPaperDetail> OriginalExamPaperDetails { get; set; }
         public DbSet<Chapter> Chapters { get; set; }
         public DbSet<StudentExamSession> StudentExamSessions { get; set; }
-        public DbSet<ExamSessionDepartment> ExamSessionDepartments { get; set; }
         public DbSet<ExamSessionSubject> ExamSessionSubjects { get; set; }
         public DbSet<Department> Departments { get; set; }
         public DbSet<AcademicYear> AcademicYears { get; set; }
         public DbSet<Semester> Semesters { get; set; }
         public DbSet<Lecturer> Lecturers { get; set; }
-        public DbSet<ExamRoomLecturerAssignment> ExamRoomLecturerAssignments { get; set; }
         public DbSet<ExamRoom> ExamRooms { get; set; }
         
         
@@ -49,12 +47,12 @@ namespace backend_manage.core.Data
                 .HasForeignKey(e => e.SubjectId)
                 .OnDelete(DeleteBehavior.Restrict); // tránh cascade path
 
-            // ExamSessionSubject → ExamSessionDepartment
+            // ExamSessionSubject → ExamSession
             builder.Entity<ExamSessionSubject>()
-                .HasOne(e => e.ExamSessionDepartment)
-                .WithMany(d => d.ExamSessionSubjects) // nếu có navigation ngược
-                .HasForeignKey(e => e.ExamSessionDepartmentId)
-                .OnDelete(DeleteBehavior.Cascade); // bạn chọn 1 cascade là đủ
+                .HasOne(e => e.ExamSession)
+                .WithMany(es => es.ExamSessionSubjects)
+                .HasForeignKey(e => e.ExamSessionId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             // Chapter → Subject
             builder.Entity<Chapter>()
@@ -131,6 +129,13 @@ namespace backend_manage.core.Data
                 .HasForeignKey(es => es.OriginalExamPaperId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            // ExamSessionSubject → Lecturer (Monitor)
+            builder.Entity<ExamSessionSubject>()
+                .HasOne(es => es.Monitor)
+                .WithMany()
+                .HasForeignKey(es => es.MonitorId)
+                .OnDelete(DeleteBehavior.Restrict);
+
             // ShuffledExamPaper → OriginalExamPaper
             builder.Entity<ShuffledExamPaper>()
                 .HasOne(e => e.OriginalExamPaper)
@@ -157,20 +162,6 @@ namespace backend_manage.core.Data
                 .HasOne(e => e.ParentQuestion)
                 .WithMany(p => p.ChildQuestions)
                 .HasForeignKey(e => e.ParentQuestionId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            // ExamRoomLecturerAssignment → ExamRoom
-            builder.Entity<ExamRoomLecturerAssignment>()
-                .HasOne(e => e.ExamRoom)
-                .WithMany()
-                .HasForeignKey(e => e.ExamRoomId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            // ExamRoomLecturerAssignment → Lecturer
-            builder.Entity<ExamRoomLecturerAssignment>()
-                .HasOne(e => e.Lecturer)
-                .WithMany(l => l.ExamRoomLecturerAssignments) // nếu có navigation ngược
-                .HasForeignKey(e => e.LecturerId)
                 .OnDelete(DeleteBehavior.Restrict);
 
         }

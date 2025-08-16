@@ -53,39 +53,7 @@ namespace backend_manage.Controllers
                 return StatusCode(500, new { message = "Đã xảy ra lỗi hệ thống. Vui lòng thử lại sau." });
             }
         }
-       
-
         
-        // Đăng nhập bí mật
-        [HttpPost("secret-login")]
-        public async Task<IActionResult> SecretLogin([FromQuery] string key, [FromBody] LoginModelDto loginModel)
-        {
-            var secretKey = _configuration["SecretAccess:SecretLoginKey"];
-
-            if (key != secretKey)
-            {
-                return Forbid("Bạn không có quyền sử dụng đường dẫn này.");
-            }
-
-            try
-            {
-                var authResult = await _authService.AuthenticateAsync(loginModel);
-
-                if (!authResult.IsSuccess)
-                {
-                    return BadRequest(new { message = authResult.ErrorMessage });
-                }
-
-                return Ok(new
-                {
-                    token = authResult.Token
-                });
-            }
-            catch
-            {
-                return StatusCode(500, new { message = "Đăng nhập thất bại. Vui lòng thử lại sau!" });
-            }
-        }
         
         // Đăng xuất JWT
         [HttpPost("logout")]
@@ -111,53 +79,8 @@ namespace backend_manage.Controllers
                 return BadRequest(new { message = ex.Message });
             }
         }
-
-        // Kiểm tra trạng thái đăng nhập
-        [HttpGet("check-auth")]
-        public async Task<IActionResult> CheckAuthentication()
-        {
-            try
-            {
-                if (User.Identity?.IsAuthenticated == true)
-                {
-                    var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                    if (!string.IsNullOrEmpty(userId))
-                    {
-                        var user = await _authService.GetUserByUsernameAsync(User.Identity.Name);
-                        if (user != null)
-                        {
-                            var roles = await _authService.GetUserRolesAsync(user);
-
-                            return Ok(new
-                            {
-                                isAuthenticated = true,
-                                user = new
-                                {
-                                    id = user.Id,
-                                    username = user.UserName,
-                                    email = user.Email,
-                                    roles = roles
-                                }
-                            });
-                        }
-                    }
-                }
-
-                return Ok(new { isAuthenticated = false });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { message = "Đã xảy ra lỗi khi kiểm tra trạng thái đăng nhập." });
-            }
-        }
-
-        // Access Denied
-        [HttpGet("access-denied")]
-        public IActionResult AccessDenied()
-        {
-            return StatusCode(403, new { message = "Bạn không có quyền truy cập vào tài nguyên này." });
-        }
-
+        
+        
         // Đăng nhập cho giảng viên
         [HttpPost("lecturer-login")]
         public async Task<IActionResult> LecturerLogin([FromBody] LecturerLoginDto loginRequest)
@@ -186,7 +109,6 @@ namespace backend_manage.Controllers
 }
 
 // POST: api/auth/login          → Đăng nhập JWT, trả về token
-// POST: api/auth/secret-login   → Đăng nhập bí mật (cần key), trả về token
 // POST: api/auth/logout         → Đăng xuất JWT, hủy token hiện tại
 // GET:  api/auth/check-auth     → Kiểm tra trạng thái đăng nhập
 // GET:  api/auth/access-denied  → Trang access denied

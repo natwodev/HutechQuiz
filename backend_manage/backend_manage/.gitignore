@@ -5,7 +5,12 @@ obj/**/*.editorconfig
 .idea/ 
 
 # Loại trừ migration
-Migrations/ 
+Migrations/
+**/Migrations/
+**/Migrations/**/*.cs
+**/Migrations/**/*.Designer.cs
+**/Migrations/**/*ModelSnapshot.cs
+**/Migrations/ApplicationDbContextModelSnapshot.cs 
 
 # Loại trừ toàn bộ thư mục bin và obj
 bin/

@@ -45,7 +45,5 @@ namespace backend_manage.core.Entities
         // Navigation property đến Department
         [ForeignKey("DepartmentId")]
         public Department Department { get; set; }
-
-        public ICollection<ExamRoomLecturerAssignment> ExamRoomLecturerAssignments { get; set; }
     }
 } 

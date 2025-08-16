@@ -51,7 +51,7 @@ namespace backend_manage.core.Services.AuthService
         }
 
         // Pass giải nén file XML
-        public const string ExtractPassword =
+        private const string ExtractPassword =
             "649224E2-F0AC-42B1-AD1B-2EAF04E2AC7D-FE602240-7E60-43BF-828D-D6AF38A70429-52572FD1-BB94-45AD-95CF-7B2B5C2E85A6-1B3D4CCF-808E-4ABF-8F9E-73ADF041C78B";
 
         private async Task<string> ExtractAndReadXmlAsync(IFormFile file, string originalExamPaperCore)
@@ -72,7 +72,7 @@ namespace backend_manage.core.Services.AuthService
             var extractFolder = Path.Combine(epzFolder, originalExamPaperCore);
             if (!Directory.Exists(extractFolder)) Directory.CreateDirectory(extractFolder);
             using (var zipStream = new FileStream(zipFilePath, FileMode.Open, FileAccess.Read))
-                using (var zipFile = new ICSharpCode.SharpZipLib.Zip.ZipFile(zipStream))
+                using (var zipFile = new ZipFile(zipStream))
                 {
                 zipFile.Password = ExtractPassword;
                     foreach (ZipEntry entry in zipFile)
@@ -261,7 +261,7 @@ namespace backend_manage.core.Services.AuthService
                         
                         // Sau đó, lưu tất cả câu hỏi con (child questions) với order riêng cho từng nhóm
                         var childQuestions = phan.CauHoi.Where(c => !string.IsNullOrEmpty(c.MaCauHoiCha) && 
-                                                                     c.MaCauHoiCha != "00000000-0000-0000-0000-000000000000").ToList();
+                                                                    c.MaCauHoiCha != "00000000-0000-0000-0000-000000000000").ToList();
                         
                         // Nhóm câu hỏi con theo câu hỏi cha
                         var childQuestionsByParent = childQuestions.GroupBy(c => c.MaCauHoiCha).ToList();
@@ -272,7 +272,7 @@ namespace backend_manage.core.Services.AuthService
                             foreach (var childCauHoi in parentGroup)
                             {
                                 var answers = childCauHoi.CauTraLoi?.OrderBy(a => a.ThuTu).ToList() ??
-                                              new List<backend_manage.shared.DTOs.EPZ.CauTraLoiDto>();
+                                              new List<CauTraLoiDto>();
                                 
                                 // Xử lý thông tin hoán vị từ XML
                                 bool canShuffleQuestion = childCauHoi.HoanVi;
@@ -651,32 +651,7 @@ namespace backend_manage.core.Services.AuthService
                 (list[n], list[k]) = (list[k], list[n]);
             }
         }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        
 
         
         public async Task<IEnumerable<OriginalExamPaperDetail>> GetOriginalExamPaperDetailsByCanShuffleQuestionAsync()
@@ -852,6 +827,17 @@ namespace backend_manage.core.Services.AuthService
                 4 => "D",
                 _ => ""
             };
+        }
+
+        // Phương thức lấy danh sách OriginalExamDto theo SubjectId
+        public async Task<IEnumerable<OriginalExamDto>> GetOriginalExamDtosBySubjectIdAsync(int subjectId)
+        {
+            var originalExamPapers = await _originalExamPaperRepository.GetQueryable()
+                .Include(o => o.Subject)
+                .Where(o => o.SubjectId == subjectId)
+                .ToListAsync();
+
+            return _mapper.Map<IEnumerable<OriginalExamDto>>(originalExamPapers);
         }
 
     }

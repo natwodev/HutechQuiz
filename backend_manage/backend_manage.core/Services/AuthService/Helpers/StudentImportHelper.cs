@@ -27,11 +27,11 @@ public class StudentImportHelper
         _logger = logger;
     }
 
-    public async Task<StudentImportResultDto> ImportFromExcelStreamAsync(Stream stream, string examSessionSubjectCore, int examRoomId, string userId)
+    public async Task<StudentImportResultDto> ImportFromExcelStreamAsync(Stream stream, string examSessionSubjectCore, string userId)
     {
         try
         {
-            _logger.LogInformation("Bắt đầu import student từ stream. ExamSessionSubjectCore: {Core}, ExamRoomId: {RoomId}", examSessionSubjectCore, examRoomId);
+            _logger.LogInformation("Bắt đầu import student từ stream. ExamSessionSubjectCore: {Core}", examSessionSubjectCore);
 
             var students = new List<Student>();
             
@@ -74,7 +74,8 @@ public class StudentImportHelper
             if (examSessionSubject == null)
                 throw new Exception($"Không tìm thấy ExamSessionSubject với core: {examSessionSubjectCore}");
 
-            int? examRoomIdValue = examRoomId;
+
+            
             int addedCount = 0;
             int studentExamSessionAdded = 0;
 
@@ -109,7 +110,6 @@ public class StudentImportHelper
                         StudentId = dbStudent.StudentId,
                         StudentCode = student.StudentCode,
                         ExamSessionSubjectId = examSessionSubject.ExamSessionSubjectId,
-                        ExamRoomId = examRoomIdValue,
                         CreatedBy = userId,
                         CreatedAt = DateTimeHelper.GetVietnamTime(),
                         StudentAnswersString = "",

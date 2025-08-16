@@ -9,7 +9,6 @@ public class AuthHeaderHandler : DelegatingHandler
 {
     private readonly IJSRuntime _jsRuntime;
     private const string TokenKey = "authToken";
-    private const string CookieAuthKey = "cookieAuth";
 
     public AuthHeaderHandler(IJSRuntime jsRuntime)
     {

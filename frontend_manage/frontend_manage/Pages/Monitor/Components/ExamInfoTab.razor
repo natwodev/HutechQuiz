@@ -1,0 +1,180 @@
+@using frontend_manage.Services
+@using frontend_manage.DTOs
+@using frontend_manage.Pages.Monitor.Components
+@using Microsoft.AspNetCore.Components
+@using Microsoft.AspNetCore.Components.Web
+@using Microsoft.AspNetCore.SignalR.Client
+@using MudBlazor
+@using System.Collections.Generic
+@using System.Linq
+@using System.Threading.Tasks
+
+<link href="css/monitor/ExamInfoPage.css" rel="stylesheet" />
+
+<div class="exam-info-tab">
+    <div class="exam-info-header">
+        <h2>THÔNG TIN CA THI</h2>
+    </div>
+
+    @if (Subject != null)
+    {
+        <div class="exam-info-content">
+            <MudGrid>
+                <MudItem xs="12" sm="6" md="6">
+                    <MudCard Elevation="2" Class="exam-details-card">
+                        <MudCardHeader>
+                            <CardHeaderContent>
+                                <MudText Typo="Typo.h6">Thông tin chung</MudText>
+                            </CardHeaderContent>
+                            <CardHeaderActions>
+                                <MudIcon Icon="@Icons.Material.Filled.Info" Color="Color.Primary" />
+                            </CardHeaderActions>
+                        </MudCardHeader>
+                        <MudCardContent>
+                            <div class="info-grid">
+                                <div class="info-label">Phòng thi:</div>
+                                <div class="info-value">@Subject.RoomName</div>
+                                
+                                <div class="info-label">Môn thi:</div>
+                                <div class="info-value">@Subject.SubjectName</div>
+                                
+                                <div class="info-label">Mã môn:</div>
+                                <div class="info-value">@Subject.SubjectCode</div>
+                                
+                                <div class="info-label">Thời gian thi:</div>
+                                <div class="info-value">@Subject.Duration phút</div>
+                                
+                                <div class="info-label">Bắt đầu:</div>
+                                <div class="info-value">@Subject.ExamSessionStartTime.ToString("HH:mm dd/MM/yyyy")</div>
+                                
+                                <div class="info-label">Kết thúc:</div>
+                                <div class="info-value">@Subject.ExamSessionEndTime.ToString("HH:mm dd/MM/yyyy")</div>
+                            </div>
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+
+                <MudItem xs="12" sm="6" md="6">
+                    <MudCard Elevation="2" Class="exam-session-card">
+                        <MudCardHeader>
+                            <CardHeaderContent>
+                                <MudText Typo="Typo.h6">Thời gian</MudText>
+                            </CardHeaderContent>
+                            <CardHeaderActions>
+                                <MudIcon Icon="@Icons.Material.Filled.Timer" Color="Color.Secondary" />
+                            </CardHeaderActions>
+                        </MudCardHeader>
+                        <MudCardContent>
+                            <div class="time-status">
+                                <div class="time-status-item">
+                                    <div class="time-status-label">Trạng thái:</div>
+                                    <div class="time-status-value status-active">ĐANG DIỄN RA</div>
+                                </div>
+                                <div class="time-status-item">
+                                    <div class="time-status-label">Thời gian còn lại:</div>
+                                    <div class="time-status-value time-remaining">@GetRemainingTime()</div>
+                                </div>
+                            </div>
+                            
+                            @{
+                                var progressValue = GetProgressValue();
+                            }
+                            <MudProgressLinear Color="Color.Info" Value="@progressValue" Class="mud-progress-linear-striped" />
+                            
+                            <div class="time-marks">
+                                <div>@Subject.ExamSessionStartTime.ToString("HH:mm")</div>
+                                <div>Đang thi</div>
+                                <div>@Subject.ExamSessionEndTime.ToString("HH:mm")</div>
+                            </div>
+                            
+                            <div class="time-controls">
+                                <MudButton Variant="Variant.Filled" 
+                                          Color="Color.Primary"
+                                          StartIcon="@Icons.Material.Filled.Pause"
+                                          Size="Size.Small"
+                                          OnClick="@(() => PauseExam())">
+                                    Tạm dừng
+                                </MudButton>
+                                <MudButton Variant="Variant.Outlined" 
+                                          Color="Color.Error"
+                                          StartIcon="@Icons.Material.Filled.Stop"
+                                          Size="Size.Small"
+                                          OnClick="@(() => EndExamEarly())">
+                                    Kết thúc sớm
+                                </MudButton>
+                                <MudButton Variant="Variant.Outlined" 
+                                          Color="Color.Warning"
+                                          StartIcon="@Icons.Material.Filled.AddAlarm"
+                                          Size="Size.Small"
+                                          OnClick="@(() => ExtendTime())">
+                                    Gia hạn
+                                </MudButton>
+                            </div>
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+            </MudGrid>
+        </div>
+    }
+    else
+    {
+        <div class="no-data">
+            <MudAlert Severity="Severity.Info" Variant="Variant.Filled">
+                Không có thông tin ca thi
+            </MudAlert>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public SubjectExamRoomStatusDto? Subject { get; set; }
+
+    [Parameter]
+    public int? ExamSessionSubjectId { get; set; }
+    
+    private string GetRemainingTime()
+    {
+        if (Subject == null) return "00:00:00";
+        
+        var now = DateTime.Now;
+        var endTime = Subject.ExamSessionEndTime;
+        var remaining = endTime - now;
+        
+        if (remaining.TotalSeconds <= 0) return "00:00:00";
+        
+        return $"{remaining.Hours:D2}:{remaining.Minutes:D2}:{remaining.Seconds:D2}";
+    }
+    
+    private double GetProgressValue()
+    {
+        if (Subject == null) return 0;
+        
+        var now = DateTime.Now;
+        var startTime = Subject.ExamSessionStartTime;
+        var endTime = Subject.ExamSessionEndTime;
+        var totalDuration = endTime - startTime;
+        var elapsed = now - startTime;
+        
+        if (totalDuration.TotalSeconds <= 0) return 0;
+        if (elapsed.TotalSeconds <= 0) return 0;
+        if (elapsed.TotalSeconds >= totalDuration.TotalSeconds) return 100;
+        
+        return (elapsed.TotalSeconds / totalDuration.TotalSeconds) * 100;
+    }
+    
+    private void PauseExam()
+    {
+        // Logic to pause the exam
+    }
+    
+    private void EndExamEarly()
+    {
+        // Logic to end exam early
+    }
+    
+    private void ExtendTime()
+    {
+        // Logic to extend exam time
+    }
+}

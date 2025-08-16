@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using System.Collections.Generic;
 using backend_manage.core.Services.Interfaces;
 using backend_manage.shared.Interfaces;
+using System;
 
 namespace backend_manage.Controllers
 {
@@ -37,6 +38,21 @@ namespace backend_manage.Controllers
                 return BadRequest("Thiếu mã đề thi gốc hoặc số lượng không hợp lệ");
             await _originalExamPaperService.CreateShuffledExamPapersAsync(originalExamPaperCore, count);
             return Ok(new { message = $"Đã tạo {count} đề thi hoán vị cho mã đề {originalExamPaperCore}" });
+        }
+        
+        [HttpGet("by-subject/{subjectId}")]
+        [Authorize]
+        public async Task<IActionResult> GetOriginalExamDtosBySubjectId(int subjectId)
+        {
+            try
+            {
+                var originalExamDtos = await _originalExamPaperService.GetOriginalExamDtosBySubjectIdAsync(subjectId);
+                return Ok(originalExamDtos);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = $"Lỗi khi lấy danh sách đề thi: {ex.Message}" });
+            }
         }
         
     }

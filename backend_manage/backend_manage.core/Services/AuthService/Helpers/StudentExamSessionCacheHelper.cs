@@ -17,7 +17,6 @@ public class StudentExamSessionCacheHelper
     private readonly IRedisService _redisService;
     private readonly ILogger<StudentExamSessionCacheHelper> _logger;
     private readonly IRepository<ExamSessionSubject> _examSessionSubjectRepository;
-    private readonly IRepository<ExamRoom> _examRoomRepository;
     private readonly IRepository<StudentExamSession> _studentExamSessionRepository;
     private readonly IRepository<Student> _studentRepository;
     private readonly IMapper _mapper;
@@ -26,7 +25,6 @@ public class StudentExamSessionCacheHelper
         IRedisService redisService,
         ILogger<StudentExamSessionCacheHelper> logger,
         IRepository<ExamSessionSubject> examSessionSubjectRepository,
-        IRepository<ExamRoom> examRoomRepository,
         IRepository<StudentExamSession> studentExamSessionRepository,
         IRepository<Student> studentRepository,
         IMapper mapper)
@@ -34,7 +32,6 @@ public class StudentExamSessionCacheHelper
         _redisService = redisService;
         _logger = logger;
         _examSessionSubjectRepository = examSessionSubjectRepository;
-        _examRoomRepository = examRoomRepository;
         _studentExamSessionRepository = studentExamSessionRepository;
         _studentRepository = studentRepository;
         _mapper = mapper;
@@ -87,8 +84,9 @@ public class StudentExamSessionCacheHelper
                        x.IsCompleted == false &&
                        currentTime < x.ExamSessionStartTime.AddMinutes(x.ExamSessionSubject.Duration + x.ExtraMinutes))
             .Include(x => x.ExamSessionSubject)
-            .ThenInclude(x => x.Subject)
-            .Include(x => x.ExamRoom)
+                .ThenInclude(x => x.Subject)
+            .Include(x => x.ExamSessionSubject)
+                .ThenInclude(x => x.ExamRoom)
             .ToListAsync();
 
         if(sessions.Any())
@@ -190,6 +188,28 @@ public class StudentExamSessionCacheHelper
         }
     }
     
+    public async Task RemoveStudentExamSessionAsync(string studentCode, int studentExamSessionId)
+    {
+        try
+        {
+            string redisHashKey = $"student_exam_sessions:{studentCode}";
+            string field = studentExamSessionId.ToString();
+            var removed = await _redisService.HashDeleteAsync(redisHashKey, field);
+            if (removed)
+            {
+                _logger.LogInformation("Đã xóa phiên thi {SessionId} của sinh viên {StudentCode} khỏi Redis", studentExamSessionId, studentCode);
+            }
+            else
+            {
+                _logger.LogDebug("Không xóa được hoặc không tồn tại phiên thi {SessionId} trong Redis cho sinh viên {StudentCode}", studentExamSessionId, studentCode);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Lỗi khi xóa phiên thi {SessionId} của sinh viên {StudentCode} khỏi Redis", studentExamSessionId, studentCode);
+        }
+    }
+    
     private async Task<StudentExamSessionCacheDto> ConvertToCacheDtoAsync(StudentExamSession session)
     {
         // Map cơ bản từ entity sang DTO
@@ -213,13 +233,15 @@ public class StudentExamSessionCacheHelper
             }
         }
 
-        // Nếu thiếu RoomName, truy vấn lại ExamRoom
-        if (string.IsNullOrWhiteSpace(cacheDto.RoomName) && session.ExamRoomId.HasValue)
+        // Nếu thiếu RoomName, lấy từ ExamSessionSubject
+        if (string.IsNullOrWhiteSpace(cacheDto.RoomName))
         {
-            var examRoom = await _examRoomRepository.GetQueryable()
-                .FirstOrDefaultAsync(er => er.ExamRoomId == session.ExamRoomId.Value);
+            var examSessionSubject = await _examSessionSubjectRepository.GetQueryable()
+                .Include(x => x.ExamRoom)
+                .FirstOrDefaultAsync(x => x.ExamSessionSubjectId == session.ExamSessionSubjectId);
 
-            cacheDto.RoomName = examRoom?.RoomName ?? string.Empty;
+            cacheDto.RoomName = examSessionSubject?.ExamRoom?.RoomName ?? string.Empty;
+            cacheDto.ExamRoomId = examSessionSubject?.ExamRoomId;
         }
 
         return cacheDto;
@@ -269,8 +291,9 @@ public class StudentExamSessionCacheHelper
             var sessionEntity = await _studentExamSessionRepository.GetQueryable()
                 .Where(x => x.StudentCode == studentCode && x.StudentExamSessionId == studentExamSessionId && x.IsCompleted == false)
                 .Include(x => x.ExamSessionSubject)
-                .ThenInclude(x => x.Subject)
-                .Include(x => x.ExamRoom)
+                    .ThenInclude(x => x.Subject)
+                .Include(x => x.ExamSessionSubject)
+                    .ThenInclude(x => x.ExamRoom)
                 .FirstOrDefaultAsync();
 
             if (sessionEntity != null)

@@ -28,4 +28,17 @@ namespace backend_manage.shared.DTOs
         public OriginalExamPaperDetailDto? ParentQuestion { get; set; }
         public List<OriginalExamPaperDetailDto> ChildQuestions { get; set; } = new();
     }
+
+    public class OriginalExamDto
+    {
+        public int OriginalExamPaperId { get; set; }
+        public string OriginalExamPaperCore { get; set; }
+        public string Title { get; set; }
+        public string? Description { get; set; }
+        public int SubjectId { get; set; }
+        public string SubjectName { get; set; }
+        public bool? IsApproved { get; set; }
+        public int DurationMinutes { get; set; }
+        public int TotalQuestions { get; set; }
+    }
 } 

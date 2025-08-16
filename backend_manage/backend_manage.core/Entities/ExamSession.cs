@@ -34,7 +34,7 @@ public class ExamSession : BaseEntity
     public int ExamBatchDetailId { get; set; }
     public ExamBatchDetail ExamBatchDetail { get; set; }
 
-    // Collection các khoa tham gia ca thi này
-    // Mối quan hệ many-to-many với Department
-    public ICollection<ExamSessionDepartment>? ExamSessionDepartments { get; set; }
+    // Collection các môn thi trong ca thi này
+    // Mối quan hệ one-to-many với ExamSessionSubject
+    public ICollection<ExamSessionSubject>? ExamSessionSubjects { get; set; }
 } 
