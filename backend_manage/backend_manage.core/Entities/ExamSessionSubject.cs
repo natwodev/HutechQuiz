@@ -40,6 +40,10 @@ namespace backend_manage.core.Entities
         // true: đã thi xong, false: chưa thi xong
         public bool IsCompleted { get; set; } = false;
 
+        // Trạng thái hoạt động của môn thi trong ca thi
+        // true: đang hoạt động, false: đã bị vô hiệu hóa
+        public bool IsActive { get; set; } = false;
+
         // Thời gian được phép bắt đầu làm bài và thời gian kết thúc làm bài cho môn thi này trong ca thi
         public DateTime StartTime { get; set; }
         public DateTime EndTime { get; set; }

@@ -10,6 +10,7 @@ namespace backend_manage.shared.DTOs
         public int? OriginalExamPaperId { get; set; }
         public string OriginalExamPaperTitle { get; set; }
         public bool IsCompleted { get; set; }
+      //  public bool IsActive { get; set; } 
         public DateTime StartTime { get; set; }
         public DateTime? EndTime { get; set; }
         public string ExamSessionSubjectCore { get; set; }

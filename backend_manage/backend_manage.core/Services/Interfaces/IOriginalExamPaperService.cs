@@ -1,4 +1,5 @@
 using backend_manage.core.Entities;
+using backend_manage.shared.DTOs;
 
 namespace backend_manage.core.Services.Interfaces
 {
@@ -28,5 +29,8 @@ namespace backend_manage.core.Services.Interfaces
         
         // Phương thức tạo AnswerKey cho đề thi hoán vị
         Task<string> GenerateAnswerKeyAsync(string shuffledExamPaperCore);
+        
+        // Phương thức lấy danh sách OriginalExamDto theo SubjectId
+        Task<IEnumerable<OriginalExamDto>> GetOriginalExamDtosBySubjectIdAsync(int subjectId);
     }
 } 
