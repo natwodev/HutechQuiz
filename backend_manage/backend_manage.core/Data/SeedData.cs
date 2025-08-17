@@ -324,6 +324,7 @@ namespace backend_manage.core.Data
                             Duration = 120,
                             StartTime  = now, 
                             EndTime = now.AddMinutes(120),
+                            IsActive = false,
                             CreatedBy = "seed",
                             CreatedAt = now,
                             IsDeleted = false,
@@ -339,6 +340,7 @@ namespace backend_manage.core.Data
                             Duration = 120,
                             StartTime  = now, 
                             EndTime = now.AddMinutes(120),
+                            IsActive = false,
                             CreatedBy = "seed",
                             CreatedAt = now,
                             IsDeleted = false,
@@ -354,6 +356,7 @@ namespace backend_manage.core.Data
                             Duration = 90,
                             StartTime = now.AddHours(2), // Thi sau ca đầu 2 tiếng
                             EndTime = now.AddHours(2).AddMinutes(90),
+                            IsActive = false,
                             CreatedBy = "seed",
                             CreatedAt = now,
                             IsDeleted = false,

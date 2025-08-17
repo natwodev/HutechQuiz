@@ -149,16 +149,24 @@ namespace frontend_manage.Pages.StudentLogin
             var examStartTime = session.ExamSessionStartTime;
             var timeDifference = currentTime - examStartTime;
 
-            // Sớm
+            // Kiểm tra nếu chưa đến giờ bắt đầu
             if (currentTime < examStartTime)
             {
                 isTooEarly = true;
             }
+            // Kiểm tra nếu đã quá 15 phút so với giờ bắt đầu ca thi (bất kể đã bắt đầu làm bài hay chưa)
+            else if (timeDifference.TotalMinutes > 15)
+            {
+                // Nếu đã quá 15 phút so với giờ bắt đầu thì chặn
+                isTooLate = true;
+            }
+            // Kiểm tra nếu đang trong thời gian hợp lệ
             else if (session.StartTime.HasValue)
             {
-                // Đã bắt đầu
+                // Đã bắt đầu làm bài, kiểm tra thời gian kết thúc
                 var totalDuration = session.Duration + session.ExtraMinutes;
                 var expectedEndTime = examStartTime.AddMinutes(totalDuration);
+                
                 if (currentTime <= expectedEndTime)
                     isInValidTime = true;
                 else
@@ -166,11 +174,8 @@ namespace frontend_manage.Pages.StudentLogin
             }
             else
             {
-                // Chưa bắt đầu, trễ quá 15 phút
-                if (timeDifference.TotalMinutes > 15)
-                    isTooLate = true;
-                else
-                    isInValidTime = true;
+                // Chưa bắt đầu làm bài và đang trong thời gian cho phép (0-15 phút sau giờ bắt đầu)
+                isInValidTime = true;
             }
 
             return (isTooEarly, isTooLate, isInValidTime);
