@@ -121,12 +121,14 @@
                             <td>@student.ExtraMinutes phút</td>
                             <td>@(student.Score.ToString("0.0"))</td>
                             <td class="actions-cell">
-                                <button class="action-btn message-btn" @onclick="() => MessageStudent(student.StudentCode)" title="Gửi thông báo">
-                                    <MudIcon Icon="@Icons.Material.Filled.Message" Size="Size.Small" />
-                                </button>
-                                <button class="action-btn settings-btn" @onclick="() => ManageStudent(student.StudentCode)" title="Quản lý">
-                                    <MudIcon Icon="@Icons.Material.Filled.Settings" Size="Size.Small" />
-                                </button>
+                                <MudIconButton Icon="@Icons.Material.Filled.Timer" Size="Size.Small" 
+                                              Color="Color.Warning" Class="mx-1"
+                                              OnClick="() => AddExtraTime(student)" 
+                                              Title="Thêm thời gian thi" />
+                                <MudIconButton Icon="@Icons.Material.Filled.Settings" Size="Size.Small" 
+                                              Color="Color.Default" Class="mx-1"
+                                              OnClick="() => ManageStudent(student.StudentCode)" 
+                                              Title="Quản lý" />
                             </td>
                         </tr>
                     }
