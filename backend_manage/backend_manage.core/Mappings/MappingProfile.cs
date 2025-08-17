@@ -147,6 +147,7 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.IsLogin, opt => opt.MapFrom(src => src.Student.IsLogin))
             .ForMember(dest => dest.IsCompleted, opt => opt.MapFrom(src => src.IsCompleted))
             .ForMember(dest => dest.ExamSessionSubjectId, opt => opt.MapFrom(src => src.ExamSessionSubjectId))
+            .ForMember(dest => dest.StudentExamSessionId, opt => opt.MapFrom(src => src.StudentExamSessionId))
             .ForMember(dest => dest.Duration, opt => opt.MapFrom(src => src.ExamSessionSubject.Duration))
             .ForMember(dest => dest.ExtraMinutes, opt => opt.MapFrom(src => src.ExtraMinutes))
             .ForMember(dest => dest.Score, opt => opt.MapFrom(src => src.Score))
