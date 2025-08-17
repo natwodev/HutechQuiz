@@ -42,16 +42,15 @@ namespace backend_manage.core.Services.AuthService
             return _mapper.Map<IEnumerable<ExamSessionSubjectDto>>(entities);
         }
 
-        public async Task<ExamSessionSubjectDto?> GetByIdAsync(string id)
+        public async Task<ExamSessionSubjectDto?> GetByIdAsync(int id)
         {
-            if (!int.TryParse(id, out var entityId)) return null;
             var entity = await _repository.GetQueryable()
                 .Include(x => x.Subject)
                 .Include(x => x.OriginalExamPaper)
                 .Include(x => x.ExamRoom)
                 .Include(x => x.Monitor)
                 .AsSplitQuery()
-                .FirstOrDefaultAsync(x => x.ExamSessionSubjectId == entityId);
+                .FirstOrDefaultAsync(x => x.ExamSessionSubjectId == id);
             return entity == null ? null : _mapper.Map<ExamSessionSubjectDto>(entity);
         }
 
@@ -80,9 +79,10 @@ namespace backend_manage.core.Services.AuthService
             return _mapper.Map<ExamSessionSubjectDto>(fullEntity);
         }
 
-        public async Task<ExamSessionSubjectDto> UpdateAsync(string id, ExamSessionSubjectUpdateDto dto)
+        public async Task<ExamSessionSubjectDto> UpdateAsync(int id, ExamSessionSubjectUpdateDto dto)
         {
-            var entity = await _repository.GetByIdAsync(id);
+            var entity = await _repository.GetQueryable()
+                .FirstOrDefaultAsync(x => x.ExamSessionSubjectId == id);
             if (entity == null) return null;
             _mapper.Map(dto, entity);
             entity.EndTime = entity.StartTime.AddMinutes(entity.Duration);
@@ -91,13 +91,15 @@ namespace backend_manage.core.Services.AuthService
                 throw new UnauthorizedAccessException("Không thể xác định người dùng cập nhật ExamSessionSubject.");
             entity.UpdatedBy = userId;
             entity.UpdatedAt = DateTimeHelper.GetVietnamTime();
+            entity.Version++; // Tăng version
             var result = await _repository.UpdateAsync(entity);
             return _mapper.Map<ExamSessionSubjectDto>(result);
         }
 
-        public async Task<bool> DeleteAsync(string id)
+        public async Task<bool> DeleteAsync(int id)
         {
-            var entity = await _repository.GetByIdAsync(id);
+            var entity = await _repository.GetQueryable()
+                .FirstOrDefaultAsync(x => x.ExamSessionSubjectId == id);
             if (entity == null) return false;
             if (entity.IsDeleted) return true;
             var userId = _httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -106,6 +108,7 @@ namespace backend_manage.core.Services.AuthService
             entity.IsDeleted = true;
             entity.UpdatedBy = userId;
             entity.UpdatedAt = DateTimeHelper.GetVietnamTime();
+            entity.Version++; // Tăng version
             await _repository.UpdateAsync(entity);
             return true;
         }
@@ -120,6 +123,7 @@ namespace backend_manage.core.Services.AuthService
                 throw new UnauthorizedAccessException("Không thể xác định người dùng cập nhật ExamSessionSubject.");
             entity.UpdatedBy = userId;
             entity.UpdatedAt = DateTimeHelper.GetVietnamTime();
+            entity.Version++; // Tăng version
             await _repository.UpdateAsync(entity);
             return true;
         }
@@ -147,6 +151,7 @@ namespace backend_manage.core.Services.AuthService
             
             entity.UpdatedBy = userId;
             entity.UpdatedAt = DateTimeHelper.GetVietnamTime();
+            entity.Version++; // Tăng version
             await _repository.UpdateAsync(entity);
             return true;
         }
@@ -167,7 +172,8 @@ namespace backend_manage.core.Services.AuthService
         // Các phương thức mới cho việc phân công giảng viên
         public async Task AssignLecturerAsync(AssignLecturerDto dto)
         {
-            var entity = await _repository.GetByIdAsync(dto.ExamSessionSubjectId.ToString());
+            var entity = await _repository.GetQueryable()
+                .FirstOrDefaultAsync(x => x.ExamSessionSubjectId == dto.ExamSessionSubjectId);
             if (entity == null) 
                 throw new ArgumentException($"Không tìm thấy ExamSessionSubject với ID: {dto.ExamSessionSubjectId}");
 
@@ -184,12 +190,14 @@ namespace backend_manage.core.Services.AuthService
             
             entity.UpdatedBy = userId;
             entity.UpdatedAt = DateTimeHelper.GetVietnamTime();
+            entity.Version++; // Tăng version
             await _repository.UpdateAsync(entity);
         }
 
         public async Task UnassignLecturerAsync(UnassignLecturerDto dto)
         {
-            var entity = await _repository.GetByIdAsync(dto.ExamSessionSubjectId.ToString());
+            var entity = await _repository.GetQueryable()
+                .FirstOrDefaultAsync(x => x.ExamSessionSubjectId == dto.ExamSessionSubjectId);
             if (entity == null) 
                 throw new ArgumentException($"Không tìm thấy ExamSessionSubject với ID: {dto.ExamSessionSubjectId}");
 
@@ -200,6 +208,7 @@ namespace backend_manage.core.Services.AuthService
             
             entity.UpdatedBy = userId;
             entity.UpdatedAt = DateTimeHelper.GetVietnamTime();
+            entity.Version++; // Tăng version
             await _repository.UpdateAsync(entity);
         }
 

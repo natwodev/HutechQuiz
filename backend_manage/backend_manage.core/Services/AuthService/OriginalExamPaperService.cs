@@ -51,7 +51,7 @@ namespace backend_manage.core.Services.AuthService
         }
 
         // Pass giải nén file XML
-        public const string ExtractPassword =
+        private const string ExtractPassword =
             "649224E2-F0AC-42B1-AD1B-2EAF04E2AC7D-FE602240-7E60-43BF-828D-D6AF38A70429-52572FD1-BB94-45AD-95CF-7B2B5C2E85A6-1B3D4CCF-808E-4ABF-8F9E-73ADF041C78B";
 
         private async Task<string> ExtractAndReadXmlAsync(IFormFile file, string originalExamPaperCore)
@@ -72,7 +72,7 @@ namespace backend_manage.core.Services.AuthService
             var extractFolder = Path.Combine(epzFolder, originalExamPaperCore);
             if (!Directory.Exists(extractFolder)) Directory.CreateDirectory(extractFolder);
             using (var zipStream = new FileStream(zipFilePath, FileMode.Open, FileAccess.Read))
-                using (var zipFile = new ICSharpCode.SharpZipLib.Zip.ZipFile(zipStream))
+                using (var zipFile = new ZipFile(zipStream))
                 {
                 zipFile.Password = ExtractPassword;
                     foreach (ZipEntry entry in zipFile)
@@ -261,7 +261,7 @@ namespace backend_manage.core.Services.AuthService
                         
                         // Sau đó, lưu tất cả câu hỏi con (child questions) với order riêng cho từng nhóm
                         var childQuestions = phan.CauHoi.Where(c => !string.IsNullOrEmpty(c.MaCauHoiCha) && 
-                                                                     c.MaCauHoiCha != "00000000-0000-0000-0000-000000000000").ToList();
+                                                                    c.MaCauHoiCha != "00000000-0000-0000-0000-000000000000").ToList();
                         
                         // Nhóm câu hỏi con theo câu hỏi cha
                         var childQuestionsByParent = childQuestions.GroupBy(c => c.MaCauHoiCha).ToList();
@@ -272,7 +272,7 @@ namespace backend_manage.core.Services.AuthService
                             foreach (var childCauHoi in parentGroup)
                             {
                                 var answers = childCauHoi.CauTraLoi?.OrderBy(a => a.ThuTu).ToList() ??
-                                              new List<backend_manage.shared.DTOs.EPZ.CauTraLoiDto>();
+                                              new List<CauTraLoiDto>();
                                 
                                 // Xử lý thông tin hoán vị từ XML
                                 bool canShuffleQuestion = childCauHoi.HoanVi;
@@ -365,6 +365,10 @@ namespace backend_manage.core.Services.AuthService
                 }
             }
         }
+
+
+
+
         
         public async Task CreateShuffledExamPapersAsync(string originalExamPaperCore, int count)
         {
@@ -403,77 +407,48 @@ namespace backend_manage.core.Services.AuthService
                 };
                 await _shuffledExamPaperRepository.AddAsync(shuffledExamPaper);
                 
-                // Sử dụng Shufflepaper để tạo thứ tự hoán vị cho câu hỏi
-                var shuffledQuestions = await Shufflepaper();
-                
-                // Tạo ShuffledExamPaperDetail cho từng câu hỏi
-                var parentQuestionMap = new Dictionary<int, int>(); // Map từ OriginalExamPaperDetailId đến ShuffledExamPaperDetailId
-                
-                foreach (var question in shuffledQuestions)
+                var rs = await ShuffleParentQuestionsAsync(originalExamPaper.OriginalExamPaperId);
+
+                Dictionary<int, int> idpr = new Dictionary<int, int>();
+
+                foreach (var r in rs)
                 {
-                    var shuffledDetail = new ShuffledExamPaperDetail
+                    var newsf = new ShuffledExamPaperDetail
                     {
                         ShuffledExamPaperId = shuffledExamPaper.ShuffledExamPaperId,
-                        Order = question.Order,
-                        OriginalExamPaperDetailId = question.OriginalExamPaperDetailId,
-                        ParentQuestionId = null,
-                        AnswerOrder = await Stringanswers(question.AnswerShuffleInfo),
-                        CreatedBy = userId,
-                        CreatedAt = now
+                        OriginalExamPaperDetailId = r.OriginalExamPaperDetailId,
+                        Order = r.Order,
+                        AnswerOrder = ShuffleAnswers(r.AnswerShuffleInfo),
+                        CreatedAt = now,
+                        CreatedBy = shuffledExamPaper.CreatedBy
                     };
-                    
-                    // Lưu câu hỏi cha trước để có ID thực
-                    await _shuffledExamPaperDetailRepository.AddAsync(shuffledDetail);
-                    
-                    // Lưu mapping để sử dụng cho câu hỏi con
-                    parentQuestionMap[question.OriginalExamPaperDetailId] = shuffledDetail.ShuffledExamPaperDetailId;
-                    
-                    if (await IsParentQuestionWithChildrenAsync(question.OriginalExamPaperDetailId))
+                    await _shuffledExamPaperDetailRepository.AddAsync(newsf);
+                    if (r.AnswerShuffleInfo == null)
                     {
-                        // lấy câu hỏi con của câu hỏi cha
-                        var a = await GetChildQuestionsByParentIdAsync(question.OriginalExamPaperDetailId); 
-                        //số lượng câu hỏi con được phép hoán vị của câu hỏi cha
-                        var counts = await _originalExamPaperDetailRepository.GetQueryable()
-                            .Where(d => d.ParentQuestionId == question.OriginalExamPaperDetailId && d.CanShuffleQuestion == true)
-                            .CountAsync();
-                        if (counts >= 2)
-                        {
-                            var b = await Shufflepaperchild(question.OriginalExamPaperDetailId);
-                            foreach (var item in b)
-                            {
-                                var detail = new ShuffledExamPaperDetail
-                                {
-                                    ShuffledExamPaperId = shuffledExamPaper.ShuffledExamPaperId,
-                                    Order = item.Order,
-                                    OriginalExamPaperDetailId = item.OriginalExamPaperDetailId,
-                                    ParentQuestionId = shuffledDetail.ShuffledExamPaperDetailId, // Bây giờ đã có ID thực
-                                    AnswerOrder = await Stringanswers(item.AnswerShuffleInfo),
-                                    CreatedBy = userId,
-                                    CreatedAt = now
-                                };
-                                await _shuffledExamPaperDetailRepository.AddAsync(detail);
-                            }
-                        }
-                        else
-                        {
-                            foreach (var child in a)
-                            {
-                                var detail = new ShuffledExamPaperDetail
-                                {
-                                    ShuffledExamPaperId = shuffledExamPaper.ShuffledExamPaperId,
-                                    Order = child.Order,
-                                    OriginalExamPaperDetailId = child.OriginalExamPaperDetailId,
-                                    ParentQuestionId = shuffledDetail.ShuffledExamPaperDetailId, // Bây giờ đã có ID thực
-                                    AnswerOrder = await Stringanswers(child.AnswerShuffleInfo),
-                                    CreatedBy = userId,
-                                    CreatedAt = now
-                                };
-                                await _shuffledExamPaperDetailRepository.AddAsync(detail);
-                            }
-                        }
+                        // Lưu key-value
+                        idpr[r.OriginalExamPaperDetailId] = newsf.ShuffledExamPaperDetailId;
                     }
                 }
-                
+                foreach (var kvp in idpr)
+                {
+                    int key = kvp.Key;       // OriginalExamPaperDetailId
+                    int value = kvp.Value;   // ShuffledExamPaperDetailId
+                    var rsc = await ShuffleChildQuestionsAsync(key);
+                    foreach (var r in rsc)
+                    {
+                        var newsf = new ShuffledExamPaperDetail
+                        {
+                            ShuffledExamPaperId = shuffledExamPaper.ShuffledExamPaperId,
+                            OriginalExamPaperDetailId = r.OriginalExamPaperDetailId,
+                            Order = r.Order,
+                            AnswerOrder = ShuffleAnswers(r.AnswerShuffleInfo),
+                            ParentQuestionId = value,
+                            CreatedAt = now,
+                            CreatedBy = shuffledExamPaper.CreatedBy
+                        };
+                        await _shuffledExamPaperDetailRepository.AddAsync(newsf);
+                    }
+                }
                 // Tạo AnswerKey cho đề thi hoán vị vừa tạo và lưu vào database
                 var answerKey = await GenerateAnswerKeyAsync(shuffledPaperCore);
                 
@@ -491,265 +466,205 @@ namespace backend_manage.core.Services.AuthService
         
         
         
-        
-        //lấy câu hỏi con của 1 câu hỏi cha
-        public async Task<IEnumerable<OriginalExamPaperDetail>> GetChildQuestionsByParentIdAsync(int parentQuestionId)
+        //hoán vị đáp án(khong chỉnh sửa)
+        public static string ShuffleAnswers(string answerShuffleInfo)
         {
-            var childQuestions = await _originalExamPaperDetailRepository.GetQueryable()
-                .Where(d => d.ParentQuestionId == parentQuestionId) 
-                .Include(d => d.OriginalExamPaper) 
-                .AsSplitQuery()
-                .OrderBy(d => d.Order) 
-                .ToListAsync();
-
-            return childQuestions;
-        }
-        
-
-        
-        public async Task<IEnumerable<OriginalExamPaperDetail>> Shufflepaperchild(int parentQuestionId)
-        {
-            // Bước 1: Lấy danh sách câu hỏi có thể hoán vị
-            var a = (await GetShuffleableChildQuestionsByParentIdAsync(parentQuestionId)).ToList();
-            // Bước 2: Lưu lại danh sách order hiện tại
-            var originalOrders = a.Select(q => q.Order).ToList();
-            
-            // Khởi tạo danh sách chứa kết quả đã hoán vị
-            var shuffles = new List<OriginalExamPaperDetail>();
-            
-            // Khởi tạo bộ sinh số ngẫu nhiên
-            var random = new Random();
-            
-            
-            foreach (var sf in a)
-            {
-                // Chọn ngẫu nhiên 1 order còn lại
-                int index = random.Next(originalOrders.Count);
-                int randomOrder = originalOrders[index];
-
-                // Tạo bản sao để không thay đổi entity gốc
-                var shuffledQuestion = new OriginalExamPaperDetail
-                {
-                    OriginalExamPaperDetailId = sf.OriginalExamPaperDetailId,
-                    Order = randomOrder, // Gán order mới cho bản sao
-                    QuestionContent = sf.QuestionContent,
-                    Answer1 = sf.Answer1,
-                    Answer2 = sf.Answer2,
-                    Answer3 = sf.Answer3,
-                    Answer4 = sf.Answer4,
-                    CorrectAnswerIndex = sf.CorrectAnswerIndex,
-                    CanShuffleQuestion = sf.CanShuffleQuestion,
-                    AnswerShuffleInfo = sf.AnswerShuffleInfo,
-                    ParentQuestionId = sf.ParentQuestionId,
-                    ChapterId = sf.ChapterId,
-                    OriginalExamPaperId = sf.OriginalExamPaperId
-                };
-
-                // Loại bỏ order đã dùng ra khỏi danh sách
-                originalOrders.RemoveAt(index);
-
-                // Thêm vào danh sách kết quả
-                shuffles.Add(shuffledQuestion);
-            }
-            var b =  await GetNonShuffleableChildQuestionsByParentIdAsync(parentQuestionId);//chưa sửa 
-            var result = shuffles.Concat(b);
-            
-            // Sắp xếp kết quả theo thứ tự tăng dần của trường Order
-            return result.OrderBy(x => x.Order);
-            
-        }
-        public async Task<IEnumerable<OriginalExamPaperDetail>> GetShuffleableChildQuestionsByParentIdAsync(int parentQuestionId)
-        {
-            var childQuestions = await _originalExamPaperDetailRepository.GetQueryable()
-                .Where(d => d.ParentQuestionId == parentQuestionId && d.CanShuffleQuestion == true)
-                .ToListAsync();
-
-            return childQuestions;
-        }
-        
-        public async Task<IEnumerable<OriginalExamPaperDetail>> GetNonShuffleableChildQuestionsByParentIdAsync(int parentQuestionId)
-        {
-            var childQuestions = await _originalExamPaperDetailRepository.GetQueryable()
-                .Where(d => d.ParentQuestionId == parentQuestionId && d.CanShuffleQuestion == false)
-                .ToListAsync();
-            return childQuestions;
-        }
-        
-        public async Task<bool> IsParentQuestionWithChildrenAsync(int questionId)
-        {
-            var question = await _originalExamPaperDetailRepository.GetQueryable()
-                .Where(d => d.OriginalExamPaperDetailId == questionId && 
-                            d.ParentQuestionId == null)
-                .Include(d => d.ChildQuestions)
-                .AsSplitQuery()
-                .FirstOrDefaultAsync();
-
-            return question != null && question.ChildQuestions != null && question.ChildQuestions.Any();
-        }
-
-        
-        
-        public async Task<string> Stringanswers(string? keysanswer)
-        {
-            if (string.IsNullOrWhiteSpace(keysanswer))
+            if (string.IsNullOrWhiteSpace(answerShuffleInfo))
                 return "";
 
-            var dict = JsonConvert.DeserializeObject<Dictionary<string, bool>>(keysanswer);
+            // Parse JSON bằng Newtonsoft.Json
+            var dict = JsonConvert.DeserializeObject<Dictionary<string, bool>>(answerShuffleInfo);
+
             if (dict == null || dict.Count == 0)
                 return "";
 
-            var allPositions = dict.Keys.Select(k => int.Parse(k)).OrderBy(x => x).ToList();
-            var truePositions = allPositions.Where(pos => dict[pos.ToString()]).ToList();
+            // Lấy danh sách các key cần shuffle (true)
+            var toShuffle = dict.Where(x => x.Value).Select(x => x.Key).ToList();
 
-            if (truePositions.Count < 2)
-                return string.Join("", allPositions);
+            // Nếu ít hơn 2 cái true thì giữ nguyên (không shuffle)
+            if (toShuffle.Count < 2)
+                return string.Join("", dict.Keys);
 
-            // Tạo bản sao để shuffle
-            List<int> shuffled = new List<int>(truePositions);
-            var rng = new Random();
+            // Shuffle danh sách đó
+            var random = new Random();
+            var shuffled = toShuffle.OrderBy(x => random.Next()).ToList();
 
-            // Shuffle cho đến khi khác với ban đầu
-            int maxRetry = 10;
-            int retry = 0;
-            do
+            // Dùng queue để gán lần lượt
+            var queue = new Queue<string>(shuffled);
+
+            // Kết quả cuối
+            List<string> result = new List<string>();
+            foreach (var kv in dict)
             {
-                FisherYatesShuffle(shuffled, rng);
-                retry++;
-            }
-            while (Enumerable.SequenceEqual(shuffled, truePositions) && retry < maxRetry);
-
-            // Nếu vẫn không khác (cực hiếm) thì giữ nguyên
-            if (Enumerable.SequenceEqual(shuffled, truePositions))
-                return string.Join("", allPositions);
-
-            // Tạo kết quả
-            var result = new List<int>();
-            foreach (var pos in allPositions)
-            {
-                if (truePositions.Contains(pos))
-                {
-                    result.Add(shuffled[0]);
-                    shuffled.RemoveAt(0);
-                }
+                if (kv.Value)
+                    result.Add(queue.Dequeue()); // gán vị trí đã shuffle
                 else
-                {
-                    result.Add(pos);
-                }
+                    result.Add(kv.Key);          // giữ nguyên
             }
 
             return string.Join("", result);
         }
 
-        // Thuật toán hoán vị ngẫu nhiên chuẩn
-        private void FisherYatesShuffle<T>(IList<T> list, Random rng)
-        {
-            int n = list.Count;
-            while (n > 1)
-            {
-                n--;
-                int k = rng.Next(n + 1);
-                (list[n], list[k]) = (list[k], list[n]);
-            }
-        }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
         
-        public async Task<IEnumerable<OriginalExamPaperDetail>> GetOriginalExamPaperDetailsByCanShuffleQuestionAsync()
-        {
-            var details = await _originalExamPaperDetailRepository.GetQueryable()
-                .Where(d => d.CanShuffleQuestion == true && d.ParentQuestionId == null)
-                .OrderBy(d => d.Order)
-                .ToListAsync();
-
-            return details;
-        }
-
-        public async Task<IEnumerable<OriginalExamPaperDetail>> GetOriginalExamPaperDetailsByCannotShuffleQuestionAsync()
-        {
-            var details = await _originalExamPaperDetailRepository.GetQueryable()
-                .Where(d => d.CanShuffleQuestion == false && d.ParentQuestionId == null)
-                .OrderBy(d => d.Order)
-                .ToListAsync();
-
-            return details;
-        }
         
-
-        public async Task<IEnumerable<OriginalExamPaperDetail>> Shufflepaper()
+        //hoán vị câu hỏi cha và câu hỏi đơn (khong chỉnh sửa)
+        public async Task<List<OriginalExamPaperDetailShufferDto>> ShuffleParentQuestionsAsync(int originalExamPaperId)
         {
-            // Bước 1: Lấy danh sách câu hỏi có thể hoán vị
-            var shuffleCandidates = (await GetOriginalExamPaperDetailsByCanShuffleQuestionAsync()).ToList();
-
-            // Bước 2: Lưu lại danh sách order hiện tại
-            var originalOrders = shuffleCandidates.Select(q => q.Order).ToList();
-
-            // Khởi tạo danh sách chứa kết quả đã hoán vị
-            var shuffle = new List<OriginalExamPaperDetail>();
-
-            // Khởi tạo bộ sinh số ngẫu nhiên
-            var random = new Random();
-
-            foreach (var sf in shuffleCandidates)
-            {
-                // Chọn ngẫu nhiên 1 order còn lại
-                int index = random.Next(originalOrders.Count);
-                int randomOrder = originalOrders[index];
-
-                // Tạo bản sao để không thay đổi entity gốc
-                var shuffledQuestion = new OriginalExamPaperDetail
-                {
-                    OriginalExamPaperDetailId = sf.OriginalExamPaperDetailId,
-                    Order = randomOrder, // Gán order mới cho bản sao
-                    QuestionContent = sf.QuestionContent,
-                    Answer1 = sf.Answer1,
-                    Answer2 = sf.Answer2,
-                    Answer3 = sf.Answer3,
-                    Answer4 = sf.Answer4,
-                    CorrectAnswerIndex = sf.CorrectAnswerIndex,
-                    CanShuffleQuestion = sf.CanShuffleQuestion,
-                    AnswerShuffleInfo = sf.AnswerShuffleInfo,
-                    ParentQuestionId = sf.ParentQuestionId,
-                    ChapterId = sf.ChapterId,
-                    OriginalExamPaperId = sf.OriginalExamPaperId
-                };
-
-                // Loại bỏ order đã dùng ra khỏi danh sách
-                originalOrders.RemoveAt(index);
-
-                // Thêm vào danh sách kết quả
-                shuffle.Add(shuffledQuestion);
-            }
-            var a =  await GetOriginalExamPaperDetailsByCannotShuffleQuestionAsync();
-            var result = shuffle.Concat(a);
+            var (parentShufflable, parentNonShufflable) = await GetParentQuestionsAsync(originalExamPaperId);
             
-            // Sắp xếp kết quả theo thứ tự tăng dần của trường Order
-            return result.OrderBy(x => x.Order);
+            var result = new List<OriginalExamPaperDetailShufferDto>();
+            
+            // Nếu số câu hỏi có thể hoán vị < 2 thì gộp danh sách lại
+            if (parentShufflable.Count() < 2)
+            {
+                // Gộp cả hai danh sách và sắp xếp theo thứ tự gốc
+                result.AddRange(MapToShufferDto(parentShufflable));
+                result.AddRange(MapToShufferDto(parentNonShufflable));
+                result = result.OrderBy(q => q.Order).ToList();
+            }
+            else
+            {
+                var random = new Random();
+                List<int> orders = new List<int>();
+                // Thêm order của parentShufflable vào danh sách orders
+                orders.AddRange(parentShufflable.Select(q => q.Order));
+                var rs = MapToShufferDto(parentShufflable);
+                foreach (var r in rs)
+                {
+                    // Lấy index ngẫu nhiên trong list orders
+                    int randomIndex = random.Next(orders.Count);
+
+                    // Lấy giá trị Order ở vị trí đó
+                    int selectedOrder = orders[randomIndex];
+
+                    // Gán vào DTO
+                    r.Order = selectedOrder;
+
+                    // Xóa phần tử đã dùng để tránh trùng
+                    orders.RemoveAt(randomIndex);
+                    result.Add(r);
+                }
+                result.AddRange(MapToShufferDto(parentNonShufflable));
+            }
+            
+            return result.OrderBy(q => q.Order).ToList();;
         }
+        
+        public async Task<List<OriginalExamPaperDetailShufferDto>> ShuffleChildQuestionsAsync(int originalExamPaperDetailId)
+        {
+            var (childShufflable, childNonShufflable) = await GetChildQuestionsAsync(originalExamPaperDetailId);
+            
+            var result = new List<OriginalExamPaperDetailShufferDto>();
+            
+            // Nếu số câu hỏi con có thể hoán vị < 2 thì gộp danh sách lại
+            if (childShufflable.Count() < 2)
+            {
+                // Gộp cả hai danh sách và sắp xếp theo thứ tự gốc
+                result.AddRange(MapToShufferDto(childShufflable));
+                result.AddRange(MapToShufferDto(childNonShufflable));
+            }
+            else
+            {
+                var random = new Random();
+                List<int> orders = new List<int>();
+                // Thêm order của childShufflable vào danh sách orders
+                orders.AddRange(childShufflable.Select(q => q.Order));
+                var rs = MapToShufferDto(childShufflable);
+                foreach (var r in rs)
+                {
+                    // Lấy index ngẫu nhiên trong list orders
+                    int randomIndex = random.Next(orders.Count);
+
+                    // Lấy giá trị Order ở vị trí đó
+                    int selectedOrder = orders[randomIndex];
+
+                    // Gán vào DTO
+                    r.Order = selectedOrder;
+
+                    // Xóa phần tử đã dùng để tránh trùng
+                    orders.RemoveAt(randomIndex);
+                    result.Add(r);
+                }
+                result.AddRange(MapToShufferDto(childNonShufflable));
+            }
+            
+            return result.OrderBy(q => q.Order).ToList();
+        }
+
+        
+        
+        // Helper method để map từ OriginalExamPaperDetail sang OriginalExamPaperDetailShufferDto
+        private List<OriginalExamPaperDetailShufferDto> MapToShufferDto(IEnumerable<OriginalExamPaperDetail> details)
+        {
+            return details.Select(detail => new OriginalExamPaperDetailShufferDto
+            {
+                OriginalExamPaperDetailId = detail.OriginalExamPaperDetailId,
+                Order = detail.Order,
+                QuestionContent = detail.QuestionContent,
+                Answer1 = detail.Answer1,
+                Answer2 = detail.Answer2,
+                Answer3 = detail.Answer3,
+                Answer4 = detail.Answer4,
+                CorrectAnswerIndex = detail.CorrectAnswerIndex,
+                ParentQuestionId = detail.ParentQuestionId,
+                CanShuffleQuestion = detail.CanShuffleQuestion,
+                AnswerShuffleInfo = detail.AnswerShuffleInfo 
+            }).ToList();
+        }
+
+        
+        
+        
+        
+        // Phương thức lấy câu hỏi cha theo khả năng hoán vị
+        public async Task<(IEnumerable<OriginalExamPaperDetail> ShufflableQuestions, IEnumerable<OriginalExamPaperDetail> NonShufflableQuestions)> GetParentQuestionsAsync(int originalExamPaperId)
+        {
+            var parentQuestions = await _originalExamPaperDetailRepository.GetQueryable()
+                .Where(q => q.OriginalExamPaperId == originalExamPaperId && q.ParentQuestionId == null)
+                .Include(q => q.ParentQuestion)
+                .OrderBy(q => q.Order)
+                .ToListAsync();
+
+            // Phân loại câu hỏi theo khả năng hoán vị
+            var shufflableQuestions = parentQuestions.Where(q => q.CanShuffleQuestion).ToList();
+            var nonShufflableQuestions = parentQuestions.Where(q => !q.CanShuffleQuestion).ToList();
+
+            return (shufflableQuestions, nonShufflableQuestions);
+        }
+
+        // Phương thức lấy câu hỏi con theo khả năng hoán vị
+        public async Task<(IEnumerable<OriginalExamPaperDetail> ShufflableQuestions, IEnumerable<OriginalExamPaperDetail> NonShufflableQuestions)> GetChildQuestionsAsync(int originalExamPaperDetailId)
+        {
+            var childQuestions = await _originalExamPaperDetailRepository.GetQueryable()
+                .Where(q => q.ParentQuestionId == originalExamPaperDetailId)
+                .OrderBy(q => q.Order)
+                .ToListAsync();
+
+            // Phân loại câu hỏi con theo khả năng hoán vị
+            var shufflableQuestions = childQuestions.Where(q => q.CanShuffleQuestion).ToList();
+            var nonShufflableQuestions = childQuestions.Where(q => !q.CanShuffleQuestion).ToList();
+
+            return (shufflableQuestions, nonShufflableQuestions);
+        }
+        
+        // Phương thức lấy câu hỏi con theo exam paper ID
+        public async Task<(IEnumerable<OriginalExamPaperDetail> ShufflableQuestions, IEnumerable<OriginalExamPaperDetail> NonShufflableQuestions)> GetChildQuestionsByExamPaperAsync(int originalExamPaperId)
+        {
+            var childQuestions = await _originalExamPaperDetailRepository.GetQueryable()
+                .Where(q => q.OriginalExamPaperId == originalExamPaperId && q.ParentQuestionId != null)
+                .OrderBy(q => q.Order)
+                .ToListAsync();
+
+            // Phân loại câu hỏi con theo khả năng hoán vị
+            var shufflableQuestions = childQuestions.Where(q => q.CanShuffleQuestion).ToList();
+            var nonShufflableQuestions = childQuestions.Where(q => !q.CanShuffleQuestion).ToList();
+
+            return (shufflableQuestions, nonShufflableQuestions);
+        }
+
+
+
+
 
         public async Task<string> GenerateAnswerKeyAsync(string shuffledExamPaperCore)
         {
@@ -816,7 +731,6 @@ namespace backend_manage.core.Services.AuthService
 
             return answerKeyBuilder.ToString();
         }
-
         private string GetCorrectAnswerWithShuffle(OriginalExamPaperDetail originalDetail, string answerOrder)
         {
             if (originalDetail.CorrectAnswerIndex == null)
@@ -841,7 +755,6 @@ namespace backend_manage.core.Services.AuthService
 
             return GetAnswerLetter(originalDetail.CorrectAnswerIndex.Value);
         }
-
         private string GetAnswerLetter(int answerIndex)
         {
             return answerIndex switch
@@ -853,6 +766,63 @@ namespace backend_manage.core.Services.AuthService
                 _ => ""
             };
         }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        // Thuật toán hoán vị ngẫu nhiên chuẩn
+        private void FisherYatesShuffle<T>(IList<T> list, Random rng)
+        {
+            int n = list.Count;
+            while (n > 1)
+            {
+                n--;
+                int k = rng.Next(n + 1);
+                (list[n], list[k]) = (list[k], list[n]);
+            }
+        }
+        
+
+        
+
+      
+
+      
+        
+
+        // Phương thức lấy danh sách OriginalExamDto theo SubjectId
+        public async Task<IEnumerable<OriginalExamDto>> GetOriginalExamDtosBySubjectIdAsync(int subjectId)
+        {
+            var originalExamPapers = await _originalExamPaperRepository.GetQueryable()
+                .Include(o => o.Subject)
+                .Where(o => o.SubjectId == subjectId)
+                .ToListAsync();
+
+            return _mapper.Map<IEnumerable<OriginalExamDto>>(originalExamPapers);
+        }
+
+        public async Task<OriginalExamPaperDto> GetWithDetailsAsync(string originalExamPaperCore)
+        {
+            var examPaper = await _originalExamPaperRepository.GetQueryable()
+                .Where(x => x.OriginalExamPaperCore == originalExamPaperCore)
+                .Include(x => x.OriginalExamPaperDetails)
+                .ThenInclude(d => d.ChildQuestions)
+                .FirstOrDefaultAsync();
+            if (examPaper == null) return null;
+            return _mapper.Map<OriginalExamPaperDto>(examPaper);
+        }
+
 
     }
 }

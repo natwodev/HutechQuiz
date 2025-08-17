@@ -94,6 +94,10 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.ChildQuestions, opt => opt.MapFrom(src => src.ChildQuestions))
             .ForMember(dest => dest.ParentQuestion, opt => opt.MapFrom(src => src.ParentQuestion));
 
+        // Mapping cho OriginalExamDto
+        CreateMap<OriginalExamPaper, OriginalExamDto>()
+            .ForMember(dest => dest.SubjectName, opt => opt.MapFrom(src => src.Subject.SubjectName));
+
         // ShuffledExamPaper & Detail
         CreateMap<ShuffledExamPaper, ShuffledExamPaperDto>()
             .ForMember(dest => dest.Details, opt => opt.MapFrom(src => src.ShuffledExamPaperDetails.Where(d => d.ParentQuestionId == null)))
@@ -143,6 +147,7 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.IsLogin, opt => opt.MapFrom(src => src.Student.IsLogin))
             .ForMember(dest => dest.IsCompleted, opt => opt.MapFrom(src => src.IsCompleted))
             .ForMember(dest => dest.ExamSessionSubjectId, opt => opt.MapFrom(src => src.ExamSessionSubjectId))
+            .ForMember(dest => dest.StudentExamSessionId, opt => opt.MapFrom(src => src.StudentExamSessionId))
             .ForMember(dest => dest.Duration, opt => opt.MapFrom(src => src.ExamSessionSubject.Duration))
             .ForMember(dest => dest.ExtraMinutes, opt => opt.MapFrom(src => src.ExtraMinutes))
             .ForMember(dest => dest.Score, opt => opt.MapFrom(src => src.Score))
@@ -177,6 +182,7 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.RoomName, opt => opt.MapFrom(src => src.ExamRoom.RoomName))
             .ForMember(dest => dest.Duration, opt => opt.MapFrom(src => src.Duration))
             .ForMember(dest => dest.IsCompleted, opt => opt.MapFrom(src => src.IsCompleted))
+            .ForMember(dest => dest.IsActive, opt => opt.MapFrom(src => src.IsActive))
             .ForMember(dest => dest.ExamSessionStartTime, opt => opt.MapFrom(src => src.StartTime))
             .ForMember(dest => dest.ExamSessionEndTime, opt => opt.MapFrom(src => src.EndTime))
             .ForMember(dest => dest.ExamSessionName, opt => opt.MapFrom(src => src.ExamSession.Name))

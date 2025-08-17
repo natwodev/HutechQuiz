@@ -105,7 +105,7 @@ namespace frontend_manage.Pages.Monitor.Components
             var parameters = new DialogParameters
             {
                 { "StudentCode", student.StudentCode },
-                { "StudentExamSessionId", student.ExamSessionSubjectId },
+                { "StudentExamSessionId", student.StudentExamSessionId },
                 { "TotalExamMinutes", student.Duration }
             };
             

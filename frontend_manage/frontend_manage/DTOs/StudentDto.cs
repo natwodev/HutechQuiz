@@ -22,6 +22,7 @@ namespace frontend_manage.DTOs
         public bool IsLogin { get; set; }
         public bool IsCompleted { get; set; }
         public int? ExamSessionSubjectId { get; set; }
+        public int StudentExamSessionId { get; set; }
         public int Duration { get; set; }
         public int ExtraMinutes { get; set; }
         public double Score { get; set; } = 0;

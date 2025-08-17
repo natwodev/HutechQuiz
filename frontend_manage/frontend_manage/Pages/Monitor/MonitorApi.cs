@@ -125,6 +125,7 @@ public class MonitorApi
     {
         try
         {
+            // Tạo request object theo đúng cấu trúc backend
             var request = new AddExtraMinutesRequest
             {
                 StudentCode = studentCode,
@@ -132,6 +133,7 @@ public class MonitorApi
                 ExtraMinutes = extraMinutes,
                 ReasonForExtra = reasonForExtra
             };
+
 
             var response = await _httpClient.PostAsJsonAsync("/api/Student/extra-minutes", request);
 
@@ -144,10 +146,21 @@ public class MonitorApi
             }
             else
             {
-                var errorResult = await response.Content.ReadFromJsonAsync<Dictionary<string, string>>();
-                if (errorResult != null && errorResult.TryGetValue("message", out var errorMessage))
-                    return errorMessage;
-                return "Lỗi không xác định từ server.";
+                var errorContent = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"HTTP {response.StatusCode}: {errorContent}");
+                
+                try
+                {
+                    var errorResult = await response.Content.ReadFromJsonAsync<Dictionary<string, string>>();
+                    if (errorResult != null && errorResult.TryGetValue("message", out var errorMessage))
+                        return $"Lỗi {response.StatusCode}: {errorMessage}";
+                }
+                catch
+                {
+                    // Nếu không parse được JSON, trả về raw content
+                }
+                
+                return $"Lỗi {response.StatusCode}: {errorContent}";
             }
         }
         catch (Exception ex)

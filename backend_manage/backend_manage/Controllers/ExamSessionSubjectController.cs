@@ -35,7 +35,7 @@ namespace backend_manage.Controllers
         }
         
         [HttpGet("{id}")]
-        public async Task<ActionResult<ExamSessionSubjectDto>> GetById(string id)
+        public async Task<ActionResult<ExamSessionSubjectDto>> GetById(int id)
         {
             try
             {
@@ -69,7 +69,7 @@ namespace backend_manage.Controllers
         }
         
         [HttpPut("{id}")]
-        public async Task<ActionResult<ExamSessionSubjectDto>> Update(string id, ExamSessionSubjectUpdateDto dto)
+        public async Task<ActionResult<ExamSessionSubjectDto>> Update(int id, ExamSessionSubjectUpdateDto dto)
         {
             try
             {
@@ -89,7 +89,7 @@ namespace backend_manage.Controllers
         }
         
         [HttpDelete("{id}")]
-        public async Task<ActionResult> Delete(string id)
+        public async Task<ActionResult> Delete(int id)
         {
             try
             {

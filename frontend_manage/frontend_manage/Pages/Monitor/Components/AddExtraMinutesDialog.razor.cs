@@ -46,12 +46,7 @@ namespace frontend_manage.Pages.Monitor.Components
             IsSubmitting = true;
             try
             {
-                var result = await MonitorApi.AddExtraMinutesAsync(
-                    StudentCode,
-                    StudentExamSessionId,
-                    ExtraMinutes,
-                    string.IsNullOrWhiteSpace(Reason) ? null : Reason
-                );
+                var result = await MonitorApi.AddExtraMinutesAsync(StudentCode, StudentExamSessionId, ExtraMinutes, string.IsNullOrWhiteSpace(Reason) ? null : Reason);
                 Snackbar.Add(result, Severity.Success);
                 MudDialog.Close(DialogResult.Ok(new { ExtraMinutes, Reason }));
             }

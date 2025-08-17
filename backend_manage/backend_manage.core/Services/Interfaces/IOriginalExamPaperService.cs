@@ -1,4 +1,5 @@
 using backend_manage.core.Entities;
+using backend_manage.shared.DTOs;
 
 namespace backend_manage.core.Services.Interfaces
 {
@@ -8,25 +9,22 @@ namespace backend_manage.core.Services.Interfaces
         //Task CreateShuffledExamPapersAsync(string originalExamPaperCore, int count);
 
         Task CreateShuffledExamPapersAsync(string originalExamPaperCore, int count);
-        Task<IEnumerable<OriginalExamPaperDetail>> GetOriginalExamPaperDetailsByCanShuffleQuestionAsync();
-        Task<IEnumerable<OriginalExamPaperDetail>> GetOriginalExamPaperDetailsByCannotShuffleQuestionAsync();
-        Task<IEnumerable<OriginalExamPaperDetail>> Shufflepaper();
         
         // Các phương thức mới để kiểm tra câu hỏi cha có câu hỏi con
-        Task<bool> IsParentQuestionWithChildrenAsync(int questionId);
+
+
+        Task<List<OriginalExamPaperDetailShufferDto>> ShuffleParentQuestionsAsync(int originalExamPaperId);        
+        // Phương thức lấy danh sách OriginalExamDto theo SubjectId
+        Task<IEnumerable<OriginalExamDto>> GetOriginalExamDtosBySubjectIdAsync(int subjectId);
+        Task<OriginalExamPaperDto> GetWithDetailsAsync(string originalExamPaperCore);
         
-        // Phương thức mới để lấy danh sách câu hỏi con của câu hỏi cha
-        Task<IEnumerable<OriginalExamPaperDetail>> GetChildQuestionsByParentIdAsync(int parentQuestionId);
+        // Phương thức lấy câu hỏi cha theo khả năng hoán vị
+        Task<(IEnumerable<OriginalExamPaperDetail> ShufflableQuestions, IEnumerable<OriginalExamPaperDetail> NonShufflableQuestions)> GetParentQuestionsAsync(int originalExamPaperId);
         
-        // Phương thức mới để lấy danh sách câu hỏi con cho phép hoán vị của câu hỏi cha
-        Task<IEnumerable<OriginalExamPaperDetail>> GetShuffleableChildQuestionsByParentIdAsync(int parentQuestionId);
+        // Phương thức lấy câu hỏi con theo khả năng hoán vị
+        Task<(IEnumerable<OriginalExamPaperDetail> ShufflableQuestions, IEnumerable<OriginalExamPaperDetail> NonShufflableQuestions)> GetChildQuestionsAsync(int originalExamPaperDetailId);
         
-        // Phương thức đối lập: lấy danh sách câu hỏi con KHÔNG cho phép hoán vị của câu hỏi cha
-        Task<IEnumerable<OriginalExamPaperDetail>> GetNonShuffleableChildQuestionsByParentIdAsync(int parentQuestionId);
-        
-        Task<IEnumerable<OriginalExamPaperDetail>> Shufflepaperchild(int parentQuestionId);
-        
-        // Phương thức tạo AnswerKey cho đề thi hoán vị
-        Task<string> GenerateAnswerKeyAsync(string shuffledExamPaperCore);
+        // Phương thức lấy câu hỏi con theo exam paper ID
+        Task<(IEnumerable<OriginalExamPaperDetail> ShufflableQuestions, IEnumerable<OriginalExamPaperDetail> NonShufflableQuestions)> GetChildQuestionsByExamPaperAsync(int originalExamPaperId);
     }
 } 
