@@ -1,4 +1,5 @@
 using frontend_manage.DTOs;
+using frontend_manage.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using MudBlazor;
@@ -12,7 +13,7 @@ namespace frontend_manage.Pages.StudentLogin
         [Inject] private NavigationManager Navigation { get; set; }
         [Inject] private IJSRuntime JSRuntime { get; set; }
         // [Inject] private HttpClient Http { get; set; }
-        [Inject] private InfoApi InfoApi { get; set; }
+        [Inject] private StudentService StudentService { get; set; }
         [Inject] private ISnackbar Snackbar { get; set; }
 
         private bool isStudent;
@@ -28,7 +29,7 @@ namespace frontend_manage.Pages.StudentLogin
         {
             try
             {
-                var info = await InfoApi.GetStudentProfileAsync();
+                var info = await StudentService.GetStudentProfileAsync();
                 if (info != null)
                 {
                     studentInfo = new StudentInfoDto
@@ -44,7 +45,7 @@ namespace frontend_manage.Pages.StudentLogin
                 }
 
                 // Fetch exam sessions
-                var allExamSessions = await InfoApi.GetStudentExamSessionsAsync();
+                var allExamSessions = await StudentService.GetStudentExamSessionsAsync();
                 
                 // Lọc và sắp xếp để chỉ hiển thị 2 ca thi có ExamSessionStartTime gần nhất
                 if (allExamSessions != null && allExamSessions.Count > 0)

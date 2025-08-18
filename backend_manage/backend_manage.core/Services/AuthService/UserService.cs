@@ -1,7 +1,6 @@
 using backend_manage.core.Entities;
 using backend_manage.core.Repositories.Interfaces;
 using backend_manage.core.Services.Interfaces;
-using backend_manage.shared.Interfaces;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
 

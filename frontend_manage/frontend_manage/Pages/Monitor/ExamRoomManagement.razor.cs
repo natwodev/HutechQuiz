@@ -11,7 +11,7 @@ namespace frontend_manage.Pages.Monitor
         [Inject] private NavigationManager Navigation { get; set; }
         [Inject] private IJSRuntime JSRuntime { get; set; }
         [Inject] private AuthService AuthService { get; set; }
-        [Inject] private MonitorApi MonitorApi { get; set; }
+        [Inject] private MonitorService MonitorService { get; set; }
         [Inject] private NotificationService NotificationService { get; set; }
 
         private string currentTime = DateTime.Now.ToString("hh:mm:ss tt");
@@ -46,7 +46,7 @@ namespace frontend_manage.Pages.Monitor
                 }
 
                 // Lấy thông tin giảng viên từ API
-                lecturerInfo = await MonitorApi.GetLecturerInfoAsync();
+                lecturerInfo = await MonitorService.GetLecturerInfoAsync();
                 if (lecturerInfo == null)
                 {
                     // Nếu không lấy được từ API, chuyển về trang login
@@ -80,7 +80,7 @@ namespace frontend_manage.Pages.Monitor
         {
             try
             {
-                var assignments = await MonitorApi.GetMyAssignmentsAsync();
+                var assignments = await MonitorService.GetMyAssignmentsAsync();
                 if (assignments != null && assignments.Count > 0)
                 {
                     examRooms = assignments;

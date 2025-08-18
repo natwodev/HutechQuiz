@@ -11,7 +11,7 @@ namespace frontend_manage.Pages.Monitor.Components
         public IMudDialogInstance MudDialog { get; set; } = default!;  // Sửa: Dùng MudDialogInstance (chuẩn MudBlazor)
 
     [Inject]
-    public MonitorApi MonitorApi { get; set; } = default!;
+    public MonitorService MonitorService { get; set; } = default!;
 
         [Inject]
         public ISnackbar Snackbar { get; set; } = default!;
@@ -46,7 +46,7 @@ namespace frontend_manage.Pages.Monitor.Components
             IsSubmitting = true;
             try
             {
-                var result = await MonitorApi.AddExtraMinutesAsync(StudentCode, StudentExamSessionId, ExtraMinutes, string.IsNullOrWhiteSpace(Reason) ? null : Reason);
+                var result = await MonitorService.AddExtraMinutesAsync(StudentCode, StudentExamSessionId, ExtraMinutes, string.IsNullOrWhiteSpace(Reason) ? null : Reason);
                 Snackbar.Add(result, Severity.Success);
                 MudDialog.Close(DialogResult.Ok(new { ExtraMinutes, Reason }));
             }

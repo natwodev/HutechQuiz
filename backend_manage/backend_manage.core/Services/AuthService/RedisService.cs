@@ -1,5 +1,4 @@
 using backend_manage.core.Services.Interfaces;
-using backend_manage.shared.Interfaces;
 using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
 

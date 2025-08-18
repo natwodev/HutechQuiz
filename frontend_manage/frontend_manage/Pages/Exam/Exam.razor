@@ -1,12 +1,11 @@
 @page "/Exam"
 @inject IJSRuntime JSRuntime
 @inject NavigationManager Navigation
-@inject InfoApi InfoApi
-@inject ExamApi ExamApi
+@inject StudentService StudentService
 @inject ISnackbar Snackbar
 @inject IDialogService Dialog
 @inject HttpClient Http
-@using frontend_manage.Pages.StudentLogin
+@using frontend_manage.Services
 @using Microsoft.AspNetCore.Components
 @using MudBlazor
 @implements IDisposable
@@ -42,7 +41,7 @@ else
                                 // Câu hỏi cha có câu con - chỉ hiển thị thông tin, không đếm số
                                 var startNumber = overallQuestionNumber;
                                 var endNumber = overallQuestionNumber + q.ChildQuestions.Count - 1;
-                                overallQuestionNumber += q.ChildQuestions.Count; // Chỉ tăng theo số câu con
+                                overallQuestionNumber += q.ChildQuestions.Count; 
 
                                 var selectedAnswer = GetSelectedAnswer(q.ShuffledExamPaperDetailId);
 

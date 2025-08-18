@@ -6,7 +6,6 @@ using backend_manage.core.Repositories.AuthRepository;
 using backend_manage.core.Repositories.Interfaces;
 using backend_manage.core.Services.Interfaces;
 using backend_manage.shared.DTOs;
-using backend_manage.shared.Interfaces;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 

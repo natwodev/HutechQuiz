@@ -2,7 +2,6 @@ using System.Text.Json;
 using backend_manage.core.Entities;
 using backend_manage.core.Repositories.Interfaces;
 using backend_manage.core.Services.Interfaces;
-using backend_manage.shared.Interfaces;
 using Microsoft.Extensions.Logging;
 
 namespace backend_manage.core.Services.AuthService.Helpers;

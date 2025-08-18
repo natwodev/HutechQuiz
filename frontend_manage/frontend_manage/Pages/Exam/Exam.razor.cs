@@ -4,6 +4,7 @@ using MudBlazor;
 using System.Text.RegularExpressions;
 using System.Timers;
 using frontend_manage.DTOs;
+using frontend_manage.Services;
 
 namespace frontend_manage.Pages.Exam
 {
@@ -87,7 +88,7 @@ namespace frontend_manage.Pages.Exam
             }
             try
             {
-                startExamResponse = await InfoApi.StartExamAsync(studentExamSessionId.Value);
+                startExamResponse = await StudentService.StartExamAsync(studentExamSessionId.Value);
                 if (startExamResponse == null)
                 {
                     errorMessage = "Không thể lấy thông tin làm bài.";
@@ -234,7 +235,7 @@ namespace frontend_manage.Pages.Exam
                     Answer = answer
                 };
 
-                var response = await ExamApi.SaveAnswerAsync(request);
+                var response = await StudentService.SaveAnswerAsync(request);
                 
                 if (response?.Success == true)
                 {
@@ -475,7 +476,7 @@ namespace frontend_manage.Pages.Exam
                        StudentExamSessionId = studentExamSessionId.Value
                    };
                        
-                   var submitResponse = await ExamApi.SubmitExamAsync(submitRequest);
+                   var submitResponse = await StudentService.SubmitExamAsync(submitRequest);
 
                    if (submitResponse?.Success == true && submitResponse.Data != null)
                    {

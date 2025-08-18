@@ -6,7 +6,6 @@ using backend_manage.core.Repositories.Interfaces;
 using backend_manage.core.Services.AuthService;
 using backend_manage.core.Services.AuthService.Helpers;
 using backend_manage.core.Services.Interfaces;
-using backend_manage.shared.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using StackExchange.Redis;

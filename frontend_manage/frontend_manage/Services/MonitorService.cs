@@ -5,13 +5,13 @@ using System.Text.Json;
 using frontend_manage.DTOs;
 using frontend_manage.DTOs.AcademicAffairs;
 
-namespace frontend_manage.Pages.Monitor;
+namespace frontend_manage.Services;
 
-public class MonitorApi
+public class MonitorService
 {
     private readonly HttpClient _httpClient;
     
-    public MonitorApi(HttpClient httpClient)
+    public MonitorService(HttpClient httpClient)
     {
         _httpClient = httpClient;
     }
