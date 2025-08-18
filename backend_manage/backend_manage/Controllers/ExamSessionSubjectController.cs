@@ -209,12 +209,12 @@ namespace backend_manage.Controllers
             }
         }
 
-        [HttpPut("{examSessionSubjectId}/is-active")]
-        public async Task<ActionResult> UpdateIsActive(int examSessionSubjectId, [FromBody] bool isActive)
+        [HttpPost("is-active")]
+        public async Task<ActionResult> UpdateIsActive([FromBody] ActiveExamSessionSubject request)
         {
             try
             {
-                await _examSessionSubjectService.UpdateIsActiveAsync(examSessionSubjectId, isActive);
+                await _examSessionSubjectService.UpdateIsActiveAsync(request.examSessionSubjectId, request.isActive);
 
                 return Ok(new { message = "Cập nhật trạng thái hoạt động thành công" });
             }
@@ -228,7 +228,12 @@ namespace backend_manage.Controllers
             }
         }
 
-
+        public class ActiveExamSessionSubject
+        {
+            public int examSessionSubjectId { get; set; }
+            public bool isActive { get; set; }
+        }
+        
         [HttpGet("{examSessionSubjectId}/with-students")]
         public async Task<ActionResult<object>> GetWithStudents(int examSessionSubjectId)
         {

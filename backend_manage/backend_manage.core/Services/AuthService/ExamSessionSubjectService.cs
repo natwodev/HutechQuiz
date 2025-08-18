@@ -145,7 +145,7 @@ namespace backend_manage.core.Services.AuthService
             if (entity == null) return false;
             
             entity.ExamRoomId = examRoomId;
-            var userId = _httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+            var userId = _httpContextAccessor.HttpContext?.User?.FindFirst("lecturerCode")?.Value;
             if (string.IsNullOrEmpty(userId))
                 throw new UnauthorizedAccessException("Không thể xác định người dùng cập nhật ExamSessionSubject.");
             
@@ -163,11 +163,12 @@ namespace backend_manage.core.Services.AuthService
                 throw new ArgumentException($"Không tìm thấy ExamSessionSubject với ID: {examSessionSubjectId}");
 
             entity.IsActive = isActive;
-            var userId = _httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrEmpty(userId))
+            var updatedBy = _httpContextAccessor.HttpContext?.User?.FindFirst("lecturerCode")?.Value
+                            ?? _httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(updatedBy))
                 throw new UnauthorizedAccessException("Không thể xác định người dùng cập nhật trạng thái hoạt động.");
 
-            entity.UpdatedBy = userId;
+            entity.UpdatedBy = updatedBy;
             entity.UpdatedAt = DateTimeHelper.GetVietnamTime();
             entity.Version++;
             await _repository.UpdateAsync(entity);
