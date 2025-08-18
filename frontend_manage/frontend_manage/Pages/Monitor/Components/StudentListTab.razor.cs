@@ -19,7 +19,7 @@ namespace frontend_manage.Pages.Monitor.Components
         private IDialogService DialogService { get; set; }
        
         [Inject]
-        private MonitorApi MonitorApi { get; set; }
+        private MonitorService MonitorService { get; set; }
 
         [Parameter]
         public List<StudentExamRoomStatusDto>? Students { get; set; }
@@ -92,7 +92,7 @@ namespace frontend_manage.Pages.Monitor.Components
 
             // Đảo trạng thái đăng nhập (ví dụ: nếu đang đăng nhập thì chuyển thành chưa đăng nhập)
             bool newLoginStatus = !student.IsLogin;
-            var result = await MonitorApi.ActiveLoginAsync(studentCode, newLoginStatus);
+            var result = await MonitorService.ActiveLoginAsync(studentCode, newLoginStatus);
             Snackbar.Add(result, Severity.Success);
 
             // Cập nhật trạng thái trong danh sách (nếu muốn cập nhật UI ngay)

@@ -23,9 +23,9 @@ builder.RootComponents.Add<HeadOutlet>("head::after");
 builder.Services.AddMudServices();
 
 builder.Services.AddScoped<AuthService>();
-builder.Services.AddScoped<InfoApi>();
-builder.Services.AddScoped<ExamApi>();
-builder.Services.AddScoped<MonitorApi>();
+builder.Services.AddScoped<StudentService>();
+
+builder.Services.AddScoped<MonitorService>();
 builder.Services.AddSingleton<NotificationService>();
 builder.Services.AddScoped<Api>();
 

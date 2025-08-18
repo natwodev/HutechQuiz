@@ -4,7 +4,7 @@
 @using MudBlazor
 @using Microsoft.AspNetCore.Components.Forms
 @inject AuthService AuthService
-@inject MonitorApi MonitorApi
+@inject MonitorService MonitorService
 @inject NavigationManager Navigation
 @inject IJSRuntime JSRuntime
 
@@ -132,7 +132,7 @@
         try
         {
             // Sử dụng MonitorApi để đăng nhập giảng viên
-            var result = await MonitorApi.LoginLecturerAsync(loginModel.LecturerCode1, loginModel.LecturerCode2);
+            var result = await MonitorService.LoginLecturerAsync(loginModel.LecturerCode1, loginModel.LecturerCode2);
             
             if (result?.IsSuccess == true)
             {

@@ -7,7 +7,7 @@ namespace frontend_manage.Pages.Monitor.Components;
 
 public partial class ExamInfoTab : ComponentBase
 {
-    [Inject] private MonitorApi MonitorApi { get; set; } = default!;
+    [Inject] private MonitorService MonitorService { get; set; } = default!;
 
     [Inject] private ISnackbar Snackbar { get; set; } = default!;
 
@@ -45,10 +45,7 @@ public partial class ExamInfoTab : ComponentBase
         return (elapsed.TotalSeconds / totalDuration.TotalSeconds) * 100;
     }
 
-    private void EndExamEarly()
-    {
-        // Logic to end exam early
-    }
+
 
     private void ExtendTime()
     {
@@ -65,7 +62,7 @@ public partial class ExamInfoTab : ComponentBase
 
         try
         {
-            var result = await MonitorApi.UpdateIsActiveAsync(ExamSessionSubjectId.Value, true);
+            var result = await MonitorService.UpdateIsActiveAsync(ExamSessionSubjectId.Value, true);
             Snackbar.Add(result, Severity.Success);
 
             // Cập nhật giao diện ngay lập tức
@@ -91,7 +88,7 @@ public partial class ExamInfoTab : ComponentBase
 
         try
         {
-            var result = await MonitorApi.UpdateIsActiveAsync(ExamSessionSubjectId.Value, false);
+            var result = await MonitorService.UpdateIsActiveAsync(ExamSessionSubjectId.Value, false);
             Snackbar.Add(result, Severity.Success);
 
             // Cập nhật giao diện ngay lập tức

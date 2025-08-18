@@ -14,7 +14,7 @@ namespace frontend_manage.Pages.Monitor
     public partial class MonitorPage : ComponentBase
     {
         [Inject] private NavigationManager Navigation { get; set; }
-        [Inject] private MonitorApi MonitorApi { get; set; }
+        [Inject] private MonitorService MonitorService { get; set; }
         [Inject] private IJSRuntime JSRuntime { get; set; }
         [Inject] private NotificationService NotificationService { get; set; }
 
@@ -102,7 +102,7 @@ namespace frontend_manage.Pages.Monitor
                 isLoading = true;
                 errorMessage = null;
 
-                examData = await MonitorApi.GetStudentsByExamRoomAsync(ExamSessionSubjectId.Value);
+                examData = await MonitorService.GetStudentsByExamRoomAsync(ExamSessionSubjectId.Value);
 
                 if (examData == null)
                 {
