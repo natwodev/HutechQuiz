@@ -2,7 +2,7 @@ using backend_manage.core.Entities;
 using backend_manage.shared.DTOs;
 using Microsoft.AspNetCore.Http;
 
-namespace backend_manage.shared.Interfaces;
+namespace backend_manage.core.Services.Interfaces;
 
 public interface IStudentService
 {

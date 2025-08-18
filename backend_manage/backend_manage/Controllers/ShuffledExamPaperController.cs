@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using backend_manage.core.Services.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using backend_manage.shared.Interfaces;
 
 namespace backend_manage.Controllers
 {

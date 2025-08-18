@@ -9,7 +9,6 @@ using backend_manage.core.Messages.RabbitMQ;
 using backend_manage.core.Repositories.Interfaces;
 using backend_manage.core.Services.AuthService.Helpers;
 using backend_manage.shared.DTOs;
-using backend_manage.shared.Interfaces;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
@@ -19,6 +18,7 @@ using Microsoft.IdentityModel.Tokens;
 using OfficeOpenXml;
 using StackExchange.Redis;
 using backend_manage.core.Services.AuthService.Helpers;
+using backend_manage.core.Services.Interfaces;
 
 namespace backend_manage.core.Services.AuthService;
 
@@ -485,25 +485,76 @@ public class StudentService : IStudentService
     #region AddExtraMinutesAsync
     public async Task AddExtraMinutesAsync(string studentCode, int studentExamSessionId, int extraMinutes, string? reasonForExtra)
     {
-        // 1. Tìm StudentExamSession cần cập nhật
-        var session = await _studentExamSessionRepository.GetQueryable()
-            .Include(s => s.Student)
-            .FirstOrDefaultAsync(s => s.StudentExamSessionId == studentExamSessionId && s.StudentCode == studentCode);
-
-        if (session == null)
-            throw new Exception("Không tìm thấy phiên thi sinh viên với mã đã cung cấp.");
-
-        // 2. Cập nhật ExtraMinutes và ReasonForExtra
-        session.ExtraMinutes = extraMinutes;
-        session.ReasonForExtra = reasonForExtra;
-
-        // 3. Cập nhật UpdatedAt, UpdatedBy nếu có thông tin từ context
         var userId = _httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
-        session.UpdatedBy = userId;
-        session.UpdatedAt = DateTimeHelper.GetVietnamTime();
 
-        // 4. Lưu vào DB
-        await _studentExamSessionRepository.UpdateAsync(session);
+        // Bước 1: Lấy StudentExamSession từ Redis cache trước, nếu không có thì lấy từ DB
+        var (redisAvailable, sessionDto) = await _sessionCacheHelper.GetStudentExamSessionAsync(studentCode, studentExamSessionId);
+
+        if (sessionDto == null)
+        {
+            throw new Exception("Không tìm thấy phiên thi sinh viên với mã đã cung cấp.");
+        }
+
+        if (sessionDto.ExtraMinutes == extraMinutes && sessionDto.ReasonForExtra == reasonForExtra)
+        {
+            return; // Không cần cập nhật nếu giá trị giống nhau
+        }
+
+        // Bước 2: Cập nhật Redis cache trước
+        try
+        {
+            // Cập nhật trạng thái trong object session
+            sessionDto.ExtraMinutes = extraMinutes;
+            sessionDto.ReasonForExtra = reasonForExtra;
+            sessionDto.UpdatedBy = userId;
+            sessionDto.UpdatedAt = DateTimeHelper.GetVietnamTime();
+            
+            // Cache lại vào Redis với thông tin mới
+            await _sessionCacheHelper.UpdateStudentExamSessionAsync(studentCode, sessionDto);
+            _logger.LogInformation("✅ Đã cập nhật Redis cache cho phiên thi {StudentExamSessionId} của sinh viên {StudentCode} với ExtraMinutes: {ExtraMinutes}", studentExamSessionId, studentCode, extraMinutes);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "⚠️ Không thể cập nhật Redis cache cho phiên thi {StudentExamSessionId} của sinh viên {StudentCode}, sẽ tiếp tục cập nhật DB", studentExamSessionId, studentCode);
+        }
+
+        // Bước 3: Cập nhật database
+        try
+        {
+            var sessionEntity = await _studentExamSessionRepository.GetQueryable()
+                .Include(s => s.Student)
+                .FirstOrDefaultAsync(s => s.StudentExamSessionId == studentExamSessionId && s.StudentCode == studentCode);
+
+            if (sessionEntity != null)
+            {
+                sessionEntity.ExtraMinutes = extraMinutes;
+                sessionEntity.ReasonForExtra = reasonForExtra;
+                sessionEntity.UpdatedBy = userId;
+                sessionEntity.UpdatedAt = DateTimeHelper.GetVietnamTime();
+                
+                await _studentExamSessionRepository.UpdateAsync(sessionEntity);
+                _logger.LogInformation("✅ Đã cập nhật database cho phiên thi {StudentExamSessionId} của sinh viên {StudentCode} với ExtraMinutes: {ExtraMinutes}", studentExamSessionId, studentCode, extraMinutes);
+                
+            
+                // Luôn gửi thông báo real-time dựa trên ExamSessionSubjectId
+                var (statusList, subjectInfo) = await GetStudentsByExamSessionSubjectAsync(sessionEntity.ExamSessionSubjectId);
+
+                var groupName = $"lecturer_subject_{sessionEntity.ExamSessionSubjectId}";
+            
+                await _hubContext.Clients
+                    .Group(groupName)
+                    .SendAsync("RoomStatusUpdated", new StudentListResponse { 
+                        Students = statusList.ToList(),
+                        Subject = subjectInfo
+                    });
+                    
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "❌ Lỗi khi cập nhật database cho phiên thi {StudentExamSessionId} của sinh viên {StudentCode}", studentExamSessionId, studentCode);
+            throw new Exception("Lỗi khi cập nhật database. Vui lòng thử lại sau.");
+        }
     }
     #endregion
     
@@ -643,6 +694,8 @@ public class StudentService : IStudentService
 
             _logger.LogInformation("✅ Hoàn thành nộp bài thi cho sinh viên {StudentCode}. Điểm: {Score}", studentCode, score);
             
+           
+            
             return (true, message, submissionData);
         }
         catch (Exception ex)
@@ -656,22 +709,3 @@ public class StudentService : IStudentService
 } 
 
 
-/*
- *  // Gửi realtime trạng thái phòng thi cho tất cả session của sinh viên
-          var studentExamSessions = await _studentExamSessionRepository.GetQueryable()
-              .Where(x => x.StudentCode == studentCode1)
-              .ToListAsync();
-
-          foreach (var session in studentExamSessions)
-          {
-              var examSessionSubjectId = session.ExamSessionSubjectId;
-              var (statusList, subjectInfo) = await GetStudentsByExamSessionSubjectAsync(examSessionSubjectId);
-              Console.WriteLine($"[SignalR] Gửi RoomStatusUpdated tới giám thị môn thi {examSessionSubjectId} với {statusList.Count()} sinh viên.");
-              // Gửi cho tất cả giám thị theo dõi môn thi này
-              await _hubContext.Clients.Group($"lecturer_subject_{examSessionSubjectId}")
-                  .SendAsync("RoomStatusUpdated", new { 
-                      students = statusList, 
-                      subject = subjectInfo
-                  });
-          }
-*/
