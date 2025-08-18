@@ -68,7 +68,9 @@
                             <div class="time-status">
                                 <div class="time-status-item">
                                     <div class="time-status-label">Trạng thái:</div>
-                                    <div class="time-status-value status-active">ĐANG DIỄN RA</div>
+                                    <div class="time-status-value @(Subject.IsActive ? "status-active" : "status-inactive")">
+                                        @(Subject.IsActive ? "ĐÃ KÍCH HOẠT" : "CHƯA KÍCH HOẠT")
+                                    </div>
                                 </div>
                                 <div class="time-status-item">
                                     <div class="time-status-label">Thời gian còn lại:</div>
@@ -89,12 +91,13 @@
                             
                             <div class="time-controls">
                                 <MudButton Variant="Variant.Filled" 
-                                          Color="Color.Primary"
-                                          StartIcon="@Icons.Material.Filled.Pause"
+                                          Color="@(Subject.IsActive ? Color.Error : Color.Success)"
+                                          StartIcon="@(Subject.IsActive ? Icons.Material.Filled.Stop : Icons.Material.Filled.PlayArrow)"
                                           Size="Size.Small"
-                                          OnClick="@(() => PauseExam())">
-                                    Tạm dừng
+                                          OnClick="@(() => Subject.IsActive ? CloseExam() : OpenExam())">
+                                    @(Subject.IsActive ? "Tắt ca thi" : "Mở ca thi")
                                 </MudButton>
+
                                 <MudButton Variant="Variant.Outlined" 
                                           Color="Color.Error"
                                           StartIcon="@Icons.Material.Filled.Stop"
@@ -126,55 +129,3 @@
     }
 </div>
 
-@code {
-    [Parameter]
-    public SubjectExamRoomStatusDto? Subject { get; set; }
-
-    [Parameter]
-    public int? ExamSessionSubjectId { get; set; }
-    
-    private string GetRemainingTime()
-    {
-        if (Subject == null) return "00:00:00";
-        
-        var now = DateTime.Now;
-        var endTime = Subject.ExamSessionEndTime;
-        var remaining = endTime - now;
-        
-        if (remaining.TotalSeconds <= 0) return "00:00:00";
-        
-        return $"{remaining.Hours:D2}:{remaining.Minutes:D2}:{remaining.Seconds:D2}";
-    }
-    
-    private double GetProgressValue()
-    {
-        if (Subject == null) return 0;
-        
-        var now = DateTime.Now;
-        var startTime = Subject.ExamSessionStartTime;
-        var endTime = Subject.ExamSessionEndTime;
-        var totalDuration = endTime - startTime;
-        var elapsed = now - startTime;
-        
-        if (totalDuration.TotalSeconds <= 0) return 0;
-        if (elapsed.TotalSeconds <= 0) return 0;
-        if (elapsed.TotalSeconds >= totalDuration.TotalSeconds) return 100;
-        
-        return (elapsed.TotalSeconds / totalDuration.TotalSeconds) * 100;
-    }
-    
-    private void PauseExam()
-    {
-        // Logic to pause the exam
-    }
-    
-    private void EndExamEarly()
-    {
-        // Logic to end exam early
-    }
-    
-    private void ExtendTime()
-    {
-        // Logic to extend exam time
-    }
-}

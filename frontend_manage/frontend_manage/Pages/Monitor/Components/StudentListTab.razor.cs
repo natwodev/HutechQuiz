@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using frontend_manage.DTOs;
 using frontend_manage.Services;
+using frontend_manage.Enums;
 
 namespace frontend_manage.Pages.Monitor.Components
 {
@@ -16,9 +17,9 @@ namespace frontend_manage.Pages.Monitor.Components
         
         [Inject]
         private IDialogService DialogService { get; set; }
-        
-    [Inject]
-    private MonitorApi MonitorApi { get; set; }
+       
+        [Inject]
+        private MonitorApi MonitorApi { get; set; }
 
         [Parameter]
         public List<StudentExamRoomStatusDto>? Students { get; set; }
@@ -28,6 +29,9 @@ namespace frontend_manage.Pages.Monitor.Components
 
         [Parameter]
         public string? ExamSessionName { get; set; }
+
+        [Parameter]
+        public DateTime? ExamSessionStartTime { get; set; }
 
         private string searchText = "";
         private int currentPage = 1;
@@ -140,12 +144,77 @@ namespace frontend_manage.Pages.Monitor.Components
                 }
             }
         }
-        
+        protected override void OnParametersSet()
+        {
+            // Khi parent truyền Students mới → ép re-render lại UI
+            StateHasChanged();
+        }
+
         private async Task RefreshStudentData()
         {
             // Notify parent component to refresh data
             Snackbar.Add("Đang làm mới dữ liệu...", Severity.Info);
             StateHasChanged();
+        }
+        
+        private ExamStatus GetExamStatus(StudentExamRoomStatusDto student)
+        {
+            // Nếu đã hoàn thành thi
+            if (student.IsCompleted)
+            {
+                return ExamStatus.Completed;
+            }
+
+            // Nếu StartTime == null (chưa bắt đầu thi)
+            if (student.StartTime == null)
+            {
+                // Kiểm tra xem có quá 15 phút kể từ ExamSessionStartTime không
+                if (ExamSessionStartTime.HasValue)
+                {
+                    var timeDifference = DateTime.Now - ExamSessionStartTime.Value;
+                    if (timeDifference.TotalMinutes <= 15)
+                    {
+                        return ExamStatus.NotStarted; // Chưa vào thi
+                    }
+                    else
+                    {
+                        return ExamStatus.Dropped; // Bỏ thi (quá 15 phút)
+                    }
+                }
+                else
+                {
+                    // Nếu không có ExamSessionStartTime, mặc định là chưa vào thi
+                    return ExamStatus.NotStarted;
+                }
+            }
+
+            // Trường hợp còn lại: đang thi
+            return ExamStatus.InProgress;
+        }
+
+  
+        private string GetExamStatusDisplayName(ExamStatus status)
+        {
+            return status switch
+            {
+                ExamStatus.NotStarted => "Chưa vào thi",
+                ExamStatus.InProgress => "Đang thi",
+                ExamStatus.Dropped => "Bỏ thi",
+                ExamStatus.Completed => "Đã hoàn thành",
+                _ => "Không xác định"
+            };
+        }
+        
+        private string GetExamStatusCssClass(ExamStatus status)
+        {
+            return status switch
+            {
+                ExamStatus.NotStarted => "status-tag warning",
+                ExamStatus.InProgress => "status-tag info",
+                ExamStatus.Dropped => "status-tag danger",
+                ExamStatus.Completed => "status-tag success",
+                _ => "status-tag default"
+            };
         }
     }
 }

@@ -156,6 +156,23 @@ namespace backend_manage.core.Services.AuthService
             return true;
         }
 
+        public async Task UpdateIsActiveAsync(int examSessionSubjectId, bool isActive)
+        {
+            var entity = await _repository.GetByIdAsync(examSessionSubjectId);
+            if (entity == null) 
+                throw new ArgumentException($"Không tìm thấy ExamSessionSubject với ID: {examSessionSubjectId}");
+
+            entity.IsActive = isActive;
+            var userId = _httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+                throw new UnauthorizedAccessException("Không thể xác định người dùng cập nhật trạng thái hoạt động.");
+
+            entity.UpdatedBy = userId;
+            entity.UpdatedAt = DateTimeHelper.GetVietnamTime();
+            entity.Version++;
+            await _repository.UpdateAsync(entity);
+        }
+
         public async Task<IEnumerable<ExamSessionSubjectDto>> GetByExamRoomIdAsync(int examRoomId)
         {
             var entities = await _repository.GetQueryable()

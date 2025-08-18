@@ -12,6 +12,7 @@ namespace backend_manage.core.Services.Interfaces
         Task<bool> UpdateOriginalExamPaperIdAsync(int examSessionSubjectId, int originalExamPaperId);
         Task<IEnumerable<ExamSessionSubjectRoomDto>> GetAllWithRoomsAsync();
         Task<bool> UpdateExamRoomIdAsync(int examSessionSubjectId, int? examRoomId);
+        Task UpdateIsActiveAsync(int examSessionSubjectId, bool isActive);
         Task<IEnumerable<ExamSessionSubjectDto>> GetByExamRoomIdAsync(int examRoomId);
         
         // Các phương thức mới cho việc phân công giảng viên

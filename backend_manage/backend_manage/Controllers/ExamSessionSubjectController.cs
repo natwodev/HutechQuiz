@@ -209,6 +209,26 @@ namespace backend_manage.Controllers
             }
         }
 
+        [HttpPut("{examSessionSubjectId}/is-active")]
+        public async Task<ActionResult> UpdateIsActive(int examSessionSubjectId, [FromBody] bool isActive)
+        {
+            try
+            {
+                await _examSessionSubjectService.UpdateIsActiveAsync(examSessionSubjectId, isActive);
+
+                return Ok(new { message = "Cập nhật trạng thái hoạt động thành công" });
+            }
+            catch (ArgumentException ex)
+            {
+                return NotFound(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Lỗi nội bộ: {ex.Message}");
+            }
+        }
+
+
         [HttpGet("{examSessionSubjectId}/with-students")]
         public async Task<ActionResult<object>> GetWithStudents(int examSessionSubjectId)
         {
@@ -230,6 +250,7 @@ namespace backend_manage.Controllers
                 return StatusCode(500, $"Lỗi nội bộ: {ex.Message}");
             }
         }
+
 
         [HttpGet("lecturer/subject-exam-room-status")]
         public async Task<ActionResult<IEnumerable<SubjectExamRoomStatusDto>>> GetSubjectExamRoomStatusByLecturerId()
