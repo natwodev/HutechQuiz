@@ -275,7 +275,7 @@ else
                     <MudGrid>
                         <MudItem xs="6" Style="align-content: center">
                             <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
-                                <MudText Typo="Typo.h4" Color="@(isTimeUp? Color.Error: remainingMinutes <= 5 ? Color.Warning : Color.Primary)" id="time-clock">
+                                <MudText Typo="Typo.h4" Color="@(isTimeUp? Color.Error: remainingMinutes <= 1 ? Color.Error: remainingMinutes <= 5 ? Color.Warning : Color.Primary)" id="time-clock">
                                     @GetFormattedTime()
                                 </MudText>
                                 @if (studentSession.ExtraMinutes > 0)

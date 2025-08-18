@@ -441,86 +441,103 @@ namespace frontend_manage.Pages.Exam
             }
         }
 
-       private async Task OnSubmitExamAsync()
-       {
-           // Lấy chuỗi thời gian dạng "mm:ss"
-           var formattedTime = GetFormattedTime();
-           // Tách phút (phần trước dấu :)
-           var minutesOnly = formattedTime.Split(':')[0];
-           // Tạo message chỉ với phút
-           var timeMessage = $"⏰ Thời gian còn lại: {minutesOnly} phút";
+               private async Task OnSubmitExamAsync()
+        {
+            // Lấy chuỗi thời gian dạng "mm:ss"
+            var formattedTime = GetFormattedTime();
+            // Tách phút (phần trước dấu :)
+            var minutesOnly = formattedTime.Split(':')[0];
+            // Tạo message chỉ với phút
+            var timeMessage = $"⏰ Thời gian còn lại: {minutesOnly} phút";
 
-           var dialog = await Dialog.ShowMessageBox("Bạn có chắc chắn muốn nộp bài thi này?", timeMessage, "Nộp bài", "Hủy");
-           if (dialog == true)
-           {
-               try
-               {
-                   // Stop timer chỉ khi thực sự nộp bài
-                   examTimer?.Stop();
-                   
-                   // Xóa dữ liệu timer khỏi localStorage khi nộp bài
-                   await JSRuntime.InvokeVoidAsync("localStorage.removeItem", TIMER_STORAGE_KEY);
-                   
-                   // Force save tất cả pending answers trước khi submit
-                   var hasPending = await JSRuntime.InvokeAsync<bool>("window.answerDebouncer.hasPendingSaves");
-                   if (hasPending)
-                   {
-                       Snackbar.Add("Đang lưu các đáp án cuối cùng...", Severity.Info);
+            var dialog = await Dialog.ShowMessageBox("Bạn có chắc chắn muốn nộp bài thi này?", timeMessage, "Nộp bài", "Hủy");
+            if (dialog == true)
+            {
+                await SubmitExamInternalAsync();
+            }
+        }
 
-                       // Đợi một chút để các pending saves hoàn thành
-                       await Task.Delay(100);
-                   }
-                   
-                   var submitRequest = new SubmitExamRequest
-                   {
-                       StudentExamSessionId = studentExamSessionId.Value
-                   };
-                       
-                   var submitResponse = await StudentService.SubmitExamAsync(submitRequest);
+        private async Task AutoSubmitExamAsync()
+        {
+            // Nộp bài tự động khi hết thời gian (không có dialog)
+            try
+            {
+                // Stop timer
+                examTimer?.Stop();
+                
+                // Xóa dữ liệu timer khỏi localStorage
+                await JSRuntime.InvokeVoidAsync("localStorage.removeItem", TIMER_STORAGE_KEY);
+                
+                // Force save tất cả pending answers trước khi submit
+                var hasPending = await JSRuntime.InvokeAsync<bool>("window.answerDebouncer.hasPendingSaves");
+                if (hasPending)
+                {
+                    Snackbar.Add("Đang lưu các đáp án cuối cùng...", Severity.Info);
+                    // Đợi một chút để các pending saves hoàn thành
+                    await Task.Delay(100);
+                }
+                
+                await SubmitExamInternalAsync();
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add("Có lỗi xảy ra khi tự động nộp bài. Vui lòng thử lại!", Severity.Error);
+            }
+        }
 
-                   if (submitResponse?.Success == true && submitResponse.Data != null)
-                   {
-                       var submissionData = submitResponse.Data;
+        private async Task SubmitExamInternalAsync()
+        {
+            try
+            {
+                var submitRequest = new SubmitExamRequest
+                {
+                    StudentExamSessionId = studentExamSessionId.Value
+                };
+                    
+                var submitResponse = await StudentService.SubmitExamAsync(submitRequest);
 
-                       // Hiển thị thông báo thành công
-                       var scoreMessage = $"Nộp bài thi thành công! Điểm: {submissionData.Score:F2}, Đúng: {submissionData.CorrectAnswers}/{submissionData.TotalQuestions} câu";
-                       Snackbar.Add(scoreMessage, Severity.Success);
+                if (submitResponse?.Success == true && submitResponse.Data != null)
+                {
+                    var submissionData = submitResponse.Data;
 
-                       // Lưu dữ liệu kết quả vào localStorage
-                       var resultData = new
-                       {
-                           StudentCode = submissionData.StudentCode,
-                           ShuffledExamPaperId = submissionData.ShuffledExamPaperId,
-                           Score = submissionData.Score,
-                           CorrectAnswers = submissionData.CorrectAnswers,
-                           TotalQuestions = submissionData.TotalQuestions,
-                           StartTime = submissionData.StartTime,
-                           EndTime = submissionData.EndTime,
-                           StudentAnswersString = submissionData.StudentAnswersString,
-                           AnswerKey = submissionData.AnswerKey
-                       };
+                    // Hiển thị thông báo thành công
+                    var scoreMessage = $"Nộp bài thi thành công! Điểm: {submissionData.Score:F2}, Đúng: {submissionData.CorrectAnswers}/{submissionData.TotalQuestions} câu";
+                    Snackbar.Add(scoreMessage, Severity.Success);
 
-                       var resultJson = System.Text.Json.JsonSerializer.Serialize(resultData);
-                       await JSRuntime.InvokeVoidAsync("localStorage.setItem", $"examResult_{studentExamSessionId}", resultJson);
+                    // Lưu dữ liệu kết quả vào localStorage
+                    var resultData = new
+                    {
+                        StudentCode = submissionData.StudentCode,
+                        ShuffledExamPaperId = submissionData.ShuffledExamPaperId,
+                        Score = submissionData.Score,
+                        CorrectAnswers = submissionData.CorrectAnswers,
+                        TotalQuestions = submissionData.TotalQuestions,
+                        StartTime = submissionData.StartTime,
+                        EndTime = submissionData.EndTime,
+                        StudentAnswersString = submissionData.StudentAnswersString,
+                        AnswerKey = submissionData.AnswerKey
+                    };
 
-                       // Lưu studentExamSessionId vào localStorage để Result page có thể truy cập
-                       await JSRuntime.InvokeVoidAsync("localStorage.setItem", "currentStudentExamSessionId", studentExamSessionId.ToString());
+                    var resultJson = System.Text.Json.JsonSerializer.Serialize(resultData);
+                    await JSRuntime.InvokeVoidAsync("localStorage.setItem", $"examResult_{studentExamSessionId}", resultJson);
 
-                       // Chuyển sang trang Result
-                       Navigation.NavigateTo("/Exam/Result");
-                   }
-                   else
-                   {
-                       var errorMessage = submitResponse?.Message ?? "Có lỗi xảy ra khi nộp bài thi";
-                       Snackbar.Add(errorMessage, Severity.Error);
-                   }
-               }
-               catch (Exception ex)
-               {
-                   Snackbar.Add("Có lỗi xảy ra khi nộp bài. Vui lòng thử lại!", Severity.Error);
-               }
-           }
-       }
+                    // Lưu studentExamSessionId vào localStorage để Result page có thể truy cập
+                    await JSRuntime.InvokeVoidAsync("localStorage.setItem", "currentStudentExamSessionId", studentExamSessionId.ToString());
+
+                    // Chuyển sang trang Result
+                    Navigation.NavigateTo("/Exam/Result");
+                }
+                else
+                {
+                    var errorMessage = submitResponse?.Message ?? "Có lỗi xảy ra khi nộp bài thi";
+                    Snackbar.Add(errorMessage, Severity.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add("Có lỗi xảy ra khi nộp bài. Vui lòng thử lại!", Severity.Error);
+            }
+        }
 
         private async Task ScrollToQuestionAsync(string questionIdentifier)
         {
@@ -640,11 +657,38 @@ namespace frontend_manage.Pages.Exam
             if (remainingSeconds > 0)
             {
                 remainingSeconds--;
+                
+                // Thông báo khi còn 1 phút và 0 giây
+                if (remainingMinutes == 1 && remainingSeconds == 0)
+                {
+                    await InvokeAsync(async () =>
+                    {
+                        Snackbar.Add("⚠️ CẢNH BÁO: Chỉ còn 1 phút nữa! Hệ thống sẽ tự động nộp bài!", Severity.Error, config => 
+                        {
+                            config.VisibleStateDuration = 10000;
+                            config.ShowCloseIcon = true;
+                            config.RequireInteraction = true;
+                        });
+                    });
+                }
             }
             else if (remainingMinutes > 0)
             {
                 remainingMinutes--;
                 remainingSeconds = 59;
+                
+                // Thông báo khi còn 5 phút
+                if (remainingMinutes == 5)
+                {
+                    await InvokeAsync(async () =>
+                    {
+                        Snackbar.Add("⏰ Còn 5 phút nữa! Hãy hoàn thành bài thi!", Severity.Warning, config => 
+                        {
+                            config.VisibleStateDuration = 8000;
+                            config.ShowCloseIcon = true;
+                        });
+                    });
+                }
             }
             else
             {
@@ -652,17 +696,26 @@ namespace frontend_manage.Pages.Exam
                 isTimeUp = true;
                 examTimer?.Stop();
                 
+                // Thông báo hết thời gian
+                await InvokeAsync(async () =>
+                {
+                    Snackbar.Add("⏰ HẾT THỜI GIAN! Hệ thống đang tự động nộp bài...", Severity.Info, config => 
+                    {
+                        config.VisibleStateDuration = 5000;
+                    });
+                });
+                
                 // Xóa dữ liệu timer khỏi localStorage khi hết thời gian
                 await InvokeAsync(async () =>
                 {
                     await JSRuntime.InvokeVoidAsync("localStorage.removeItem", TIMER_STORAGE_KEY);
                 });
                 
-                // Auto submit exam
-                await InvokeAsync(async () =>
-                {
-                    await OnSubmitExamAsync();
-                });
+                        // Auto submit exam (không có dialog)
+        await InvokeAsync(async () =>
+        {
+            await AutoSubmitExamAsync();
+        });
                 return;
             }
             
