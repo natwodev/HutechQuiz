@@ -1,4 +1,4 @@
-@page "/Exam"
+@page "/Exam/test"
 @inject IJSRuntime JSRuntime
 @inject NavigationManager Navigation
 @inject InfoApi InfoApi
@@ -279,12 +279,6 @@ else
                                 <MudText Typo="Typo.h4" Color="@(isTimeUp? Color.Error: remainingMinutes <= 5 ? Color.Warning : Color.Primary)" id="time-clock">
                                     @GetFormattedTime()
                                 </MudText>
-                                @if (studentSession.ExtraMinutes > 0)
-                                {
-                                    <MudText Typo="Typo.h6" Color="Color.Primary">
-                                        +@studentSession.ExtraMinutes
-                                    </MudText>
-                                }
                             </div>
                         </MudItem>
                         <MudItem xs="6">
@@ -296,85 +290,17 @@ else
                     </MudGrid>
                 </MudPaper>
 
-                <!-- Student Info -->
+                <!-- Exam Info -->
                 <MudPaper Class="pa-4" Style="text-align: center; border: 1px solid #ccc; margin-bottom: 15%;">
                     <MudImage Src="images/exam/Ellipse 1.svg" Width="120" Class="mb-2" />
                     <MudDivider Class="mb-2" />
-                    <MudText Typo="Typo.subtitle2"><b>Mã sinh viên:</b> @studentSession.StudentCode</MudText>
+                    <MudText Typo="Typo.subtitle2"><b>Mã sinh viên:</b> TEST001</MudText>
                     <MudText Typo="Typo.subtitle2"><b>Mã đề:</b> @shuffledExam.ShuffledExamPaperCore</MudText>
                     <MudText Typo="Typo.subtitle2"><b>Môn học:</b> @shuffledExam.SubjectName (@shuffledExam.SubjectCode)</MudText>
-                    <MudText Typo="Typo.subtitle2"><b>Phòng thi:</b> @studentSession.RoomName</MudText>
-                    <MudText Typo="Typo.subtitle2"><b>Thời gian:</b> @studentSession.Duration phút</MudText>
-                    @if (studentSession.ExtraMinutes > 0)
-                    {
-                        <MudText Typo="Typo.subtitle2"><b>Thêm:</b> +@studentSession.ExtraMinutes phút</MudText>
-                    }
-                </MudPaper>
-
-                <!-- Question Navigation -->
-                <MudPaper Class="pa-4" Style="text-align: center; border: 1px solid #ccc; max-height: 450px; overflow-y: auto">
-                    <MudText Typo="Typo.subtitle2" Class="mb-2"><b>Danh sách câu hỏi</b></MudText>
-                    <MudGrid>
-                        @if (shuffledExam.Details != null)
-                        {
-                            var navOverallQuestionNumber = 1;
-                            @foreach (var q in shuffledExam.Details.OrderBy(d => d.Order))
-                            {
-                                if (q.ChildQuestions != null && q.ChildQuestions.Any())
-                                {
-                                    // Câu hỏi cha có câu con - không hiển thị navigation button cho câu cha
-                                    var startNumber = navOverallQuestionNumber;
-                                    navOverallQuestionNumber += q.ChildQuestions.Count;
-
-                                    @foreach (var childQ in q.ChildQuestions.OrderBy(cq => cq.Order))
-                                    {
-                                        var childIndex = q.ChildQuestions.OrderBy(cq => cq.Order).ToList().IndexOf(childQ);
-                                        var childQuestionNumber = startNumber + childIndex;
-                                        var isChildAnswered = !string.IsNullOrEmpty(GetSelectedChildAnswer(childQ.ShuffledExamPaperDetailId));
-
-                                        <MudItem xs="2" md="3" Style="padding-left: 15px">
-                                            <MudButton Size="Size.Small" Variant="Variant.Filled"
-                                                       Color="@(isChildAnswered ? Color.Success : Color.Default)"
-                                                       OnClick="@(async () => await ScrollToQuestionAsync(childQuestionNumber.ToString()))"
-                                                       Style="font-size: 0.8em;">
-                                                @childQuestionNumber
-                                            </MudButton>
-                                        </MudItem>
-                                    }
-                                }
-                                else
-                                {
-                                    // Câu hỏi đơn lẻ
-                                    var questionNumber = navOverallQuestionNumber++;
-                                    var isAnswered = !string.IsNullOrEmpty(GetSelectedAnswer(q.ShuffledExamPaperDetailId));
-
-                                    <MudItem xs="2" md="3" Style="padding-left: 15px">
-                                        <MudButton Size="Size.Small" Variant="Variant.Filled"
-                                                   Color="@(isAnswered ? Color.Success : Color.Default)"
-                                                   OnClick="async () => await ScrollToQuestionAsync(questionNumber.ToString())">
-                                            @questionNumber
-                                        </MudButton>
-                                    </MudItem>
-                                }
-                            }
-                        }
-                    </MudGrid>
-
-                    <MudDivider Class="my-3" />
-                    <MudText Typo="Typo.body2">
-                        Đã trả lời: @GetAnsweredQuestionsCount() / @GetTotalQuestionsCount() câu
-                    </MudText>
-                    <MudText Typo="Typo.caption" Color="Color.Secondary">
-                        @GetQuestionCountDetails()
-                    </MudText>
-                    @if (lastSaveTime.HasValue)
-                    {
-                        <MudText Typo="Typo.caption" Color="Color.Success" Class="mt-2">
-                            <MudIcon Icon="Icons.Material.Filled.Save" Size="Size.Small" Class="mr-1" />
-                            Lưu lần cuối: @lastSaveTime.Value.ToString("HH:mm:ss")
-                        </MudText>
-                    }
-                </MudPaper>
+                    <MudText Typo="Typo.subtitle2"><b>Phòng thi:</b> Phòng Test</MudText>
+                    <MudText Typo="Typo.subtitle2"><b>Thời gian:</b> 90 phút</MudText>
+                    <MudText Typo="Typo.subtitle2" Color="Color.Warning"><b>🧪 Test Mode</b></MudText>
+                </MudPaper>            
             </MudItem>
         </MudGrid>
     </MudPaper>

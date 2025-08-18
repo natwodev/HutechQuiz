@@ -30,6 +30,9 @@
         </div>
         <div class="header-right">
             <span class="mode-tag">Monitor (Testing Mode)</span>
+            
+
+            
             <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" Color="Color.Inherit" OnClick="GoBackToExamRoomManagement" Title="Quay lại quản lý phòng thi" />
             <MudIconButton Icon="@Icons.Material.Filled.AccountCircle" Color="Color.Inherit" />
             <MudIconButton Icon="@Icons.Material.Filled.Notifications" Color="Color.Inherit" />
@@ -43,12 +46,15 @@
         <div class="nav-item @(activeTab == 0 ? "active" : "")" @onclick="() => ActivateTab(0)">
             <MudIcon Icon="@Icons.Material.Filled.PeopleAlt" />
             <span>DANH SÁCH SINH VIÊN</span>
+
         </div>
         <div class="nav-item @(activeTab == 1 ? "active" : "")" @onclick="() => ActivateTab(1)">
             <MudIcon Icon="@Icons.Material.Filled.Info" />
             <span>THÔNG TIN CA THI</span>
         </div>
     </div>
+
+
 
     <!-- Content Area -->
     <div class="monitor-content">
@@ -101,7 +107,7 @@
             <div class="@(activeTab == 0 ? "tab-content-active" : "tab-content-hidden")">
                 @if (activeTab == 0 || previousTab == 0)
                 {
-                    <StudentListTab Students="@examData.Students" ExamSessionSubjectId="@ExamSessionSubjectId" ExamSessionName="@examData.Subject?.ExamSessionName" />
+                    <StudentListTab Students="@examData.Students" ExamSessionSubjectId="@ExamSessionSubjectId" ExamSessionName="@examData.Subject?.ExamSessionName" ExamSessionStartTime="@examData.Subject?.ExamSessionStartTime" />
                 }
             </div>
             <div class="@(activeTab == 1 ? "tab-content-active" : "tab-content-hidden")">
@@ -152,7 +158,7 @@
             <div class="footer-copyright">© 2025 Trường Đại học Công nghệ TP.HCM. All rights reserved.</div>
         </div>
         <div class="footer-right">
-            <span class="footer-version">Version 1.0.2</span>
+            <span class="footer-version">Version 1.0.1</span>
             <span class="footer-divider">|</span>
             <span class="footer-developers">Developed by Natwodev & Juo</span>
             <MudIcon Icon="@Icons.Custom.Brands.GitHub" Size="Size.Small" Class="footer-icon ms-1" />

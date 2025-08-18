@@ -1,6 +1,7 @@
 @using frontend_manage.Services
 @using frontend_manage.DTOs
 @using frontend_manage.Pages.Monitor.Components
+@using frontend_manage.Enums
 @using Microsoft.AspNetCore.Components
 @using Microsoft.AspNetCore.Components.Web
 @using Microsoft.AspNetCore.SignalR.Client
@@ -99,14 +100,12 @@
                             <td>@($"#{student.StudentCode}")</td>
                             <td>@($"{student.FirstName} {student.LastName}")</td>
                             <td>
-                                @if (student.IsCompleted)
-                                {
-                                    <span class="status-tag success">Đã nộp bài</span>
+                                @{
+                                    var examStatus = GetExamStatus(student);
+                                    var statusDisplayName = GetExamStatusDisplayName(examStatus);
+                                    var statusCssClass = GetExamStatusCssClass(examStatus);
                                 }
-                                else
-                                {
-                                    <span class="status-tag warning">Đang thi</span>
-                                }
+                                <span class="@statusCssClass">@statusDisplayName</span>
                             </td>
                             <td>
                                 @if (student.IsLogin)

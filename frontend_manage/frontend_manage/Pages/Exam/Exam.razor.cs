@@ -839,49 +839,32 @@ namespace frontend_manage.Pages.Exam
             {
                 var audioPath = match.Groups[1].Value;
                 var fullAudioPath = GetAudioPath(audioPath);
-                
-                // Debug: Log đường dẫn audio
-                Console.WriteLine($"Audio path: {audioPath}");
-                Console.WriteLine($"Full audio path: {fullAudioPath}");
+                // Tạo audioId dựa trên audioPath để đảm bảo tính nhất quán
+                var audioId = $"audio_{audioPath.GetHashCode().ToString().Replace("-", "n")}";
                 
                 if (!string.IsNullOrEmpty(fullAudioPath))
                 {
-                    // Thay thế thẻ audio bằng HTML audio player
-                    var audioPlayer = $@"<div class=""audio-player mb-3"">
-                        <audio controls style=""width: 100%; max-width: 400px;"">
+                    // Thay thế thẻ audio bằng button đơn giản
+                    var audioButton = $@"
+                    <div class=""audio-player mb-3"">
+                        <audio id=""{audioId}"" style=""display: none;"">
                             <source src=""{fullAudioPath}"" type=""audio/mpeg"">
-                            Your browser does not support the audio element.
                         </audio>
+                        <button class=""mud-button-root mud-button mud-button-filled mud-button-filled-primary mud-button-filled-size-medium mud-ripple"" 
+                                onclick=""playAudioSimple('{audioId}', '{fullAudioPath}')"">
+                            <span class=""mud-button-label"">
+                                🔊 Phát audio (5/5)
+                            </span>
+                        </button>
                     </div>";
                     
-                    return Regex.Replace(content, audioPattern, audioPlayer);
+                    return Regex.Replace(content, audioPattern, audioButton);
                 }
             }
             
             return content;
         }
+        
 
-
-
-        private string GetAnswerFromValue(string value)
-        {
-            if (string.IsNullOrEmpty(value)) return "";
-            
-            // Extract the answer number from the value (e.g., "q123_1" -> "1")
-            var parts = value.Split('_');
-            if (parts.Length >= 2)
-            {
-                var answerNumber = parts[1];
-                return answerNumber switch
-                {
-                    "1" => "A",
-                    "2" => "B", 
-                    "3" => "C",
-                    "4" => "D",
-                    _ => ""
-                };
-            }
-            return "";
-        }
     }
 }

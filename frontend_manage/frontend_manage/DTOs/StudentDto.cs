@@ -1,12 +1,5 @@
 namespace frontend_manage.DTOs
 {
-    public enum ExamStatus
-    {
-        NotStarted,
-        TakingExam,
-        Submitted
-    }
-
     public enum LoginStatus
     {
         NotLoggedIn,
@@ -38,6 +31,7 @@ namespace frontend_manage.DTOs
         public string RoomName { get; set; }
         public int Duration { get; set; }
         public bool IsCompleted { get; set; }
+        public bool IsActive { get; set; }
         public DateTime ExamSessionStartTime { get; set; }
         public DateTime ExamSessionEndTime { get; set; }
         public string ExamSessionName { get; set; }

@@ -219,4 +219,69 @@ public class MonitorApi
         public string StudentCode { get; set; } = string.Empty;
         public bool IsLogin { get; set; }
     }
+
+    public async Task<string> UpdateIsActiveAsync(int examSessionSubjectId, bool isActive)
+    {
+        try
+        {
+            var request = new ActiveExamSessionSubject
+            {
+                examSessionSubjectId = examSessionSubjectId,
+                isActive = isActive
+            };
+
+            var response = await _httpClient.PostAsJsonAsync("/api/ExamSessionSubject/is-active", request);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var responseContent = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"Success response: {responseContent}");
+                
+                // Try to parse as simple message object first
+                try
+                {
+                    var result = await response.Content.ReadFromJsonAsync<Dictionary<string, object>>();
+                    if (result != null && result.TryGetValue("message", out var message))
+                        return message.ToString() ?? "Cập nhật trạng thái hoạt động thành công";
+                }
+                catch
+                {
+                    // If parsing fails, try to get the raw content
+                    return responseContent;
+                }
+                
+                return "Cập nhật trạng thái hoạt động thành công";
+            }
+            else
+            {
+                var responseContent = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"Error response: {responseContent}");
+                
+                // Try to parse error response
+                try
+                {
+                    var errorResult = await response.Content.ReadFromJsonAsync<Dictionary<string, object>>();
+                    if (errorResult != null && errorResult.TryGetValue("message", out var errorMessage))
+                        return errorMessage.ToString() ?? $"Lỗi {response.StatusCode}";
+                }
+                catch
+                {
+                    // If parsing fails, return raw content
+                }
+                
+                return $"Lỗi {response.StatusCode}: {responseContent}";
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error updating isActive status: {ex.Message}");
+            return $"Lỗi: {ex.Message}";
+        }
+    }
+
+    public class ActiveExamSessionSubject
+    {
+        public int examSessionSubjectId { get; set; }
+        public bool isActive { get; set; }
+    }
 }
