@@ -30,5 +30,10 @@ namespace backend_manage.shared.DTOs
         public string ExamSessionName { get; set; }
         public string LecturerCode { get; set; }
     }
-    
+    public class StudentListResponse
+    { 
+        public SubjectExamRoomStatusDto Subject { get; set; }
+        public List<StudentExamRoomStatusDto> Students { get; set; }
+
+    }
 } 

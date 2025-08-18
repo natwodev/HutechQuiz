@@ -130,27 +130,19 @@ public class StudentService : IStudentService
         {
             var examSessionSubjectId = session.ExamSessionSubjectId;
             
-            // Lấy thông tin phòng thi từ ExamSessionSubject
-            var examSessionSubject = await _examSessionSubjectRepository.GetQueryable()
-                .Include(x => x.ExamRoom)
-                .FirstOrDefaultAsync(x => x.ExamSessionSubjectId == examSessionSubjectId);
-                
-            if (examSessionSubject?.ExamRoomId != null)
-            {
-                var examRoomId = examSessionSubject.ExamRoomId.Value;
-                var (statusList, subjectInfo) = await GetStudentsByExamSessionSubjectAsync(examSessionSubjectId);
+            // Luôn gửi thông báo real-time dựa trên ExamSessionSubjectId
+            var (statusList, subjectInfo) = await GetStudentsByExamSessionSubjectAsync(examSessionSubjectId);
 
-                var groupName = $"lecturer_room_{examRoomId}_{examSessionSubjectId}";
+            var groupName = $"lecturer_subject_{examSessionSubjectId}";
+            
+            await _hubContext.Clients
+                .Group(groupName)
+                .SendAsync("RoomStatusUpdated", new StudentListResponse { 
+                    Students = statusList.ToList(),
+                    Subject = subjectInfo
+                });
 
-                await _hubContext.Clients
-                    .Group(groupName)
-                    .SendAsync("RoomStatusUpdated", new { students = statusList, subject = subjectInfo });
-            }
         }
-
-        
-        
-        
         
         // Sinh JWT token như cũ, nhưng không có username
         var tokenHandler = new JwtSecurityTokenHandler();
@@ -526,8 +518,8 @@ public class StudentService : IStudentService
     {
         var userId = _httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
 
-        var student = await _repository.GetQueryable()
-            .FirstOrDefaultAsync(x => x.StudentCode == studentCode);
+        // Bước 1: Lấy sinh viên từ Redis cache trước, nếu không có thì lấy từ DB
+        var student = await _studentCacheHelper.GetStudentFromRedisAsync(studentCode);
 
         if (student == null)
         {
@@ -539,12 +531,35 @@ public class StudentService : IStudentService
             return (true, "Trạng thái đăng nhập đã đúng, không cần cập nhật.");
         }
 
-        student.IsLogin = isLogin;
-        student.UpdatedBy = userId;
-        student.UpdatedAt = DateTimeHelper.GetVietnamTime();
+        // Bước 2: Cập nhật Redis cache trước
+        try
+        {
+            // Cập nhật trạng thái trong object student
+            student.IsLogin = isLogin;
+            student.UpdatedBy = userId;
+            student.UpdatedAt = DateTimeHelper.GetVietnamTime();
+            
+            // Cache lại vào Redis với thông tin mới
+            await _studentCacheHelper.CacheStudent(studentCode, student);
+            _logger.LogInformation("✅ Đã cập nhật Redis cache cho sinh viên {StudentCode} với trạng thái IsLogin: {IsLogin}", studentCode, isLogin);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "⚠️ Không thể cập nhật Redis cache cho sinh viên {StudentCode}, sẽ tiếp tục cập nhật DB", studentCode);
+        }
 
-        await _repository.UpdateAsync(student);
-
+        // Bước 3: Cập nhật database
+        try
+        {
+            await _repository.UpdateAsync(student);
+            _logger.LogInformation("✅ Đã cập nhật database cho sinh viên {StudentCode} với trạng thái IsLogin: {IsLogin}", studentCode, isLogin);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "❌ Lỗi khi cập nhật database cho sinh viên {StudentCode}", studentCode);
+            return (false, "Lỗi khi cập nhật database. Vui lòng thử lại sau.");
+        }
+        
         // Gửi realtime trạng thái phòng thi cho tất cả session của sinh viên
         var studentExamSessions = await _studentExamSessionRepository.GetQueryable()
             .Where(x => x.StudentCode == studentCode)
@@ -563,10 +578,13 @@ public class StudentService : IStudentService
             {
                 var examRoomId = examSessionSubject.ExamRoomId.Value;
                 var (statusList, subjectInfo) = await GetStudentsByExamSessionSubjectAsync(examSessionSubjectId);
-                Console.WriteLine($"[SignalR] Gửi RoomStatusUpdated tới giám thị phòng {examRoomId} với {statusList.Count()} sinh viên.");
+
                 // Chỉ gửi cho giám thị, không gửi cho sinh viên
-                await _hubContext.Clients.Group($"lecturer_room_{examRoomId}")
-                    .SendAsync("RoomStatusUpdated", new { students = statusList, subject = subjectInfo });
+                await _hubContext.Clients.Group($"lecturer_subject_{examSessionSubjectId}")
+                    .SendAsync("RoomStatusUpdated", new StudentListResponse { 
+                        Students = statusList.ToList(), 
+                        Subject = subjectInfo
+                    });
             }
         }
 
@@ -660,15 +678,14 @@ public class StudentService : IStudentService
 
           foreach (var session in studentExamSessions)
           {
-              if (session.ExamRoomId != null)
-              {
-                  var examRoomId = session.ExamRoomId.Value;
-                  var examSessionSubjectId = session.ExamSessionSubjectId;
-                  var (statusList, subjectInfo) = await GetStudentsByExamSessionSubjectAsync(examSessionSubjectId);
-                  Console.WriteLine($"[SignalR] Gửi RoomStatusUpdated tới giám thị phòng {examRoomId} với {statusList.Count()} sinh viên.");
-                  // Chỉ gửi cho giám thị, không gửi cho sinh viên
-                  await _hubContext.Clients.Group($"lecturer_room_{examRoomId}")
-                      .SendAsync("RoomStatusUpdated", statusList);
-              }
+              var examSessionSubjectId = session.ExamSessionSubjectId;
+              var (statusList, subjectInfo) = await GetStudentsByExamSessionSubjectAsync(examSessionSubjectId);
+              Console.WriteLine($"[SignalR] Gửi RoomStatusUpdated tới giám thị môn thi {examSessionSubjectId} với {statusList.Count()} sinh viên.");
+              // Gửi cho tất cả giám thị theo dõi môn thi này
+              await _hubContext.Clients.Group($"lecturer_subject_{examSessionSubjectId}")
+                  .SendAsync("RoomStatusUpdated", new { 
+                      students = statusList, 
+                      subject = subjectInfo
+                  });
           }
 */
