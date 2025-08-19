@@ -30,6 +30,16 @@ namespace backend_manage.Controllers
             return Ok(new { message = "Import thành công (nếu mã môn học chưa tồn tại)." });
         }
         
+        [HttpGet("{core}/with-details")]
+        [Authorize(Policy = "AdminOnly")]
+        public async Task<IActionResult> GetWithDetails(string core)
+        {
+            var result = await _originalExamPaperService.GetWithDetailsAsync(core);
+            if (result == null) return NotFound();
+            return Ok(result);
+        }
+        /*
+        
         [HttpPost("create-shuffled")]
         [Authorize(Policy = "AdminOnly")]
         public async Task<IActionResult> CreateShuffled([FromForm] string originalExamPaperCore, [FromForm] int count)
@@ -55,14 +65,7 @@ namespace backend_manage.Controllers
             }
         }
         
-        [HttpGet("{core}/with-details")]
-        [Authorize(Policy = "AdminOnly")]
-        public async Task<IActionResult> GetWithDetails(string core)
-        {
-            var result = await _originalExamPaperService.GetWithDetailsAsync(core);
-            if (result == null) return NotFound();
-            return Ok(result);
-        }
+   
         
         [HttpGet("{originalExamPaperId}/parent-questions")]
         [Authorize(Policy = "AdminOnly")]
@@ -146,6 +149,6 @@ namespace backend_manage.Controllers
                 return BadRequest(new { message = $"Lỗi khi hoán vị câu hỏi cha: {ex.Message}" });
             }
         }
-        
+        */
     }
 }

@@ -12,8 +12,9 @@ namespace backend_manage.shared.DTOs
         public string SubjectName { get; set; }
         public string SubjectCode { get; set; }
         public int? ExamSessionSubjectId { get; set; }
-        public List<ShuffledExamPaperDetailDto> Details { get; set; }
+        // public List<ShuffledExamPaperDetailDto> Details { get; set; }
     }
+      /*
       public class ShuffledExamPaperDetailDto
     {
         public int ShuffledExamPaperDetailId { get; set; }
@@ -28,4 +29,5 @@ namespace backend_manage.shared.DTOs
         public string Answer4 { get; set; }
         public List<ShuffledExamPaperDetailDto> ChildQuestions { get; set; } = new();
     }
+    */
 } 

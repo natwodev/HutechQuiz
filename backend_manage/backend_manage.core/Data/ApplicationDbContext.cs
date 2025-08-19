@@ -18,7 +18,7 @@ namespace backend_manage.core.Data
         public DbSet<ExamBatchDetail> ExamBatchDetails { get; set; }
         public DbSet<ExamSession> ExamSessions { get; set; }
         public DbSet<Student> Students { get; set; }
-        public DbSet<ShuffledExamPaperDetail> ShuffledExamPaperDetails { get; set; }
+        // public DbSet<ShuffledExamPaperDetail> ShuffledExamPaperDetails { get; set; }
         public DbSet<OriginalExamPaperDetail> OriginalExamPaperDetails { get; set; }
         public DbSet<Chapter> Chapters { get; set; }
         public DbSet<StudentExamSession> StudentExamSessions { get; set; }
@@ -69,6 +69,7 @@ namespace backend_manage.core.Data
                 .OnDelete(DeleteBehavior.Restrict);
 
             // ExamPaperDetail → ShuffledExamPaper
+            /*
             builder.Entity<ShuffledExamPaperDetail>()
                 .HasOne(e => e.ShuffledExamPaper)
                 .WithMany(e => e.ShuffledExamPaperDetails) // nếu có navigation
@@ -88,6 +89,7 @@ namespace backend_manage.core.Data
                 .WithMany(p => p.ChildQuestions)
                 .HasForeignKey(e => e.ParentQuestionId)
                 .OnDelete(DeleteBehavior.Restrict); // KHÔNG cascade để tránh multiple cascade paths
+            */
 
             // StudentExamSession → Student
             builder.Entity<StudentExamSession>()

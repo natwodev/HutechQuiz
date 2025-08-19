@@ -4,6 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace backend_manage.core.Entities
 {
     // Entity đại diện cho chi tiết câu hỏi trong đề thi hoán vị
+    /*
     public class ShuffledExamPaperDetail : BaseEntity //câu hỏi của đề thi hoán vị hoán vị
     {
         // Khóa chính của bảng ExamPaperDetail (tự động tăng)
@@ -40,4 +41,5 @@ namespace backend_manage.core.Entities
         public ShuffledExamPaper ShuffledExamPaper { get; set; }
         
     }
+    */
 } 

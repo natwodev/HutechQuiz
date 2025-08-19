@@ -48,7 +48,7 @@ public class ShuffledExamPaper : BaseEntity  //đề thi đã được hoán v�
 
     // Collection các chi tiết câu hỏi trong đề thi hoán vị
     // Mối quan hệ one-to-many với ShuffledExamPaperDetail
-    public ICollection<ShuffledExamPaperDetail> ShuffledExamPaperDetails { get; set; } = new List<ShuffledExamPaperDetail>();
+    // public ICollection<ShuffledExamPaperDetail> ShuffledExamPaperDetails { get; set; } = new List<ShuffledExamPaperDetail>();
     
     // Collection các sinh viên làm đề thi hoán vị này
     // Mối quan hệ one-to-many với StudentExamSession

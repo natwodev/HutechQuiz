@@ -192,12 +192,12 @@ public class ExamPaperHelper
         {
             // Lấy chi tiết đề từ database
             var cachedExamPaper = await _shuffledExamPaperRepository.GetQueryable()
-                .Include(x => x.ShuffledExamPaperDetails)
-                    .ThenInclude(d => d.OriginalExamPaperDetail)
-                .Include(x => x.ShuffledExamPaperDetails)
-                    .ThenInclude(d => d.ChildQuestions)
-                .Include(x => x.ShuffledExamPaperDetails)
-                    .ThenInclude(d => d.ParentQuestion)
+                // .Include(x => x.ShuffledExamPaperDetails)
+                //     .ThenInclude(d => d.OriginalExamPaperDetail)
+                // .Include(x => x.ShuffledExamPaperDetails)
+                //     .ThenInclude(d => d.ChildQuestions)
+                // .Include(x => x.ShuffledExamPaperDetails)
+                //     .ThenInclude(d => d.ParentQuestion)
                 .Include(x => x.OriginalExamPaper)
                 .Include(x => x.Subject)
                 .FirstOrDefaultAsync(p => p.ShuffledExamPaperId == randomPaperId.Value);
@@ -405,12 +405,12 @@ public class ExamPaperHelper
     public async Task<(ShuffledExamPaper ExamPaper, ShuffledExamPaperDto ExamPaperDto)> GetExamFromDatabase(int shuffledExamPaperId)
     {
         var shuffledExamPaper = await _shuffledExamPaperRepository.GetQueryable()
-            .Include(x => x.ShuffledExamPaperDetails)
-                .ThenInclude(d => d.OriginalExamPaperDetail)
-            .Include(x => x.ShuffledExamPaperDetails)
-                .ThenInclude(d => d.ChildQuestions)
-            .Include(x => x.ShuffledExamPaperDetails)
-                .ThenInclude(d => d.ParentQuestion)
+            // .Include(x => x.ShuffledExamPaperDetails)
+            //     .ThenInclude(d => d.OriginalExamPaperDetail)
+            // .Include(x => x.ShuffledExamPaperDetails)
+            //     .ThenInclude(d => d.ChildQuestions)
+            // .Include(x => x.ShuffledExamPaperDetails)
+            //     .ThenInclude(d => d.ParentQuestion)
             .Include(x => x.OriginalExamPaper)
             .Include(x => x.Subject)
             .FirstOrDefaultAsync(x => x.ShuffledExamPaperId == shuffledExamPaperId);
