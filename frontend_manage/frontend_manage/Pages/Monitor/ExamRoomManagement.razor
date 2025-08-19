@@ -83,18 +83,7 @@
                                         
                                         <MudDivider Style="margin: 6px 0;" />
                                         
-                                        <!-- Nút refresh -->
-                                        <MudStack Direction="Direction.Row" Justify="Justify.Center" Spacing="2">
-                                            <MudButton Variant="Variant.Outlined" 
-                                                       Color="Color.Primary" 
-                                                       StartIcon="@Icons.Material.Filled.Refresh" 
-                                                       OnClick="RefreshAssignments" 
-                                                       Style="border-radius: 8px; font-weight: 500; height: 32px; font-size: 0.8rem;">
-                                                Làm mới
-                                            </MudButton>
-                                        </MudStack>
-                                        
-                                        <MudDivider Style="margin: 6px 0;" />
+                                        <!-- ...existing code... -->
                                         
                                         @if (examRooms == null)
                                         {
@@ -111,31 +100,23 @@
                                         }
                                         else
                                         {
-                                            <MudList T="object" Dense="true" Style="width: 100%; max-height: 400px; overflow-y: auto;">
+                                            <div style="width: 100%; max-width: 100%; max-height: 400px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px;">
                                                 @foreach (var room in examRooms)
                                                 {
-                                                    <MudListItem T="object"
-                                                                 Style="cursor:pointer;"
-                                                                 @onclick="() => { selectedExamRoomId = room.SubjectId; selectedExamSessionSubjectId = room.SubjectId; }">
-
-                                                        <MudCard Elevation="2" Style="width: 100%; border-radius: 10px; margin: 4px 0;">
-                                                            <MudCardContent Style="padding: 12px;">
-                                                                <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
-                                                                    <!-- Bên trái: thông tin phòng thi -->
-                                                                    <div style="display: flex; flex-direction: column; font-size: 0.8rem; flex: 1;">
-                                                                        <MudText Typo="Typo.body2" Color="Color.Primary" Style="font-weight: 600; font-size: 0.9rem;"><b>@room.RoomName</b></MudText>
-                                                                        <MudText Typo="Typo.caption" Style="font-weight: 500;">Môn thi: <b style="color: #1976d2;">@room.SubjectName</b></MudText>
-                                                                                                                <MudText Typo="Typo.caption" Style="font-weight: 500;">Ca thi: <b style="color: #1976d2;">@room.ExamSessionName</b></MudText>
-                                        <MudText Typo="Typo.caption" Style="font-weight: 500;">Thời lượng: <b style="color: #1976d2;">@room.Duration phút</b></MudText>
-                                        <MudText Typo="Typo.caption" Style="font-weight: 500;">Bắt đầu: <b style="color: #1976d2;">@(room.ExamSessionStartTime.ToString("HH:mm dd/MM/yyyy"))</b></MudText>
-                                        <MudText Typo="Typo.caption" Style="font-weight: 500;">Kết thúc: <b style="color: #1976d2;">@(room.ExamSessionEndTime.ToString("HH:mm dd/MM/yyyy"))</b></MudText>
-                                        <MudText Typo="Typo.caption" Style="font-weight: 500;">
-                                            Trạng thái: 
-                                            <span style="color: #757575; font-weight: 600;">@(room.IsCompleted ? "Hoàn thành" : "Đang diễn ra")</span>
-                                        </MudText>
-                                                                    </div>
-
-                                                                    <!-- Bên phải: nút Giám sát nếu là phòng đã chọn -->
+                                                    <MudCard Elevation="2" Style="width: 100%; border-radius: 10px; margin: 4px 0;">
+                                                        <MudCardContent Style="padding: 12px;">
+                                                            <div style="display: flex; flex-direction: column; gap: 8px;">
+                                                                <MudText Typo="Typo.body2" Color="Color.Primary" Style="font-weight: 600; font-size: 0.9rem;"><b>@room.RoomName</b></MudText>
+                                                                <MudText Typo="Typo.caption" Style="font-weight: 500;">Môn thi: <b style="color: #1976d2;">@room.SubjectName</b></MudText>
+                                                                <MudText Typo="Typo.caption" Style="font-weight: 500;">Ca thi: <b style="color: #1976d2;">@room.ExamSessionName</b></MudText>
+                                                                <MudText Typo="Typo.caption" Style="font-weight: 500;">Thời lượng: <b style="color: #1976d2;">@room.Duration phút</b></MudText>
+                                                                <MudText Typo="Typo.caption" Style="font-weight: 500;">Bắt đầu: <b style="color: #1976d2;">@(room.ExamSessionStartTime.ToString("HH:mm dd/MM/yyyy"))</b></MudText>
+                                                                <MudText Typo="Typo.caption" Style="font-weight: 500;">Kết thúc: <b style="color: #1976d2;">@(room.ExamSessionEndTime.ToString("HH:mm dd/MM/yyyy"))</b></MudText>
+                                                                <MudText Typo="Typo.caption" Style="font-weight: 500;">
+                                                                    Trạng thái:
+                                                                    <span style="color: #757575; font-weight: 600;">@(room.IsCompleted ? "Hoàn thành" : "Đang diễn ra")</span>
+                                                                </MudText>
+                                                                <div style="margin-top: 8px;">
                                                                     @if (selectedExamRoomId == room.SubjectId)
                                                                     {
                                                                         <MudButton Disabled="@_processing" Variant="Variant.Filled" Color="Color.Success" Class="ml-3" Style="border-radius: 8px; font-weight: 500; min-width: 80px; height: 32px; font-size: 0.75rem;" OnClick="NavigateToDashboard">
@@ -151,11 +132,11 @@
                                                                         </MudButton>
                                                                     }
                                                                 </div>
-                                                            </MudCardContent>
-                                                        </MudCard>
-                                                    </MudListItem>
+                                                            </div>
+                                                        </MudCardContent>
+                                                    </MudCard>
                                                 }
-                                            </MudList>
+                                            </div>
                                         }
                                     </MudStack>
                                 </MudCardContent>

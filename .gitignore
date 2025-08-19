@@ -9,6 +9,7 @@
 # Loại trừ thư mục build
 bin/
 obj/
+.vs/
 
 # Loại trừ file cấu hình nhạy cảm
 # appsettings.json
