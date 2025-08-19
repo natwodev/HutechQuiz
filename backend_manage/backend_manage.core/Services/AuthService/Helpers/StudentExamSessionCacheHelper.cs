@@ -5,7 +5,6 @@ using backend_manage.core.Hubs;
 using backend_manage.core.Repositories.Interfaces;
 using backend_manage.core.Services.Interfaces;
 using backend_manage.shared.DTOs;
-using backend_manage.shared.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using StackExchange.Redis;

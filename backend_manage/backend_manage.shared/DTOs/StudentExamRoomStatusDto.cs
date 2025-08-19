@@ -8,6 +8,7 @@ namespace backend_manage.shared.DTOs
         public bool IsLogin { get; set; }
         public bool IsCompleted { get; set; }
         public int? ExamSessionSubjectId { get; set; }
+        public int StudentExamSessionId { get; set; }
         public int Duration { get; set; }
         public int ExtraMinutes { get; set; }
         public double Score { get; set; } = 0;
@@ -29,5 +30,10 @@ namespace backend_manage.shared.DTOs
         public string ExamSessionName { get; set; }
         public string LecturerCode { get; set; }
     }
-    
+    public class StudentListResponse
+    { 
+        public SubjectExamRoomStatusDto Subject { get; set; }
+        public List<StudentExamRoomStatusDto> Students { get; set; }
+
+    }
 } 

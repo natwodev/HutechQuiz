@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Authorization;
 using System.Collections.Generic;
 using backend_manage.core.Services.Interfaces;
 using backend_manage.shared.DTOs;
-using backend_manage.shared.Interfaces;
 using System.Security.Claims;
 using backend_manage.core.Entities;
 using backend_manage.core.Repositories.Interfaces;

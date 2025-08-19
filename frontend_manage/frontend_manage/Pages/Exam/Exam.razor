@@ -1,12 +1,11 @@
 @page "/Exam"
 @inject IJSRuntime JSRuntime
 @inject NavigationManager Navigation
-@inject InfoApi InfoApi
-@inject ExamApi ExamApi
+@inject StudentService StudentService
 @inject ISnackbar Snackbar
 @inject IDialogService Dialog
 @inject HttpClient Http
-@using frontend_manage.Pages.StudentLogin
+@using frontend_manage.Services
 @using Microsoft.AspNetCore.Components
 @using MudBlazor
 @implements IDisposable
@@ -42,7 +41,7 @@ else
                                 // Câu hỏi cha có câu con - chỉ hiển thị thông tin, không đếm số
                                 var startNumber = overallQuestionNumber;
                                 var endNumber = overallQuestionNumber + q.ChildQuestions.Count - 1;
-                                overallQuestionNumber += q.ChildQuestions.Count; // Chỉ tăng theo số câu con
+                                overallQuestionNumber += q.ChildQuestions.Count; 
 
                                 var selectedAnswer = GetSelectedAnswer(q.ShuffledExamPaperDetailId);
 
@@ -276,7 +275,7 @@ else
                     <MudGrid>
                         <MudItem xs="6" Style="align-content: center">
                             <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
-                                <MudText Typo="Typo.h4" Color="@(isTimeUp? Color.Error: remainingMinutes <= 5 ? Color.Warning : Color.Primary)" id="time-clock">
+                                <MudText Typo="Typo.h4" Color="@(isTimeUp? Color.Error: remainingMinutes <= 1 ? Color.Error: remainingMinutes <= 5 ? Color.Warning : Color.Primary)" id="time-clock">
                                     @GetFormattedTime()
                                 </MudText>
                                 @if (studentSession.ExtraMinutes > 0)
@@ -493,90 +492,15 @@ else
         }
 </style>
 
+<script src="js/exam-audio.js"></script>
+<script src="js/anti-copy.js"></script>
+<script src="js/scroll.js"></script>
+<script src="js/answer-debouncer.js"></script>
 <script>
-    window.scrollToElement = (elementId) => {
-        const el = document.getElementById(elementId);
-        if (el) {
-            el.scrollIntoView({ behavior: "smooth", block: "start" });
-        }
-    };
+    // scrollToElement moved to wwwroot/js/scroll.js
+    // Debouncing moved to wwwroot/js/answer-debouncer.js
 
-    // Debouncing cho answer selection
-    window.answerDebouncer = {
-        timers: {},
-        debounceDelay: 2000, // 2 giây
+    // Anti-copy moved to wwwroot/js/anti-copy.js
 
-        // Debounce function cho answer selection
-        debounce: function(questionId, callbackRef) {
-            // Clear timer cũ nếu có
-            if (this.timers[questionId]) {
-                clearTimeout(this.timers[questionId]);
-            }
-
-            // Set timer mới
-            this.timers[questionId] = setTimeout(async () => {
-                try {
-                    await callbackRef.invokeMethodAsync('ExecuteSave');
-                } catch (error) {
-                    // Error executing save
-                }
-                delete this.timers[questionId];
-            }, this.debounceDelay);
-        },
-
-        // Force save tất cả pending answers (khi submit hoặc hết giờ)
-        saveAllPending: async function(callbackMap) {
-            const promises = [];
-            Object.keys(this.timers).forEach(questionId => {
-                if (this.timers[questionId]) {
-                    clearTimeout(this.timers[questionId]);
-                    if (callbackMap[questionId]) {
-                        promises.push(callbackMap[questionId].invokeMethodAsync('ExecuteSave'));
-                    }
-                    delete this.timers[questionId];
-                }
-            });
-
-            if (promises.length > 0) {
-                await Promise.all(promises);
-            }
-        },
-
-        // Kiểm tra có pending saves không
-        hasPendingSaves: function() {
-            return Object.keys(this.timers).length > 0;
-        },
-
-        // Get số lượng pending saves
-        getPendingCount: function() {
-            return Object.keys(this.timers).length;
-        }
-    };
-
-    // Chặn copy văn bản
-    window.antiCopy = {
-        enable: function () {
-            // Chặn chuột phải
-            document.addEventListener('contextmenu', e => e.preventDefault());
-
-            // Chặn tổ hợp phím Ctrl+C, Ctrl+U, PrintScreen...
-            document.addEventListener('keydown', function (e) {
-                if ((e.ctrlKey && ['c', 'u', 's', 'x'].includes(e.key.toLowerCase())) ||
-                    e.key === 'PrintScreen') {
-                    e.preventDefault();
-                }
-            });
-
-            // Chặn copy
-            document.addEventListener('copy', function (e) {
-                e.preventDefault();
-                alert("Không được phép sao chép nội dung!");
-            });
-        }
-    };
-
-    // Kích hoạt chống copy khi trang load
-    document.addEventListener('DOMContentLoaded', function() {
-        window.antiCopy.enable();
-    });
+    // Audio control moved to wwwroot/js/exam-audio.js
 </script>

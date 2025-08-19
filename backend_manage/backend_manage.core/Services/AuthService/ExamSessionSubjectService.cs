@@ -5,7 +5,6 @@ using backend_manage.core.Hubs;
 using backend_manage.core.Repositories.Interfaces;
 using backend_manage.core.Services.Interfaces;
 using backend_manage.shared.DTOs;
-using backend_manage.shared.Interfaces;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 
@@ -145,7 +144,7 @@ namespace backend_manage.core.Services.AuthService
             if (entity == null) return false;
             
             entity.ExamRoomId = examRoomId;
-            var userId = _httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+            var userId = _httpContextAccessor.HttpContext?.User?.FindFirst("lecturerCode")?.Value;
             if (string.IsNullOrEmpty(userId))
                 throw new UnauthorizedAccessException("Không thể xác định người dùng cập nhật ExamSessionSubject.");
             
@@ -154,6 +153,24 @@ namespace backend_manage.core.Services.AuthService
             entity.Version++; // Tăng version
             await _repository.UpdateAsync(entity);
             return true;
+        }
+
+        public async Task UpdateIsActiveAsync(int examSessionSubjectId, bool isActive)
+        {
+            var entity = await _repository.GetByIdAsync(examSessionSubjectId);
+            if (entity == null) 
+                throw new ArgumentException($"Không tìm thấy ExamSessionSubject với ID: {examSessionSubjectId}");
+
+            entity.IsActive = isActive;
+            var updatedBy = _httpContextAccessor.HttpContext?.User?.FindFirst("lecturerCode")?.Value
+                            ?? _httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(updatedBy))
+                throw new UnauthorizedAccessException("Không thể xác định người dùng cập nhật trạng thái hoạt động.");
+
+            entity.UpdatedBy = updatedBy;
+            entity.UpdatedAt = DateTimeHelper.GetVietnamTime();
+            entity.Version++;
+            await _repository.UpdateAsync(entity);
         }
 
         public async Task<IEnumerable<ExamSessionSubjectDto>> GetByExamRoomIdAsync(int examRoomId)

@@ -3,6 +3,13 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System.Threading;
+using backend_manage.core.Hubs;
+using backend_manage.core.Services.Interfaces;
+using backend_manage.shared.DTOs;
+using Microsoft.AspNetCore.SignalR;
+using backend_manage.core.Services.Interfaces;
+using backend_manage.shared.DTOs;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace backend_manage.core.Messages.RabbitMQ
 {
@@ -11,6 +18,7 @@ namespace backend_manage.core.Messages.RabbitMQ
         private readonly IRabbitMqService _rabbitMqService;
         private readonly ILogger<RabbitMqConsumer> _logger;
         private readonly IServiceScopeFactory _serviceScopeFactory;
+        private readonly IHubContext<NotificationHub> _hubContext;
         private bool _consumersRegistered = false;
         private readonly object _lockObject = new object();
 
@@ -24,11 +32,13 @@ namespace backend_manage.core.Messages.RabbitMQ
         public RabbitMqConsumer(
             IRabbitMqService rabbitMqService,
             ILogger<RabbitMqConsumer> logger,
-            IServiceScopeFactory serviceScopeFactory)
+            IServiceScopeFactory serviceScopeFactory,
+            IHubContext<NotificationHub> hubContext)
         {
             _rabbitMqService = rabbitMqService;
             _logger = logger;
             _serviceScopeFactory = serviceScopeFactory;
+            _hubContext = hubContext;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -273,6 +283,19 @@ namespace backend_manage.core.Messages.RabbitMQ
                     message.TotalQuestions,
                     message.EndTime
                 );
+                using var studentServiceScope = _serviceScopeFactory.CreateScope();
+                var studentService = studentServiceScope.ServiceProvider.GetRequiredService<IStudentService>();
+                
+                var (statusList, subjectInfo) = await studentService.GetStudentsByExamSessionSubjectAsync(studentExamSession.ExamSessionSubjectId);
+
+                var groupName = $"lecturer_subject_{studentExamSession.ExamSessionSubjectId}";
+            
+                await _hubContext.Clients
+                    .Group(groupName)
+                    .SendAsync("RoomStatusUpdated", new StudentListResponse { 
+                        Students = statusList.ToList(),
+                        Subject = subjectInfo
+                    });
             }
             catch (Exception ex)
             {
@@ -280,6 +303,8 @@ namespace backend_manage.core.Messages.RabbitMQ
                     message.StudentCode, message.ShuffledExamPaperId);
                 throw;
             }
+            
+           
         }
     }
 }

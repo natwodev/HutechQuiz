@@ -3,7 +3,6 @@ using backend_manage.core.Authentication.Services;
 using backend_manage.core.Jwt;
 using backend_manage.core.Services.Interfaces;
 using backend_manage.shared.DTOs;
-using backend_manage.shared.Interfaces;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using IConfiguration = Microsoft.Extensions.Configuration.IConfiguration;
