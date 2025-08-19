@@ -667,7 +667,7 @@ namespace frontend_manage.Pages.Exam
                         {
                             config.VisibleStateDuration = 10000;
                             config.ShowCloseIcon = true;
-                            config.RequireInteraction = true;
+                            config.RequireInteraction = false; // Cho phép tự động tắt
                         });
                     });
                 }
