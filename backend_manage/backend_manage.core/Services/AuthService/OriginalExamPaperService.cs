@@ -175,6 +175,9 @@ namespace backend_manage.core.Services.AuthService
             };
             await _originalExamPaperRepository.AddAsync(originalExamPaper);
 
+            // Dictionary để lưu trữ mapping giữa câu hỏi và đáp án đúng
+            var questionAnswerMapping = new Dictionary<int, int>();
+
             // Lưu các phần (section) dựa vào TenPhan
             if (monHoc.Phan != null)
             {
@@ -302,6 +305,7 @@ namespace backend_manage.core.Services.AuthService
                                 // Lưu các đáp án cho câu hỏi con
                                 if (answers.Any())
                                 {
+                                    int? correctAnswerId = null;
                                     foreach (var answer in answers)
                                     {
                                         var answerEntity = new Answers
@@ -315,6 +319,18 @@ namespace backend_manage.core.Services.AuthService
                                             CreatedAt = now
                                         };
                                         await _answersRepository.AddAsync(answerEntity);
+                                        
+                                        // Lưu ID của đáp án đúng
+                                        if (answer.LaDapAn)
+                                        {
+                                            correctAnswerId = answerEntity.AnswerId;
+                                        }
+                                    }
+                                    
+                                    // Lưu mapping giữa câu hỏi và đáp án đúng
+                                    if (correctAnswerId.HasValue)
+                                    {
+                                        questionAnswerMapping[detail.OriginalExamPaperDetailId] = correctAnswerId.Value;
                                     }
                                 }
                             }
@@ -361,6 +377,7 @@ namespace backend_manage.core.Services.AuthService
                             // Lưu các đáp án cho câu hỏi độc lập
                             if (answers.Any())
                             {
+                                int? correctAnswerId = null;
                                 foreach (var answer in answers)
                                 {
                                     var answerEntity = new Answers
@@ -374,11 +391,36 @@ namespace backend_manage.core.Services.AuthService
                                         CreatedAt = now
                                     };
                                     await _answersRepository.AddAsync(answerEntity);
+                                    
+                                    // Lưu ID của đáp án đúng
+                                    if (answer.LaDapAn)
+                                    {
+                                        correctAnswerId = answerEntity.AnswerId;
+                                    }
+                                }
+                                
+                                // Lưu mapping giữa câu hỏi và đáp án đúng
+                                if (correctAnswerId.HasValue)
+                                {
+                                    questionAnswerMapping[detail.OriginalExamPaperDetailId] = correctAnswerId.Value;
                                 }
                             }
                         }
                     }
                 }
+            }
+            
+            // Tạo KeyValueList từ mapping giữa câu hỏi và đáp án đúng
+            if (questionAnswerMapping.Any())
+            {
+                var keyValuePairs = questionAnswerMapping
+                    .Select(kvp => $"({kvp.Key}:{kvp.Value})")
+                    .ToList();
+                var keyValueList = string.Join(";", keyValuePairs) + ";";
+                
+                // Cập nhật OriginalExamPaper với KeyValueList
+                originalExamPaper.KeyValueList = keyValueList;
+                await _originalExamPaperRepository.UpdateAsync(originalExamPaper);
             }
         }
         

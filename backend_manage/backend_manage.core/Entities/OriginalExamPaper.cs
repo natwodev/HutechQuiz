@@ -42,6 +42,10 @@ public class OriginalExamPaper : BaseEntity
     // Tổng số đề hoán vị được tạo từ đề thi gốc này
     public int TotalShuffledPapers { get; set; }
     
+    // Danh sách key-value để lưu trữ các thông tin bổ sung
+    // Ví dụ: (1:2);(2:3);(Difficulty:Medium);
+    public string? KeyValueList { get; set; }
+    
     // Navigation property đến entity Subject
     public Subject Subject { get; set; }
 

@@ -9,6 +9,7 @@ namespace backend_manage.shared.DTOs
         public int SubjectId { get; set; }
         public int DurationMinutes { get; set; }
         public int TotalQuestions { get; set; }
+        public string? KeyValueList { get; set; }
         public List<OriginalExamPaperDetailDto> Details { get; set; }
     }
      public class OriginalExamPaperDetailDto
@@ -37,6 +38,7 @@ namespace backend_manage.shared.DTOs
         public bool? IsApproved { get; set; }
         public int DurationMinutes { get; set; }
         public int TotalQuestions { get; set; }
+        public string? KeyValueList { get; set; }
     }
 
     public class OriginalExamPaperDetailShufferDto
