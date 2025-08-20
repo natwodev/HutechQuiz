@@ -31,6 +31,13 @@ namespace backend_manage.core.Services.Interfaces
 
         // Phương thức lấy câu hỏi con theo exam paper ID
         Task<(IEnumerable<OriginalExamPaperDetail> ShufflableQuestions, IEnumerable<OriginalExamPaperDetail> NonShufflableQuestions)> GetChildQuestionsByExamPaperAsync(int originalExamPaperId);
+        
+ 
         */
-    }
+                               // Phương thức lấy danh sách Answers theo OriginalExamPaperId
+          Task<IEnumerable<Answers>> GetAnswersByOriginalExamPaperIdAsync(int originalExamPaperId);
+          
+          // Phương thức lấy danh sách Answers theo OriginalExamPaperDetailId
+          Task<IEnumerable<Answers>> GetAnswersByOriginalExamPaperDetailIdAsync(int originalExamPaperDetailId);
+      }
 } 
