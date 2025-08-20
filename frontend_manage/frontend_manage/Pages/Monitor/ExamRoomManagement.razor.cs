@@ -56,7 +56,15 @@ namespace frontend_manage.Pages.Monitor
                 }
 
                 // Lấy danh sách phòng thi từ API
-                await LoadExamRoomAssignments();
+                var assignments = await MonitorService.GetMyAssignmentsAsync();
+                if (assignments != null && assignments.Count > 0)
+                {
+                    examRooms = assignments;
+                }
+                else
+                {
+                    examRooms = new List<SubjectExamRoomStatusDto>();
+                }
                 
               
             }
@@ -76,31 +84,9 @@ namespace frontend_manage.Pages.Monitor
             }
         }
 
-        private async Task LoadExamRoomAssignments()
-        {
-            try
-            {
-                var assignments = await MonitorService.GetMyAssignmentsAsync();
-                if (assignments != null && assignments.Count > 0)
-                {
-                    examRooms = assignments;
-                }
-                else
-                {
-                    examRooms = new List<SubjectExamRoomStatusDto>();
-                }
-            }
-            catch (Exception ex)
-            {
-                
-            }
-        }
 
-        public async Task RefreshAssignments()
-        {
-            await LoadExamRoomAssignments();
-            StateHasChanged();
-        }
+
+
 
         public async Task NavigateToDashboard()
         {
