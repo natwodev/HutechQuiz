@@ -16,6 +16,11 @@
                 </MudAlert>
             </MudItem>
             <MudItem xs="12">
+                <MudAlert Severity="Severity.Warning" Class="mb-4">
+                    Thời gian thêm không được quá 30% giờ thi
+                </MudAlert>
+            </MudItem>
+            <MudItem xs="12">
                 <MudNumericField @bind-Value="ExtraMinutes" Label="Số phút cộng thêm"
                                  Variant="Variant.Outlined" Required="true"
                                  Min="1" Max="@MaxExtraMinutes" />

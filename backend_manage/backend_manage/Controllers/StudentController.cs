@@ -91,11 +91,11 @@ public class StudentController : ControllerBase
             if (string.IsNullOrEmpty(studentCode))
                 return Unauthorized(new { message = "Token không hợp lệ!" });
             
-            var (result, pp) = await _studentService.StartExamAsync(studentCode, studentExamSessionId);
+            var (result, pp, originalPaper) = await _studentService.StartExamAsync(studentCode, studentExamSessionId);
             if (result == null) 
                 return BadRequest(new { message = "Không thể bắt đầu làm bài vì không có phiên thi." });
             
-            return Ok(new { studentSession = result, examPaper = pp });
+            return Ok(new { studentSession = result, examPaper = pp, originalExamPaper = originalPaper });
         }
         catch (InvalidOperationException ex)
         {

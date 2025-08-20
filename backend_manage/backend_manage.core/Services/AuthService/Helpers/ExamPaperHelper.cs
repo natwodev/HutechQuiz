@@ -20,6 +20,7 @@ public class ExamPaperHelper
     private readonly ILogger<ExamPaperHelper> _logger;
     private readonly IRepository<ShuffledExamPaper> _shuffledExamPaperRepository;
     private readonly IRepository<ExamSessionSubject> _examSessionSubjectRepository;
+    private readonly IRepository<OriginalExamPaper> _originalExamPaperRepository;
     private readonly AutoMapper.IMapper _mapper;
     private readonly StudentExamSessionCacheHelper _sessionCacheHelper;
     private readonly IRabbitMqService _rabbitMqService;
@@ -29,6 +30,7 @@ public class ExamPaperHelper
         ILogger<ExamPaperHelper> logger,
         IRepository<ShuffledExamPaper> shuffledExamPaperRepository,
         IRepository<ExamSessionSubject> examSessionSubjectRepository,
+        IRepository<OriginalExamPaper> originalExamPaperRepository,
         AutoMapper.IMapper mapper,
         StudentExamSessionCacheHelper sessionCacheHelper,
         IRabbitMqService rabbitMqService
@@ -38,6 +40,7 @@ public class ExamPaperHelper
         _logger = logger;
         _shuffledExamPaperRepository = shuffledExamPaperRepository;
         _examSessionSubjectRepository = examSessionSubjectRepository;
+        _originalExamPaperRepository = originalExamPaperRepository;
         _mapper = mapper;
         _sessionCacheHelper = sessionCacheHelper;
         _rabbitMqService = rabbitMqService;
@@ -45,14 +48,14 @@ public class ExamPaperHelper
 
     //dùng để bắt đầu thi()
     #region GetStudentExamSessionAndExamPaperAsync
-    public async Task<(StudentExamSessionCacheDto studentExamSessionDto, ShuffledExamPaperDto? existingExamPaper)> GetStudentExamSessionAndExamPaperAsync(string studentCode, int studentExamSessionId)
+    public async Task<(StudentExamSessionCacheDto studentExamSessionDto, ShuffledExamPaperDto? existingExamPaper, OriginalExamPaperDto? originalExamPaper)> GetStudentExamSessionAndExamPaperAsync(string studentCode, int studentExamSessionId)
     {
         var (redisAvailable, studentExamSessionDto) = await _sessionCacheHelper.GetStudentExamSessionAsync(studentCode, studentExamSessionId);
 
         if (studentExamSessionDto == null)
         {
             _logger.LogWarning("Không tìm thấy phiên thi của sinh viên {StudentCode} với ID phiên thi {SessionId}", studentCode, studentExamSessionId);
-            return (null, null);
+            return (null, null, null);
         }
 
         // Kiểm tra thời gian bắt đầu thi
@@ -132,7 +135,9 @@ public class ExamPaperHelper
             _rabbitMqService.Publish("start_exam_queue",startExamMessage);
             _logger.LogInformation("Đã gửi đến message để lưu thông tin vào db cho sinh viên {studentCode}",studentCode);
             
-            return (studentExamSessionDto, newExamPaper);
+            var originalExamPaper = await GetOriginalExamPaperAsync(newExamPaper.OriginalExamPaperId);
+            
+            return (studentExamSessionDto, newExamPaper, originalExamPaper);
         }
 
         _logger.LogInformation("Đã có đề thi, tiến hành lấy từ Redis với ID {ShuffledExamPaperId}", studentExamSessionDto.ShuffledExamPaperId.Value);
@@ -144,8 +149,8 @@ public class ExamPaperHelper
             _logger.LogInformation("Không lấy được đề thi từ Redis, chuyển sang lấy từ database");
             existingExamPaper = await GetExamFromDatabaseAsync(studentExamSessionDto.ShuffledExamPaperId.Value);
         }
-        
-        return (studentExamSessionDto, existingExamPaper);
+        var originalExamPapers = await GetOriginalExamPaperAsync(existingExamPaper.OriginalExamPaperId);
+        return (studentExamSessionDto, existingExamPaper, originalExamPapers);
     }
     
     
@@ -192,12 +197,6 @@ public class ExamPaperHelper
         {
             // Lấy chi tiết đề từ database
             var cachedExamPaper = await _shuffledExamPaperRepository.GetQueryable()
-                .Include(x => x.ShuffledExamPaperDetails)
-                    .ThenInclude(d => d.OriginalExamPaperDetail)
-                .Include(x => x.ShuffledExamPaperDetails)
-                    .ThenInclude(d => d.ChildQuestions)
-                .Include(x => x.ShuffledExamPaperDetails)
-                    .ThenInclude(d => d.ParentQuestion)
                 .Include(x => x.OriginalExamPaper)
                 .Include(x => x.Subject)
                 .FirstOrDefaultAsync(p => p.ShuffledExamPaperId == randomPaperId.Value);
@@ -233,8 +232,7 @@ public class ExamPaperHelper
         _logger.LogInformation("Đã chọn ngẫu nhiên đề thi {ShuffledExamPaperId}", selectedExamPaper.ShuffledExamPaperId);
         return selectedExamPaper;
     }
-
-    
+     
     #endregion
     
     
@@ -405,12 +403,6 @@ public class ExamPaperHelper
     public async Task<(ShuffledExamPaper ExamPaper, ShuffledExamPaperDto ExamPaperDto)> GetExamFromDatabase(int shuffledExamPaperId)
     {
         var shuffledExamPaper = await _shuffledExamPaperRepository.GetQueryable()
-            .Include(x => x.ShuffledExamPaperDetails)
-                .ThenInclude(d => d.OriginalExamPaperDetail)
-            .Include(x => x.ShuffledExamPaperDetails)
-                .ThenInclude(d => d.ChildQuestions)
-            .Include(x => x.ShuffledExamPaperDetails)
-                .ThenInclude(d => d.ParentQuestion)
             .Include(x => x.OriginalExamPaper)
             .Include(x => x.Subject)
             .FirstOrDefaultAsync(x => x.ShuffledExamPaperId == shuffledExamPaperId);
@@ -635,5 +627,133 @@ public class ExamPaperHelper
         }
     }
 
+    public async Task<OriginalExamPaperDto> GetWithDetailsByIdAsync(int originalExamPaperId)
+    {
+        var examPaper = await _originalExamPaperRepository.GetQueryable()
+            .Where(x => x.OriginalExamPaperId == originalExamPaperId)
+            .Include(x => x.OriginalExamPaperDetails)
+                .ThenInclude(d => d.Answers)
+            .Include(x => x.OriginalExamPaperDetails)
+                .ThenInclude(d => d.ChildQuestions)
+                    .ThenInclude(c => c.Answers)
+            .FirstOrDefaultAsync();
+        if (examPaper == null) return null;
+        
+        var examPaperDto = _mapper.Map<OriginalExamPaperDto>(examPaper);
+        
+        // Cache vào Redis
+        await CacheOriginalExamPaperAsync(originalExamPaperId, examPaperDto);
+        
+        return examPaperDto;
+    }
+    
+    public async Task<OriginalExamPaperDto> GetOriginalExamPaperAsync(int originalExamPaperId)
+    {
+        try
+        {
+            // Thử lấy từ Redis trước
+            var (success, examPaperDto) = await GetOriginalExamPaperFromRedisAsync(originalExamPaperId);
+            if (success && examPaperDto != null)
+            {
+                _logger.LogInformation("Đã lấy được đề thi gốc {OriginalExamPaperId} từ Redis", originalExamPaperId);
+                return examPaperDto;
+            }
+            
+            // Nếu không có trong Redis, lấy từ database
+            _logger.LogInformation("Không tìm thấy đề thi gốc {OriginalExamPaperId} trong Redis, chuyển sang lấy từ database", originalExamPaperId);
+            return await GetWithDetailsByIdAsync(originalExamPaperId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Lỗi khi lấy đề thi gốc {OriginalExamPaperId}", originalExamPaperId);
+            throw;
+        }
+    }
+    
+    private async Task<(bool success, OriginalExamPaperDto? examPaperDto)> GetOriginalExamPaperFromRedisAsync(int originalExamPaperId)
+    {
+        try
+        {
+            var db = _redisService.GetDatabase();
+            string cacheKey = $"original_exam_paper:{originalExamPaperId}";
+            _logger.LogInformation("Đang tìm đề thi gốc từ Redis với key: {CacheKey}", cacheKey);
+
+            var cachedPaper = await db.StringGetAsync(cacheKey);
+
+            if (cachedPaper.HasValue)
+            {
+                var cachedValue = cachedPaper.ToString();
+                try
+                {
+                    var jsonOptions = new JsonSerializerOptions
+                    {
+                        ReferenceHandler = ReferenceHandler.Preserve,
+                        MaxDepth = 64
+                    };
+                    var paperDto = JsonSerializer.Deserialize<OriginalExamPaperDto>(cachedValue, jsonOptions);
+                    if (paperDto != null)
+                    {
+                        _logger.LogInformation("Đã lấy được đề thi gốc từ Redis");
+                        return (true, paperDto);
+                    }
+                    else
+                    {
+                        _logger.LogWarning("Dữ liệu Redis null sau khi deserialize, xóa key: {CacheKey}", cacheKey);
+                        await db.KeyDeleteAsync(cacheKey);
+                        return (false, null);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Lỗi khi deserialize đề thi gốc từ Redis, xóa key: {CacheKey}", cacheKey);
+                    await db.KeyDeleteAsync(cacheKey);
+                    return (false, null);
+                }
+            }
+            else
+            {
+                _logger.LogInformation("Không tìm thấy đề thi gốc trong Redis với key: {CacheKey}", cacheKey);
+                return (false, null);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Lỗi khi truy cập Redis để lấy đề thi gốc");
+            return (false, null);
+        }
+    }
+    
+    private async Task<bool> CacheOriginalExamPaperAsync(int originalExamPaperId, OriginalExamPaperDto examPaperDto)
+    {
+        try
+        {
+            // Kiểm tra Redis connection trước khi cache
+            if (!_redisService.IsConnected)
+            {
+                _logger.LogWarning("Redis không khả dụng, bỏ qua cache đề thi gốc vào Redis cho {OriginalExamPaperId}", 
+                    originalExamPaperId);
+                return false;
+            }
+
+            var db = _redisService.GetDatabase();
+            string cacheKey = $"original_exam_paper:{originalExamPaperId}";
+            
+            var jsonOptions = new JsonSerializerOptions
+            {
+                ReferenceHandler = ReferenceHandler.Preserve,
+                MaxDepth = 64
+            };
+            var jsonString = JsonSerializer.Serialize(examPaperDto, jsonOptions);
+            await db.StringSetAsync(cacheKey, jsonString, TimeSpan.FromHours(6));
+            
+            _logger.LogInformation("Đã cache đề thi gốc {OriginalExamPaperId} vào Redis", originalExamPaperId);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Lỗi khi cache đề thi gốc {OriginalExamPaperId} vào Redis", originalExamPaperId);
+            return false;
+        }
+    }
     
 } 

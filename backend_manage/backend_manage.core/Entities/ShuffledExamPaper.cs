@@ -40,15 +40,19 @@ public class ShuffledExamPaper : BaseEntity  //đề thi đã được hoán v�
     // Chuỗi đáp án đúng của đề hoán vị (ví dụ: "ABCDACDB...")
     public string? AnswerKey { get; set; }
     
+    // Cấu trúc JSON hoán vị của đề thi
+    // Lưu trữ thông tin về thứ tự câu hỏi và đáp án đã được hoán vị
+    public string? QuestionStructure { get; set; }
+    
+    
+
+    
     // Navigation property đến entity OriginalExamPaper
     public OriginalExamPaper OriginalExamPaper { get; set; }
     
     // Navigation property đến entity Subject
     public Subject Subject { get; set; }
 
-    // Collection các chi tiết câu hỏi trong đề thi hoán vị
-    // Mối quan hệ one-to-many với ShuffledExamPaperDetail
-    public ICollection<ShuffledExamPaperDetail> ShuffledExamPaperDetails { get; set; } = new List<ShuffledExamPaperDetail>();
     
     // Collection các sinh viên làm đề thi hoán vị này
     // Mối quan hệ one-to-many với StudentExamSession

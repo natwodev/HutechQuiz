@@ -373,13 +373,13 @@ public class StudentService : IStudentService
     
     //Đang tối ưu lấy được đề và phiên khi k có redis / chưa cập nhật vào db và redis 
     #region StartExamAsync
-    public async Task<(StudentExamSessionCacheDto studentExamSessionCacheDto, ShuffledExamPaperDto? shuffledExamPaperDto)> StartExamAsync(string studentCode, int studentExamSessionId)
+    public async Task<(StudentExamSessionCacheDto studentExamSessionCacheDto, ShuffledExamPaperDto? shuffledExamPaperDto, OriginalExamPaperDto? originalExamPaperDto)> StartExamAsync(string studentCode, int studentExamSessionId)
     {
         _logger.LogInformation("Bắt đầu lấy đề thi cho sinh viên {StudentCode}, phiên thi {StudentExamSessionId}", studentCode, studentExamSessionId);
 
-        var (studentExamSessionCacheDto, shuffledExamPaperDto) = await _examPaperHelper.GetStudentExamSessionAndExamPaperAsync(studentCode, studentExamSessionId);
+        var (studentExamSessionCacheDto, shuffledExamPaperDto, originalExamPaperDto) = await _examPaperHelper.GetStudentExamSessionAndExamPaperAsync(studentCode, studentExamSessionId);
 
-        return (studentExamSessionCacheDto,shuffledExamPaperDto);
+        return (studentExamSessionCacheDto, shuffledExamPaperDto, originalExamPaperDto);
     }
     #endregion
     
@@ -506,8 +506,6 @@ public class StudentService : IStudentService
             // Cập nhật trạng thái trong object session
             sessionDto.ExtraMinutes = extraMinutes;
             sessionDto.ReasonForExtra = reasonForExtra;
-            sessionDto.UpdatedBy = userId;
-            sessionDto.UpdatedAt = DateTimeHelper.GetVietnamTime();
             
             // Cache lại vào Redis với thông tin mới
             await _sessionCacheHelper.UpdateStudentExamSessionAsync(studentCode, sessionDto);
