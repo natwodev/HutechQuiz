@@ -16,7 +16,7 @@ public interface IStudentService
 
     Task<StudentImportResultDto> ImportFromExcelAsyncs(IFormFile file, string examSessionSubjectCore);
 // Trong IStudentService
-    Task<(StudentExamSessionCacheDto studentExamSessionCacheDto, ShuffledExamPaperDto? shuffledExamPaperDto)>
+    Task<(StudentExamSessionCacheDto studentExamSessionCacheDto, ShuffledExamPaperDto? shuffledExamPaperDto, OriginalExamPaperDto? originalExamPaperDto)>
         StartExamAsync(string studentCode,
             int studentExamSessionId);
     Task<IEnumerable<StudentExamSessionDto>> GetStudentExamSessionsAsync(string studentCode);

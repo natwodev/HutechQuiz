@@ -469,7 +469,6 @@ public class StudentExamSessionCacheHelper
 
                             // Cập nhật session trong cache
                             cachedSession.StudentAnswersString = newAnswersString;
-                            cachedSession.UpdatedAt = DateTime.UtcNow;
                             
                             // Lưu lại vào cache
                             var updatedSessionJson = JsonSerializer.Serialize(cachedSession);
@@ -707,7 +706,6 @@ public class StudentExamSessionCacheHelper
                         {
                             // Cập nhật StudentAnswersString
                             cachedSession.StudentAnswersString = newAnswersString;
-                            cachedSession.UpdatedAt = DateTime.UtcNow;
                             
                             // Lưu lại vào cache
                             var updatedSessionJson = JsonSerializer.Serialize(cachedSession);
