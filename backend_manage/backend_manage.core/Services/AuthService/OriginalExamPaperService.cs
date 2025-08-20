@@ -440,6 +440,38 @@ namespace backend_manage.core.Services.AuthService
                 };
                 await _shuffledExamPaperRepository.AddAsync(shuffledExamPaper);
                 
+                var result = new List<OriginalExamPaperDetailShufferDto>();
+                var resulta = new List<AnswerShufferDto>();
+                var qu = await ShuffleParentQuestionsAsync(originalExamPaper.OriginalExamPaperId);
+                
+                foreach (var q in qu)
+                {
+                    var sfc = await ShuffleChildQuestionsAsync(q.OriginalExamPaperDetailId);
+                    result.AddRange(sfc);
+                   
+                }
+                
+                result.AddRange(qu);
+                
+                // Sắp xếp result theo trường Order
+                result = result.OrderBy(q => q.Order).ToList();
+                foreach (var q in result)
+                {
+                    var sfa = await ShuffleAnswersAsync(q.OriginalExamPaperDetailId);
+                    resulta.AddRange(sfa);
+                }
+                
+                // Sắp xếp resulta theo trường Order
+                resulta = resulta.OrderBy(a => a.Order).ToList();
+                
+                // Map vào QuestionStructureDto
+                var questionStructure = MapToQuestionStructure(result, resulta);
+                
+                // Lưu cấu trúc câu hỏi vào ShuffledExamPaper
+                shuffledExamPaper.QuestionStructure = JsonConvert.SerializeObject(questionStructure);
+                
+                // Cập nhật ShuffledExamPaper với cấu trúc câu hỏi
+                await _shuffledExamPaperRepository.UpdateAsync(shuffledExamPaper);
                 
             }
         }
@@ -495,6 +527,8 @@ namespace backend_manage.core.Services.AuthService
             return result.OrderBy(q => q.Order).ToList();;
         }
          
+        
+        
         public async Task<List<OriginalExamPaperDetailShufferDto>> ShuffleChildQuestionsAsync(int originalExamPaperDetailId)
         {
             var (childShufflable, childNonShufflable) = await GetChildQuestionsAsync(originalExamPaperDetailId);
@@ -537,6 +571,50 @@ namespace backend_manage.core.Services.AuthService
         }
 
         
+        public async Task<IEnumerable<AnswerShufferDto>> ShuffleAnswersAsync(int originalExamPaperDetailId)
+        {
+            var result = new List<AnswerShufferDto>();
+
+            var (shufflableAnswers, nonShufflableAnswers) = await GetAnswersByOriginalExamPaperDetailIdAsync(originalExamPaperDetailId);
+           
+            var random = new Random();
+            
+            // Nếu số câu trả lời có thể hoán vị < 2 thì gộp danh sách lại
+            if (shufflableAnswers.Count() < 2)
+            {
+                // Gộp cả hai danh sách và sắp xếp theo thứ tự gốc
+                result.AddRange(MapToShufferAnswersDto(shufflableAnswers));
+                result.AddRange(MapToShufferAnswersDto(nonShufflableAnswers));
+            }
+            else
+            {
+                // Tạo danh sách thứ tự để hoán vị
+                List<int> orders = new List<int>();
+                orders.AddRange(shufflableAnswers.Select(a => a.Order));
+                var rs = MapToShufferAnswersDto(shufflableAnswers);
+                // Hoán vị các câu trả lời có thể hoán vị
+                foreach (var answer in rs)
+                {
+                    // Lấy index ngẫu nhiên trong list orders
+                    int randomIndex = random.Next(orders.Count);
+                    // Lấy giá trị Order ở vị trí đó
+                    int selectedOrder = orders[randomIndex];
+                    // Gán vào DTO
+                    answer.Order = selectedOrder;
+                    // Xóa phần tử đã dùng để tránh trùng
+                    orders.RemoveAt(randomIndex);
+                    result.Add(answer);
+                }
+                
+                // Thêm các câu trả lời không thể hoán vị với thứ tự gốc
+                result.AddRange(MapToShufferAnswersDto(nonShufflableAnswers));
+            }
+            
+            return result.OrderBy(a => a.Order).ToList();
+        }
+
+        
+        
         // Helper method để map từ OriginalExamPaperDetail sang OriginalExamPaperDetailShufferDto
         private List<OriginalExamPaperDetailShufferDto> MapToShufferDto(IEnumerable<OriginalExamPaperDetail> details)
         {
@@ -551,6 +629,22 @@ namespace backend_manage.core.Services.AuthService
             }).ToList();
         }
          
+        
+        private List<AnswerShufferDto> MapToShufferAnswersDto(IEnumerable<Answers> answers)
+        {
+            return answers.Select(answer => new AnswerShufferDto
+            {
+                AnswerId = answer.AnswerId,
+                Order = answer.Order,
+                AnswerContent = answer.AnswerContent,
+                IsCorrect = answer.IsCorrect,
+                CanShuffleAnswer = answer.CanShuffleAnswer,
+                OriginalExamPaperDetailId = answer.OriginalExamPaperDetailId
+            }).ToList();
+        }
+        
+        
+        
         // Phương thức lấy câu hỏi cha theo khả năng hoán vị,danh danh sách câu hỏi không hoán vị
         public async Task<(IEnumerable<OriginalExamPaperDetail> ShufflableQuestions, IEnumerable<OriginalExamPaperDetail> NonShufflableQuestions)> GetParentQuestionsAsync(int originalExamPaperId)
         {
@@ -567,7 +661,23 @@ namespace backend_manage.core.Services.AuthService
             return (shufflableQuestions, nonShufflableQuestions);
         }
 
-        
+        // Phương thức lấy danh sách Answers theo originalExamPaperDetailId với phân loại khả năng hoán vị
+        public async Task<(IEnumerable<Answers> ShufflableAnswers, IEnumerable<Answers> NonShufflableAnswers)> GetAnswersByOriginalExamPaperDetailIdAsync(int originalExamPaperDetailId)
+        {
+            var answers = await _answersRepository.GetQueryable()
+                .Where(a => a.OriginalExamPaperDetailId == originalExamPaperDetailId)
+                .Include(a => a.OriginalExamPaperDetail)
+                .OrderBy(a => a.Order)
+                .ToListAsync();
+
+            // Phân loại câu trả lời theo khả năng hoán vị của từng câu trả lời
+            var shufflableAnswers = answers.Where(a => a.CanShuffleAnswer == true).ToList();
+            var nonShufflableAnswers = answers.Where(a => a.CanShuffleAnswer == false).ToList();
+
+            return (shufflableAnswers, nonShufflableAnswers);
+        }
+
+
         
         // Phương thức lấy câu hỏi con theo khả năng hoán vị
         public async Task<(IEnumerable<OriginalExamPaperDetail> ShufflableQuestions, IEnumerable<OriginalExamPaperDetail> NonShufflableQuestions)> GetChildQuestionsAsync(int originalExamPaperDetailId)
@@ -586,7 +696,7 @@ namespace backend_manage.core.Services.AuthService
         
         
         
-        // Phương thức lấy danh sách Answers theo OriginalExamPaperId
+                // Phương thức lấy danh sách Answers theo OriginalExamPaperId
         public async Task<IEnumerable<Answers>> GetAnswersByOriginalExamPaperIdAsync(int originalExamPaperId)
         {
             var answers = await _answersRepository.GetQueryable()
@@ -598,20 +708,80 @@ namespace backend_manage.core.Services.AuthService
 
             return answers;
         }
-        
-        // Phương thức lấy danh sách Answers theo originalExamPaperDetailId
-        public async Task<IEnumerable<Answers>> GetAnswersByOriginalExamPaperDetailIdAsync(int originalExamPaperDetailId)
-        {
-            var answers = await _answersRepository.GetQueryable()
-                .Where(a => a.OriginalExamPaperDetailId == originalExamPaperDetailId)
-                .Include(a => a.OriginalExamPaperDetail)
-                .OrderBy(a => a.Order)
-                .ToListAsync();
 
-            return answers;
+        // Phương thức mapping chính để tạo QuestionStructureDto
+        private List<QuestionStructureDto> MapToQuestionStructure(List<OriginalExamPaperDetailShufferDto> questions, List<AnswerShufferDto> answers)
+        {
+            var result = new List<QuestionStructureDto>();
+            
+            // Lấy tất cả câu hỏi cha (ParentQuestionId = null)
+            var parentQuestions = questions
+                .Where(q => q.ParentQuestionId == null)
+                .OrderBy(q => q.Order)
+                .ToList();
+            
+            foreach (var parentQuestion in parentQuestions)
+            {
+                var questionStructure = new QuestionStructureDto
+                {
+                    OriginalExamPaperDetailId = parentQuestion.OriginalExamPaperDetailId,
+                    ParentQuestionId = parentQuestion.ParentQuestionId,
+                    Order = parentQuestion.Order,
+                    ChildQuestions = new List<QuestionStructureDto>(),
+                    Answers = new List<AnswerStructureDto>()
+                };
+                
+                // Lấy câu hỏi con của câu hỏi cha này
+                var childQuestions = questions
+                    .Where(q => q.ParentQuestionId == parentQuestion.OriginalExamPaperDetailId)
+                    .OrderBy(q => q.Order)
+                    .ToList();
+                
+                if (childQuestions.Any())
+                {
+                    // Nếu có câu hỏi con, map câu hỏi con
+                    foreach (var childQuestion in childQuestions)
+                    {
+                        var childStructure = new QuestionStructureDto
+                        {
+                            OriginalExamPaperDetailId = childQuestion.OriginalExamPaperDetailId,
+                            ParentQuestionId = childQuestion.ParentQuestionId,
+                            Order = childQuestion.Order,
+                            ChildQuestions = new List<QuestionStructureDto>(),
+                            Answers = GetAnswersForQuestion(childQuestion.OriginalExamPaperDetailId, answers)
+                        };
+                        
+                        questionStructure.ChildQuestions.Add(childStructure);
+                    }
+                }
+                else
+                {
+                    // Nếu không có câu hỏi con, lấy câu trả lời trực tiếp
+                    questionStructure.Answers = GetAnswersForQuestion(parentQuestion.OriginalExamPaperDetailId, answers);
+                }
+                
+                result.Add(questionStructure);
+            }
+            
+            return result;
         }
         
-        
+        // Helper method để lấy câu trả lời cho một câu hỏi
+        private List<AnswerStructureDto> GetAnswersForQuestion(int questionId, List<AnswerShufferDto> allAnswers)
+        {
+            return allAnswers
+                .Where(a => a.OriginalExamPaperDetailId == questionId)
+                .OrderBy(a => a.Order)
+                .Select(answer => new AnswerStructureDto
+                {
+                    AnswerId = answer.AnswerId,
+                    Order = answer.Order,
+                    OriginalExamPaperDetailId = answer.OriginalExamPaperDetailId
+                })
+                .ToList();
+        }
 
+
+        
     }
 }

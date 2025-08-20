@@ -38,7 +38,8 @@ namespace backend_manage.Controllers
             if (result == null) return NotFound();
             return Ok(result);
         }
-        /*
+        
+        
         
         [HttpPost("create-shuffled")]
         [Authorize(Policy = "AdminOnly")]
@@ -49,6 +50,10 @@ namespace backend_manage.Controllers
             await _originalExamPaperService.CreateShuffledExamPapersAsync(originalExamPaperCore, count);
             return Ok(new { message = $"Đã tạo {count} đề thi hoán vị cho mã đề {originalExamPaperCore}" });
         }
+        
+        /*
+        
+       
         
         [HttpGet("by-subject/{subjectId}")]
         [Authorize]

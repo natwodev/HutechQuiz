@@ -199,6 +199,11 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.Index, opt => opt.MapFrom(src => src.Index))
             .ForMember(dest => dest.Answer, opt => opt.MapFrom(src => src.Answer))
             .ForMember(dest => dest.NewAnswersString, opt => opt.MapFrom(src => src.NewAnswersString));
+
+        // Mapping cho ShuffledExamPaper
+        CreateMap<ShuffledExamPaper, ShuffledExamPaperDto>()
+            .ForMember(dest => dest.SubjectName, opt => opt.MapFrom(src => src.Subject != null ? src.Subject.SubjectName : null))
+            .ForMember(dest => dest.SubjectCode, opt => opt.MapFrom(src => src.Subject != null ? src.Subject.SubjectCore : null));
     }
 
    

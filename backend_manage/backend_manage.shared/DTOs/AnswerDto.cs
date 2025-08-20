@@ -13,6 +13,17 @@ namespace backend_manage.shared.DTOs
         public int OriginalExamPaperDetailId { get; set; }
     }
 
+    
+    public class AnswerShufferDto
+    {
+        public int AnswerId { get; set; }
+        public int Order { get; set; }
+        public string AnswerContent { get; set; }
+        public bool IsCorrect { get; set; }
+        public bool CanShuffleAnswer { get; set; }
+        public int OriginalExamPaperDetailId { get; set; }
+    }
+    
     public class AnswerCreateDto
     {
         [Required]
