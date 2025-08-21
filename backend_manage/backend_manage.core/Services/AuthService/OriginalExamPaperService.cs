@@ -51,7 +51,7 @@ namespace backend_manage.core.Services.AuthService
 
 
         #region ExtractAndReadXmlAsync thêm đề thi
-         private const string ExtractPassword =
+        private const string ExtractPassword =
             "649224E2-F0AC-42B1-AD1B-2EAF04E2AC7D-FE602240-7E60-43BF-828D-D6AF38A70429-52572FD1-BB94-45AD-95CF-7B2B5C2E85A6-1B3D4CCF-808E-4ABF-8F9E-73ADF041C78B";
 
         private async Task<string> ExtractAndReadXmlAsync(IFormFile file, string originalExamPaperCore)
@@ -823,7 +823,7 @@ namespace backend_manage.core.Services.AuthService
                 .ToList();
         }
 
-
         
+
     }
 }

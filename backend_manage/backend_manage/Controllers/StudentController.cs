@@ -155,12 +155,12 @@ public async Task<IActionResult> UpdateAnswer([FromBody] SaveAnswerDto request)
             return Unauthorized(new { success = false, message = "Không tìm thấy thông tin sinh viên" });
         }
 
-        if (request.Index < 0)
+        if (request.key < 0)
         {
             return BadRequest(new { success = false, message = "Index không hợp lệ" });
         }
 
-        if (string.IsNullOrWhiteSpace(request.Answer))
+        if (string.IsNullOrWhiteSpace(request.value.ToString()))
         {
             return BadRequest(new { success = false, message = "Đáp án không được để trống" });
         }
@@ -168,18 +168,16 @@ public async Task<IActionResult> UpdateAnswer([FromBody] SaveAnswerDto request)
         var (success, message, newAnswersString) = await _studentService.UpdateSingleAnswerAsync(
             studentCode,
             request.StudentExamSessionId,
-            request.Index,
-            request.SubIndex, // truyền thêm vào
-            request.Answer
+            request.key,
+            request.value // truyền thêm vào
         );
 
         if (success)
         {
-            _logger.LogInformation("✅ Sinh viên {StudentCode} đã cập nhật đáp án tại vị trí {Index}{SubIndex}: {Answer}",
+            _logger.LogInformation("✅ Sinh viên {StudentCode} đã cập nhật đáp án tại vị trí {Key}: {Value}",
                 studentCode,
-                request.Index,
-                request.SubIndex.HasValue ? $" (câu con {request.SubIndex})" : "",
-                request.Answer);
+                request.key,
+                request.value);
 
             return Ok(new
             {
@@ -188,29 +186,27 @@ public async Task<IActionResult> UpdateAnswer([FromBody] SaveAnswerDto request)
                 data = new
                 {
                     newAnswersString,
-                    index = request.Index,
-                    subIndex = request.SubIndex,
-                    answer = request.Answer
+                    key = request.key,
+                    value = request.value,
                 }
             });
         }
         else
         {
-            _logger.LogWarning("⚠️ Sinh viên {StudentCode} không thể cập nhật đáp án tại vị trí {Index}{SubIndex}: {Message}",
+            _logger.LogWarning("⚠️ Sinh viên {StudentCode} không thể cập nhật đáp án tại vị trí {Key}: {Value}",
                 studentCode,
-                request.Index,
-                request.SubIndex.HasValue ? $" (câu con {request.SubIndex})" : "",
-                message);
+                request.key,
+                request.value);
 
             return BadRequest(new { success = false, message });
         }
     }
     catch (Exception ex)
     {
-        _logger.LogError(ex, "❌ Lỗi khi cập nhật đáp án cho sinh viên {StudentCode} tại vị trí {Index}{SubIndex}",
+        _logger.LogError(ex, "❌ Lỗi khi cập nhật đáp án cho sinh viên {StudentCode} tại vị trí {Key}: {Value}",
             User.FindFirst("studentCode")?.Value,
-            request.Index,
-            request.SubIndex);
+            request.key,
+            request.value);
 
         return StatusCode(500, new { success = false, message = "Lỗi server khi cập nhật đáp án" });
     }

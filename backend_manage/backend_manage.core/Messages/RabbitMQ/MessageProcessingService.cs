@@ -129,8 +129,8 @@ public class MessageProcessingService : IMessageProcessingService
                 await dbContext.SaveChangesAsync();
 
                 _logger.LogInformation(
-                    "📝 Đã cập nhật đáp án trực tiếp: StudentCode={StudentCode}, StudentExamSessionId={StudentExamSessionId}, Index={Index}, Answer={Answer}",
-                    saveAnswerMessage.StudentCode, saveAnswerMessage.StudentExamSessionId, saveAnswerMessage.Index, saveAnswerMessage.Answer
+                    "📝 Đã cập nhật đáp án trực tiếp: StudentCode={StudentCode}, StudentExamSessionId={StudentExamSessionId}, Key={Key}, Value={Value}",
+                    saveAnswerMessage.StudentCode, saveAnswerMessage.StudentExamSessionId, saveAnswerMessage.key, saveAnswerMessage.value
                 );
             }
             else

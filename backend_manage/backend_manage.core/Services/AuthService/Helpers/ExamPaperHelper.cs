@@ -110,14 +110,16 @@ public class ExamPaperHelper
         
         if (!studentExamSessionDto.ShuffledExamPaperId.HasValue)
         {
+
             _logger.LogInformation("Chưa có đề thi nên sẽ random đề thi mới cho sinh viên {StudentCode}", studentCode);
             var newExamPaper = await CreateNewExamPaperAsync(studentExamSessionDto.ExamSessionSubjectId, studentCode);
             _logger.LogInformation("Cập nhật đề thi vào phiên thi trên redis và db");
             studentExamSessionDto.ShuffledExamPaperId = newExamPaper.ShuffledExamPaperId;
             studentExamSessionDto.StartTime = DateTimeHelper.GetVietnamTime();
-            
+            var originalExamPaper = await GetOriginalExamPaperAsync(newExamPaper.OriginalExamPaperId);
+
             // Tạo chuỗi đáp án rỗng dựa trên cấu trúc đề thi thực tế
-            var emptyAnswers = CreateEmptyAnswersString(newExamPaper.AnswerKey);
+            var emptyAnswers = CreateEmptyAnswersString(originalExamPaper.KeyValueList);
             studentExamSessionDto.StudentAnswersString = emptyAnswers;
             studentExamSessionDto.IsCompleted = false; // Chưa hoàn thành
             await _sessionCacheHelper.UpdateStudentExamSessionAsync(studentCode,studentExamSessionDto);
@@ -135,7 +137,6 @@ public class ExamPaperHelper
             _rabbitMqService.Publish("start_exam_queue",startExamMessage);
             _logger.LogInformation("Đã gửi đến message để lưu thông tin vào db cho sinh viên {studentCode}",studentCode);
             
-            var originalExamPaper = await GetOriginalExamPaperAsync(newExamPaper.OriginalExamPaperId);
             
             return (studentExamSessionDto, newExamPaper, originalExamPaper);
         }
@@ -455,9 +456,24 @@ public class ExamPaperHelper
    
     public Dictionary<string, string> ParseAnswerKey(string answerKeyString)
     {
-        return answerKeyString.Split(';', StringSplitOptions.RemoveEmptyEntries)
-            .Select(a => a.Trim('(', ')').Split(','))
-            .ToDictionary(parts => parts[0], parts => parts[1]);
+        // Format mới: (1:1);(2:6);(3:10);(4:13);(5:20);...
+        // Format cũ: (1,A);(2,B);(3,C);(4,D);...
+        
+        if (string.IsNullOrWhiteSpace(answerKeyString))
+            return new Dictionary<string, string>();
+            
+        try
+        {
+            return answerKeyString.Split(';', StringSplitOptions.RemoveEmptyEntries)
+                .Select(a => a.Trim('(', ')').Split(':'))
+                .Where(parts => parts.Length == 2)
+                .ToDictionary(parts => parts[0], parts => parts[1]);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "❌ Lỗi khi parse answer key: {AnswerKeyString}", answerKeyString);
+            return new Dictionary<string, string>();
+        }
     }
     
     private string CreateEmptyAnswersString(string answerKey)
@@ -465,12 +481,13 @@ public class ExamPaperHelper
         if (string.IsNullOrWhiteSpace(answerKey))
             return "";
 
-        // Tạo chuỗi đáp án rỗng bằng cách thay thế tất cả các ký tự A, B, C, D bằng dấu '-'
+        // Format mới: (1:1);(2:6);(3:10);(4:13);(5:20);...
+        // Tạo chuỗi đáp án rỗng bằng cách thay thế tất cả các số sau dấu ':' bằng dấu '-'
         // Giữ nguyên cấu trúc format của answer key
-        string result = answerKey;
         
-        // Thay thế tất cả các ký tự A, B, C, D bằng dấu '-'
-        result = Regex.Replace(result, @"[A-D]", "-");
+        // Sử dụng regex để thay thế số sau dấu ':' bằng dấu '-'
+        // Pattern: (?<=:)\d+  - tìm số sau dấu ':' (positive lookbehind)
+        string result = Regex.Replace(answerKey, @"(?<=:)\d+", "-");
         
         return result;
     }
