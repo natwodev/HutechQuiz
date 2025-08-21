@@ -631,27 +631,27 @@ public class StudentService : IStudentService
 
     // Helper methods để tái sử dụng code
     #region UpdateSingleAnswerAsync
-    public async Task<(bool Success, string Message, string? NewAnswersString)> UpdateSingleAnswerAsync(string studentCode, int studentExamSessionId, int index,int? SubIndex, string answer)
+    public async Task<(bool Success, string Message, string? NewAnswersString)> UpdateSingleAnswerAsync(string studentCode, int studentExamSessionId, int key ,int value)
     {
         try
         {
             // Cập nhật đáp án sử dụng StudentAnswerHelper
-            var (success, message, newAnswersString) = await _answerHelper.UpdateSingleAnswerAsync(studentCode, studentExamSessionId, index, SubIndex, answer);
+            var (success, message, newAnswersString) = await _answerHelper.UpdateSingleAnswerAsync(studentCode, studentExamSessionId, key, value);
             
             if (success)
             {
-                _logger.LogInformation("✅ Đã cập nhật đáp án thành công cho sinh viên {StudentCode} tại vị trí {Index} ,{SubIndex}", studentCode, index,SubIndex);
+                _logger.LogInformation("✅ Đã cập nhật đáp án thành công cho sinh viên {StudentCode} tại vị trí {Key}: {Value}", studentCode, key, value);
             }
             else
             {
-                _logger.LogWarning("⚠️ Không thể cập nhật đáp án cho sinh viên {StudentCode} tại vị trí {Index}  ,{SubIndex}: {Message}", studentCode, index,SubIndex, message);
+                _logger.LogWarning("⚠️ Không thể cập nhật đáp án cho sinh viên {StudentCode} tại vị trí {Key}: {Value}: {Message}", studentCode, key, value, message);
             }
 
             return (success, message, newAnswersString);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "❌ Lỗi khi cập nhật đáp án cho sinh viên {StudentCode} tại vị trí {Index}", studentCode, index);
+            _logger.LogError(ex, "❌ Lỗi khi cập nhật đáp án cho sinh viên {StudentCode} tại vị trí {Key}", studentCode, key);
             return (false, "Lỗi hệ thống khi cập nhật đáp án", null);
         }
     }

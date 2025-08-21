@@ -193,11 +193,11 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.StudentAnswersString, opt => opt.MapFrom(src => src.StudentAnswersString));
 
         // Mapping cho StudentAnswerSavedMessage
-        CreateMap<(string StudentCode, int StudentExamSessionId, int Index, string Answer, string NewAnswersString), StudentAnswerSavedMessage>()
+        CreateMap<(string StudentCode, int StudentExamSessionId, int key, int value, string NewAnswersString), StudentAnswerSavedMessage>()
             .ForMember(dest => dest.StudentCode, opt => opt.MapFrom(src => src.StudentCode))
             .ForMember(dest => dest.StudentExamSessionId, opt => opt.MapFrom(src => src.StudentExamSessionId))
-            .ForMember(dest => dest.Index, opt => opt.MapFrom(src => src.Index))
-            .ForMember(dest => dest.Answer, opt => opt.MapFrom(src => src.Answer))
+            .ForMember(dest => dest.key, opt => opt.MapFrom(src => src.key))
+            .ForMember(dest => dest.value, opt => opt.MapFrom(src => src.value))
             .ForMember(dest => dest.NewAnswersString, opt => opt.MapFrom(src => src.NewAnswersString));
 
         // Mapping cho ShuffledExamPaper

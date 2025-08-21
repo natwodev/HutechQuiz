@@ -62,14 +62,10 @@ namespace backend_manage.shared.DTOs
         public int StudentExamSessionId { get; set; }
 
         [Required]
-        public int Index { get; set; }
-
+        public int key { get; set; }
         // Dùng cho câu hỏi con trong câu cha
-        public int? SubIndex { get; set; }
-
-        [Required]
-        [RegularExpression("^[A-D]$", ErrorMessage = "Đáp án phải là A, B, C hoặc D")]
-        public string Answer { get; set; } = null!;
+        public int value { get; set; }
+        
     }
 
     public class ExamSubmissionDto

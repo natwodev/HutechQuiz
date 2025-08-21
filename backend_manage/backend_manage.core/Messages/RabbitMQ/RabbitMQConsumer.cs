@@ -228,15 +228,15 @@ namespace backend_manage.core.Messages.RabbitMQ
                 await dbContext.SaveChangesAsync();
 
                 _logger.LogInformation(
-                    "📝 Đã cập nhật đáp án vào database: StudentCode={StudentCode}, StudentExamSessionId={StudentExamSessionId}, Index={Index}, Answer={Answer}",
-                    message.StudentCode, message.StudentExamSessionId, message.Index, message.Answer
+                    "📝 Đã cập nhật đáp án vào database: StudentCode={StudentCode}, StudentExamSessionId={StudentExamSessionId}, Key={Key}, Value={Value}",
+                    message.StudentCode, message.StudentExamSessionId, message.key, message.value
                 );
 
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "❌ Lỗi xử lý StudentAnswerSavedMessage: StudentCode={StudentCode}, Index={Index}, Answer={Answer}",
-                    message.StudentCode, message.Index, message.Answer);
+                _logger.LogError(ex, "❌ Lỗi xử lý StudentAnswerSavedMessage: StudentCode={StudentCode}, Key={Key}, Value={Value}",
+                    message.StudentCode, message.key, message.value);
                 throw;
             }
         }
