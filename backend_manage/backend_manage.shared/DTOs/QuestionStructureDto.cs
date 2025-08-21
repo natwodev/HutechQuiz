@@ -9,7 +9,8 @@ namespace backend_manage.shared.DTOs
         public int? ParentQuestionId { get; set; }
         
         public int Order { get; set; }
-        public string? QuestionContent { get; set; } = "12345";
+
+        public string? QuestionContent { get; set; } 
         public List<QuestionStructureDto> ChildQuestions { get; set; } = new();
         
         public List<AnswerStructureDto> Answers { get; set; } = new();
@@ -20,7 +21,7 @@ namespace backend_manage.shared.DTOs
         public int AnswerId { get; set; }
         
         public int Order { get; set; }
-        public string AnswerContent { get; set; } = "12345";
+        public string AnswerContent { get; set; } 
         
         public int OriginalExamPaperDetailId { get; set; }
     }

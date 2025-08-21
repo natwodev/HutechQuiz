@@ -52,8 +52,12 @@ namespace frontend_manage.Pages.Exam
 
         private StartExamResponseDto? startExamResponse;
         private ShuffledExamPaperDto? shuffledExam;
+        private OriginalExamPaperDto? originalExamPaper;
         private StudentExamSessionCacheDto? studentSession;
         private string? errorMessage;
+        
+        // Dữ liệu đã map từ originalExamPaper
+        private List<QuestionStructureDto>? mappedQuestions;
         
         // Dictionary to store selected answers for each question
         private Dictionary<int, string> selectedAnswers = new();
@@ -96,7 +100,14 @@ namespace frontend_manage.Pages.Exam
                 else
                 {
                     shuffledExam = startExamResponse.ExamPaper;
+                    originalExamPaper = startExamResponse.OriginalExamPaper;
                     studentSession = startExamResponse.StudentSession;
+                    
+                    // Map dữ liệu từ originalExamPaper sang QuestionStructureDto
+                    if (originalExamPaper?.Details != null)
+                    {
+                        mappedQuestions = MapToQuestionStructureList(originalExamPaper.Details);
+                    }
                     
                     // Load existing answers if any - chỉ sau khi đã có dữ liệu exam
                     
@@ -659,5 +670,66 @@ namespace frontend_manage.Pages.Exam
         }
         
 
+
+        private QuestionStructureDto MapToQuestionStructure(OriginalExamPaperDetailDto originalQuestion)
+        {
+            if (originalQuestion == null)
+                return null;
+
+            var questionStructure = new QuestionStructureDto
+            {
+                OriginalExamPaperDetailId = originalQuestion.OriginalExamPaperDetailId,
+                ParentQuestionId = originalQuestion.ParentQuestionId,
+                Order = originalQuestion.Order,
+                QuestionContent = originalQuestion.QuestionContent,
+                ChildQuestions = new List<QuestionStructureDto>(),
+                Answers = new List<AnswerStructureDto>()
+            };
+
+            // Map child questions recursively
+            if (originalQuestion.ChildQuestions?.Any() == true)
+            {
+                questionStructure.ChildQuestions = originalQuestion.ChildQuestions
+                    .Select(child => MapToQuestionStructure(child))
+                    .Where(child => child != null)
+                    .ToList();
+            }
+
+            // Map answers
+            if (originalQuestion.Answers?.Any() == true)
+            {
+                questionStructure.Answers = originalQuestion.Answers
+                    .Select(answer => MapToAnswerStructure(answer))
+                    .Where(answer => answer != null)
+                    .ToList();
+            }
+
+            return questionStructure;
+        }
+        
+        private AnswerStructureDto MapToAnswerStructure(AnswerDto originalAnswer)
+        {
+            if (originalAnswer == null)
+                return null;
+
+            return new AnswerStructureDto
+            {
+                AnswerId = originalAnswer.AnswerId,
+                Order = originalAnswer.Order,
+                AnswerContent = originalAnswer.AnswerContent,
+                OriginalExamPaperDetailId = originalAnswer.OriginalExamPaperDetailId
+            };
+        }
+        
+        private List<QuestionStructureDto> MapToQuestionStructureList(List<OriginalExamPaperDetailDto> originalQuestions)
+        {
+            if (originalQuestions?.Any() != true)
+                return new List<QuestionStructureDto>();
+
+            return originalQuestions
+                .Select(question => MapToQuestionStructure(question))
+                .Where(question => question != null)
+                .ToList();
+        }
     }
 }
