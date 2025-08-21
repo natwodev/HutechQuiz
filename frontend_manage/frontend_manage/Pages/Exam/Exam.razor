@@ -28,240 +28,69 @@ else
             <!-- Main Content -->
             <MudItem xs="12" md="9">
                 <MudPaper Class="pa-4" Style="border: 1px solid #ccc;">
-                    <MudText Typo="Typo.h4" Class="mb-4">@shuffledExam.Title (@shuffledExam.ShuffledExamPaperCore)</MudText>
-
-
-                    @if (shuffledExam.Details != null)
-                    {
-                        var overallQuestionNumber = 1;
-                        @foreach (var q in shuffledExam.Details.OrderBy(d => d.Order))
+                    @{
+                        int index = 1; // stt
+                        @if (shuffledExam?.QuestionStructures != null)
                         {
-                            if (q.ChildQuestions != null && q.ChildQuestions.Any())
+                            @foreach (var question in shuffledExam.QuestionStructures)
                             {
-                                // Câu hỏi cha có câu con - chỉ hiển thị thông tin, không đếm số
-                                var startNumber = overallQuestionNumber;
-                                var endNumber = overallQuestionNumber + q.ChildQuestions.Count - 1;
-                                overallQuestionNumber += q.ChildQuestions.Count; 
-
-                                var selectedAnswer = GetSelectedAnswer(q.ShuffledExamPaperDetailId);
-
-                                <MudPaper Class="pa-4 mb-3" Elevation="1" Style="border: 1px solid #e0e0e0;">
-                                    @if (q.ChildQuestions != null && q.ChildQuestions.Any())
+                                // Hiển thị câu hỏi chính
+                                if (!string.IsNullOrEmpty(question.QuestionContent))
+                                {
+                                    string strCau = $"Câu {index}";
+                                    if (question.Answers == null || question.Answers?.Count == 0)
                                     {
-                                        // Hiển thị câu hỏi chính với range số (ví dụ: Câu 12–15)
-                                        <MudText id="@($"question-{startNumber}")" Typo="Typo.body1" Class="mb-3 question-content">
-                                            <b>Câu @startNumber–@endNumber: </b>
-                                            @((MarkupString)ProcessQuestionContent(q.QuestionContent))
-                                        </MudText>
+                                        strCau += " - Câu";
                                     }
-                                    else
-                                    {
-                                        // Hiển thị câu hỏi đơn lẻ bình thường
-                                        var questionNumber = overallQuestionNumber++;
-                                        <MudText id="@($"question-{questionNumber}")" Typo="Typo.body1" Class="mb-3 question-content">
-                                            <b>Câu @questionNumber: </b>
-                                            @((MarkupString)ProcessQuestionContent(q.QuestionContent))
-                                        </MudText>
-                                    }
-
-                                    @if (!string.IsNullOrEmpty(q.Answer1) || !string.IsNullOrEmpty(q.Answer2) ||
-                                                        !string.IsNullOrEmpty(q.Answer3) || !string.IsNullOrEmpty(q.Answer4))
-                                    {
-                                        // Chỉ hiển thị đáp án cho câu hỏi đơn lẻ (không có câu con)
-                                        if (!(q.ChildQuestions != null && q.ChildQuestions.Any()))
-                                        {
-                                            <MudGrid Class="mt-3">
-                                                @if (!string.IsNullOrEmpty(q.Answer1))
-                                                {
-                                                    <MudItem xs="12" Class="pa-0">
-                                                        <MudButton Variant="Variant.Text" Color="Color.Primary" FullWidth="true"
-                                                                   Class="@(GetSelectedAnswer(q.ShuffledExamPaperDetailId) == $"q{q.ShuffledExamPaperDetailId}_1" ? "answer-option selected" : "answer-option")"
-                                                                   OnClick="@(async () => await OnAnswerSelected(q.ShuffledExamPaperDetailId, "A", q.Order))"
-                                                                   Style="text-align: left; justify-content: flex-start;">
-                                                            <MudIcon Icon="@(GetSelectedAnswer(q.ShuffledExamPaperDetailId) == $"q{q.ShuffledExamPaperDetailId}_1" ? Icons.Material.Filled.RadioButtonChecked : Icons.Material.Filled.RadioButtonUnchecked)" Class="mr-2" />
-                                                            <span>A. @((MarkupString)q.Answer1)</span>
-                                                        </MudButton>
-                                                    </MudItem>
-                                                }
-                                                @if (!string.IsNullOrEmpty(q.Answer2))
-                                                {
-                                                    <MudItem xs="12" Class="pa-0">
-                                                        <MudButton Variant="Variant.Text" Color="Color.Primary" FullWidth="true"
-                                                                   Class="@(GetSelectedAnswer(q.ShuffledExamPaperDetailId) == $"q{q.ShuffledExamPaperDetailId}_2" ? "answer-option selected" : "answer-option")"
-                                                                   OnClick="@(async () => await OnAnswerSelected(q.ShuffledExamPaperDetailId, "B", q.Order))"
-                                                                   Style="text-align: left; justify-content: flex-start;">
-                                                            <MudIcon Icon="@(GetSelectedAnswer(q.ShuffledExamPaperDetailId) == $"q{q.ShuffledExamPaperDetailId}_2" ? Icons.Material.Filled.RadioButtonChecked : Icons.Material.Filled.RadioButtonUnchecked)" Class="mr-2" />
-                                                            <span>B. @((MarkupString)q.Answer2)</span>
-                                                        </MudButton>
-                                                    </MudItem>
-                                                }
-                                                @if (!string.IsNullOrEmpty(q.Answer3))
-                                                {
-                                                    <MudItem xs="12" Class="pa-0">
-                                                        <MudButton Variant="Variant.Text" Color="Color.Primary" FullWidth="true"
-                                                                   Class="@(GetSelectedAnswer(q.ShuffledExamPaperDetailId) == $"q{q.ShuffledExamPaperDetailId}_3" ? "answer-option selected" : "answer-option")"
-                                                                   OnClick="@(async () => await OnAnswerSelected(q.ShuffledExamPaperDetailId, "C", q.Order))"
-                                                                   Style="text-align: left; justify-content: flex-start;">
-                                                            <MudIcon Icon="@(GetSelectedAnswer(q.ShuffledExamPaperDetailId) == $"q{q.ShuffledExamPaperDetailId}_3" ? Icons.Material.Filled.RadioButtonChecked : Icons.Material.Filled.RadioButtonUnchecked)" Class="mr-2" />
-                                                            <span>C. @((MarkupString)q.Answer3)</span>
-                                                        </MudButton>
-                                                    </MudItem>
-                                                }
-                                                @if (!string.IsNullOrEmpty(q.Answer4))
-                                                {
-                                                    <MudItem xs="12" Class="pa-0">
-                                                        <MudButton Variant="Variant.Text" Color="Color.Primary" FullWidth="true"
-                                                                   Class="@(GetSelectedAnswer(q.ShuffledExamPaperDetailId) == $"q{q.ShuffledExamPaperDetailId}_4" ? "answer-option selected" : "answer-option")"
-                                                                   OnClick="@(async () => await OnAnswerSelected(q.ShuffledExamPaperDetailId, "D", q.Order))"
-                                                                   Style="text-align: left; justify-content: flex-start;">
-                                                            <MudIcon Icon="@(GetSelectedAnswer(q.ShuffledExamPaperDetailId) == $"q{q.ShuffledExamPaperDetailId}_4" ? Icons.Material.Filled.RadioButtonChecked : Icons.Material.Filled.RadioButtonUnchecked)" Class="mr-2" />
-                                                            <span>D. @((MarkupString)q.Answer4)</span>
-                                                        </MudButton>
-                                                    </MudItem>
-                                                }
-                                            </MudGrid>
-                                        }
-                                    }
-
-                                    @if (q.ChildQuestions != null && q.ChildQuestions.Any())
-                                    {
-                                        <MudDivider Class="my-3" />
-                                        @* <MudText Typo="Typo.subtitle2" Class="mb-3">Câu hỏi con:</MudText> *@
-
-                                        @foreach (var childQ in q.ChildQuestions.OrderBy(cq => cq.Order))
-                                        {
-                                            var childIndex = q.ChildQuestions.OrderBy(cq => cq.Order).ToList().IndexOf(childQ);
-                                            var childQuestionNumber = startNumber + childIndex;
-                                            var selectedChildAnswer = GetSelectedChildAnswer(childQ.ShuffledExamPaperDetailId);
-
-                                            <MudPaper Class="pa-3 mb-2 ml-4" Elevation="0" Style="background-color: #f5f5f5;">
-                                                <MudText id="@($"question-{childQuestionNumber}")" Typo="Typo.body2" Class="mb-2 question-content">
-                                                    <b>@childQuestionNumber. </b>
-                                                    @((MarkupString)ProcessQuestionContent(childQ.QuestionContent))
-                                                </MudText>
-
-                                                <MudGrid Class="mt-2">
-                                                    @if (!string.IsNullOrEmpty(childQ.Answer1))
-                                                    {
-                                                        <MudItem xs="12" Class="pa-0">
-                                                            <MudButton Variant="Variant.Text" Color="Color.Secondary" Size="Size.Small" FullWidth="true"
-                                                                       Class="@(GetSelectedChildAnswer(childQ.ShuffledExamPaperDetailId) == $"cq{childQ.ShuffledExamPaperDetailId}_1" ? "answer-option selected" : "answer-option")"
-                                                                       OnClick="@(async () => await OnChildAnswerSelected(childQ.ShuffledExamPaperDetailId, "A", q.Order, childQ.Order))"
-                                                                       Style="text-align: left; justify-content: flex-start;">
-                                                                <MudIcon Icon="@(GetSelectedChildAnswer(childQ.ShuffledExamPaperDetailId) == $"cq{childQ.ShuffledExamPaperDetailId}_1" ? Icons.Material.Filled.RadioButtonChecked : Icons.Material.Filled.RadioButtonUnchecked)" Class="mr-2" Size="Size.Small" />
-                                                                <span>A. @((MarkupString)childQ.Answer1)</span>
-                                                            </MudButton>
-                                                        </MudItem>
-                                                    }
-                                                    @if (!string.IsNullOrEmpty(childQ.Answer2))
-                                                    {
-                                                        <MudItem xs="12" Class="pa-0">
-                                                            <MudButton Variant="Variant.Text" Color="Color.Secondary" Size="Size.Small" FullWidth="true"
-                                                                       Class="@(GetSelectedChildAnswer(childQ.ShuffledExamPaperDetailId) == $"cq{childQ.ShuffledExamPaperDetailId}_2" ? "answer-option selected" : "answer-option")"
-                                                                       OnClick="@(async () => await OnChildAnswerSelected(childQ.ShuffledExamPaperDetailId, "B", q.Order, childQ.Order))"
-                                                                       Style="text-align: left; justify-content: flex-start;">
-                                                                <MudIcon Icon="@(GetSelectedChildAnswer(childQ.ShuffledExamPaperDetailId) == $"cq{childQ.ShuffledExamPaperDetailId}_2" ? Icons.Material.Filled.RadioButtonChecked : Icons.Material.Filled.RadioButtonUnchecked)" Class="mr-2" Size="Size.Small" />
-                                                                <span>B. @((MarkupString)childQ.Answer2)</span>
-                                                            </MudButton>
-                                                        </MudItem>
-                                                    }
-                                                    @if (!string.IsNullOrEmpty(childQ.Answer3))
-                                                    {
-                                                        <MudItem xs="12" Class="pa-0">
-                                                            <MudButton Variant="Variant.Text" Color="Color.Secondary" Size="Size.Small" FullWidth="true"
-                                                                       Class="@(GetSelectedChildAnswer(childQ.ShuffledExamPaperDetailId) == $"cq{childQ.ShuffledExamPaperDetailId}_3" ? "answer-option selected" : "answer-option")"
-                                                                       OnClick="@(async () => await OnChildAnswerSelected(childQ.ShuffledExamPaperDetailId, "C", q.Order, childQ.Order))"
-                                                                       Style="text-align: left; justify-content: flex-start;">
-                                                                <MudIcon Icon="@(GetSelectedChildAnswer(childQ.ShuffledExamPaperDetailId) == $"cq{childQ.ShuffledExamPaperDetailId}_3" ? Icons.Material.Filled.RadioButtonChecked : Icons.Material.Filled.RadioButtonUnchecked)" Class="mr-2" Size="Size.Small" />
-                                                                <span>C. @((MarkupString)childQ.Answer3)</span>
-                                                            </MudButton>
-                                                        </MudItem>
-                                                    }
-                                                    @if (!string.IsNullOrEmpty(childQ.Answer4))
-                                                    {
-                                                        <MudItem xs="12" Class="pa-0">
-                                                            <MudButton Variant="Variant.Text" Color="Color.Secondary" Size="Size.Small" FullWidth="true"
-                                                                       Class="@(GetSelectedChildAnswer(childQ.ShuffledExamPaperDetailId) == $"cq{childQ.ShuffledExamPaperDetailId}_4" ? "answer-option selected" : "answer-option")"
-                                                                       OnClick="@(async () => await OnChildAnswerSelected(childQ.ShuffledExamPaperDetailId, "D", q.Order, childQ.Order))"
-                                                                       Style="text-align: left; justify-content: flex-start;">
-                                                                <MudIcon Icon="@(GetSelectedChildAnswer(childQ.ShuffledExamPaperDetailId) == $"cq{childQ.ShuffledExamPaperDetailId}_4" ? Icons.Material.Filled.RadioButtonChecked : Icons.Material.Filled.RadioButtonUnchecked)" Class="mr-2" Size="Size.Small" />
-                                                                <span>D. @((MarkupString)childQ.Answer4)</span>
-                                                            </MudButton>
-                                                        </MudItem>
-                                                    }
-                                                </MudGrid>
-                                            </MudPaper>
-                                        }
-                                    }
-                                </MudPaper>
-                            }
-                            else
-                            {
-                                // Câu hỏi đơn lẻ bình thường
-                                var questionNumber = overallQuestionNumber++;
-                                var selectedAnswer = GetSelectedAnswer(q.ShuffledExamPaperDetailId);
-
-                                <MudPaper Class="pa-4 mb-3" Elevation="1" Style="border: 1px solid #e0e0e0;">
-                                    <MudText id="@($"question-{questionNumber}")" Typo="Typo.body1" Class="mb-3 question-content">
-                                        <b>Câu @questionNumber: </b>
-                                        @((MarkupString)ProcessQuestionContent(q.QuestionContent))
+                                    
+                                    <MudText id="@($"{question.OriginalExamPaperDetailId}")" Typo="Typo.body1" GutterBottom="true">
+                                        <b>@strCau: @((MarkupString)question.QuestionContent)</b>
                                     </MudText>
+                                }
 
-                                    @if (!string.IsNullOrEmpty(q.Answer1) || !string.IsNullOrEmpty(q.Answer2) ||
-                                                        !string.IsNullOrEmpty(q.Answer3) || !string.IsNullOrEmpty(q.Answer4))
+                                // Hiển thị đáp án câu hỏi chính
+                                if (question.Answers != null && question.Answers?.Count > 0)
+                                {
+                                    <MudRadioGroup T="int?" Class="mt-2" Style="padding-bottom:10px">
+                                        @foreach (var answer in question.Answers.OrderBy(a => a.Order))
+                                        {
+                                            <MudItem xs="12" sm="6">
+                                                <MudRadio T="int?" Value="@answer.AnswerId">@((MarkupString)answer.AnswerContent)</MudRadio>
+                                            </MudItem>
+                                        }
+                                    </MudRadioGroup>
+                                }
+
+                                // Hiển thị câu hỏi con
+                                if (question.ChildQuestions?.Any() == true)
+                                {
+                                    @foreach (var childQuestion in question.ChildQuestions.OrderBy(c => c.Order))
                                     {
-                                        <MudGrid Class="mt-3">
-                                            @if (!string.IsNullOrEmpty(q.Answer1))
-                                            {
-                                                <MudItem xs="12" Class="pa-0">
-                                                    <MudButton Variant="Variant.Text" Color="Color.Primary" FullWidth="true"
-                                                               Class="@(GetSelectedAnswer(q.ShuffledExamPaperDetailId) == $"q{q.ShuffledExamPaperDetailId}_1" ? "answer-option selected" : "answer-option")"
-                                                               OnClick="@(async () => await OnAnswerSelected(q.ShuffledExamPaperDetailId, "A", q.Order))"
-                                                               Style="text-align: left; justify-content: flex-start;">
-                                                        <MudIcon Icon="@(GetSelectedAnswer(q.ShuffledExamPaperDetailId) == $"q{q.ShuffledExamPaperDetailId}_1" ? Icons.Material.Filled.RadioButtonChecked : Icons.Material.Filled.RadioButtonUnchecked)" Class="mr-2" />
-                                                        <span>A. @((MarkupString)q.Answer1)</span>
-                                                    </MudButton>
-                                                </MudItem>
-                                            }
-                                            @if (!string.IsNullOrEmpty(q.Answer2))
-                                            {
-                                                <MudItem xs="12" Class="pa-0">
-                                                    <MudButton Variant="Variant.Text" Color="Color.Primary" FullWidth="true"
-                                                               Class="@(GetSelectedAnswer(q.ShuffledExamPaperDetailId) == $"q{q.ShuffledExamPaperDetailId}_2" ? "answer-option selected" : "answer-option")"
-                                                               OnClick="@(async () => await OnAnswerSelected(q.ShuffledExamPaperDetailId, "B", q.Order))"
-                                                               Style="text-align: left; justify-content: flex-start;">
-                                                        <MudIcon Icon="@(GetSelectedAnswer(q.ShuffledExamPaperDetailId) == $"q{q.ShuffledExamPaperDetailId}_2" ? Icons.Material.Filled.RadioButtonChecked : Icons.Material.Filled.RadioButtonUnchecked)" Class="mr-2" />
-                                                        <span>B. @((MarkupString)q.Answer2)</span>
-                                                    </MudButton>
-                                                </MudItem>
-                                            }
-                                            @if (!string.IsNullOrEmpty(q.Answer3))
-                                            {
-                                                <MudItem xs="12" Class="pa-0">
-                                                    <MudButton Variant="Variant.Text" Color="Color.Primary" FullWidth="true"
-                                                               Class="@(GetSelectedAnswer(q.ShuffledExamPaperDetailId) == $"q{q.ShuffledExamPaperDetailId}_3" ? "answer-option selected" : "answer-option")"
-                                                               OnClick="@(async () => await OnAnswerSelected(q.ShuffledExamPaperDetailId, "C", q.Order))"
-                                                               Style="text-align: left; justify-content: flex-start;">
-                                                        <MudIcon Icon="@(GetSelectedAnswer(q.ShuffledExamPaperDetailId) == $"q{q.ShuffledExamPaperDetailId}_3" ? Icons.Material.Filled.RadioButtonChecked : Icons.Material.Filled.RadioButtonUnchecked)" Class="mr-2" />
-                                                        <span>C. @((MarkupString)q.Answer3)</span>
-                                                    </MudButton>
-                                                </MudItem>
-                                            }
-                                            @if (!string.IsNullOrEmpty(q.Answer4))
-                                            {
-                                                <MudItem xs="12" Class="pa-0">
-                                                    <MudButton Variant="Variant.Text" Color="Color.Primary" FullWidth="true"
-                                                               Class="@(GetSelectedAnswer(q.ShuffledExamPaperDetailId) == $"q{q.ShuffledExamPaperDetailId}_4" ? "answer-option selected" : "answer-option")"
-                                                               OnClick="@(async () => await OnAnswerSelected(q.ShuffledExamPaperDetailId, "D", q.Order))"
-                                                               Style="text-align: left; justify-content: flex-start;">
-                                                        <MudIcon Icon="@(GetSelectedAnswer(q.ShuffledExamPaperDetailId) == $"q{q.ShuffledExamPaperDetailId}_4" ? Icons.Material.Filled.RadioButtonChecked : Icons.Material.Filled.RadioButtonUnchecked)" Class="mr-2" />
-                                                        <span>D. @((MarkupString)q.Answer4)</span>
-                                                    </MudButton>
-                                                </MudItem>
-                                            }
-                                        </MudGrid>
+                                        if (!string.IsNullOrEmpty(childQuestion.QuestionContent))
+                                        {
+                                            string strCauCon = $"Câu {index}.{childQuestion.Order}";
+                                            
+                                            <MudText id="@($"{childQuestion.OriginalExamPaperDetailId}")" Typo="Typo.body1" GutterBottom="true" Class="ml-4">
+                                                <b>@strCauCon: @((MarkupString)childQuestion.QuestionContent)</b>
+                                            </MudText>
+                                        }
+
+                                        // Hiển thị đáp án câu con
+                                        if (childQuestion.Answers != null && childQuestion.Answers?.Count > 0)
+                                        {
+                                            <MudRadioGroup T="int?" Class="mt-2 ml-4" Style="padding-bottom:10px">
+                                                @foreach (var answer in childQuestion.Answers.OrderBy(a => a.Order))
+                                                {
+                                                    <MudItem xs="12" sm="6">
+                                                        <MudRadio T="int?" Value="@answer.AnswerId">@((MarkupString)answer.AnswerContent)</MudRadio>
+                                                    </MudItem>
+                                                }
+                                            </MudRadioGroup>
+                                        }
                                     }
-                                </MudPaper>
+                                }
+                                
+                                index++;
                             }
                         }
                     }
@@ -273,22 +102,10 @@ else
                 <!-- Timer and Submit Button -->
                 <MudPaper Style="text-align: center; border: 1px solid #ccc; margin-bottom: 15%;">
                     <MudGrid>
-                        <MudItem xs="6" Style="align-content: center">
-                            <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
-                                <MudText Typo="Typo.h4" Color="@(isTimeUp? Color.Error: remainingMinutes <= 1 ? Color.Error: remainingMinutes <= 5 ? Color.Warning : Color.Primary)" id="time-clock">
-                                    @GetFormattedTime()
-                                </MudText>
-                                @if (studentSession.ExtraMinutes > 0)
-                                {
-                                    <MudText Typo="Typo.h6" Color="Color.Primary">
-                                        +@studentSession.ExtraMinutes
-                                    </MudText>
-                                }
-                            </div>
-                        </MudItem>
+                  
                         <MudItem xs="6">
                             <MudButton Style="margin: 5px" Variant="Variant.Outlined" Color="Color.Success"
-                                       Size="Size.Large" OnClick="OnSubmitExamAsync">
+                                       Size="Size.Large" >
                                 Nộp Bài
                             </MudButton>
                         </MudItem>
@@ -297,82 +114,21 @@ else
 
                 <!-- Student Info -->
                 <MudPaper Class="pa-4" Style="text-align: center; border: 1px solid #ccc; margin-bottom: 15%;">
-                    <MudImage Src="images/exam/Ellipse 1.svg" Width="120" Class="mb-2" />
-                    <MudDivider Class="mb-2" />
-                    <MudText Typo="Typo.subtitle2"><b>Mã sinh viên:</b> @studentSession.StudentCode</MudText>
-                    <MudText Typo="Typo.subtitle2"><b>Mã đề:</b> @shuffledExam.ShuffledExamPaperCore</MudText>
-                    <MudText Typo="Typo.subtitle2"><b>Môn học:</b> @shuffledExam.SubjectName (@shuffledExam.SubjectCode)</MudText>
-                    <MudText Typo="Typo.subtitle2"><b>Phòng thi:</b> @studentSession.RoomName</MudText>
-                    <MudText Typo="Typo.subtitle2"><b>Thời gian:</b> @studentSession.Duration phút</MudText>
-                    @if (studentSession.ExtraMinutes > 0)
-                    {
-                        <MudText Typo="Typo.subtitle2"><b>Thêm:</b> +@studentSession.ExtraMinutes phút</MudText>
-                    }
                 </MudPaper>
 
                 <!-- Question Navigation -->
                 <MudPaper Class="pa-4" Style="text-align: center; border: 1px solid #ccc; max-height: 450px; overflow-y: auto">
                     <MudText Typo="Typo.subtitle2" Class="mb-2"><b>Danh sách câu hỏi</b></MudText>
                     <MudGrid>
-                        @if (shuffledExam.Details != null)
-                        {
-                            var navOverallQuestionNumber = 1;
-                            @foreach (var q in shuffledExam.Details.OrderBy(d => d.Order))
-                            {
-                                if (q.ChildQuestions != null && q.ChildQuestions.Any())
-                                {
-                                    // Câu hỏi cha có câu con - không hiển thị navigation button cho câu cha
-                                    var startNumber = navOverallQuestionNumber;
-                                    navOverallQuestionNumber += q.ChildQuestions.Count;
-
-                                    @foreach (var childQ in q.ChildQuestions.OrderBy(cq => cq.Order))
-                                    {
-                                        var childIndex = q.ChildQuestions.OrderBy(cq => cq.Order).ToList().IndexOf(childQ);
-                                        var childQuestionNumber = startNumber + childIndex;
-                                        var isChildAnswered = !string.IsNullOrEmpty(GetSelectedChildAnswer(childQ.ShuffledExamPaperDetailId));
-
-                                        <MudItem xs="2" md="3" Style="padding-left: 15px">
-                                            <MudButton Size="Size.Small" Variant="Variant.Filled"
-                                                       Color="@(isChildAnswered ? Color.Success : Color.Default)"
-                                                       OnClick="@(async () => await ScrollToQuestionAsync(childQuestionNumber.ToString()))"
-                                                       Style="font-size: 0.8em;">
-                                                @childQuestionNumber
-                                            </MudButton>
-                                        </MudItem>
-                                    }
-                                }
-                                else
-                                {
-                                    // Câu hỏi đơn lẻ
-                                    var questionNumber = navOverallQuestionNumber++;
-                                    var isAnswered = !string.IsNullOrEmpty(GetSelectedAnswer(q.ShuffledExamPaperDetailId));
-
-                                    <MudItem xs="2" md="3" Style="padding-left: 15px">
-                                        <MudButton Size="Size.Small" Variant="Variant.Filled"
-                                                   Color="@(isAnswered ? Color.Success : Color.Default)"
-                                                   OnClick="async () => await ScrollToQuestionAsync(questionNumber.ToString())">
-                                            @questionNumber
-                                        </MudButton>
-                                    </MudItem>
-                                }
-                            }
-                        }
+                        
+                       
                     </MudGrid>
 
                     <MudDivider Class="my-3" />
                     <MudText Typo="Typo.body2">
-                        Đã trả lời: @GetAnsweredQuestionsCount() / @GetTotalQuestionsCount() câu
                     </MudText>
                     <MudText Typo="Typo.caption" Color="Color.Secondary">
-                        @GetQuestionCountDetails()
                     </MudText>
-                    @if (lastSaveTime.HasValue)
-                    {
-                        <MudText Typo="Typo.caption" Color="Color.Success" Class="mt-2">
-                            <MudIcon Icon="Icons.Material.Filled.Save" Size="Size.Small" Class="mr-1" />
-                            Lưu lần cuối: @lastSaveTime.Value.ToString("HH:mm:ss")
-                        </MudText>
-                    }
                 </MudPaper>
             </MudItem>
         </MudGrid>
@@ -504,3 +260,4 @@ else
 
     // Audio control moved to wwwroot/js/exam-audio.js
 </script>
+
