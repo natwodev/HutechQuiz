@@ -2,6 +2,7 @@ using AutoMapper;
 using backend_manage.core.Entities;
 using backend_manage.core.Messages;
 using backend_manage.shared.DTOs;
+using System.Text.Json;
 
 namespace backend_manage.core.Mappings;
 public class MappingProfile : Profile
@@ -203,10 +204,29 @@ public class MappingProfile : Profile
         // Mapping cho ShuffledExamPaper
         CreateMap<ShuffledExamPaper, ShuffledExamPaperDto>()
             .ForMember(dest => dest.SubjectName, opt => opt.MapFrom(src => src.Subject != null ? src.Subject.SubjectName : null))
-            .ForMember(dest => dest.SubjectCode, opt => opt.MapFrom(src => src.Subject != null ? src.Subject.SubjectCore : null));
+            .ForMember(dest => dest.SubjectCode, opt => opt.MapFrom(src => src.Subject != null ? src.Subject.SubjectCore : null))
+            .ForMember(dest => dest.QuestionStructures, opt => opt.MapFrom(src => ParseQuestionStructure(src.QuestionStructure)));
     }
 
-   
 
-    
+    private static List<QuestionStructureDto> ParseQuestionStructure(string? questionStructureJson)
+    {
+        if (string.IsNullOrEmpty(questionStructureJson))
+            return new List<QuestionStructureDto>();
+
+        try
+        {
+            var options = new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            };
+            
+            var questionStructures = JsonSerializer.Deserialize<List<QuestionStructureDto>>(questionStructureJson, options);
+            return questionStructures ?? new List<QuestionStructureDto>();
+        }
+        catch
+        {
+            return new List<QuestionStructureDto>();
+        }
+    }
 }

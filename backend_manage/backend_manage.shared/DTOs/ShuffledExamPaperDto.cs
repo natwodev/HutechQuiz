@@ -13,7 +13,9 @@ namespace backend_manage.shared.DTOs
         public string SubjectCode { get; set; }
         public int? ExamSessionSubjectId { get; set; }
         
-        public string? QuestionStructure { get; set; }
+        //public string? QuestionStructure { get; set; }
+        
+        public List<QuestionStructureDto> QuestionStructures { get; set; } = new();
         
     }
     
