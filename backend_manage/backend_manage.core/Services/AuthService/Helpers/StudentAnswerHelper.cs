@@ -100,13 +100,13 @@ public class StudentAnswerHelper
         var answersDict = ParseAnswersString(currentAnswerString);
     
         // Cập nhật đáp án cho câu hỏi đơn
-        answersDict[key.ToString()] = value;
+        answersDict[key.ToString()] = value.ToString();
     
         // Tạo lại chuỗi đáp án
         return CreateAnswersString(answersDict);
     }
 
-    private static string CreateAnswersString(Dictionary<string, int> answers)
+    private static string CreateAnswersString(Dictionary<string, string> answers)
     {
         if (answers == null || answers.Count == 0)
             return "";
@@ -115,14 +115,14 @@ public class StudentAnswerHelper
         return string.Join(";", answers.Select(kv => $"({kv.Key}:{kv.Value})"));
     }
 
-    private static Dictionary<string, int> ParseAnswersString(string answersString)
+    private static Dictionary<string, string> ParseAnswersString(string answersString)
     {
         if (string.IsNullOrEmpty(answersString))
-            return new Dictionary<string, int>();
+            return new Dictionary<string, string>();
 
         try
         {
-            var result = new Dictionary<string, int>();
+            var result = new Dictionary<string, string>();
             var parts = answersString.Split(';', StringSplitOptions.RemoveEmptyEntries);
         
             foreach (var part in parts)
@@ -135,11 +135,8 @@ public class StudentAnswerHelper
                     var key = subParts[0];
                     var answerStr = subParts[1];
                 
-                    // Nếu value là số thì parse, còn nếu là "-" thì mặc định -1
-                    if (int.TryParse(answerStr, out int answer))
-                        result[key] = answer;
-                    else
-                        result[key] = -1; // hoặc để 0 tùy bạn định nghĩa
+                    // Giữ nguyên giá trị gốc, không chuyển đổi
+                    result[key] = answerStr;
                 }
             }
         
@@ -147,7 +144,7 @@ public class StudentAnswerHelper
         }
         catch
         {
-            return new Dictionary<string, int>();
+            return new Dictionary<string, string>();
         }
     }
 

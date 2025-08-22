@@ -1,10 +1,12 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using MudBlazor;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Timers;
 using frontend_manage.DTOs;
 using frontend_manage.Services;
+using frontend_manage.Pages.Exam.Components;
 
 namespace frontend_manage.Pages.Exam
 {
@@ -81,6 +83,11 @@ namespace frontend_manage.Pages.Exam
                     }
                     
                     // Load existing answers if any - chỉ sau khi đã có dữ liệu exam
+                    if (!string.IsNullOrEmpty(studentSession.StudentAnswersString))
+                    {
+                        LoadAnswersFromString(studentSession.StudentAnswersString);
+                        StateHasChanged(); // Cập nhật UI sau khi load answers
+                    }
                     
                     // Initialize timer
                     await InitializeTimerAsync();
@@ -94,6 +101,17 @@ namespace frontend_manage.Pages.Exam
         
         
         
+        // Handler methods for QuestionItem component events
+        private async Task HandleAnswerSelected(QuestionItem.AnswerSelectedArgs args)
+        {
+            await SaveAnswerAsync(args.QuestionId, args.AnswerId);
+        }
+
+        private async Task HandleChildAnswerSelected(QuestionItem.AnswerSelectedArgs args)
+        {
+            await SaveChildAnswerAsync(args.QuestionId, args.AnswerId);
+        }
+
         private async Task<bool> SaveAnswerAsync(int key, int value)
         {
             if (studentExamSessionId == null || studentSession == null)
@@ -184,6 +202,8 @@ namespace frontend_manage.Pages.Exam
                     selectedChildAnswers.Clear();
                     
                     // Load the answers từ StudentAnswersString có sẵn
+                    LoadAnswersFromString(answersString);
+                    StateHasChanged(); // Cập nhật UI sau khi load answers
                     
                     if (showSuccessMessage)
                     {
@@ -213,6 +233,89 @@ namespace frontend_manage.Pages.Exam
             }
         }
 
+        private void LoadAnswersFromString(string answersString)
+        {
+            if (string.IsNullOrEmpty(answersString))
+                return;
+
+            try
+            {
+                var answerPairs = answersString.Split(';', StringSplitOptions.RemoveEmptyEntries);
+                
+                foreach (var pair in answerPairs)
+                {
+                    // Loại bỏ dấu ngoặc đơn
+                    var cleanPair = pair.Trim('(', ')');
+                    
+                    // Tách key và value - support cả format cũ (dấu phẩy) và mới (dấu hai chấm)
+                    var parts = cleanPair.Split(':');
+                    if (parts.Length != 2)
+                    {
+                        parts = cleanPair.Split(',');
+                    }
+                    
+                    if (parts.Length == 2)
+                    {
+                        var questionIdStr = parts[0].Trim();
+                        var answerIdStr = parts[1].Trim();
+                        
+                        // Parse question ID
+                        if (int.TryParse(questionIdStr, out int questionId))
+                        {
+                            // Kiểm tra nếu answerId là "-" hoặc rỗng thì không chọn
+                            if (!string.IsNullOrEmpty(answerIdStr) && answerIdStr != "-")
+                            {
+                                if (int.TryParse(answerIdStr, out int answerId))
+                                {
+                                    // Xác định đây là câu hỏi cha hay câu hỏi con
+                                    var isChildQuestion = IsChildQuestion(questionId);
+                                    
+                                    if (isChildQuestion)
+                                    {
+                                        selectedChildAnswers[questionId] = answerId.ToString();
+                                    }
+                                    else
+                                    {
+                                        selectedAnswers[questionId] = answerId.ToString();
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log error nếu cần
+                Console.WriteLine($"Error parsing answers string: {ex.Message}");
+            }
+        }
+
+        private bool IsChildQuestion(int questionId)
+        {
+            // Kiểm tra xem questionId có phải là câu hỏi con không
+            // Dựa vào mappedQuestions để xác định
+            if (mappedQuestions == null)
+                return false;
+
+            foreach (var question in mappedQuestions)
+            {
+                // Kiểm tra câu hỏi con
+                if (question.ChildQuestions?.Any() == true)
+                {
+                    foreach (var childQuestion in question.ChildQuestions)
+                    {
+                        if (childQuestion.OriginalExamPaperDetailId == questionId)
+                        {
+                            return true;
+                        }
+                    }
+                }
+            }
+            
+            return false;
+        }
+
        private async Task OnSubmitExamAsync()
        {
            // Lấy chuỗi thời gian dạng "mm:ss"
@@ -233,15 +336,48 @@ namespace frontend_manage.Pages.Exam
                    // Xóa dữ liệu timer khỏi localStorage khi nộp bài
                    await JSRuntime.InvokeVoidAsync("localStorage.removeItem", TIMER_STORAGE_KEY);
                    
-                   // TODO: Logic lưu đáp án cuối cùng đã được gỡ bỏ
+                   // Lưu đáp án cuối cùng trước khi nộp bài
+                   await RefreshAnswersAsync(false);
                    
-                   // TODO: API nộp bài đã được gỡ bỏ - chờ hướng dẫn thêm
-                   
-                   // Hiển thị thông báo tạm thời
-                   Snackbar.Add("Chức năng nộp bài tạm thời không khả dụng", Severity.Warning);
-                   
-                   // Tạm thời không chuyển trang
-                   // Navigation.NavigateTo("/Exam/Result");
+                   var submitRequest = new SubmitExamRequest
+                   {
+                       StudentExamSessionId = studentExamSessionId.Value
+                   };
+                                          
+                   var submitResponse = await StudentService.SubmitExamAsync(submitRequest);
+
+                   if (submitResponse?.Success == true)
+                   {
+                       // Lưu dữ liệu exam result vào localStorage để trang Result có thể đọc
+                       if (submitResponse.Data != null)
+                       {
+                           var examResultData = new
+                           {
+                               StudentCode = submitResponse.Data.StudentCode,
+                               ShuffledExamPaperId = submitResponse.Data.ShuffledExamPaperId,
+                               Score = submitResponse.Data.Score,
+                               CorrectAnswers = submitResponse.Data.CorrectAnswers,
+                               TotalQuestions = submitResponse.Data.TotalQuestions,
+                               StartTime = submitResponse.Data.StartTime,
+                               EndTime = submitResponse.Data.EndTime,
+                               StudentAnswersString = submitResponse.Data.StudentAnswersString,
+                               AnswerKey = submitResponse.Data.AnswerKey
+                           };
+                           
+                                                       var resultJson = JsonSerializer.Serialize(examResultData);
+                           await JSRuntime.InvokeVoidAsync("localStorage.setItem", $"examResult_{studentExamSessionId.Value}", resultJson);
+                           
+                           // Lưu studentExamSessionId để trang Result có thể đọc
+                           await JSRuntime.InvokeVoidAsync("localStorage.setItem", "currentStudentExamSessionId", studentExamSessionId.Value.ToString());
+                       }
+                       
+                       Snackbar.Add("Nộp bài thành công!", Severity.Success);
+                       Navigation.NavigateTo("/Exam/Result");
+                   }
+                   else
+                   {
+                       Snackbar.Add("Có lỗi xảy ra khi nộp bài. Vui lòng thử lại!", Severity.Error);
+                   }
                }
                catch (Exception ex)
                {
@@ -267,7 +403,7 @@ namespace frontend_manage.Pages.Exam
                     try
                     {
                         // Parse dữ liệu timer đã lưu
-                        var timerData = System.Text.Json.JsonSerializer.Deserialize<ExamTimerData>(savedTimerData);
+                        var timerData = JsonSerializer.Deserialize<ExamTimerData>(savedTimerData);
                         
                         if (timerData != null && timerData.StudentExamSessionId == studentExamSessionId)
                         {
@@ -567,106 +703,9 @@ namespace frontend_manage.Pages.Exam
                 .Where(question => question != null)
                 .ToList();
         }
+        
 
-        // Navigation Panel Helper Methods
-        private string GetSelectedAnswer(int originalExamPaperDetailId)
-        {
-            selectedAnswers.TryGetValue(originalExamPaperDetailId, out string? value);
-            return value ?? string.Empty;
-        }
-
-        private string GetSelectedChildAnswer(int originalExamPaperDetailId)
-        {
-            selectedChildAnswers.TryGetValue(originalExamPaperDetailId, out string? value);
-            return value ?? string.Empty;
-        }
-
-        private int GetAnsweredQuestionsCount()
-        {
-            if (mappedQuestions == null) return 0;
-
-            int count = 0;
-            foreach (var question in mappedQuestions.OrderBy(d => d.Order))
-            {
-                if (question.ChildQuestions?.Any() == true)
-                {
-                    // Câu hỏi cha có câu con - đếm câu con đã trả lời
-                    count += question.ChildQuestions.Count(childQ => !string.IsNullOrEmpty(GetSelectedChildAnswer(childQ.OriginalExamPaperDetailId)));
-                }
-                else
-                {
-                    // Câu hỏi đơn lẻ
-                    if (!string.IsNullOrEmpty(GetSelectedAnswer(question.OriginalExamPaperDetailId)))
-                        count++;
-                }
-            }
-            return count;
-        }
-
-        private int GetTotalQuestionsCount()
-        {
-            if (mappedQuestions == null) return 0;
-
-            int count = 0;
-            foreach (var question in mappedQuestions.OrderBy(d => d.Order))
-            {
-                if (question.ChildQuestions?.Any() == true)
-                {
-                    // Câu hỏi cha có câu con - đếm số câu con
-                    count += question.ChildQuestions.Count;
-                }
-                else
-                {
-                    // Câu hỏi đơn lẻ
-                    count++;
-                }
-            }
-            return count;
-        }
-
-        private string GetQuestionCountDetails()
-        {
-            if (mappedQuestions == null) return "";
-
-            int parentQuestions = mappedQuestions.Count(q => q.ChildQuestions?.Any() == true);
-            int singleQuestions = mappedQuestions.Count(q => q.ChildQuestions?.Any() != true);
-            int childQuestions = mappedQuestions.Where(q => q.ChildQuestions?.Any() == true)
-                                               .Sum(q => q.ChildQuestions.Count);
-
-            var details = new List<string>();
-            if (singleQuestions > 0)
-                details.Add($"{singleQuestions} câu đơn");
-            if (parentQuestions > 0)
-                details.Add($"{parentQuestions} câu cha");
-            if (childQuestions > 0)
-                details.Add($"{childQuestions} câu con");
-
-            return string.Join(", ", details);
-        }
-
-        // Helper methods for RadioGroup values
-        private int? GetSelectedAnswerAsInt(int originalExamPaperDetailId)
-        {
-            var selectedValue = GetSelectedAnswer(originalExamPaperDetailId);
-            if (string.IsNullOrEmpty(selectedValue))
-                return null;
-            
-            if (int.TryParse(selectedValue, out int result))
-                return result;
-            
-            return null;
-        }
-
-        private int? GetSelectedChildAnswerAsInt(int originalExamPaperDetailId)
-        {
-            var selectedValue = GetSelectedChildAnswer(originalExamPaperDetailId);
-            if (string.IsNullOrEmpty(selectedValue))
-                return null;
-            
-            if (int.TryParse(selectedValue, out int result))
-                return result;
-            
-            return null;
-        }
+        
+        
     }
 }
