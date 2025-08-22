@@ -52,7 +52,7 @@ else
                                 if (isParentQuestion)
                                 { 
                                     // Câu cha: hiển thị phạm vi câu hỏi con (không có MudPaper)
-                                    <MudText id="@($"{question.OriginalExamPaperDetailId}")" Typo="Typo.body1" GutterBottom="true">
+                                    <MudText id="@($"question-parent-{question.OriginalExamPaperDetailId}")" Typo="Typo.body1" GutterBottom="true">
                                         <b>@((MarkupString)question.QuestionContent)</b>
                                     </MudText>
                                 }
@@ -60,20 +60,29 @@ else
                                 {
                                     // Câu đơn: có số thứ tự và MudPaper riêng
                                     <MudPaper Class="pa-3 mb-3" Style="border: 1px solid #e0e0e0; border-radius: 8px;">
-                                        <MudText id="@($"{question.OriginalExamPaperDetailId}")" Typo="Typo.body1" GutterBottom="true">
+                                        <MudText id="@($"question-{questionNumber}")" Typo="Typo.body1" GutterBottom="true">
                                             <b>Câu @(questionNumber++): @((MarkupString)question.QuestionContent)</b>
                                         </MudText>
                                         
                                         @if (question.Answers != null && question.Answers?.Count > 0)
                                         {
-                                            <MudRadioGroup T="int?" Class="mt-2" Style="display: flex; flex-direction: column;">
+                                            <MudRadioGroup T="int?" 
+                                                           Class="mt-2" 
+                                                           Style="display: flex; flex-direction: column;"
+                                                           Value="@GetSelectedAnswerAsInt(question.OriginalExamPaperDetailId)"
+                                                           ValueChanged="@(async (selectedAnswerId) => 
+                                                                             await SaveAnswerAsync(question.OriginalExamPaperDetailId, selectedAnswerId ?? 0))">
                                                 @foreach (var answer in question.Answers.OrderBy(a => a.Order))
                                                 {
-                                                    <MudPaper Class="pa-2 mb-2" Style="border: 1px solid #ddd; border-radius: 6px; background-color: #fafafa; width: 100%;">
-                                                        <MudRadio T="int?" Value="@answer.AnswerId" Style="width: 100%;">@((MarkupString)answer.AnswerContent)</MudRadio>
+                                                    <MudPaper Class="pa-2 mb-2" 
+                                                              Style="border: 1px solid #ddd; border-radius: 6px; background-color: #fafafa; width: 100%;">
+                                                        <MudRadio T="int?" Value="@answer.AnswerId" Style="width: 100%;">
+                                                            @((MarkupString)answer.AnswerContent)
+                                                        </MudRadio>
                                                     </MudPaper>
                                                 }
                                             </MudRadioGroup>
+
                                         }
                                     </MudPaper>
                                 }
@@ -87,7 +96,7 @@ else
                                     <MudPaper Class="pa-3 mb-3" Style="border: 1px solid #e0e0e0; border-radius: 8px;">
                                         @if (!string.IsNullOrEmpty(childQuestion.QuestionContent))
                                         {
-                                            <MudText id="@($"{childQuestion.OriginalExamPaperDetailId}")" Typo="Typo.body1" GutterBottom="true">
+                                            <MudText id="@($"question-{questionNumber}")" Typo="Typo.body1" GutterBottom="true">
                                                 <b>Câu @(questionNumber++): @((MarkupString)childQuestion.QuestionContent)</b>
                                             </MudText>
                                         }
@@ -95,14 +104,23 @@ else
                                         
                                         @if (childQuestion.Answers != null && childQuestion.Answers?.Count > 0)
                                         {
-                                            <MudRadioGroup T="int?" Class="mt-2" Style="display: flex; flex-direction: column;">
+                                            <MudRadioGroup T="int?" 
+                                                           Class="mt-2" 
+                                                           Style="display: flex; flex-direction: column;"
+                                                           Value="@GetSelectedChildAnswerAsInt(childQuestion.OriginalExamPaperDetailId)"
+                                                           ValueChanged="@(async (selectedAnswerId) => 
+                                                                             await SaveChildAnswerAsync(childQuestion.OriginalExamPaperDetailId, selectedAnswerId ?? 0))">
                                                 @foreach (var answer in childQuestion.Answers.OrderBy(a => a.Order))
                                                 {
-                                                    <MudPaper Class="pa-2 mb-2" Style="border: 1px solid #ddd; border-radius: 6px; background-color: #fafafa; width: 100%;">
-                                                        <MudRadio T="int?" Value="@answer.AnswerId" Style="width: 100%;">@((MarkupString)answer.AnswerContent)</MudRadio>
+                                                    <MudPaper Class="pa-2 mb-2" 
+                                                              Style="border: 1px solid #ddd; border-radius: 6px; background-color: #fafafa; width: 100%;">
+                                                        <MudRadio T="int?" Value="@answer.AnswerId" Style="width: 100%;">
+                                                            @((MarkupString)answer.AnswerContent)
+                                                        </MudRadio>
                                                     </MudPaper>
                                                 }
                                             </MudRadioGroup>
+
                                         }
                                     </MudPaper>
                                 }
@@ -117,34 +135,111 @@ else
                 <!-- Timer and Submit Button -->
                 <MudPaper Style="text-align: center; border: 1px solid #ccc; margin-bottom: 15%;">
                     <MudGrid>
-
+                        <MudItem xs="6" Style="align-content: center">
+                            <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+                                <MudText Typo="Typo.h4" 
+                                         Color="@(isTimeUp? Color.Error: remainingMinutes <= 5 ? Color.Warning : Color.Primary)" 
+                                         id="time-clock">
+                                    @GetFormattedTime()
+                                </MudText>
+                                @if (studentSession.ExtraMinutes > 0)
+                                {
+                                    <MudText Typo="Typo.h6" Color="Color.Primary">
+                                        +@studentSession.ExtraMinutes
+                                    </MudText>
+                                }
+                            </div>
+                        </MudItem>
                         <MudItem xs="6">
                             <MudButton Style="margin: 5px" Variant="Variant.Outlined" Color="Color.Success"
-                                       Size="Size.Large">
+                                       Size="Size.Large" OnClick="OnSubmitExamAsync">
                                 Nộp Bài
                             </MudButton>
                         </MudItem>
                     </MudGrid>
                 </MudPaper>
-
+                
                 <!-- Student Info -->
                 <MudPaper Class="pa-4" Style="text-align: center; border: 1px solid #ccc; margin-bottom: 15%;">
+                    <MudImage Src="images/exam/Ellipse 1.svg" Width="120" Class="mb-2" />
+                    <MudDivider Class="mb-2" />
+                    <MudText Typo="Typo.subtitle2"><b>Mã sinh viên:</b> @studentSession.StudentCode</MudText>
+                    <MudText Typo="Typo.subtitle2"><b>Mã đề:</b> @shuffledExam.ShuffledExamPaperCore</MudText>
+                    <MudText Typo="Typo.subtitle2"><b>Môn học:</b> @shuffledExam.SubjectName (@shuffledExam.SubjectCode)</MudText>
+                    <MudText Typo="Typo.subtitle2"><b>Phòng thi:</b> @studentSession.RoomName</MudText>
+                    <MudText Typo="Typo.subtitle2"><b>Thời gian:</b> @studentSession.Duration phút</MudText>
+                    @if (studentSession.ExtraMinutes > 0)
+                    {
+                        <MudText Typo="Typo.subtitle2"><b>Thêm:</b> +@studentSession.ExtraMinutes phút</MudText>
+                    }
                 </MudPaper>
-
                 <!-- Question Navigation -->
                 <MudPaper Class="pa-4" Style="text-align: center; border: 1px solid #ccc; max-height: 450px; overflow-y: auto">
                     <MudText Typo="Typo.subtitle2" Class="mb-2"><b>Danh sách câu hỏi</b></MudText>
                     <MudGrid>
+                        @if (mappedQuestions != null)
+                        {
+                            var navOverallQuestionNumber = 1;
+                            @foreach (var q in mappedQuestions.OrderBy(d => d.Order))
+                            {
+                                if (q.ChildQuestions != null && q.ChildQuestions.Any())
+                                {
+                                    // Câu hỏi cha có câu con - không hiển thị navigation button cho câu cha
+                                    var startNumber = navOverallQuestionNumber;
+                                    navOverallQuestionNumber += q.ChildQuestions.Count;
 
+                                    @foreach (var childQ in q.ChildQuestions.OrderBy(cq => cq.Order))
+                                    {
+                                        var childIndex = q.ChildQuestions.OrderBy(cq => cq.Order).ToList().IndexOf(childQ);
+                                        var childQuestionNumber = startNumber + childIndex;
+                                        var isChildAnswered = !string.IsNullOrEmpty(GetSelectedChildAnswer(childQ.OriginalExamPaperDetailId));
 
+                                        <MudItem xs="2" md="3" Style="padding-left: 15px">
+                                            <MudButton Size="Size.Small" Variant="Variant.Filled"
+                                                       Color="@(isChildAnswered ? Color.Success : Color.Default)"
+                                                       OnClick="@(async () => await ScrollToQuestionAsync(childQuestionNumber.ToString()))"
+                                                       Style="font-size: 0.8em;">
+                                                @childQuestionNumber
+                                            </MudButton>
+                                        </MudItem>
+                                    }
+                                }
+                                else
+                                {
+                                    // Câu hỏi đơn lẻ
+                                    var questionNumber = navOverallQuestionNumber++;
+                                    var isAnswered = !string.IsNullOrEmpty(GetSelectedAnswer(q.OriginalExamPaperDetailId));
+
+                                    <MudItem xs="2" md="3" Style="padding-left: 15px">
+                                        <MudButton Size="Size.Small" Variant="Variant.Filled"
+                                                   Color="@(isAnswered ? Color.Success : Color.Default)"
+                                                   OnClick="async () => await ScrollToQuestionAsync(questionNumber.ToString())">
+                                            @questionNumber
+                                        </MudButton>
+                                    </MudItem>
+                                }
+                            }
+                        }
                     </MudGrid>
 
-                    <MudDivider Class="my-3"/>
+                    <MudDivider Class="my-3" />
                     <MudText Typo="Typo.body2">
+                        Đã trả lời: @GetAnsweredQuestionsCount() / @GetTotalQuestionsCount() câu
                     </MudText>
                     <MudText Typo="Typo.caption" Color="Color.Secondary">
+                        @GetQuestionCountDetails()
                     </MudText>
+                    @if (lastSaveTime.HasValue)
+                    {
+                        <MudText Typo="Typo.caption" Color="Color.Success" Class="mt-2">
+                            <MudIcon Icon="Icons.Material.Filled.Save" Size="Size.Small" Class="mr-1" />
+                            Lưu lần cuối: @lastSaveTime.Value.ToString("HH:mm:ss")
+                        </MudText>
+                    }
                 </MudPaper>
+                
+                
+                
             </MudItem>
         </MudGrid>
     </MudPaper>
