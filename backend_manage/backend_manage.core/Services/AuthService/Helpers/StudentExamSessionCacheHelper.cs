@@ -469,7 +469,6 @@ public class StudentExamSessionCacheHelper
 
                             // Cập nhật session trong cache
                             cachedSession.StudentAnswersString = newAnswersString;
-                            cachedSession.UpdatedAt = DateTime.UtcNow;
                             
                             // Lưu lại vào cache
                             var updatedSessionJson = JsonSerializer.Serialize(cachedSession);
@@ -550,9 +549,10 @@ public class StudentExamSessionCacheHelper
                 bool found = false;
                 foreach (var part in answerParts)
                 {
-                    if (part.StartsWith($"({index},"))
+                    // Tìm chính xác câu hỏi có index tương ứng
+                    if (part.StartsWith($"({index}:") && part.EndsWith(")"))
                     {
-                        updatedParts.Add($"({index},{answer})");
+                        updatedParts.Add($"({index}:{answer})");
                         found = true;
                     }
                     else if (!string.IsNullOrWhiteSpace(part))
@@ -564,7 +564,7 @@ public class StudentExamSessionCacheHelper
                 // Nếu không tìm thấy index, thêm mới
                 if (!found)
                 {
-                    updatedParts.Add($"({index},{answer})");
+                    updatedParts.Add($"({index}:{answer})");
                 }
 
                 // Tạo chuỗi đáp án mới
@@ -707,7 +707,6 @@ public class StudentExamSessionCacheHelper
                         {
                             // Cập nhật StudentAnswersString
                             cachedSession.StudentAnswersString = newAnswersString;
-                            cachedSession.UpdatedAt = DateTime.UtcNow;
                             
                             // Lưu lại vào cache
                             var updatedSessionJson = JsonSerializer.Serialize(cachedSession);

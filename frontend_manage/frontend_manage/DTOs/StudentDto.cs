@@ -108,13 +108,7 @@ namespace frontend_manage.DTOs
         public string SubjectName { get; set; }
         public string RoomName { get; set; }
         public int Duration { get; set; }
-    
-        // Audit fields từ BaseEntity
-        public DateTime CreatedAt { get; set; }
-        public string? CreatedBy { get; set; }
-        public DateTime? UpdatedAt { get; set; }
-        public string? UpdatedBy { get; set; }
-        public int Version { get; set; }
+        
     }
 
 

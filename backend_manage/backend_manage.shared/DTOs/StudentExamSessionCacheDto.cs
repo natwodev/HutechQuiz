@@ -31,11 +31,6 @@ namespace backend_manage.shared.DTOs
         public DateTime ExamSessionStartTime { get; set; }
         public DateTime ExamSessionEndTime { get; set; }
         
-        // Audit fields từ BaseEntity
-        public DateTime CreatedAt { get; set; }
-        public string? CreatedBy { get; set; }
-        public DateTime? UpdatedAt { get; set; }
-        public string? UpdatedBy { get; set; }
-        public int Version { get; set; }
+        // Không cần các trường audit từ BaseEntity cho cache
     }
 } 

@@ -2,26 +2,53 @@ using System.ComponentModel.DataAnnotations;
 
 namespace backend_manage.shared.DTOs
 {
+    // DTO cho entity Answers trong database
     public class AnswerDto
     {
         public int AnswerId { get; set; }
-        public int QuestionId { get; set; }
-        public string Content { get; set; }
+        public int Order { get; set; }
+        public string AnswerContent { get; set; }
         public bool IsCorrect { get; set; }
+        public bool CanShuffleAnswer { get; set; }
+        public int OriginalExamPaperDetailId { get; set; }
     }
 
+    
+    public class AnswerShufferDto
+    {
+        public int AnswerId { get; set; }
+        public int Order { get; set; }
+        public string AnswerContent { get; set; }
+        public bool IsCorrect { get; set; }
+        public bool CanShuffleAnswer { get; set; }
+        public int OriginalExamPaperDetailId { get; set; }
+    }
+    
     public class AnswerCreateDto
     {
-        public int QuestionId { get; set; }
-        public string Content { get; set; }
+        [Required]
+        public int Order { get; set; }
+        
+        [Required]
+        public string AnswerContent { get; set; }
+        
         public bool IsCorrect { get; set; }
+        
+        public bool CanShuffleAnswer { get; set; } = true;
+        
+        [Required]
+        public int OriginalExamPaperDetailId { get; set; }
     }
 
     public class AnswerUpdateDto
     {
-        public string Content { get; set; }
-        public bool IsCorrect { get; set; }
+        public int? Order { get; set; }
+        public string AnswerContent { get; set; }
+        public bool? IsCorrect { get; set; }
+        public bool? CanShuffleAnswer { get; set; }
     }
+
+
 
     public class SubmitExamDto
     {
@@ -29,23 +56,17 @@ namespace backend_manage.shared.DTOs
         public List<SaveAnswerDto> SaveAnswerDtos { get; set; }
     }
 
-
     public class SaveAnswerDto
     {
         [Required]
         public int StudentExamSessionId { get; set; }
 
         [Required]
-        public int Index { get; set; }
-
+        public int key { get; set; }
         // Dùng cho câu hỏi con trong câu cha
-        public int? SubIndex { get; set; }
-
-        [Required]
-        [RegularExpression("^[A-D]$", ErrorMessage = "Đáp án phải là A, B, C hoặc D")]
-        public string Answer { get; set; } = null!;
+        public int value { get; set; }
+        
     }
-
 
     public class ExamSubmissionDto
     {

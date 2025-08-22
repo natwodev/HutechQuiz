@@ -21,16 +21,7 @@ namespace backend_manage.core.Entities
 
         // Nội dung câu hỏi
         public string? QuestionContent { get; set; }
-        // Đáp án 1
-        public string? Answer1 { get; set; }
-        // Đáp án 2
-        public string? Answer2 { get; set; }
-        // Đáp án 3
-        public string? Answer3 { get; set; }
-        // Đáp án 4
-        public string? Answer4 { get; set; }
         
-
         // Chỉ số đáp án đúng (1, 2, 3, 4)
         public int? CorrectAnswerIndex { get; set; }
 
@@ -40,11 +31,6 @@ namespace backend_manage.core.Entities
         // Thông tin hoán vị từ XML
         // Cho phép hoán vị câu hỏi hay không
         public bool CanShuffleQuestion { get; set; } = true;
-        
-        // Thông tin hoán vị của từng đáp án (JSON format)
-        // Ví dụ: "{\"1\":true,\"2\":false,\"3\":true,\"4\":false}"
-        // Key: vị trí đáp án (1,2,3,4), Value: có thể hoán vị hay không
-        public string? AnswerShuffleInfo { get; set; }
 
         // Khóa ngoại liên kết với bảng Chapter
         // Xác định câu hỏi thuộc chương nào
@@ -64,6 +50,9 @@ namespace backend_manage.core.Entities
         public Chapter Chapter { get; set; }
 
         // Navigation property đến danh sách các câu hỏi hoán vị
-        public ICollection<ShuffledExamPaperDetail>? ShuffledExamPaperDetails { get; set; }
+        // public ICollection<ShuffledExamPaperDetail>? ShuffledExamPaperDetails { get; set; }
+        
+        // Navigation property đến danh sách các đáp án của câu hỏi
+        public ICollection<Answers>? Answers { get; set; }
     }
 } 

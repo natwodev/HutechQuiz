@@ -1,10 +1,12 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using MudBlazor;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Timers;
 using frontend_manage.DTOs;
 using frontend_manage.Services;
+using frontend_manage.Pages.Exam.Components;
 
 namespace frontend_manage.Pages.Exam
 {
@@ -15,35 +17,6 @@ namespace frontend_manage.Pages.Exam
         public DateTime StartTime { get; set; }
         public double Duration { get; set; } // Thời gian còn lại tính bằng phút
     }
-    
-    // Class để handle delayed save callback từ JavaScript
-    public class DelayedSaveCallback : IDisposable
-    {
-        private readonly Exam _examComponent;
-        private readonly int _order;
-        private readonly int? _subOrder;
-        private readonly string _answer;
-
-        public DelayedSaveCallback(Exam examComponent, int order, int? subOrder, string answer)
-        {
-            _examComponent = examComponent;
-            _order = order;
-            _subOrder = subOrder;
-            _answer = answer;
-        }
-
-        [JSInvokable]
-        public async Task ExecuteSave()
-        {
-            await _examComponent.SaveAnswerSilentlyAsync(_order, _subOrder, _answer);
-        }
-
-        public void Dispose()
-        {
-            // Cleanup if needed
-        }
-    }
-
     public partial class Exam
     {
         [Parameter]
@@ -52,8 +25,12 @@ namespace frontend_manage.Pages.Exam
 
         private StartExamResponseDto? startExamResponse;
         private ShuffledExamPaperDto? shuffledExam;
+        private OriginalExamPaperDto? originalExamPaper;
         private StudentExamSessionCacheDto? studentSession;
         private string? errorMessage;
+        
+        // Dữ liệu đã map từ originalExamPaper
+        private List<QuestionStructureDto>? mappedQuestions;
         
         // Dictionary to store selected answers for each question
         private Dictionary<int, string> selectedAnswers = new();
@@ -96,10 +73,21 @@ namespace frontend_manage.Pages.Exam
                 else
                 {
                     shuffledExam = startExamResponse.ExamPaper;
+                    originalExamPaper = startExamResponse.OriginalExamPaper;
                     studentSession = startExamResponse.StudentSession;
                     
+                    // Map dữ liệu từ originalExamPaper sang QuestionStructureDto
+                    if (originalExamPaper?.Details != null)
+                    {
+                        mappedQuestions = MapToQuestionStructureList(originalExamPaper.Details);
+                    }
+                    
                     // Load existing answers if any - chỉ sau khi đã có dữ liệu exam
-                    await LoadExistingAnswersAsync();
+                    if (!string.IsNullOrEmpty(studentSession.StudentAnswersString))
+                    {
+                        LoadAnswersFromString(studentSession.StudentAnswersString);
+                        StateHasChanged(); // Cập nhật UI sau khi load answers
+                    }
                     
                     // Initialize timer
                     await InitializeTimerAsync();
@@ -110,115 +98,21 @@ namespace frontend_manage.Pages.Exam
                 errorMessage = ex.Message;
             }
         }
-
-        private async Task OnAnswerSelected(int questionId, string answer, int order)
+        
+        
+        
+        // Handler methods for QuestionItem component events
+        private async Task HandleAnswerSelected(QuestionItem.AnswerSelectedArgs args)
         {
-            // Cập nhật selected answer ngay lập tức
-            var answerValue = $"q{questionId}_{answer switch { "A" => "1", "B" => "2", "C" => "3", "D" => "4", _ => "1" }}";
-            selectedAnswers[questionId] = answerValue;
-            
-            // Update UI ngay lập tức
-            StateHasChanged();
-            
-            // Sử dụng debouncing để delay API call
-            await JSRuntime.InvokeVoidAsync("window.answerDebouncer.debounce", 
-                $"q{questionId}", 
-                DotNetObjectReference.Create(new DelayedSaveCallback(this, order, null, answer)));
+            await SaveAnswerAsync(args.QuestionId, args.AnswerId);
         }
 
-        private async Task OnChildAnswerSelected(int questionId, string answer, int parentOrder, int childOrder)
+        private async Task HandleChildAnswerSelected(QuestionItem.AnswerSelectedArgs args)
         {
-            // Cập nhật selected child answer ngay lập tức
-            var answerValue = $"cq{questionId}_{answer switch { "A" => "1", "B" => "2", "C" => "3", "D" => "4", _ => "1" }}";
-            selectedChildAnswers[questionId] = answerValue;
-            
-            // Update UI ngay lập tức
-            StateHasChanged();
-            
-            // Sử dụng debouncing để delay API call
-            await JSRuntime.InvokeVoidAsync("window.answerDebouncer.debounce", 
-                $"cq{questionId}", 
-                DotNetObjectReference.Create(new DelayedSaveCallback(this, parentOrder, childOrder, answer)));
+            await SaveChildAnswerAsync(args.QuestionId, args.AnswerId);
         }
 
-        public async Task SaveAnswerSilentlyAsync(int index, int? subIndex, string answer)
-        {
-            var questionKey = subIndex.HasValue ? $"{index}.{subIndex}" : index.ToString();
-            
-            try
-            {
-                // Set saving state (không cần StateHasChanged vì đây là background task)
-                savingStates[questionKey] = true;
-                
-                var success = await SaveAnswerAsync(index, subIndex, answer);
-                
-                // Remove saving state
-                savingStates.Remove(questionKey);
-                
-                if (!success)
-                {
-                    // Chỉ hiện thông báo lỗi nếu thất bại, không retry tự động để tránh spam
-                    await InvokeAsync(() =>
-                    {
-                        Snackbar.Add($"Lưu đáp án câu {questionKey} thất bại. Hãy thử lại!", Severity.Warning, config =>
-                        {
-                            config.ShowCloseIcon = true;
-                            config.VisibleStateDuration = 3000;
-                        });
-                    });
-                }
-            }
-            catch (Exception ex)
-            {
-                savingStates.Remove(questionKey);
-                
-                // Hiện thông báo lỗi nhẹ nhàng
-                await InvokeAsync(() =>
-                {
-                    Snackbar.Add($"Mất kết nối - đáp án câu {questionKey} chưa được lưu", Severity.Error, config =>
-                    {
-                        config.ShowCloseIcon = true;
-                        config.VisibleStateDuration = 5000;
-                    });
-                });
-            }
-        }
-
-        private async Task SaveAnswerWithRetryAsync(int index, int? subIndex, string answer, int maxRetries = 2)
-        {
-            var questionKey = subIndex.HasValue ? $"{index}.{subIndex}" : index.ToString();
-            
-            for (int attempt = 1; attempt <= maxRetries; attempt++)
-            {
-                try
-                {
-                    var success = await SaveAnswerAsync(index, subIndex, answer);
-                    if (success)
-                    {
-                        return; // Thành công, thoát
-                    }
-                }
-                catch (Exception ex)
-                {
-                    // Attempt failed, continue to next attempt
-                }
-                
-                if (attempt < maxRetries)
-                {
-                    // Wait before retry (shorter delay)
-                    await Task.Delay(1000);
-                }
-            }
-            
-            // All attempts failed - show error
-            Snackbar.Add($"Không thể lưu đáp án câu {questionKey}. Vui lòng kiểm tra kết nối mạng.", Severity.Error, config =>
-            {
-                config.ShowCloseIcon = true;
-                config.VisibleStateDuration = 5000;
-            });
-        }
-
-        private async Task<bool> SaveAnswerAsync(int index, int? subIndex, string answer)
+        private async Task<bool> SaveAnswerAsync(int key, int value)
         {
             if (studentExamSessionId == null || studentSession == null)
             {
@@ -230,15 +124,18 @@ namespace frontend_manage.Pages.Exam
                 var request = new SaveAnswerDto
                 {
                     StudentExamSessionId = studentExamSessionId.Value,
-                    Index = index,
-                    SubIndex = subIndex,
-                    Answer = answer
+                    key = key,
+                    value = value,
                 };
 
                 var response = await StudentService.SaveAnswerAsync(request);
-                
+        
                 if (response?.Success == true)
                 {
+                    // Cập nhật selectedAnswers để navigation panel hiển thị đúng
+                    selectedAnswers[key] = value.ToString();
+                    lastSaveTime = DateTime.Now;
+                    StateHasChanged(); // Cập nhật UI
                     return true;
                 }
                 else
@@ -246,153 +143,47 @@ namespace frontend_manage.Pages.Exam
                     return false;
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                throw; // Re-throw to be caught by retry logic
+                throw; // Re-throw để retry ở chỗ khác
             }
         }
 
-        private string GetSelectedAnswer(int questionId)
+        private async Task<bool> SaveChildAnswerAsync(int key, int value)
         {
-            var result = selectedAnswers.TryGetValue(questionId, out var answer) ? answer : "";
-            return result;
-        }
-
-        private string GetSelectedChildAnswer(int questionId)
-        {
-            var result = selectedChildAnswers.TryGetValue(questionId, out var answer) ? answer : "";
-            return result;
-        }
-
-        private async Task LoadExistingAnswersAsync()
-        {
-            if (studentSession?.StudentAnswersString == null || shuffledExam?.Details == null)
-                return;
-
-            // Backup current state trước khi load
-            var backupSelectedAnswers = new Dictionary<int, string>(selectedAnswers);
-            var backupSelectedChildAnswers = new Dictionary<int, string>(selectedChildAnswers);
+            if (studentExamSessionId == null || studentSession == null)
+            {
+                return false;
+            }
 
             try
             {
-                // Parse existing answers string
-                var answers = ParseAnswersString(studentSession.StudentAnswersString);
-                
-                // Chỉ proceed nếu có đáp án thực sự
-                if (answers.Count == 0)
+                var request = new SaveAnswerDto
                 {
-                    return;
-                }
-                
-                // Map answers to UI state
-                int successfullyLoaded = 0;
-                foreach (var detail in shuffledExam.Details.OrderBy(d => d.Order))
-                {
-                    // Sử dụng detail.Order thay vì IndexOf để đồng nhất với logic save
-                    var questionNumber = detail.Order;
-                    
-                    // Check for main question answer
-                    if (answers.TryGetValue(questionNumber.ToString(), out var mainAnswer))
-                    {
-                        var answerNumber = GetAnswerNumber(mainAnswer);
-                        if (!string.IsNullOrEmpty(answerNumber)) // Chỉ set khi có đáp án hợp lệ
-                        {
-                            selectedAnswers[detail.ShuffledExamPaperDetailId] = $"q{detail.ShuffledExamPaperDetailId}_{answerNumber}";
-                            successfullyLoaded++;
-                        }
-                    }
-                    
-                    // Check for child questions answers
-                    if (detail.ChildQuestions != null)
-                    {
-                        foreach (var childQ in detail.ChildQuestions.OrderBy(cq => cq.Order))
-                        {
-                            // Sử dụng childQ.Order thay vì IndexOf
-                            var childQuestionIndex = childQ.Order;
-                            var childKey = $"{questionNumber}.{childQuestionIndex}";
-                            
-                            if (answers.TryGetValue(childKey, out var childAnswer))
-                            {
-                                var childAnswerNumber = GetAnswerNumber(childAnswer);
-                                if (!string.IsNullOrEmpty(childAnswerNumber)) // Chỉ set khi có đáp án hợp lệ
-                                {
-                                    selectedChildAnswers[childQ.ShuffledExamPaperDetailId] = $"cq{childQ.ShuffledExamPaperDetailId}_{childAnswerNumber}";
-                                    successfullyLoaded++;
-                                }
-                            }
-                        }
-                    }
-                }
-                
-                StateHasChanged();
-            }
-            catch (Exception ex)
-            {
-                // Khôi phục trạng thái trước đó nếu có lỗi
-                selectedAnswers = backupSelectedAnswers ?? selectedAnswers;
-                selectedChildAnswers = backupSelectedChildAnswers ?? selectedChildAnswers;
-                StateHasChanged();
-            }
-        }
+                    StudentExamSessionId = studentExamSessionId.Value,
+                    key = key,
+                    value = value,
+                };
 
-        private Dictionary<string, string> ParseAnswersString(string answersString)
-        {
-            var result = new Dictionary<string, string>();
-            
-            if (string.IsNullOrEmpty(answersString))
-                return result;
-
-            try
-            {
-                var parts = answersString.Split(';', StringSplitOptions.RemoveEmptyEntries);
-                
-                foreach (var part in parts)
+                var response = await StudentService.SaveAnswerAsync(request);
+        
+                if (response?.Success == true)
                 {
-                    var cleanPart = part.Trim('(', ')', ' ');
-                    if (string.IsNullOrEmpty(cleanPart))
-                        continue;
-                        
-                    var subParts = cleanPart.Split(',', 2);
-                    
-                    if (subParts.Length == 2)
-                    {
-                        var key = subParts[0].Trim();
-                        var answer = subParts[1].Trim();
-                        
-                        // Validate answer is A, B, C, or D
-                        if (!string.IsNullOrEmpty(key) && 
-                            !string.IsNullOrEmpty(answer) && 
-                            (answer == "A" || answer == "B" || answer == "C" || answer == "D"))
-                        {
-                            result[key] = answer;
-                        }
-                    }
+                    // Cập nhật selectedChildAnswers để navigation panel hiển thị đúng
+                    selectedChildAnswers[key] = value.ToString();
+                    lastSaveTime = DateTime.Now;
+                    StateHasChanged(); // Cập nhật UI
+                    return true;
+                }
+                else
+                {
+                    return false;
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                // Error parsing answers string
+                throw; // Re-throw để retry ở chỗ khác
             }
-            
-            return result;
-        }
-
-        private string GetAnswerNumber(string answer)
-        {
-            return answer switch
-            {
-                "A" => "1",
-                "B" => "2",
-                "C" => "3",
-                "D" => "4",
-                _ => "" // Trả về chuỗi rỗng thay vì "1" để tránh tự động chọn đáp án A
-            };
-        }
-
-        private bool IsQuestionSaving(int index, int? subIndex = null)
-        {
-            var questionKey = subIndex.HasValue ? $"{index}.{subIndex}" : index.ToString();
-            return savingStates.ContainsKey(questionKey);
         }
 
         private async Task RefreshAnswersAsync(bool showSuccessMessage = true)
@@ -411,7 +202,8 @@ namespace frontend_manage.Pages.Exam
                     selectedChildAnswers.Clear();
                     
                     // Load the answers từ StudentAnswersString có sẵn
-                    await LoadExistingAnswersAsync();
+                    LoadAnswersFromString(answersString);
+                    StateHasChanged(); // Cập nhật UI sau khi load answers
                     
                     if (showSuccessMessage)
                     {
@@ -441,6 +233,89 @@ namespace frontend_manage.Pages.Exam
             }
         }
 
+        private void LoadAnswersFromString(string answersString)
+        {
+            if (string.IsNullOrEmpty(answersString))
+                return;
+
+            try
+            {
+                var answerPairs = answersString.Split(';', StringSplitOptions.RemoveEmptyEntries);
+                
+                foreach (var pair in answerPairs)
+                {
+                    // Loại bỏ dấu ngoặc đơn
+                    var cleanPair = pair.Trim('(', ')');
+                    
+                    // Tách key và value - support cả format cũ (dấu phẩy) và mới (dấu hai chấm)
+                    var parts = cleanPair.Split(':');
+                    if (parts.Length != 2)
+                    {
+                        parts = cleanPair.Split(',');
+                    }
+                    
+                    if (parts.Length == 2)
+                    {
+                        var questionIdStr = parts[0].Trim();
+                        var answerIdStr = parts[1].Trim();
+                        
+                        // Parse question ID
+                        if (int.TryParse(questionIdStr, out int questionId))
+                        {
+                            // Kiểm tra nếu answerId là "-" hoặc rỗng thì không chọn
+                            if (!string.IsNullOrEmpty(answerIdStr) && answerIdStr != "-")
+                            {
+                                if (int.TryParse(answerIdStr, out int answerId))
+                                {
+                                    // Xác định đây là câu hỏi cha hay câu hỏi con
+                                    var isChildQuestion = IsChildQuestion(questionId);
+                                    
+                                    if (isChildQuestion)
+                                    {
+                                        selectedChildAnswers[questionId] = answerId.ToString();
+                                    }
+                                    else
+                                    {
+                                        selectedAnswers[questionId] = answerId.ToString();
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log error nếu cần
+                Console.WriteLine($"Error parsing answers string: {ex.Message}");
+            }
+        }
+
+        private bool IsChildQuestion(int questionId)
+        {
+            // Kiểm tra xem questionId có phải là câu hỏi con không
+            // Dựa vào mappedQuestions để xác định
+            if (mappedQuestions == null)
+                return false;
+
+            foreach (var question in mappedQuestions)
+            {
+                // Kiểm tra câu hỏi con
+                if (question.ChildQuestions?.Any() == true)
+                {
+                    foreach (var childQuestion in question.ChildQuestions)
+                    {
+                        if (childQuestion.OriginalExamPaperDetailId == questionId)
+                        {
+                            return true;
+                        }
+                    }
+                }
+            }
+            
+            return false;
+        }
+
        private async Task OnSubmitExamAsync()
        {
            // Lấy chuỗi thời gian dạng "mm:ss"
@@ -461,58 +336,47 @@ namespace frontend_manage.Pages.Exam
                    // Xóa dữ liệu timer khỏi localStorage khi nộp bài
                    await JSRuntime.InvokeVoidAsync("localStorage.removeItem", TIMER_STORAGE_KEY);
                    
-                   // Force save tất cả pending answers trước khi submit
-                   var hasPending = await JSRuntime.InvokeAsync<bool>("window.answerDebouncer.hasPendingSaves");
-                   if (hasPending)
-                   {
-                       Snackbar.Add("Đang lưu các đáp án cuối cùng...", Severity.Info);
-
-                       // Đợi một chút để các pending saves hoàn thành
-                       await Task.Delay(100);
-                   }
+                   // Lưu đáp án cuối cùng trước khi nộp bài
+                   await RefreshAnswersAsync(false);
                    
                    var submitRequest = new SubmitExamRequest
                    {
                        StudentExamSessionId = studentExamSessionId.Value
                    };
-                       
+                                          
                    var submitResponse = await StudentService.SubmitExamAsync(submitRequest);
 
-                   if (submitResponse?.Success == true && submitResponse.Data != null)
+                   if (submitResponse?.Success == true)
                    {
-                       var submissionData = submitResponse.Data;
-
-                       // Hiển thị thông báo thành công
-                       var scoreMessage = $"Nộp bài thi thành công! Điểm: {submissionData.Score:F2}, Đúng: {submissionData.CorrectAnswers}/{submissionData.TotalQuestions} câu";
-                       Snackbar.Add(scoreMessage, Severity.Success);
-
-                       // Lưu dữ liệu kết quả vào localStorage
-                       var resultData = new
+                       // Lưu dữ liệu exam result vào localStorage để trang Result có thể đọc
+                       if (submitResponse.Data != null)
                        {
-                           StudentCode = submissionData.StudentCode,
-                           ShuffledExamPaperId = submissionData.ShuffledExamPaperId,
-                           Score = submissionData.Score,
-                           CorrectAnswers = submissionData.CorrectAnswers,
-                           TotalQuestions = submissionData.TotalQuestions,
-                           StartTime = submissionData.StartTime,
-                           EndTime = submissionData.EndTime,
-                           StudentAnswersString = submissionData.StudentAnswersString,
-                           AnswerKey = submissionData.AnswerKey
-                       };
-
-                       var resultJson = System.Text.Json.JsonSerializer.Serialize(resultData);
-                       await JSRuntime.InvokeVoidAsync("localStorage.setItem", $"examResult_{studentExamSessionId}", resultJson);
-
-                       // Lưu studentExamSessionId vào localStorage để Result page có thể truy cập
-                       await JSRuntime.InvokeVoidAsync("localStorage.setItem", "currentStudentExamSessionId", studentExamSessionId.ToString());
-
-                       // Chuyển sang trang Result
+                           var examResultData = new
+                           {
+                               StudentCode = submitResponse.Data.StudentCode,
+                               ShuffledExamPaperId = submitResponse.Data.ShuffledExamPaperId,
+                               Score = submitResponse.Data.Score,
+                               CorrectAnswers = submitResponse.Data.CorrectAnswers,
+                               TotalQuestions = submitResponse.Data.TotalQuestions,
+                               StartTime = submitResponse.Data.StartTime,
+                               EndTime = submitResponse.Data.EndTime,
+                               StudentAnswersString = submitResponse.Data.StudentAnswersString,
+                               AnswerKey = submitResponse.Data.AnswerKey
+                           };
+                           
+                                                       var resultJson = JsonSerializer.Serialize(examResultData);
+                           await JSRuntime.InvokeVoidAsync("localStorage.setItem", $"examResult_{studentExamSessionId.Value}", resultJson);
+                           
+                           // Lưu studentExamSessionId để trang Result có thể đọc
+                           await JSRuntime.InvokeVoidAsync("localStorage.setItem", "currentStudentExamSessionId", studentExamSessionId.Value.ToString());
+                       }
+                       
+                       Snackbar.Add("Nộp bài thành công!", Severity.Success);
                        Navigation.NavigateTo("/Exam/Result");
                    }
                    else
                    {
-                       var errorMessage = submitResponse?.Message ?? "Có lỗi xảy ra khi nộp bài thi";
-                       Snackbar.Add(errorMessage, Severity.Error);
+                       Snackbar.Add("Có lỗi xảy ra khi nộp bài. Vui lòng thử lại!", Severity.Error);
                    }
                }
                catch (Exception ex)
@@ -539,7 +403,7 @@ namespace frontend_manage.Pages.Exam
                     try
                     {
                         // Parse dữ liệu timer đã lưu
-                        var timerData = System.Text.Json.JsonSerializer.Deserialize<ExamTimerData>(savedTimerData);
+                        var timerData = JsonSerializer.Deserialize<ExamTimerData>(savedTimerData);
                         
                         if (timerData != null && timerData.StudentExamSessionId == studentExamSessionId)
                         {
@@ -710,96 +574,8 @@ namespace frontend_manage.Pages.Exam
             return $"{remainingMinutes:D2}:{remainingSeconds:D2}";
         }
 
-        private int GetAnsweredQuestionsCount()
-        {
-            if (shuffledExam?.Details == null) return 0;
-            
-            int answeredCount = 0;
-            
-            foreach (var detail in shuffledExam.Details)
-            {
-                // Nếu có câu hỏi con, chỉ đếm câu hỏi con đã trả lời (không đếm câu cha)
-                if (detail.ChildQuestions != null && detail.ChildQuestions.Any())
-                {
-                    foreach (var childQ in detail.ChildQuestions)
-                    {
-                        if (!string.IsNullOrEmpty(GetSelectedChildAnswer(childQ.ShuffledExamPaperDetailId)))
-                        {
-                            answeredCount++;
-                        }
-                    }
-                }
-                else
-                {
-                    // Nếu không có câu hỏi con, đếm câu chính
-                    if (!string.IsNullOrEmpty(GetSelectedAnswer(detail.ShuffledExamPaperDetailId)))
-                    {
-                        answeredCount++;
-                    }
-                }
-            }
-            
-            return answeredCount;
-        }
-
-        private string GetQuestionCountDetails()
-        {
-            if (shuffledExam?.Details == null) return "Chưa có dữ liệu";
-            
-            int questionGroupsWithChildren = 0;
-            int standaloneQuestions = 0;
-            int totalAnswerableQuestions = 0;
-            
-            foreach (var detail in shuffledExam.Details)
-            {
-                if (detail.ChildQuestions != null && detail.ChildQuestions.Any())
-                {
-                    questionGroupsWithChildren++;
-                    totalAnswerableQuestions += detail.ChildQuestions.Count;
-                }
-                else
-                {
-                    standaloneQuestions++;
-                    totalAnswerableQuestions++;
-                }
-            }
-            
-            if (questionGroupsWithChildren > 0 && standaloneQuestions > 0)
-            {
-                return $"{standaloneQuestions} câu đơn + {questionGroupsWithChildren} nhóm câu = {totalAnswerableQuestions} câu trả lời";
-            }
-            else if (questionGroupsWithChildren > 0)
-            {
-                return $"{questionGroupsWithChildren} nhóm câu = {totalAnswerableQuestions} câu trả lời";
-            }
-            else
-            {
-                return $"{standaloneQuestions} câu đơn";
-            }
-        }
-
-        private int GetTotalQuestionsCount()
-        {
-            if (shuffledExam?.Details == null) return 0;
-            
-            int total = 0;
-            
-            foreach (var detail in shuffledExam.Details)
-            {
-                // Nếu có câu hỏi con, chỉ đếm câu hỏi con (không đếm câu cha)
-                if (detail.ChildQuestions != null && detail.ChildQuestions.Any())
-                {
-                    total += detail.ChildQuestions.Count;
-                }
-                else
-                {
-                    // Nếu không có câu hỏi con, đếm câu chính
-                    total++;
-                }
-            }
-            
-            return total;
-        }
+       
+        
 
         private string GetAudioPath(string audioFileName)
         {
@@ -813,19 +589,7 @@ namespace frontend_manage.Pages.Exam
             var baseAddress = Http.BaseAddress?.ToString() ?? "http://localhost:5163/";
             return $"{baseAddress}EPZ/{folderName}/{audioFileName}";
         }
-
-        private string GetPhysicalAudioPath(string audioFileName)
-        {
-            if (string.IsNullOrEmpty(shuffledExam?.ShuffledExamPaperCore) || string.IsNullOrEmpty(audioFileName))
-                return string.Empty;
-
-            // Lấy phần trước dấu _ từ ShuffledExamPaperCore
-            var folderName = shuffledExam.ShuffledExamPaperCore.Split('_')[0];
-            
-            // Tạo đường dẫn vật lý để kiểm tra file có tồn tại không
-            var wwwrootPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
-            return Path.Combine(wwwrootPath, "EPZ", folderName, audioFileName);
-        }
+        
 
        private string ProcessQuestionContent(string content)
         {
@@ -867,5 +631,81 @@ namespace frontend_manage.Pages.Exam
         }
         
 
+
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+        private QuestionStructureDto MapToQuestionStructure(OriginalExamPaperDetailDto originalQuestion)
+        {
+            if (originalQuestion == null)
+                return null;
+
+            var questionStructure = new QuestionStructureDto
+            {
+                OriginalExamPaperDetailId = originalQuestion.OriginalExamPaperDetailId,
+                ParentQuestionId = originalQuestion.ParentQuestionId,
+                Order = originalQuestion.Order,
+                QuestionContent = originalQuestion.QuestionContent,
+                ChildQuestions = new List<QuestionStructureDto>(),
+                Answers = new List<AnswerStructureDto>()
+            };
+
+            // Map child questions recursively
+            if (originalQuestion.ChildQuestions?.Any() == true)
+            {
+                questionStructure.ChildQuestions = originalQuestion.ChildQuestions
+                    .Select(child => MapToQuestionStructure(child))
+                    .Where(child => child != null)
+                    .ToList();
+            }
+
+            // Map answers
+            if (originalQuestion.Answers?.Any() == true)
+            {
+                questionStructure.Answers = originalQuestion.Answers
+                    .Select(answer => MapToAnswerStructure(answer))
+                    .Where(answer => answer != null)
+                    .ToList();
+            }
+
+            return questionStructure;
+        }
+        
+        private AnswerStructureDto MapToAnswerStructure(AnswerDto originalAnswer)
+        {
+            if (originalAnswer == null)
+                return null;
+
+            return new AnswerStructureDto
+            {
+                AnswerId = originalAnswer.AnswerId,
+                Order = originalAnswer.Order,
+                AnswerContent = originalAnswer.AnswerContent,
+                OriginalExamPaperDetailId = originalAnswer.OriginalExamPaperDetailId
+            };
+        }
+        
+        private List<QuestionStructureDto> MapToQuestionStructureList(List<OriginalExamPaperDetailDto> originalQuestions)
+        {
+            if (originalQuestions?.Any() != true)
+                return new List<QuestionStructureDto>();
+
+            return originalQuestions
+                .Select(question => MapToQuestionStructure(question))
+                .Where(question => question != null)
+                .ToList();
+        }
+        
+
+        
+        
     }
 }

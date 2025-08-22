@@ -373,13 +373,13 @@ public class StudentService : IStudentService
     
     //Đang tối ưu lấy được đề và phiên khi k có redis / chưa cập nhật vào db và redis 
     #region StartExamAsync
-    public async Task<(StudentExamSessionCacheDto studentExamSessionCacheDto, ShuffledExamPaperDto? shuffledExamPaperDto)> StartExamAsync(string studentCode, int studentExamSessionId)
+    public async Task<(StudentExamSessionCacheDto studentExamSessionCacheDto, ShuffledExamPaperDto? shuffledExamPaperDto, OriginalExamPaperDto? originalExamPaperDto)> StartExamAsync(string studentCode, int studentExamSessionId)
     {
         _logger.LogInformation("Bắt đầu lấy đề thi cho sinh viên {StudentCode}, phiên thi {StudentExamSessionId}", studentCode, studentExamSessionId);
 
-        var (studentExamSessionCacheDto, shuffledExamPaperDto) = await _examPaperHelper.GetStudentExamSessionAndExamPaperAsync(studentCode, studentExamSessionId);
+        var (studentExamSessionCacheDto, shuffledExamPaperDto, originalExamPaperDto) = await _examPaperHelper.GetStudentExamSessionAndExamPaperAsync(studentCode, studentExamSessionId);
 
-        return (studentExamSessionCacheDto,shuffledExamPaperDto);
+        return (studentExamSessionCacheDto, shuffledExamPaperDto, originalExamPaperDto);
     }
     #endregion
     
@@ -506,8 +506,6 @@ public class StudentService : IStudentService
             // Cập nhật trạng thái trong object session
             sessionDto.ExtraMinutes = extraMinutes;
             sessionDto.ReasonForExtra = reasonForExtra;
-            sessionDto.UpdatedBy = userId;
-            sessionDto.UpdatedAt = DateTimeHelper.GetVietnamTime();
             
             // Cache lại vào Redis với thông tin mới
             await _sessionCacheHelper.UpdateStudentExamSessionAsync(studentCode, sessionDto);
@@ -633,27 +631,27 @@ public class StudentService : IStudentService
 
     // Helper methods để tái sử dụng code
     #region UpdateSingleAnswerAsync
-    public async Task<(bool Success, string Message, string? NewAnswersString)> UpdateSingleAnswerAsync(string studentCode, int studentExamSessionId, int index,int? SubIndex, string answer)
+    public async Task<(bool Success, string Message, string? NewAnswersString)> UpdateSingleAnswerAsync(string studentCode, int studentExamSessionId, int key ,int value)
     {
         try
         {
             // Cập nhật đáp án sử dụng StudentAnswerHelper
-            var (success, message, newAnswersString) = await _answerHelper.UpdateSingleAnswerAsync(studentCode, studentExamSessionId, index, SubIndex, answer);
+            var (success, message, newAnswersString) = await _answerHelper.UpdateSingleAnswerAsync(studentCode, studentExamSessionId, key, value);
             
             if (success)
             {
-                _logger.LogInformation("✅ Đã cập nhật đáp án thành công cho sinh viên {StudentCode} tại vị trí {Index} ,{SubIndex}", studentCode, index,SubIndex);
+                _logger.LogInformation("✅ Đã cập nhật đáp án thành công cho sinh viên {StudentCode} tại vị trí {Key}: {Value}", studentCode, key, value);
             }
             else
             {
-                _logger.LogWarning("⚠️ Không thể cập nhật đáp án cho sinh viên {StudentCode} tại vị trí {Index}  ,{SubIndex}: {Message}", studentCode, index,SubIndex, message);
+                _logger.LogWarning("⚠️ Không thể cập nhật đáp án cho sinh viên {StudentCode} tại vị trí {Key}: {Value}: {Message}", studentCode, key, value, message);
             }
 
             return (success, message, newAnswersString);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "❌ Lỗi khi cập nhật đáp án cho sinh viên {StudentCode} tại vị trí {Index}", studentCode, index);
+            _logger.LogError(ex, "❌ Lỗi khi cập nhật đáp án cho sinh viên {StudentCode} tại vị trí {Key}", studentCode, key);
             return (false, "Lỗi hệ thống khi cập nhật đáp án", null);
         }
     }

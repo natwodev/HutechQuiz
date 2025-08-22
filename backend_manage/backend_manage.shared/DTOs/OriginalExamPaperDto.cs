@@ -9,6 +9,7 @@ namespace backend_manage.shared.DTOs
         public int SubjectId { get; set; }
         public int DurationMinutes { get; set; }
         public int TotalQuestions { get; set; }
+        public string? KeyValueList { get; set; }
         public List<OriginalExamPaperDetailDto> Details { get; set; }
     }
      public class OriginalExamPaperDetailDto
@@ -16,10 +17,6 @@ namespace backend_manage.shared.DTOs
         public int OriginalExamPaperDetailId { get; set; }
         public int Order { get; set; }
         public string? QuestionContent { get; set; }
-        public string? Answer1 { get; set; }
-        public string? Answer2 { get; set; }
-        public string? Answer3 { get; set; }
-        public string? Answer4 { get; set; }
         public int? CorrectAnswerIndex { get; set; }
         public int? ParentQuestionId { get; set; }
         public int ChapterId { get; set; }
@@ -27,6 +24,7 @@ namespace backend_manage.shared.DTOs
         public string? AnswerShuffleInfo { get; set; }
         public OriginalExamPaperDetailDto? ParentQuestion { get; set; }
         public List<OriginalExamPaperDetailDto> ChildQuestions { get; set; } = new();
+        public List<AnswerDto> Answers { get; set; } = new();
     }
 
     public class OriginalExamDto
@@ -40,6 +38,7 @@ namespace backend_manage.shared.DTOs
         public bool? IsApproved { get; set; }
         public int DurationMinutes { get; set; }
         public int TotalQuestions { get; set; }
+        public string? KeyValueList { get; set; }
     }
 
     public class OriginalExamPaperDetailShufferDto
@@ -47,10 +46,6 @@ namespace backend_manage.shared.DTOs
         public int OriginalExamPaperDetailId { get; set; }
         public int Order { get; set; }
         public string? QuestionContent { get; set; }
-        public string? Answer1 { get; set; }
-        public string? Answer2 { get; set; }
-        public string? Answer3 { get; set; }
-        public string? Answer4 { get; set; }
         public int? CorrectAnswerIndex { get; set; }
         public int? ParentQuestionId { get; set; }
         public bool CanShuffleQuestion { get; set; }

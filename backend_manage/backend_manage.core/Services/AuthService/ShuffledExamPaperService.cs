@@ -34,12 +34,12 @@ namespace backend_manage.core.Services.AuthService
         {
             var paper = await _shuffledExamPaperRepository.GetQueryable()
                 .Where(x => x.ShuffledExamPaperCore == shuffledExamPaperCore)
-                .Include(x => x.ShuffledExamPaperDetails)
-                    .ThenInclude(d => d.OriginalExamPaperDetail)
-                .Include(x => x.ShuffledExamPaperDetails)
-                    .ThenInclude(d => d.ChildQuestions)
-                .Include(x => x.ShuffledExamPaperDetails)
-                    .ThenInclude(d => d.ParentQuestion)
+                // .Include(x => x.ShuffledExamPaperDetails)
+                //     .ThenInclude(d => d.OriginalExamPaperDetail)
+                // .Include(x => x.ShuffledExamPaperDetails)
+                //     .ThenInclude(d => d.ChildQuestions)
+                // .Include(x => x.ShuffledExamPaperDetails)
+                //     .ThenInclude(d => d.ParentQuestion)
                 .Include(x => x.OriginalExamPaper)
                 .Include(x => x.Subject)
                 .FirstOrDefaultAsync();
