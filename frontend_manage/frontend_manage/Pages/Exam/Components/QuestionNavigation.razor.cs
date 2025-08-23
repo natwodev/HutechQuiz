@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Components;
+using Microsoft.JSInterop;
 using frontend_manage.DTOs;
 
 namespace frontend_manage.Pages.Exam.Components
@@ -8,7 +9,9 @@ namespace frontend_manage.Pages.Exam.Components
         [Parameter] public List<QuestionStructureDto>? Questions { get; set; }
         [Parameter] public Dictionary<int, string> SelectedAnswers { get; set; } = new();
         [Parameter] public Dictionary<int, string> SelectedChildAnswers { get; set; } = new();
-        [Parameter] public EventCallback<string> OnQuestionClick { get; set; }
+
+        
+        [Inject] private IJSRuntime JSRuntime { get; set; } = default!;
 
         private bool IsQuestionAnswered(int originalExamPaperDetailId)
         {
@@ -78,5 +81,21 @@ namespace frontend_manage.Pages.Exam.Components
             }
             return answered;
         }
+
+        // Method để scroll đến câu hỏi cụ thể
+        public async Task ScrollToQuestionAsync(string questionIdentifier)
+        {
+            try
+            {
+                await JSRuntime.InvokeVoidAsync("scrollToElement", $"question-{questionIdentifier}");
+            }
+            catch (Exception ex)
+            {
+                // Log error nếu cần
+                Console.WriteLine($"Error scrolling to question: {ex.Message}");
+            }
+        }
+
+
     }
 }

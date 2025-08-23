@@ -1,3 +1,4 @@
+using AspNetCoreRateLimit;
 using backend_manage.core.Hubs;
 using backend_manage.core.Middlewares;
 using Microsoft.AspNetCore.Builder;
@@ -23,7 +24,7 @@ namespace backend_manage.core.Extensions
             app.UseAuthentication();
             app.UseAuthorization();
 
-            // app.UseIpRateLimiting(); // Tắt rate limiting
+            app.UseIpRateLimiting(); // Bật Rate Limiting để bảo vệ server
 
             app.MapControllers();
 
