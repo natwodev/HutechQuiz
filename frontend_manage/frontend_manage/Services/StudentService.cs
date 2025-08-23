@@ -41,6 +41,7 @@ public class StudentService
         try
         {
             var response = await _httpClient.PostAsJsonAsync("/api/Student/save-answer", request);
+            
             if (response.IsSuccessStatusCode)
             {
                 var responseContent = await response.Content.ReadAsStringAsync();
@@ -49,12 +50,49 @@ public class StudentService
             }
             else
             {
-                return null;
+                // Xử lý các status codes cụ thể
+                var errorContent = await response.Content.ReadAsStringAsync();
+                
+                if (response.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
+                {
+                    // HTTP 429 - Rate limit exceeded
+                    return new SaveAnswerResponse
+                    {
+                        Success = false,
+                        Message = "Quá nhiều yêu cầu. Vui lòng thử lại sau vài giây.",
+                        IsRateLimited = true,
+                        RetryAfterSeconds = GetRetryAfterSeconds(response)
+                    };
+                }
+                else if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+                {
+                    return new SaveAnswerResponse
+                    {
+                        Success = false,
+                        Message = "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.",
+                        IsUnauthorized = true
+                    };
+                }
+                else
+                {
+                    // Các lỗi khác
+                    return new SaveAnswerResponse
+                    {
+                        Success = false,
+                        Message = $"Lỗi server: {response.StatusCode}. {errorContent}",
+                        StatusCode = (int)response.StatusCode
+                    };
+                }
             }
         }
         catch (Exception ex)
         {
-            return null;
+            return new SaveAnswerResponse
+            {
+                Success = false,
+                Message = $"Lỗi kết nối: {ex.Message}",
+                IsConnectionError = true
+            };
         }
     }
 
@@ -71,12 +109,61 @@ public class StudentService
             }
             else
             {
-                return null;
+                // Xử lý các status codes cụ thể
+                var errorContent = await response.Content.ReadAsStringAsync();
+                
+                if (response.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
+                {
+                    // HTTP 429 - Rate limit exceeded - KHÔNG được chuyển trang kết quả
+                    return new SubmitExamResponse
+                    {
+                        Success = false,
+                        Message = "Quá nhiều yêu cầu nộp bài. Vui lòng thử lại sau vài giây.",
+                        IsRateLimited = true,
+                        RetryAfterSeconds = GetRetryAfterSeconds(response)
+                    };
+                }
+                else if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+                {
+                    return new SubmitExamResponse
+                    {
+                        Success = false,
+                        Message = "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.",
+                        IsUnauthorized = true
+                    };
+                }
+                else
+                {
+                    // Các lỗi khác
+                    return new SubmitExamResponse
+                    {
+                        Success = false,
+                        Message = $"Lỗi server khi nộp bài: {response.StatusCode}. {errorContent}",
+                        StatusCode = (int)response.StatusCode
+                    };
+                }
             }
         }
         catch (Exception ex)
         {
-            return null;
+            return new SubmitExamResponse
+            {
+                Success = false,
+                Message = $"Lỗi kết nối khi nộp bài: {ex.Message}",
+                IsConnectionError = true
+            };
         }
+    }
+
+    private int GetRetryAfterSeconds(HttpResponseMessage response)
+    {
+        // Kiểm tra header Retry-After nếu có
+        if (response.Headers.RetryAfter?.Delta?.TotalSeconds > 0)
+        {
+            return (int)response.Headers.RetryAfter.Delta.Value.TotalSeconds;
+        }
+        
+        // Mặc định 5 giây nếu không có header
+        return 5;
     }
 }

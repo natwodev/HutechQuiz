@@ -26,6 +26,22 @@ public class SaveAnswerResponse
     
     [JsonPropertyName("data")]
     public SaveAnswerData? Data { get; set; }
+    
+    // Các trường mới để xử lý lỗi
+    [JsonIgnore]
+    public bool IsRateLimited { get; set; }
+    
+    [JsonIgnore]
+    public bool IsUnauthorized { get; set; }
+    
+    [JsonIgnore]
+    public bool IsConnectionError { get; set; }
+    
+    [JsonIgnore]
+    public int? StatusCode { get; set; }
+    
+    [JsonIgnore]
+    public int RetryAfterSeconds { get; set; }
 }
 
 public class SaveAnswerData
@@ -49,6 +65,22 @@ public class SubmitExamResponse
     
     [JsonPropertyName("data")]
     public SubmitExamData? Data { get; set; }
+    
+    // Các trường mới để xử lý lỗi
+    [JsonIgnore]
+    public bool IsRateLimited { get; set; }
+    
+    [JsonIgnore]
+    public bool IsUnauthorized { get; set; }
+    
+    [JsonIgnore]
+    public bool IsConnectionError { get; set; }
+    
+    [JsonIgnore]
+    public int? StatusCode { get; set; }
+    
+    [JsonIgnore]
+    public int RetryAfterSeconds { get; set; }
 }
 
 public class SubmitExamData

@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using AspNetCoreRateLimit;
 using backend_manage.core.Configurations;
 using backend_manage.core.Data;
 using backend_manage.core.Entities;
@@ -133,9 +134,10 @@ namespace backend_manage.core.Extensions
             });
             
             services.AddMemoryCache();
-            // services.Configure<IpRateLimitOptions>(configuration.GetSection("RateLimit")); // Tắt rate limiting
-            // services.AddInMemoryRateLimiting(); // Tắt rate limiting
-            // services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>(); // Tắt rate limiting
+            // Bật Rate Limiting để bảo vệ server
+            services.Configure<IpRateLimitOptions>(configuration.GetSection("RateLimit"));
+            services.AddInMemoryRateLimiting();
+            services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>();
         }
         
         private static IConnectionMultiplexer CreateRedisFallback(ILogger logger, string connectionString)
