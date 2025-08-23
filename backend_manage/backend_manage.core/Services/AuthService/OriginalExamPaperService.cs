@@ -475,6 +475,7 @@ namespace backend_manage.core.Services.AuthService
                     Title = $"{originalExamPaper.Title} - Hoán vị {i}",
                     ShuffledExamPaperCore = shuffledPaperCore,
                     OriginalExamPaperId = originalExamPaper.OriginalExamPaperId,
+                    AnswerKey = originalExamPaper.KeyValueList,
                     SubjectId = subjectId,
                     IsApproved = true,
                     CreatedBy = userId,

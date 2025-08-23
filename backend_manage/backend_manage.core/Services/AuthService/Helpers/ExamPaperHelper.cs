@@ -456,8 +456,8 @@ public class ExamPaperHelper
    
     public Dictionary<string, string> ParseAnswerKey(string answerKeyString)
     {
-        // Format mới: (1:1);(2:6);(3:10);(4:13);(5:20);...
-        // Format cũ: (1,A);(2,B);(3,C);(4,D);...
+        // Format hiện tại: (1:1);(2:6);(3:10);(4:13);(5:20);...
+        // Key: ID câu hỏi, Value: ID đáp án đúng (số)
         
         if (string.IsNullOrWhiteSpace(answerKeyString))
             return new Dictionary<string, string>();
@@ -481,8 +481,8 @@ public class ExamPaperHelper
         if (string.IsNullOrWhiteSpace(answerKey))
             return "";
 
-        // Format mới: (1:1);(2:6);(3:10);(4:13);(5:20);...
-        // Tạo chuỗi đáp án rỗng bằng cách thay thế tất cả các số sau dấu ':' bằng dấu '-'
+        // Format hiện tại: (1:1);(2:6);(3:10);(4:13);(5:20);...
+        // Tạo chuỗi đáp án rỗng bằng cách thay thế tất cả các ID đáp án sau dấu ':' bằng dấu '-'
         // Giữ nguyên cấu trúc format của answer key
         
         // Sử dụng regex để thay thế số sau dấu ':' bằng dấu '-'
@@ -622,7 +622,8 @@ public class ExamPaperHelper
                 {
                     if (!string.IsNullOrWhiteSpace(studentAnswer) && studentAnswer != "-")
                     {
-                        if (string.Equals(studentAnswer, correctAnswer, StringComparison.OrdinalIgnoreCase))
+                        // So sánh trực tiếp vì bây giờ value là số, không cần StringComparison
+                        if (studentAnswer == correctAnswer)
                         {
                             correctCount++;
                         }

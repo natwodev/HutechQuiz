@@ -9,6 +9,7 @@
 @using frontend_manage.DTOs
 @using Microsoft.AspNetCore.Components
 @using MudBlazor
+@using frontend_manage.Pages.Exam.Components
 @implements IDisposable
 
 <PageTitle>Làm bài thi</PageTitle>
@@ -33,7 +34,7 @@ else
             <!-- Main Content -->
             <MudItem xs="12" md="9">
                 <MudPaper Class="pa-4" Style="border: 1px solid #ccc;">
-                    <MudText Typo="Typo.h5" Class="mb-3" Style="font-weight: bold; color: #1976d2;">
+                    <MudText Typo="Typo.h5" Class="mb-3" Style="font-weight: bold; color: #1976d2; text-align: center;">
                         @(shuffledExam?.Title ?? "Đề thi")
                     </MudText>
                     @{
@@ -43,70 +44,28 @@ else
                     {
                         @foreach (var question in mappedQuestions)
                         {
-                            // Kiểm tra xem đây có phải câu cha không (có câu con)
-                            bool isParentQuestion = question.ChildQuestions?.Any() == true;
+                            int startChildQuestionNumber = questionNumber;
                             
-                            // Hiển thị câu hỏi chính
-                            if (!string.IsNullOrEmpty(question.QuestionContent))
-                            {
-                                if (isParentQuestion)
-                                { 
-                                    // Câu cha: hiển thị phạm vi câu hỏi con (không có MudPaper)
-                                    <MudText id="@($"{question.OriginalExamPaperDetailId}")" Typo="Typo.body1" GutterBottom="true">
-                                        <b>@((MarkupString)question.QuestionContent)</b>
-                                    </MudText>
-                                }
-                                else
-                                {
-                                    // Câu đơn: có số thứ tự và MudPaper riêng
-                                    <MudPaper Class="pa-3 mb-3" Style="border: 1px solid #e0e0e0; border-radius: 8px;">
-                                        <MudText id="@($"{question.OriginalExamPaperDetailId}")" Typo="Typo.body1" GutterBottom="true">
-                                            <b>Câu @(questionNumber++): @((MarkupString)question.QuestionContent)</b>
-                                        </MudText>
-                                        
-                                        @if (question.Answers != null && question.Answers?.Count > 0)
-                                        {
-                                            <MudRadioGroup T="int?" Class="mt-2" Style="display: flex; flex-direction: column;">
-                                                @foreach (var answer in question.Answers.OrderBy(a => a.Order))
-                                                {
-                                                    <MudPaper Class="pa-2 mb-2" Style="border: 1px solid #ddd; border-radius: 6px; background-color: #fafafa; width: 100%;">
-                                                        <MudRadio T="int?" Value="@answer.AnswerId" Style="width: 100%;">@((MarkupString)answer.AnswerContent)</MudRadio>
-                                                    </MudPaper>
-                                                }
-                                            </MudRadioGroup>
-                                        }
-                                    </MudPaper>
-                                }
-                            }
-
-                            // Hiển thị câu hỏi con
+                            // Tính toán số thứ tự câu hỏi
                             if (question.ChildQuestions?.Any() == true)
                             {
-                                @foreach (var childQuestion in question.ChildQuestions.OrderBy(c => c.Order))
-                                {
-                                    <MudPaper Class="pa-3 mb-3" Style="border: 1px solid #e0e0e0; border-radius: 8px;">
-                                        @if (!string.IsNullOrEmpty(childQuestion.QuestionContent))
-                                        {
-                                            <MudText id="@($"{childQuestion.OriginalExamPaperDetailId}")" Typo="Typo.body1" GutterBottom="true">
-                                                <b>Câu @(questionNumber++): @((MarkupString)childQuestion.QuestionContent)</b>
-                                            </MudText>
-                                        }
-
-                                        
-                                        @if (childQuestion.Answers != null && childQuestion.Answers?.Count > 0)
-                                        {
-                                            <MudRadioGroup T="int?" Class="mt-2" Style="display: flex; flex-direction: column;">
-                                                @foreach (var answer in childQuestion.Answers.OrderBy(a => a.Order))
-                                                {
-                                                    <MudPaper Class="pa-2 mb-2" Style="border: 1px solid #ddd; border-radius: 6px; background-color: #fafafa; width: 100%;">
-                                                        <MudRadio T="int?" Value="@answer.AnswerId" Style="width: 100%;">@((MarkupString)answer.AnswerContent)</MudRadio>
-                                                    </MudPaper>
-                                                }
-                                            </MudRadioGroup>
-                                        }
-                                    </MudPaper>
-                                }
+                                // Câu có con: startChildQuestionNumber để truyền vào component
+                                questionNumber += question.ChildQuestions.Count;
                             }
+                            else
+                            {
+                                // Câu đơn: tăng questionNumber sau khi hiển thị
+                                questionNumber++;
+                            }
+                            
+                            <QuestionItem Question="@question"
+                                        QuestionNumber="@(question.ChildQuestions?.Any() == true ? 0 : questionNumber - 1)"
+                                        StartChildQuestionNumber="@startChildQuestionNumber"
+                                        SelectedAnswers="@selectedAnswers"
+                                        SelectedChildAnswers="@selectedChildAnswers"
+                                        OnAnswerSelected="@HandleAnswerSelected"
+                                        OnChildAnswerSelected="@HandleChildAnswerSelected"
+                                        ProcessQuestionContentFunction="@ProcessQuestionContent" />
                         }
                     }
                 </MudPaper>
@@ -114,37 +73,42 @@ else
 
             <!-- Sidebar Info -->
             <MudItem xs="12" md="3" Style="position: sticky; top: 0; overflow-y: auto; height: 100%">
+                <div style="display: flex; flex-direction: column; gap: 0;">
                 <!-- Timer and Submit Button -->
-                <MudPaper Style="text-align: center; border: 1px solid #ccc; margin-bottom: 15%;">
-                    <MudGrid>
-
-                        <MudItem xs="6">
-                            <MudButton Style="margin: 5px" Variant="Variant.Outlined" Color="Color.Success"
-                                       Size="Size.Large">
-                                Nộp Bài
-                            </MudButton>
-                        </MudItem>
-                    </MudGrid>
-                </MudPaper>
-
+                <ExamTimer FormattedTime="@GetFormattedTime()"
+                          RemainingMinutes="@remainingMinutes"
+                          ExtraMinutes="@(studentSession?.ExtraMinutes ?? 0)"
+                          IsTimeUp="@isTimeUp"
+                          IsSubmitDisabled="false"
+                          OnSubmitExam="@OnSubmitExamAsync" />
+                
                 <!-- Student Info -->
-                <MudPaper Class="pa-4" Style="text-align: center; border: 1px solid #ccc; margin-bottom: 15%;">
-                </MudPaper>
-
+                <StudentInfo StudentCode="@(studentSession?.StudentCode ?? string.Empty)"
+                           ExamPaperCode="@(shuffledExam?.ShuffledExamPaperCore ?? string.Empty)"
+                           SubjectName="@(shuffledExam?.SubjectName ?? string.Empty)"
+                           SubjectCode="@(shuffledExam?.SubjectCode ?? string.Empty)"
+                           RoomName="@(studentSession?.RoomName ?? string.Empty)"
+                           Duration="@(studentSession?.Duration ?? 0)"
+                           ExtraMinutes="@(studentSession?.ExtraMinutes ?? 0)" />
+                </div>
                 <!-- Question Navigation -->
-                <MudPaper Class="pa-4" Style="text-align: center; border: 1px solid #ccc; max-height: 450px; overflow-y: auto">
-                    <MudText Typo="Typo.subtitle2" Class="mb-2"><b>Danh sách câu hỏi</b></MudText>
-                    <MudGrid>
-
-
-                    </MudGrid>
-
-                    <MudDivider Class="my-3"/>
-                    <MudText Typo="Typo.body2">
-                    </MudText>
-                    <MudText Typo="Typo.caption" Color="Color.Secondary">
-                    </MudText>
-                </MudPaper>
+                <QuestionNavigation Questions="@mappedQuestions"
+                                  SelectedAnswers="@selectedAnswers"
+                                  SelectedChildAnswers="@selectedChildAnswers"
+                                  OnQuestionClick="@ScrollToQuestionAsync" />
+                
+                    @if (lastSaveTime.HasValue)
+                    {
+                    <MudPaper Class="pa-2 mt-2" Style="text-align: center; border: 1px solid #ccc;">
+                        <MudText Typo="Typo.caption" Color="Color.Success">
+                            <MudIcon Icon="Icons.Material.Filled.Save" Size="Size.Small" Class="mr-1" />
+                            Lưu lần cuối: @lastSaveTime.Value.ToString("HH:mm:ss")
+                        </MudText>
+                    </MudPaper>
+                    }
+                
+                
+                
             </MudItem>
         </MudGrid>
     </MudPaper>
@@ -265,7 +229,6 @@ else
 
 <script src="js/exam-audio.js"></script>
 <script src="js/anti-copy.js"></script>
-<script src="js/scroll.js"></script>
 <script src="js/answer-debouncer.js"></script>
 <script>
     // scrollToElement moved to wwwroot/js/scroll.js
