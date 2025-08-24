@@ -5,6 +5,41 @@ window.audioPlayingStates = window.audioPlayingStates || {};
 
 const MAX_PLAY_COUNT = 5;
 
+// Block keyboard media keys (play/pause, next, previous)
+document.addEventListener('keydown', function(event) {
+    // Block play/pause key (Space, MediaPlayPause)
+    if (event.code === 'Space' || event.code === 'MediaPlayPause') {
+        event.preventDefault();
+        event.stopPropagation();
+        return false;
+    }
+    
+    // Block next/previous track keys
+    if (event.code === 'MediaTrackNext' || event.code === 'MediaTrackPrevious') {
+        event.preventDefault();
+        event.stopPropagation();
+        return false;
+    }
+    
+    // Block F1-F12 keys that might control media
+    if (event.code.startsWith('F') && event.code.length <= 3) {
+        event.preventDefault();
+        event.stopPropagation();
+        return false;
+    }
+});
+
+// Block media session API
+if ('mediaSession' in navigator) {
+    navigator.mediaSession.setActionHandler('play', () => {});
+    navigator.mediaSession.setActionHandler('pause', () => {});
+    navigator.mediaSession.setActionHandler('stop', () => {});
+    navigator.mediaSession.setActionHandler('seekbackward', () => {});
+    navigator.mediaSession.setActionHandler('seekforward', () => {});
+    navigator.mediaSession.setActionHandler('previoustrack', () => {});
+    navigator.mediaSession.setActionHandler('nexttrack', () => {});
+}
+
 window.playAudioSimple = function (audioId, audioPath) {
     // Initialize count if not exists
     if (!window.audioPlayCounts[audioId]) {
@@ -32,6 +67,32 @@ window.playAudioSimple = function (audioId, audioPath) {
         audio.addEventListener('seeking', function () {
             if (audio.currentTime > 0) {
                 audio.currentTime = 0;
+            }
+        });
+
+        // Block keyboard controls on audio element
+        audio.addEventListener('keydown', function(event) {
+            if (event.code === 'Space' || event.code === 'MediaPlayPause') {
+                event.preventDefault();
+                event.stopPropagation();
+                return false;
+            }
+        });
+
+        // Prevent audio from being paused by external controls
+        audio.addEventListener('pause', function(event) {
+            // Only allow pause if it's the end of audio or manual pause from our button
+            if (!audio.ended && window.audioPlayingStates[audioId]) {
+                // Resume playback if paused by external controls
+                setTimeout(() => {
+                    if (window.audioPlayingStates[audioId] && audio.paused) {
+                        audio.play().catch(() => {
+                            // If play fails, mark as stopped
+                            window.audioPlayingStates[audioId] = false;
+                            updateAudioButton(audioId);
+                        });
+                    }
+                }, 100);
             }
         });
 
