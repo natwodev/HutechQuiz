@@ -4,6 +4,7 @@ using frontend_manage.DTOs;
 using System.Timers;
 using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Components.Web;
+using frontend_manage.Services;
 
 namespace frontend_manage.Pages.Exam.Components
 {
@@ -16,11 +17,15 @@ namespace frontend_manage.Pages.Exam.Components
         [Parameter] public Dictionary<int, string> SelectedChildAnswers { get; set; } = new();
         [Parameter] public EventCallback<AnswerSelectedArgs> OnAnswerSelected { get; set; }
         [Parameter] public EventCallback<AnswerSelectedArgs> OnChildAnswerSelected { get; set; }
+        [Parameter] public EventCallback OnAnswersChanged { get; set; }
         [Parameter] public Func<string, string>? ProcessQuestionContentFunction { get; set; }
         
         // Audio processing parameters
         [Parameter] public string? ShuffledExamPaperCore { get; set; }
         [Parameter] public string? BaseAddress { get; set; }
+
+        // MathJax service
+        [Inject] private IMathJaxService MathJaxService { get; set; } = default!;
 
         // Debounce timer properties
         private System.Timers.Timer? _debounceTimer;
@@ -55,7 +60,7 @@ namespace frontend_manage.Pages.Exam.Components
             return $"{baseAddr}EPZ/{folderName}/{audioFileName}";
         }
 
-        private string ProcessQuestionContent(string content)
+        private async Task<string> ProcessQuestionContentAsync(string content)
         {
             if (string.IsNullOrEmpty(content))
                 return content;
@@ -87,11 +92,56 @@ namespace frontend_manage.Pages.Exam.Components
                         </button>
                     </div>";
                     
-                    return Regex.Replace(content, audioPattern, audioButton);
+                    content = Regex.Replace(content, audioPattern, audioButton);
                 }
             }
+
+            // Xử lý LaTeX inline (công thức trong dòng)
+            var inlineLatexPattern = @"\\\(([^\\]+)\\\)";
+            content = await ProcessLatexPatternAsync(content, inlineLatexPattern, false);
+
+            // Xử lý LaTeX display (công thức riêng dòng)
+            var displayLatexPattern = @"\\\[([^\\]+)\\\]";
+            content = await ProcessLatexPatternAsync(content, displayLatexPattern, true);
+
+            // Xử lý LaTeX với $$ (công thức riêng dòng)
+            var dollarLatexPattern = @"\$\$([^$]+)\$\$";
+            content = await ProcessLatexPatternAsync(content, dollarLatexPattern, true);
+
+            // Xử lý LaTeX với $ (công thức trong dòng)
+            var singleDollarLatexPattern = @"\$([^$]+)\$";
+            content = await ProcessLatexPatternAsync(content, singleDollarLatexPattern, false);
             
             return content;
+        }
+
+        private async Task<string> ProcessLatexPatternAsync(string content, string pattern, bool isDisplay)
+        {
+            var matches = Regex.Matches(content, pattern);
+            foreach (Match match in matches)
+            {
+                var latex = match.Groups[1].Value;
+                try
+                {
+                    var processedLatex = await MathJaxService.ProcessLatexAsync(latex, isDisplay);
+                    if (!string.IsNullOrEmpty(processedLatex))
+                    {
+                        content = content.Replace(match.Value, processedLatex);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error processing LaTeX '{latex}': {ex.Message}");
+                }
+            }
+            return content;
+        }
+
+        // Giữ lại method cũ để tương thích ngược
+        private string ProcessQuestionContent(string content)
+        {
+            // Gọi method async và đợi kết quả
+            return ProcessQuestionContentAsync(content).GetAwaiter().GetResult();
         }
 
         private int? GetSelectedAnswerAsInt(int originalExamPaperDetailId)
@@ -123,7 +173,12 @@ namespace frontend_manage.Pages.Exam.Components
         {
             // Cập nhật UI ngay lập tức (tích checkbox)
             SelectedAnswers[args.QuestionId] = args.AnswerId.ToString();
-            StateHasChanged();
+            
+            // Thông báo cho parent component biết có thay đổi để cập nhật QuestionNavigation
+            await InvokeAsync(StateHasChanged);
+            
+            // Thông báo cho parent component về thay đổi answers
+            await OnAnswersChanged.InvokeAsync();
             
             // Lưu args để gọi API sau
             _pendingAnswerArgs = args;
@@ -143,7 +198,12 @@ namespace frontend_manage.Pages.Exam.Components
         {
             // Cập nhật UI ngay lập tức (tích checkbox)
             SelectedChildAnswers[args.QuestionId] = args.AnswerId.ToString();
-            StateHasChanged();
+            
+            // Thông báo cho parent component biết có thay đổi để cập nhật QuestionNavigation
+            await InvokeAsync(StateHasChanged);
+            
+            // Thông báo cho parent component về thay đổi answers
+            await OnAnswersChanged.InvokeAsync();
             
             // Lưu args để gọi API sau
             _pendingAnswerArgs = args;
