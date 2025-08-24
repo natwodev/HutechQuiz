@@ -1,6 +1,9 @@
 using Microsoft.AspNetCore.Components;
+using Microsoft.JSInterop;
 using frontend_manage.DTOs;
 using System.Timers;
+using System.Text.RegularExpressions;
+using Microsoft.AspNetCore.Components.Web;
 
 namespace frontend_manage.Pages.Exam.Components
 {
@@ -14,6 +17,10 @@ namespace frontend_manage.Pages.Exam.Components
         [Parameter] public EventCallback<AnswerSelectedArgs> OnAnswerSelected { get; set; }
         [Parameter] public EventCallback<AnswerSelectedArgs> OnChildAnswerSelected { get; set; }
         [Parameter] public Func<string, string>? ProcessQuestionContentFunction { get; set; }
+        
+        // Audio processing parameters
+        [Parameter] public string? ShuffledExamPaperCore { get; set; }
+        [Parameter] public string? BaseAddress { get; set; }
 
         // Debounce timer properties
         private System.Timers.Timer? _debounceTimer;
@@ -35,13 +42,56 @@ namespace frontend_manage.Pages.Exam.Components
             return StartChildQuestionNumber + childIndex;
         }
 
+        private string GetAudioPath(string audioFileName)
+        {
+            if (string.IsNullOrEmpty(ShuffledExamPaperCore) || string.IsNullOrEmpty(audioFileName))
+                return string.Empty;
+
+            // Lấy phần trước dấu _ từ ShuffledExamPaperCore
+            var folderName = ShuffledExamPaperCore.Split('_')[0];
+            
+            // Tạo đường dẫn audio trực tiếp tới file trong backend
+            var baseAddr = BaseAddress ?? "http://localhost:5163/";
+            return $"{baseAddr}EPZ/{folderName}/{audioFileName}";
+        }
+
         private string ProcessQuestionContent(string content)
         {
-            if (ProcessQuestionContentFunction != null)
+            if (string.IsNullOrEmpty(content))
+                return content;
+
+            // Tìm và thay thế thẻ audio
+            var audioPattern = @"<audio>([^<]+)</audio>";
+            var match = Regex.Match(content, audioPattern);
+            
+            if (match.Success)
             {
-                return ProcessQuestionContentFunction(content);
+                var audioPath = match.Groups[1].Value;
+                var fullAudioPath = GetAudioPath(audioPath);
+                // Tạo audioId dựa trên audioPath để đảm bảo tính nhất quán
+                var audioId = $"audio_{audioPath.GetHashCode().ToString().Replace("-", "n")}";
+                
+                if (!string.IsNullOrEmpty(fullAudioPath))
+                {
+                    // Thay thế thẻ audio bằng button đơn giản
+                    var audioButton = $@"
+                    <div class=""audio-player mb-3"">
+                        <audio id=""{audioId}"" style=""display: none;"">
+                            <source src=""{fullAudioPath}"" type=""audio/mpeg"">
+                        </audio>
+                        <button class=""mud-button-root mud-button mud-button-filled mud-button-filled-primary mud-button-filled-size-medium mud-ripple"" 
+                                onclick=""playAudioSimple('{audioId}', '{fullAudioPath}')"">
+                            <span class=""mud-button-label"">
+                                🔊 Phát audio (5/5)
+                            </span>
+                        </button>
+                    </div>";
+                    
+                    return Regex.Replace(content, audioPattern, audioButton);
+                }
             }
-            return content ?? string.Empty;
+            
+            return content;
         }
 
         private int? GetSelectedAnswerAsInt(int originalExamPaperDetailId)

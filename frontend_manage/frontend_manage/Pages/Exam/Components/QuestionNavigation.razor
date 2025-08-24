@@ -25,7 +25,7 @@
                         <MudItem xs="2" md="3" Style="padding-left: 15px">
                             <MudButton Size="Size.Small" Variant="Variant.Filled"
                                        Color="@(isChildAnswered ? Color.Success : Color.Default)"
-                                       OnClick="@(async () => await OnQuestionClick.InvokeAsync(childQuestionNumber.ToString()))"
+                                       OnClick="@(async () => await ScrollToQuestionAsync(childQuestionNumber.ToString()))"
                                        Style="font-size: 0.8em;">
                                 @childQuestionNumber
                             </MudButton>
@@ -41,7 +41,7 @@
                     <MudItem xs="2" md="3" Style="padding-left: 15px">
                         <MudButton Size="Size.Small" Variant="Variant.Filled"
                                    Color="@(isAnswered ? Color.Success : Color.Default)"
-                                   OnClick="async () => await OnQuestionClick.InvokeAsync(questionNumber.ToString())">
+                                   OnClick="@(async () => await ScrollToQuestionAsync(questionNumber.ToString()))">
                             @questionNumber
                         </MudButton>
                     </MudItem>
