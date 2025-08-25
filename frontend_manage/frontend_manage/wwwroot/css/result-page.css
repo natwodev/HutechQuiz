@@ -41,6 +41,42 @@
     --transition-fast: all 0.2s ease;
 }
 
+/* ===== HEADER STYLES ===== */
+.result-header {
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%) !important;
+    border-bottom: 1px solid var(--border-light) !important;
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 100 !important;
+    box-shadow: var(--shadow-soft) !important;
+}
+
+.logo-button {
+    display: flex !important;
+    align-items: center !important;
+    padding: 8px 12px !important;
+    border-radius: var(--er-radius) !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    min-height: auto !important;
+    text-transform: none !important;
+    font-weight: var(--font-weight-medium) !important;
+    transition: var(--transition-smooth) !important;
+}
+
+.logo-button:hover {
+    background: rgba(25, 118, 210, 0.04) !important;
+    transform: translateY(-1px) !important;
+    box-shadow: var(--shadow-soft) !important;
+}
+
+.hutech-logo {
+    height: 32px !important;
+    width: auto !important;
+    object-fit: contain !important;
+    filter: drop-shadow(0 1px 2px rgba(0,0,0,0.1)) !important;
+}
+
 /* ===== RESULT PAGE WRAPPER ===== */
 .result-page-wrapper {
     width: 100% !important;

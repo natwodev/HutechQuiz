@@ -1,0 +1,542 @@
+/* ===== TEST CSS - XÁC NHẬN CSS ĐƯỢC LOAD ===== */
+.result-page-wrapper {
+    border: 5px solid red !important;
+    background-color: yellow !important;
+    padding: 20px !important;
+}
+
+.result-bg {
+    border: 5px solid blue !important;
+    background-color: lightgreen !important;
+    padding: 15px !important;
+}
+
+:root {
+    --er-bg: linear-gradient(135deg,#e3f2fd 0%,#ffffff 100%);
+    --er-surface: #ffffff;
+    --er-text: #263238;
+    --er-primary: #1976d2;
+    --er-shadow: 0 6px 32px rgba(33,150,243,.10);
+    --ok: #43a047;
+    --ok-b: #2e7d32;
+    --bad: #e53935;
+    --bad-b: #b71c1c;
+    --emp: #b0bec5;
+    --emp-b: #78909c;
+    --er-radius: 22px;
+    --er-card-shadow: 0 8px 32px rgba(33,150,243,.13);
+    --er-card-hover: 0 12px 36px rgba(33,150,243,.18);
+    
+    /* ===== ENHANCED TYPOGRAPHY SYSTEM ===== */
+    --font-primary: 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+    --font-heading: 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+    --font-weight-light: 300;
+    --font-weight-normal: 400;
+    --font-weight-medium: 500;
+    --font-weight-semibold: 600;
+    --font-weight-bold: 700;
+    --font-weight-extrabold: 800;
+    
+    /* ===== ENHANCED COLOR SYSTEM ===== */
+    --text-primary: #1a237e;
+    --text-secondary: #37474f;
+    --text-muted: #546e7a;
+    --border-light: #e8eaf6;
+    --border-medium: #c5cae9;
+    --shadow-soft: 0 2px 8px rgba(0,0,0,0.08);
+    --shadow-medium: 0 4px 16px rgba(0,0,0,0.12);
+    --shadow-strong: 0 8px 24px rgba(0,0,0,0.16);
+    
+    /* ===== ANIMATION CURVES ===== */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-fast: all 0.2s ease;
+}
+
+/* ===== RESULT PAGE WRAPPER ===== */
+.result-page-wrapper {
+    width: 100% !important;
+    min-height: 100vh !important;
+    background: var(--er-bg) !important;
+    font-family: var(--font-primary) !important;
+}
+
+/* Global typography improvements */
+.result-page-wrapper .result-bg {
+    font-family: var(--font-primary) !important;
+    font-weight: var(--font-weight-normal) !important;
+    line-height: 1.6 !important;
+    -webkit-font-smoothing: antialiased !important;
+    -moz-osx-font-smoothing: grayscale !important;
+}
+
+/* Nền & container */
+.result-page-wrapper .result-bg {
+    min-height: 100vh !important;
+    background: var(--er-bg) !important;
+    color: var(--er-text) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+}
+
+.result-page-wrapper .er-container {
+    padding: 16px 0 48px !important;
+    width: 100% !important;
+    max-width: 1100px !important;
+    margin: 0 auto !important;
+}
+
+/* ===== HERO gọn, tách khỏi nội dung ===== */
+.result-page-wrapper .er-hero {
+    position: relative !important;
+    overflow: hidden !important;
+    border-radius: var(--er-radius) !important;
+    margin-bottom: 24px !important;
+    padding: 28px 24px !important;
+    color: #fff !important;
+    background: linear-gradient(135deg,#1e3c72 0%, #2a5298 45%, #4e8df2 100%) !important;
+    box-shadow: var(--er-card-shadow) !important;
+    transition: var(--transition-smooth) !important;
+    border: 2px solid rgba(255,255,255,0.15) !important;
+    backdrop-filter: blur(10px) !important;
+}
+
+.result-page-wrapper .er-hero:hover {
+    box-shadow: var(--er-card-hover) !important;
+    transform: translateY(-3px) !important;
+    border-color: rgba(255,255,255,0.25) !important;
+}
+
+.result-page-wrapper .er-hero__bg {
+    position: absolute !important;
+    inset: 0 !important;
+    pointer-events: none !important;
+    opacity: .18 !important;
+    background-image: 
+        radial-gradient(1200px 220px at -10% 0%, rgba(255,255,255,.3) 0%, rgba(255,255,255,0) 60%), 
+        radial-gradient(900px 240px at 120% 100%, rgba(255,255,255,.2) 0%, rgba(255,255,255,0) 60%) !important;
+}
+
+.result-page-wrapper .er-hero__grid {
+    position: relative !important;
+    z-index: 1 !important;
+}
+
+.result-page-wrapper .er-hero__title-wrap {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 10px !important;
+    background: rgba(255,255,255,0.98) !important;
+    backdrop-filter: blur(15px) !important;
+    border-radius: 24px !important;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.2) !important;
+    padding: 24px 20px !important;
+    margin: 0 auto 24px auto !important;
+    max-width: 520px !important;
+    border: 3px solid rgba(255,255,255,0.4) !important;
+    transition: var(--transition-smooth) !important;
+    position: relative !important;
+    overflow: hidden !important;
+}
+
+.result-page-wrapper .er-hero__title-wrap::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    height: 4px !important;
+    background: linear-gradient(90deg, #1976d2, #42a5f5, #1976d2) !important;
+    border-radius: 24px 24px 0 0 !important;
+}
+
+.result-page-wrapper .er-hero__title-wrap:hover {
+    transform: scale(1.03) !important;
+    box-shadow: 0 16px 48px rgba(0,0,0,0.25) !important;
+    border-color: rgba(255,255,255,0.6) !important;
+}
+
+.result-page-wrapper .er-hero__title {
+    font-family: var(--font-heading) !important;
+    font-weight: var(--font-weight-extrabold) !important;
+    letter-spacing: .6px !important;
+    color: var(--text-primary) !important;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+    text-align: center !important;
+    font-size: 2.6rem !important;
+    line-height: 1.1 !important;
+    margin: 0 !important;
+    position: relative !important;
+    z-index: 1 !important;
+}
+
+.result-page-wrapper .er-hero__subtitle {
+    color: var(--text-secondary) !important;
+    text-align: center !important;
+    font-size: 1.15rem !important;
+    font-weight: var(--font-weight-medium) !important;
+    line-height: 1.4 !important;
+    margin: 0 !important;
+    opacity: 0.95 !important;
+    position: relative !important;
+    z-index: 1 !important;
+}
+
+/* ===== Card chung ===== */
+.er-card {
+    border-radius: var(--er-radius);
+    background: var(--er-surface);
+    box-shadow: var(--shadow-soft);
+    margin: 20px 0;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid var(--border-light);
+    overflow: hidden;
+}
+
+.er-card--info {
+    border: 2px solid var(--border-medium);
+    background: linear-gradient(135deg, #f8faff 0%, #ffffff 100%);
+    box-shadow: var(--shadow-medium);
+    border-radius: 24px;
+    position: relative;
+}
+
+.er-card--info::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #1976d2, #42a5f5, #1976d2);
+    border-radius: 24px 24px 0 0;
+}
+
+.stat-card--score {
+    border: 2px solid var(--border-medium);
+    background: linear-gradient(135deg, #f8faff 0%, #ffffff 100%);
+    box-shadow: var(--shadow-medium);
+    border-radius: 24px;
+    overflow: hidden;
+    padding: 0 !important;
+    position: relative;
+}
+
+.stat-card--score::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #4caf50, #81c784, #4caf50);
+    border-radius: 24px 24px 0 0;
+}
+
+.er-card:hover {
+    box-shadow: var(--shadow-strong);
+    transform: translateY(-2px);
+    border-color: var(--border-medium);
+}
+
+.er-card .mud-card-header, .er-card .mud-card-content {
+    padding: 20px;
+    border-radius: var(--er-radius);
+}
+
+.er-card .mud-card-header {
+    background: linear-gradient(135deg, #fafbfc 0%, #f5f7fa 100%);
+    border-bottom: 1px solid var(--border-light);
+}
+
+.er-card .mud-card-header .mud-text {
+    font-family: var(--font-heading);
+    font-weight: var(--font-weight-semibold);
+    color: var(--text-primary);
+    letter-spacing: 0.3px;
+}
+
+/* ===== Info grid & stats ===== */
+.info-grid {
+    display: grid;
+    grid-template-columns: 160px 1fr;
+    row-gap: 12px;
+    column-gap: 16px;
+    margin-bottom: 16px;
+    padding: 16px;
+    background: rgba(255,255,255,0.7);
+    border-radius: 16px;
+    border: 1px solid var(--border-light);
+}
+
+.info-row {
+    display: contents;
+}
+
+.info-row .k {
+    font-family: var(--font-heading);
+    font-weight: var(--font-weight-semibold);
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    letter-spacing: 0.2px;
+    padding: 8px 12px;
+    background: linear-gradient(135deg, #f8faff 0%, #f0f4ff 100%);
+    border-radius: 8px;
+    border: 1px solid var(--border-light);
+    display: flex;
+    align-items: center;
+}
+
+.info-row .v {
+    font-family: var(--font-primary);
+    font-weight: var(--font-weight-medium);
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    padding: 8px 12px;
+    background: #ffffff;
+    border-radius: 8px;
+    border: 1px solid var(--border-light);
+    display: flex;
+    align-items: center;
+    box-shadow: var(--shadow-soft);
+}
+
+.info-stats {
+    margin-top: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    padding: 16px;
+    background: linear-gradient(135deg, #f8faff 0%, #ffffff 100%);
+    border-radius: 16px;
+    border: 1px solid var(--border-light);
+}
+
+.info-stats .mud-chip {
+    font-family: var(--font-heading);
+    font-weight: var(--font-weight-semibold);
+    font-size: 0.9rem;
+    letter-spacing: 0.3px;
+    padding: 8px 16px;
+    border-radius: 20px !important;
+    box-shadow: var(--shadow-soft);
+    transition: all 0.3s ease;
+}
+
+.info-stats .mud-chip:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-medium);
+}
+
+.info-note {
+    font-family: var(--font-primary);
+    font-weight: var(--font-weight-medium);
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    margin-left: 12px;
+    padding: 8px 16px;
+    background: rgba(255,255,255,0.8);
+    border-radius: 12px;
+    border: 1px solid var(--border-light);
+}
+
+/* ===== Score SVG ===== */
+.stat-card {
+    position: relative;
+    overflow: hidden;
+    border-radius: var(--er-radius);
+    box-shadow: var(--er-card-shadow);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.stat-card__content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 240px;
+    padding: 20px 0;
+    width: 100%;
+    border-radius: 24px;
+    overflow: hidden;
+    background: linear-gradient(135deg, #f8faff 0%, #ffffff 100%);
+}
+
+.stat-card--score {
+    background: linear-gradient(135deg,#e3f2fd 0%,#fff 100%);
+    border-radius: var(--er-radius);
+}
+
+.er-score-svg-wrap {
+    padding: 20px;
+    background: linear-gradient(135deg, #f8faff 0%, #ffffff 100%);
+    border-radius: 20px;
+    box-shadow: var(--shadow-soft);
+}
+
+.er-score-svg {
+    width: 100%;
+    max-width: 560px;
+    height: auto;
+    display: block;
+    border-radius: 20px;
+    box-shadow: var(--shadow-medium);
+    margin: 0 auto;
+    transition: all 0.3s ease;
+}
+
+.er-score-svg:hover {
+    transform: scale(1.02);
+    box-shadow: var(--shadow-strong);
+}
+
+/* ===== Heatmap ===== */
+.heatmap-wrap {
+    padding-top: 8px;
+    background: rgba(255,255,255,0.5);
+    border-radius: 16px;
+    padding: 16px;
+    border: 1px solid var(--border-light);
+}
+
+.er-legend-compact {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.er-legend-compact .mud-chip {
+    margin-left: 0;
+    border-radius: 16px !important;
+    font-family: var(--font-heading);
+    font-weight: var(--font-weight-semibold);
+    font-size: 0.9rem;
+    letter-spacing: 0.3px;
+    padding: 8px 16px;
+    box-shadow: var(--shadow-soft);
+    transition: all 0.3s ease;
+    border: 1px solid rgba(255,255,255,0.3);
+}
+
+.er-legend-compact .mud-chip:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-medium);
+}
+
+.er-legend-compact .mud-chip:first-child {
+    margin-left: 0;
+}
+
+/* Spacing helpers */
+.ml-2 {
+    margin-left: .5rem;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+    .info-grid {
+        grid-template-columns: 140px 1fr;
+        row-gap: 10px;
+        column-gap: 12px;
+        padding: 12px;
+    }
+    
+    .info-row .k,
+    .info-row .v {
+        font-size: 0.9rem;
+        padding: 6px 10px;
+    }
+    
+    .er-container {
+        max-width: 98vw;
+        padding: 12px 0 32px;
+    }
+    
+    .er-hero {
+        margin-bottom: 20px;
+        padding: 20px 16px;
+    }
+    
+    .er-hero__title {
+        font-size: 2rem;
+    }
+    
+    .er-hero__subtitle {
+        font-size: 1rem;
+    }
+    
+    .stat-card__content {
+        min-height: 220px;
+        padding: 16px 0;
+    }
+}
+
+@media (max-width: 600px) {
+    .info-grid {
+        grid-template-columns: 120px 1fr;
+        row-gap: 8px;
+        column-gap: 10px;
+        padding: 10px;
+    }
+    
+    .info-row .k,
+    .info-row .v {
+        font-size: 0.85rem;
+        padding: 5px 8px;
+    }
+    
+    .info-stats {
+        padding: 12px;
+        gap: 8px;
+    }
+    
+    .info-stats .mud-chip {
+        font-size: 0.85rem;
+        padding: 6px 12px;
+    }
+    
+    .info-note {
+        font-size: 0.85rem;
+        padding: 6px 12px;
+        margin-left: 8px;
+    }
+
+    .stat-card__content {
+        min-height: 200px;
+        padding: 12px 0;
+    }
+    
+    .er-score-svg {
+        max-width: 98vw;
+    }
+    
+    .er-hero__title {
+        font-size: 1.6rem;
+        letter-spacing: 0.3px;
+    }
+    
+    .er-hero__subtitle {
+        font-size: 0.95rem;
+    }
+    
+    .er-hero__title-wrap {
+        padding: 16px 12px;
+        max-width: 90vw;
+    }
+    
+    .er-card .mud-card-header,
+    .er-card .mud-card-content {
+        padding: 16px;
+    }
+    
+    .er-legend-compact .mud-chip {
+        font-size: 0.85rem;
+        padding: 6px 12px;
+    }
+    
+    .heatmap-wrap {
+        padding: 12px;
+    }
+}

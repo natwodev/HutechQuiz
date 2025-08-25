@@ -11,7 +11,7 @@ namespace frontend_manage.DTOs
     {
         public string StudentCode { get; set; } = string.Empty;
         public int ShuffledExamPaperId { get; set; }
-        public int Score { get; set; }
+        public double Score { get; set; }
         public int CorrectAnswers { get; set; }
         public int TotalQuestions { get; set; }
         public DateTime StartTime { get; set; }

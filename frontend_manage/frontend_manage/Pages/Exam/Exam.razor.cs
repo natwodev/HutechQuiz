@@ -325,14 +325,26 @@ namespace frontend_manage.Pages.Exam
                         // Parse question ID
                         if (int.TryParse(questionIdStr, out int questionId))
                         {
-                            // Kiểm tra nếu answerId là "-" hoặc rỗng thì không chọn
-                            if (!string.IsNullOrEmpty(answerIdStr) && answerIdStr != "-")
+                            // Lưu TẤT CẢ câu hỏi, kể cả câu bỏ trống
+                            if (!string.IsNullOrEmpty(answerIdStr))
                             {
-                                if (int.TryParse(answerIdStr, out int answerId))
+                                if (answerIdStr == "-")
                                 {
-                                    // Xác định đây là câu hỏi cha hay câu hỏi con
+                                    // Câu hỏi bỏ trống - lưu với giá trị "-"
                                     var isChildQuestion = IsChildQuestion(questionId);
-                                    
+                                    if (isChildQuestion)
+                                    {
+                                        selectedChildAnswers[questionId] = "-";
+                                    }
+                                    else
+                                    {
+                                        selectedAnswers[questionId] = "-";
+                                    }
+                                }
+                                else if (int.TryParse(answerIdStr, out int answerId))
+                                {
+                                    // Câu hỏi đã trả lời - lưu với answerId
+                                    var isChildQuestion = IsChildQuestion(questionId);
                                     if (isChildQuestion)
                                     {
                                         selectedChildAnswers[questionId] = answerId.ToString();
@@ -407,31 +419,46 @@ namespace frontend_manage.Pages.Exam
 
                    if (submitResponse?.Success == true)
                    {
-                       // Lưu dữ liệu exam result vào localStorage để trang Result có thể đọc
-                       if (submitResponse.Data != null)
+                                          // Lưu dữ liệu exam result vào localStorage để trang Result có thể đọc
+                   if (submitResponse.Data != null)
+                   {
+                       var examResultData = new
                        {
-                           var examResultData = new
-                           {
-                               StudentCode = submitResponse.Data.StudentCode,
-                               ShuffledExamPaperId = submitResponse.Data.ShuffledExamPaperId,
-                               Score = submitResponse.Data.Score,
-                               CorrectAnswers = submitResponse.Data.CorrectAnswers,
-                               TotalQuestions = submitResponse.Data.TotalQuestions,
-                               StartTime = submitResponse.Data.StartTime,
-                               EndTime = submitResponse.Data.EndTime,
-                               StudentAnswersString = submitResponse.Data.StudentAnswersString,
-                               AnswerKey = submitResponse.Data.AnswerKey
-                           };
-                           
-                           var resultJson = JsonSerializer.Serialize(examResultData);
-                           await JSRuntime.InvokeVoidAsync("localStorage.setItem", $"examResult_{studentExamSessionId.Value}", resultJson);
-                           
-                           // Lưu studentExamSessionId để trang Result có thể đọc
-                           await JSRuntime.InvokeVoidAsync("localStorage.setItem", "currentStudentExamSessionId", studentExamSessionId.Value.ToString());
-                       }
+                           StudentCode = submitResponse.Data.StudentCode ?? "",
+                           ShuffledExamPaperId = submitResponse.Data.ShuffledExamPaperId,
+                           Score = submitResponse.Data.Score ?? 0,
+                           CorrectAnswers = submitResponse.Data.CorrectAnswers ?? 0,
+                           TotalQuestions = submitResponse.Data.TotalQuestions ?? 0,
+                           StartTime = submitResponse.Data.StartTime,
+                           EndTime = submitResponse.Data.EndTime,
+                           StudentAnswersString = submitResponse.Data.StudentAnswersString ?? "",
+                           AnswerKey = submitResponse.Data.AnswerKey ?? ""
+                       };
                        
-                       Snackbar.Add("Nộp bài thành công!", Severity.Success);
-                       Navigation.NavigateTo("/Exam/Result");
+                       var resultJson = JsonSerializer.Serialize(examResultData);
+                       await JSRuntime.InvokeVoidAsync("localStorage.setItem", $"examResult_{studentExamSessionId.Value}", resultJson);
+                       
+                       // Lưu studentExamSessionId để trang Result có thể đọc
+                       await JSRuntime.InvokeVoidAsync("localStorage.setItem", "currentStudentExamSessionId", studentExamSessionId.Value.ToString());
+                       
+                       // ===================== BẢO MẬT: Lưu các flag bảo mật =====================
+                       // Flag để xác nhận bài thi đã hoàn thành
+                       await JSRuntime.InvokeVoidAsync("localStorage.setItem", "examCompletedFlag", "true");
+                       
+                       // Thời gian nộp bài để kiểm tra thời hạn truy cập
+                       await JSRuntime.InvokeVoidAsync("localStorage.setItem", "examSubmitTime", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+                   }
+                       
+                                               Snackbar.Add("Nộp bài thành công!", Severity.Success);
+                        try
+                        {
+                            await JSRuntime.InvokeVoidAsync("window.location.assign", "/Exam/Result");
+                        }
+                        catch (Exception ex)
+                        {
+                            // Fallback nếu JavaScript interop fail
+                            Navigation.NavigateTo("/Exam/Result");
+                        }
                    }
                    else if (submitResponse != null)
                    {
