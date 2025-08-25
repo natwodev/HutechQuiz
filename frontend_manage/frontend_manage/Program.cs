@@ -37,6 +37,9 @@ builder.Services.AddScoped<ExamBatchDetailService>();
 builder.Services.AddScoped<ExamSessionService>();
 builder.Services.AddScoped<ExamSessionSubjectService>();
 
+// Đăng ký MathJax service
+builder.Services.AddScoped<IMathJaxService, MathJaxService>();
+
 // Đăng ký AuthHeaderHandler
 builder.Services.AddScoped<AuthHeaderHandler>();
 

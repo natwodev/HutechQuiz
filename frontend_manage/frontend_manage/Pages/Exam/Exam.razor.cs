@@ -8,6 +8,7 @@ using frontend_manage.DTOs;
 using frontend_manage.Services;
 using frontend_manage.Pages.Exam.Components;
 using frontend_manage.DTOs.Mapp;
+using frontend_manage.Services;
 
 
 namespace frontend_manage.Pages.Exam
@@ -44,6 +45,9 @@ namespace frontend_manage.Pages.Exam
         private int remainingSeconds;
         private bool isTimeUp = false;
         private DateTime examStartTime;
+
+        // MathJax service
+        [Inject] private IMathJaxService MathJaxService { get; set; } = default!;
 
         protected override async Task OnInitializedAsync()
         {
@@ -92,6 +96,25 @@ namespace frontend_manage.Pages.Exam
                 errorMessage = ex.Message;
             }
         }
+
+        protected override async Task OnAfterRenderAsync(bool firstRender)
+        {
+            if (firstRender && mappedQuestions != null)
+            {
+                // Đợi một chút để DOM được render hoàn toàn
+                await Task.Delay(100);
+                
+                // Gọi MathJax để render LaTeX
+                try
+                {
+                    await MathJaxService.TypesetAsync();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error typesetting MathJax: {ex.Message}");
+                }
+            }
+        }
         
         
         
@@ -126,10 +149,8 @@ namespace frontend_manage.Pages.Exam
         
                 if (response?.Success == true)
                 {
-                    // Cập nhật selectedAnswers để navigation panel hiển thị đúng
-                    selectedAnswers[key] = value.ToString();
+                    // selectedAnswers đã được cập nhật trong QuestionItem, chỉ cần cập nhật thời gian
                     lastSaveTime = DateTime.Now;
-                    StateHasChanged(); // Cập nhật UI
                     return true;
                 }
                 else if (response != null)
@@ -143,10 +164,7 @@ namespace frontend_manage.Pages.Exam
                             config.VisibleStateDuration = 5000;
                         });
                         
-                        // Lưu answer vào cache để retry sau
-                        selectedAnswers[key] = value.ToString();
-                        StateHasChanged();
-                        
+                        // selectedAnswers đã được cập nhật trong QuestionItem, không cần cập nhật lại
                         // Tự động retry sau khi hết rate limit
                         _ = ScheduleAutoRetryAsync(response.RetryAfterSeconds);
                         
@@ -198,10 +216,8 @@ namespace frontend_manage.Pages.Exam
         
                 if (response?.Success == true)
                 {
-                    // Cập nhật selectedChildAnswers để navigation panel hiển thị đúng
-                    selectedChildAnswers[key] = value.ToString();
+                    // selectedChildAnswers đã được cập nhật trong QuestionItem, chỉ cần cập nhật thời gian
                     lastSaveTime = DateTime.Now;
-                    StateHasChanged(); // Cập nhật UI
                     return true;
                 }
                 else if (response != null)
@@ -215,10 +231,7 @@ namespace frontend_manage.Pages.Exam
                             config.VisibleStateDuration = 5000;
                         });
                         
-                        // Lưu answer vào cache để retry sau
-                        selectedChildAnswers[key] = value.ToString();
-                        StateHasChanged();
-                        
+                        // selectedChildAnswers đã được cập nhật trong QuestionItem, không cần cập nhật lại
                         // Tự động retry sau khi hết rate limit
                         _ = ScheduleAutoRetryAsync(response.RetryAfterSeconds);
                         
