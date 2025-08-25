@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Components;
+using Microsoft.JSInterop;
 using MudBlazor;
 using System;
 using System.Collections.Generic;
@@ -7,6 +8,8 @@ using System.Threading.Tasks;
 using frontend_manage.DTOs;
 using frontend_manage.Services;
 using frontend_manage.Enums;
+using OfficeOpenXml;
+using System.IO;
 
 namespace frontend_manage.Pages.Monitor.Components
 {
@@ -20,6 +23,9 @@ namespace frontend_manage.Pages.Monitor.Components
        
         [Inject]
         private MonitorService MonitorService { get; set; }
+        
+        [Inject]
+        private IJSRuntime JSRuntime { get; set; }
 
         [Parameter]
         public List<StudentExamRoomStatusDto>? Students { get; set; }
@@ -215,6 +221,103 @@ namespace frontend_manage.Pages.Monitor.Components
                 ExamStatus.Completed => "status-tag success",
                 _ => "status-tag default"
             };
+        }
+
+        private async Task ExportStudentGradesToExcelAsync()
+        {
+            if (Students == null || !Students.Any())
+            {
+                Snackbar.Add("Không có dữ liệu sinh viên để export", Severity.Warning);
+                return;
+            }
+
+            try
+            {
+                Snackbar.Add("Đang tạo file Excel...", Severity.Info);
+
+                // Tạo danh sách StudentGradeDto từ dữ liệu có sẵn
+                var grades = Students.Select((student, index) => new StudentGradeDto
+                {
+                    STT = index + 1,
+                    StudentCode = student.StudentCode,
+                    Score = student.Score // Score đã có giá trị mặc định là 0
+                }).ToList();
+
+                // Tạo file Excel
+                var excelBytes = await CreateExcelFileAsync(grades);
+
+                if (excelBytes != null && excelBytes.Length > 0)
+                {
+                    // Tạo tên file với timestamp
+                    string fileName = $"BangDiem_ESS{ExamSessionSubjectId}_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
+                    
+                    // Gọi JavaScript để download file
+                    await JSRuntime.InvokeVoidAsync("downloadExcelFile", fileName, Convert.ToBase64String(excelBytes));
+                    
+                    Snackbar.Add("Tải bảng điểm thành công!", Severity.Success);
+                }
+                else
+                {
+                    Snackbar.Add("Không thể tạo file Excel. Vui lòng thử lại sau.", Severity.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error exporting grades: {ex.Message}");
+                Snackbar.Add($"Lỗi khi tạo file Excel: {ex.Message}", Severity.Error);
+            }
+        }
+
+        private async Task<byte[]> CreateExcelFileAsync(List<StudentGradeDto> grades)
+        {
+            try
+            {
+                // Set EPPlus license context
+                ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+
+                using var package = new ExcelPackage();
+                var worksheet = package.Workbook.Worksheets.Add("Bảng Điểm");
+                
+                // Tạo header
+                worksheet.Cells[1, 1].Value = "STT";
+                worksheet.Cells[1, 2].Value = "Mã Sinh Viên";
+                worksheet.Cells[1, 3].Value = "Điểm";
+                
+                // Style header
+                var headerRange = worksheet.Cells[1, 1, 1, 3];
+                headerRange.Style.Font.Bold = true;
+                headerRange.Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
+                headerRange.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightGray);
+                
+                // Fill data
+                int row = 2;
+                foreach (var grade in grades)
+                {
+                    worksheet.Cells[row, 1].Value = grade.STT;
+                    worksheet.Cells[row, 2].Value = grade.StudentCode;
+                    worksheet.Cells[row, 3].Value = grade.Score;
+                    row++;
+                }
+                
+                // Auto fit columns
+                worksheet.Cells[worksheet.Dimension.Address].AutoFitColumns();
+                
+                var excelBytes = package.GetAsByteArray();
+                return excelBytes;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error creating Excel file: {ex.Message}");
+                throw;
+            }
+        }
+
+        // DTO class cho bảng điểm
+        public class StudentGradeDto
+        {
+            public int STT { get; set; }
+            public string StudentCode { get; set; } = string.Empty;
+            public double Score { get; set; }
         }
     }
 }
