@@ -20,7 +20,7 @@ namespace frontend_manage.Pages.Exam.Components
         [Parameter] public EventCallback OnAnswersChanged { get; set; }
         [Parameter] public Func<string, string>? ProcessQuestionContentFunction { get; set; }
         
-        // Audio processing parameters
+        // Audio
         [Parameter] public string? ShuffledExamPaperCore { get; set; }
         [Parameter] public string? BaseAddress { get; set; }
 
@@ -30,11 +30,11 @@ namespace frontend_manage.Pages.Exam.Components
         // JS Runtime
         [Inject] private IJSRuntime JSRuntime { get; set; } = default!;
 
-        // Debounce timer properties
-        private System.Timers.Timer? _debounceTimer;
-        private AnswerSelectedArgs? _pendingAnswerArgs;
-        private bool _isPendingChildAnswer;
-        private const int DEBOUNCE_DELAY_MS = 3000; // 3 seconds
+        // Debounce dictionaries (theo từng câu hỏi)
+        private readonly Dictionary<int, System.Timers.Timer> _debounceTimers = new();
+        private readonly Dictionary<int, AnswerSelectedArgs> _pendingAnswers = new();
+        private readonly Dictionary<int, bool> _isChildAnswer = new();
+        private const int DEBOUNCE_DELAY_MS = 3000; // 3s
 
         public class AnswerSelectedArgs
         {
@@ -55,10 +55,7 @@ namespace frontend_manage.Pages.Exam.Components
             if (string.IsNullOrEmpty(ShuffledExamPaperCore) || string.IsNullOrEmpty(audioFileName))
                 return string.Empty;
 
-            // Lấy phần trước dấu _ từ ShuffledExamPaperCore
             var folderName = ShuffledExamPaperCore.Split('_')[0];
-            
-            // Tạo đường dẫn audio trực tiếp tới file trong backend
             var baseAddr = BaseAddress ?? "http://localhost:5163/";
             return $"{baseAddr}EPZ/{folderName}/{audioFileName}";
         }
@@ -67,10 +64,7 @@ namespace frontend_manage.Pages.Exam.Components
         {
             if (firstRender)
             {
-                // Đợi một chút để DOM được render
                 await Task.Delay(500);
-                
-                // Gọi MathJax để render LaTeX
                 try
                 {
                     await JSRuntime.InvokeVoidAsync("MathJax.typesetPromise");
@@ -83,15 +77,10 @@ namespace frontend_manage.Pages.Exam.Components
             }
         }
 
-
-
-        // Method sync để sử dụng trong Razor
         private string ProcessQuestionContent(string content)
         {
-            if (string.IsNullOrEmpty(content))
-                return content;
+            if (string.IsNullOrEmpty(content)) return content;
 
-            // Tìm và thay thế thẻ audio
             var audioPattern = @"<audio>([^<]+)</audio>";
             var match = Regex.Match(content, audioPattern);
             
@@ -110,137 +99,111 @@ namespace frontend_manage.Pages.Exam.Components
                         </audio>
                         <button class=""mud-button-root mud-button mud-button-filled mud-button-filled-primary mud-button-filled-size-medium mud-ripple"" 
                                 onclick=""playAudioSimple('{audioId}', '{fullAudioPath}')"">
-                            <span class=""mud-button-label"">
-                                🔊 Phát audio (5/5)
-                            </span>
+                            <span class=""mud-button-label"">🔊 Phát audio (5/5)</span>
                         </button>
                     </div>";
                     
                     content = Regex.Replace(content, audioPattern, audioButton);
                 }
             }
-
-            // Trả về content gốc, LaTeX sẽ được xử lý bởi MathJax tự động
             return content;
         }
 
         private int? GetSelectedAnswerAsInt(int originalExamPaperDetailId)
         {
-            SelectedAnswers.TryGetValue(originalExamPaperDetailId, out string? selectedValue);
-            if (string.IsNullOrEmpty(selectedValue))
-                return null;
-            
-            if (int.TryParse(selectedValue, out int result))
-                return result;
-            
-            return null;
+            return SelectedAnswers.TryGetValue(originalExamPaperDetailId, out string? selectedValue) &&
+                   int.TryParse(selectedValue, out int result)
+                   ? result : null;
         }
 
         private int? GetSelectedChildAnswerAsInt(int originalExamPaperDetailId)
         {
-            SelectedChildAnswers.TryGetValue(originalExamPaperDetailId, out string? selectedValue);
-            if (string.IsNullOrEmpty(selectedValue))
-                return null;
-            
-            if (int.TryParse(selectedValue, out int result))
-                return result;
-            
-            return null;
+            return SelectedChildAnswers.TryGetValue(originalExamPaperDetailId, out string? selectedValue) &&
+                   int.TryParse(selectedValue, out int result)
+                   ? result : null;
         }
 
-        // Debounced methods for handling answer selection
+        // ============= Debounced methods =============
         private async Task HandleAnswerSelectedWithDebounce(AnswerSelectedArgs args)
         {
-            // Cập nhật UI ngay lập tức (tích checkbox)
             SelectedAnswers[args.QuestionId] = args.AnswerId.ToString();
-            
-            // Thông báo cho parent component biết có thay đổi để cập nhật QuestionNavigation
             await InvokeAsync(StateHasChanged);
-            
-            // Thông báo cho parent component về thay đổi answers
             await OnAnswersChanged.InvokeAsync();
-            
-            // Lưu args để gọi API sau
-            _pendingAnswerArgs = args;
-            _isPendingChildAnswer = false;
-            
-            // Reset the timer
-            _debounceTimer?.Stop();
-            _debounceTimer?.Dispose();
-            
-            _debounceTimer = new System.Timers.Timer(DEBOUNCE_DELAY_MS);
-            _debounceTimer.Elapsed += async (sender, e) => await OnDebounceTimerElapsed();
-            _debounceTimer.AutoReset = false;
-            _debounceTimer.Start();
+
+            DebounceAnswer(args, isChild: false);
         }
 
         private async Task HandleChildAnswerSelectedWithDebounce(AnswerSelectedArgs args)
         {
-            // Cập nhật UI ngay lập tức (tích checkbox)
             SelectedChildAnswers[args.QuestionId] = args.AnswerId.ToString();
-            
-            // Thông báo cho parent component biết có thay đổi để cập nhật QuestionNavigation
             await InvokeAsync(StateHasChanged);
-            
-            // Thông báo cho parent component về thay đổi answers
             await OnAnswersChanged.InvokeAsync();
-            
-            // Lưu args để gọi API sau
-            _pendingAnswerArgs = args;
-            _isPendingChildAnswer = true;
-            
-            // Reset the timer
-            _debounceTimer?.Stop();
-            _debounceTimer?.Dispose();
-            
-            _debounceTimer = new System.Timers.Timer(DEBOUNCE_DELAY_MS);
-            _debounceTimer.Elapsed += async (sender, e) => await OnDebounceTimerElapsed();
-            _debounceTimer.AutoReset = false;
-            _debounceTimer.Start();
+
+            DebounceAnswer(args, isChild: true);
         }
 
-        private async Task OnDebounceTimerElapsed()
+        private void DebounceAnswer(AnswerSelectedArgs args, bool isChild)
         {
-            if (_pendingAnswerArgs != null)
+            _pendingAnswers[args.QuestionId] = args;
+            _isChildAnswer[args.QuestionId] = isChild;
+
+            if (_debounceTimers.TryGetValue(args.QuestionId, out var oldTimer))
+            {
+                oldTimer.Stop();
+                oldTimer.Dispose();
+            }
+
+            var timer = new System.Timers.Timer(DEBOUNCE_DELAY_MS);
+            timer.Elapsed += async (s, e) => await OnDebounceTimerElapsed(args.QuestionId);
+            timer.AutoReset = false;
+            timer.Start();
+
+            _debounceTimers[args.QuestionId] = timer;
+        }
+
+        private async Task OnDebounceTimerElapsed(int questionId)
+        {
+            if (_pendingAnswers.TryGetValue(questionId, out var args))
             {
                 await InvokeAsync(async () =>
                 {
                     try
                     {
-                        // Chỉ gọi API, không cập nhật UI nữa vì đã update trước đó
-                        if (_isPendingChildAnswer)
+                        if (_isChildAnswer.TryGetValue(questionId, out var isChild) && isChild)
                         {
-                            await OnChildAnswerSelected.InvokeAsync(_pendingAnswerArgs);
+                            await OnChildAnswerSelected.InvokeAsync(args);
                         }
                         else
                         {
-                            await OnAnswerSelected.InvokeAsync(_pendingAnswerArgs);
+                            await OnAnswerSelected.InvokeAsync(args);
                         }
                     }
                     catch (Exception ex)
                     {
-                        // Log error if needed
-                        Console.WriteLine($"Error invoking answer selected callback: {ex.Message}");
-                        
-                        // Nếu API thất bại, có thể rollback UI state ở đây nếu cần
-                        // Hoặc hiển thị thông báo lỗi cho user
+                        Console.WriteLine($"Error saving answer for Q{questionId}: {ex.Message}");
                     }
                     finally
                     {
-                        _pendingAnswerArgs = null;
-                        // Không cần StateHasChanged() ở đây vì UI đã được update trước đó
+                        _pendingAnswers.Remove(questionId);
+                        _isChildAnswer.Remove(questionId);
+                        if (_debounceTimers.TryGetValue(questionId, out var timer))
+                        {
+                            timer.Dispose();
+                            _debounceTimers.Remove(questionId);
+                        }
                     }
                 });
             }
-
-            _debounceTimer?.Dispose();
-            _debounceTimer = null;
         }
 
         public void Dispose()
         {
-            _debounceTimer?.Stop();
-            _debounceTimer?.Dispose();
+            foreach (var t in _debounceTimers.Values)
+            {
+                t.Stop();
+                t.Dispose();
+            }
+            _debounceTimers.Clear();
         }
     }
 }
