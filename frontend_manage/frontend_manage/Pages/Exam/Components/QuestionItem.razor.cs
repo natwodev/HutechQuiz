@@ -68,11 +68,24 @@ namespace frontend_manage.Pages.Exam.Components
                 try
                 {
                     await JSRuntime.InvokeVoidAsync("MathJax.typesetPromise");
-                    Console.WriteLine("MathJax typeset completed");
+                    Console.WriteLine("MathJax typeset completed for questions and answers");
                 }
                 catch (Exception ex)
                 {
                     Console.WriteLine($"Error typesetting MathJax: {ex.Message}");
+                }
+            }
+            else
+            {
+                // Đảm bảo MathJax xử lý lại khi có thay đổi trong câu trả lời
+                try
+                {
+                    await Task.Delay(100); // Chờ một chút để DOM được cập nhật
+                    await JSRuntime.InvokeVoidAsync("MathJax.typesetPromise");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error re-typesetting MathJax: {ex.Message}");
                 }
             }
         }
@@ -108,6 +121,8 @@ namespace frontend_manage.Pages.Exam.Components
             }
             return content;
         }
+
+
 
         private int? GetSelectedAnswerAsInt(int originalExamPaperDetailId)
         {
