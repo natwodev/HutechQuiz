@@ -25,9 +25,13 @@
             }
         </div>
         <div class="search-area">
+            <MudButton Variant="Variant.Filled" Color="Color.Success" Class="excel-button" Size="Size.Small" OnClick="ExportStudentGradesToExcelAsync" Disabled="@(Students == null || !Students.Any())">
+                <MudIcon Icon="@Icons.Material.Filled.TableChart" Class="mr-1" />
+                Tải danh sách bảng điểm
+            </MudButton>
             <div class="search-input-wrapper">
-                <MudIcon Icon="@Icons.Material.Filled.Search" Class="search-icon" Size="Size.Small" />
-                <input type="text" class="search-input" placeholder="Tìm kiếm theo mã SV hoặc họ tên..." @bind="searchText" @bind:event="oninput" />
+                <MudIcon Icon="@Icons.Material.Filled.Search" Class="search-icon" Size="Size.Small"/>
+                <input type="text" class="search-input" placeholder="Tìm kiếm theo mã SV hoặc họ tên..." @bind="searchText" @bind:event="oninput"/>
             </div>
             <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="search-button" Size="Size.Small" OnClick="PerformSearch">Tìm kiếm</MudButton>
         </div>

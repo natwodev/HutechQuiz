@@ -277,6 +277,58 @@ public async Task<IActionResult> UpdateAnswer([FromBody] SaveAnswerDto request)
         return Ok(new { message });
     }
     
+    [HttpGet("grades/{examSessionSubjectId}")]
+    [Authorize(Policy = "AdminOnly")]
+    [Authorize(Policy = "LecturerOnly")]
+    public async Task<IActionResult> GetStudentGrades(int examSessionSubjectId)
+    {
+        try
+        {
+            _logger.LogInformation("Yêu cầu lấy danh sách điểm cho ExamSessionSubjectId: {ExamSessionSubjectId}", examSessionSubjectId);
+            
+            var (grades, subjectCode) = await _studentService.GetStudentGradesByExamSessionSubjectAsync(examSessionSubjectId);
+            
+            return Ok(new { 
+                success = true, 
+                data = grades,
+                subjectCode = subjectCode,
+                count = grades.Count()
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Lỗi khi lấy danh sách điểm cho ExamSessionSubjectId: {ExamSessionSubjectId}", examSessionSubjectId);
+            return StatusCode(500, new { success = false, message = "Lỗi server khi lấy danh sách điểm" });
+        }
+    }
+    
+    [HttpGet("grades/{examSessionSubjectId}/export")]
+    [Authorize(Policy = "LecturerOnly")]
+    public async Task<IActionResult> ExportStudentGrades(int examSessionSubjectId)
+    {
+        try
+        {
+            _logger.LogInformation("Yêu cầu export Excel bảng điểm cho ExamSessionSubjectId: {ExamSessionSubjectId}", examSessionSubjectId);
+            
+            // Lấy dữ liệu điểm và mã môn học
+            var (grades, subjectCode) = await _studentService.GetStudentGradesByExamSessionSubjectAsync(examSessionSubjectId);
+            
+            // Tạo file Excel
+            var excelBytes = await _studentService.ExportStudentGradesToExcelAsync(grades);
+            
+            // Tạo tên file với mã môn học
+            string fileName = $"BangDiem_{subjectCode}_ESS{examSessionSubjectId}_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
+            
+            // Trả về file Excel
+            return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Lỗi khi export Excel bảng điểm cho ExamSessionSubjectId: {ExamSessionSubjectId}", examSessionSubjectId);
+            return StatusCode(500, new { success = false, message = "Lỗi server khi export bảng điểm" });
+        }
+    }
+    
 
 }
 

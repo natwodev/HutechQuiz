@@ -704,6 +704,104 @@ public class StudentService : IStudentService
     }
     #endregion
     
+    #region GetStudentGradesByExamSessionSubjectAsync
+    public async Task<(IEnumerable<StudentGradeDto> Grades, string SubjectCode)> GetStudentGradesByExamSessionSubjectAsync(int examSessionSubjectId)
+    {
+        try
+        {
+            _logger.LogInformation("Bắt đầu lấy danh sách điểm sinh viên cho ExamSessionSubjectId: {ExamSessionSubjectId}", examSessionSubjectId);
+
+            // Lấy danh sách StudentExamSession theo ExamSessionSubjectId
+            var studentExamSessions = await _studentExamSessionRepository.GetQueryable()
+                .Include(ses => ses.Student)
+                .Include(ses => ses.ExamSessionSubject)
+                .ThenInclude(ess => ess.Subject)
+                .Where(ses => ses.ExamSessionSubjectId == examSessionSubjectId)
+                .OrderBy(ses => ses.Student.StudentCode)
+                .ToListAsync();
+
+            if (!studentExamSessions.Any())
+            {
+                _logger.LogWarning("Không tìm thấy dữ liệu điểm cho ExamSessionSubjectId: {ExamSessionSubjectId}", examSessionSubjectId);
+                return (new List<StudentGradeDto>(), "UNKNOWN");
+            }
+
+            // Lấy mã môn học từ ExamSessionSubject đầu tiên
+            string subjectCode = studentExamSessions.First().ExamSessionSubject?.Subject?.SubjectCore ?? "UNKNOWN";
+
+            // Chuyển đổi thành StudentGradeDto với STT
+            var result = new List<StudentGradeDto>();
+            int stt = 1;
+
+            foreach (var session in studentExamSessions)
+            {
+                result.Add(new StudentGradeDto
+                {
+                    STT = stt++,
+                    StudentCode = session.Student?.StudentCode ?? session.StudentCode,
+                    Score = session.Score
+                });
+            }
+
+            _logger.LogInformation("Đã lấy thành công {Count} bản ghi điểm cho ExamSessionSubjectId: {ExamSessionSubjectId}, Môn học: {SubjectCode}", result.Count, examSessionSubjectId, subjectCode);
+            return (result, subjectCode);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Lỗi khi lấy danh sách điểm sinh viên cho ExamSessionSubjectId: {ExamSessionSubjectId}", examSessionSubjectId);
+            throw;
+        }
+    }
+    #endregion
+    
+    #region ExportStudentGradesToExcelAsync
+    public async Task<byte[]> ExportStudentGradesToExcelAsync(IEnumerable<StudentGradeDto> grades)
+    {
+        try
+        {
+            _logger.LogInformation("Bắt đầu export Excel bảng điểm với {Count} bản ghi", grades.Count());
+
+            // Tạo file Excel
+            using var package = new ExcelPackage();
+            var worksheet = package.Workbook.Worksheets.Add("Bảng Điểm");
+            
+            // Tạo header
+            worksheet.Cells[1, 1].Value = "STT";
+            worksheet.Cells[1, 2].Value = "Mã Sinh Viên";
+            worksheet.Cells[1, 3].Value = "Điểm";
+            
+            // Style header
+            var headerRange = worksheet.Cells[1, 1, 1, 3];
+            headerRange.Style.Font.Bold = true;
+            headerRange.Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
+            headerRange.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightGray);
+            
+            // Fill data
+            int row = 2;
+            foreach (var grade in grades)
+            {
+                worksheet.Cells[row, 1].Value = grade.STT;
+                worksheet.Cells[row, 2].Value = grade.StudentCode;
+                worksheet.Cells[row, 3].Value = grade.Score;
+                row++;
+            }
+            
+            // Auto fit columns
+            worksheet.Cells[worksheet.Dimension.Address].AutoFitColumns();
+            
+            var excelBytes = package.GetAsByteArray();
+            _logger.LogInformation("Đã tạo thành công file Excel với {Count} bản ghi", grades.Count());
+            
+            return excelBytes;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Lỗi khi export Excel bảng điểm");
+            throw;
+        }
+    }
+    #endregion
+    
 } 
 
 

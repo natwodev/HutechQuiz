@@ -26,6 +26,9 @@ namespace frontend_manage.Pages.Exam.Components
 
         // MathJax service
         [Inject] private IMathJaxService MathJaxService { get; set; } = default!;
+        
+        // JS Runtime
+        [Inject] private IJSRuntime JSRuntime { get; set; } = default!;
 
         // Debounce timer properties
         private System.Timers.Timer? _debounceTimer;
@@ -60,7 +63,30 @@ namespace frontend_manage.Pages.Exam.Components
             return $"{baseAddr}EPZ/{folderName}/{audioFileName}";
         }
 
-        private async Task<string> ProcessQuestionContentAsync(string content)
+        protected override async Task OnAfterRenderAsync(bool firstRender)
+        {
+            if (firstRender)
+            {
+                // Đợi một chút để DOM được render
+                await Task.Delay(500);
+                
+                // Gọi MathJax để render LaTeX
+                try
+                {
+                    await JSRuntime.InvokeVoidAsync("MathJax.typesetPromise");
+                    Console.WriteLine("MathJax typeset completed");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error typesetting MathJax: {ex.Message}");
+                }
+            }
+        }
+
+
+
+        // Method sync để sử dụng trong Razor
+        private string ProcessQuestionContent(string content)
         {
             if (string.IsNullOrEmpty(content))
                 return content;
@@ -73,12 +99,10 @@ namespace frontend_manage.Pages.Exam.Components
             {
                 var audioPath = match.Groups[1].Value;
                 var fullAudioPath = GetAudioPath(audioPath);
-                // Tạo audioId dựa trên audioPath để đảm bảo tính nhất quán
                 var audioId = $"audio_{audioPath.GetHashCode().ToString().Replace("-", "n")}";
                 
                 if (!string.IsNullOrEmpty(fullAudioPath))
                 {
-                    // Thay thế thẻ audio bằng button đơn giản
                     var audioButton = $@"
                     <div class=""audio-player mb-3"">
                         <audio id=""{audioId}"" style=""display: none;"">
@@ -96,52 +120,8 @@ namespace frontend_manage.Pages.Exam.Components
                 }
             }
 
-            // Xử lý LaTeX inline (công thức trong dòng)
-            var inlineLatexPattern = @"\\\(([^\\]+)\\\)";
-            content = await ProcessLatexPatternAsync(content, inlineLatexPattern, false);
-
-            // Xử lý LaTeX display (công thức riêng dòng)
-            var displayLatexPattern = @"\\\[([^\\]+)\\\]";
-            content = await ProcessLatexPatternAsync(content, displayLatexPattern, true);
-
-            // Xử lý LaTeX với $$ (công thức riêng dòng)
-            var dollarLatexPattern = @"\$\$([^$]+)\$\$";
-            content = await ProcessLatexPatternAsync(content, dollarLatexPattern, true);
-
-            // Xử lý LaTeX với $ (công thức trong dòng)
-            var singleDollarLatexPattern = @"\$([^$]+)\$";
-            content = await ProcessLatexPatternAsync(content, singleDollarLatexPattern, false);
-            
+            // Trả về content gốc, LaTeX sẽ được xử lý bởi MathJax tự động
             return content;
-        }
-
-        private async Task<string> ProcessLatexPatternAsync(string content, string pattern, bool isDisplay)
-        {
-            var matches = Regex.Matches(content, pattern);
-            foreach (Match match in matches)
-            {
-                var latex = match.Groups[1].Value;
-                try
-                {
-                    var processedLatex = await MathJaxService.ProcessLatexAsync(latex, isDisplay);
-                    if (!string.IsNullOrEmpty(processedLatex))
-                    {
-                        content = content.Replace(match.Value, processedLatex);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Error processing LaTeX '{latex}': {ex.Message}");
-                }
-            }
-            return content;
-        }
-
-        // Giữ lại method cũ để tương thích ngược
-        private string ProcessQuestionContent(string content)
-        {
-            // Gọi method async và đợi kết quả
-            return ProcessQuestionContentAsync(content).GetAwaiter().GetResult();
         }
 
         private int? GetSelectedAnswerAsInt(int originalExamPaperDetailId)
