@@ -19,7 +19,7 @@ namespace frontend_manage.Pages.Exam
         [Inject] private NavigationManager Navigation { get; set; } = default!;
 
         // ===================== State =====================
-        private ExamResultDataDto? result;
+        private SubmitExamData? result;
         private bool isLoading = true;
         private string errorMessage = string.Empty;
         private List<HeatCell> heatCells = new();
@@ -64,25 +64,19 @@ namespace frontend_manage.Pages.Exam
 
                 // ===== DÙNG DỮ LIỆU THẬT =====
                 if (!await ValidateAccessAsync()) return;
-                var examResultJson = await GetExamResultJsonAsync();
-                if (string.IsNullOrEmpty(examResultJson))
-                {
-                    SetErrorAndRedirect("Không tìm thấy dữ liệu kết quả bài thi.");
-                    return;
-                }
+                
+                // Dữ liệu đã được kiểm tra trong ValidateAccessAsync
+                var sessionIdStr = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "currentStudentExamSessionId");
+                var examResultJson = await JSRuntime.InvokeAsync<string>("localStorage.getItem", $"examResult_{sessionIdStr}");
+                
                 result = ParseExamResult(examResultJson);
                 if (result == null)
                 {
                     SetErrorAndRedirect("Không thể đọc dữ liệu kết quả bài thi.");
                     return;
                 }
-                // Lưu ý: Khi dùng dữ liệu thật, điểm số sẽ được tính toán lại từ heatmap
-                // để đảm bảo tính nhất quán với hiển thị
 
                 BuildHeatmap();
-                
-                // Tính toán điểm số dựa trên kết quả thực tế từ heatmap
-                CalculateScoreFromHeatmap();
 
                 // Xóa dữ liệu sau 5 phút để bảo mật
                 _ = Task.Run(async () =>
@@ -109,158 +103,32 @@ namespace frontend_manage.Pages.Exam
             }
         }
 
-        // ===================== Mock Data for Testing (ĐÃ COMMENT LẠI) =====================
-        // Test case: 50 câu hỏi với kết quả chính xác:
-        // - 20 câu đầu: Sinh viên trả lời "A", đáp án "A" → ĐÚNG
-        // - 20 câu tiếp: Sinh viên trả lời "B", đáp án "C" → SAI  
-        // - 10 câu cuối: Sinh viên bỏ trống "-", đáp án "-" → CHƯA TRẢ LỜI
-        /*
-        private ExamResultDataDto CreateMockExamResult()
-        {
-            var mockStudentAnswers = GenerateMockStudentAnswers(50); // Giảm xuống 50 câu để dễ test
-            var mockAnswerKey = GenerateMockAnswerKey(50);
-            var actualCorrectAnswers = CalculateActualCorrectAnswers(mockStudentAnswers, mockAnswerKey);
-
-            return new ExamResultDataDto
-            {
-                StudentCode = "SV001",
-                ShuffledExamPaperId = 12345,
-                Score = 0.0, // Sẽ được tính toán sau khi xây dựng heatmap
-                CorrectAnswers = actualCorrectAnswers,
-                TotalQuestions = 50, // Giảm xuống 50 câu
-                StartTime = DateTime.Now.AddHours(-2),
-                EndTime = DateTime.Now.AddMinutes(-30),
-                StudentAnswersString = mockStudentAnswers,
-                AnswerKey = mockAnswerKey
-            };
-        }
-        */
-
-        /*
-        private int CalculateActualCorrectAnswers(string studentAnswersString, string answerKeyString)
-        {
-            var studentAnswers = ParseAnswerString(studentAnswersString);
-            var correctAnswers = ParseAnswerString(answerKeyString);
-
-            int correctCount = 0;
-
-            foreach (var kvp in studentAnswers)
-            {
-                var qid = kvp.Key;
-                var student = NormalizeAnswer(kvp.Value);
-                var correct = NormalizeAnswer(correctAnswers.GetValueOrDefault(qid, ""));
-
-                // Chỉ tính câu đúng khi:
-                // 1. Sinh viên đã trả lời (không bỏ trống)
-                // 2. Có đáp án đúng để so sánh
-                if (string.IsNullOrEmpty(student)) continue; // SV bỏ trống
-                if (string.IsNullOrEmpty(correct)) continue; // Không có đáp án
-
-                if (student == correct) correctCount++;
-            }
-
-            return correctCount;
-        }
-
-        private string GenerateMockStudentAnswers(int totalQuestions)
-        {
-            var answers = new List<string>();
-            var random = new Random(42); // seed cố định
-
-            // Tạo chính xác: 20 câu đúng, 20 câu sai, 10 câu chưa trả lời
-            for (int i = 1; i <= totalQuestions; i++)
-            {
-                var questionNo = i + 19; // 20.. (giống DB thực)
-                
-                string answer;
-                if (i <= 20)
-                {
-                    // 20 câu đầu: sinh viên trả lời (sẽ đúng)
-                    answer = "A"; // Cố định để dễ test
-                }
-                else if (i <= 40)
-                {
-                    // 20 câu tiếp: sinh viên trả lời (sẽ sai)
-                    answer = "B"; // Cố định để dễ test
-                }
-                else
-                {
-                    // 10 câu cuối: sinh viên bỏ trống
-                    answer = "-";
-                }
-
-                answers.Add($"({questionNo}:{answer})");
-            }
-
-            return string.Join(";", answers);
-        }
-
-        private string GenerateMockAnswerKey(int totalQuestions)
-        {
-            var answers = new List<string>();
-            var random = new Random(123);
-
-            // Tạo đáp án để test case: 20 câu đúng, 20 câu sai, 10 câu chưa trả lời
-            for (int i = 1; i <= totalQuestions; i++)
-            {
-                var qid = i + 19;
-                
-                string answer;
-                if (i <= 20)
-                {
-                    // 20 câu đầu: đáp án trùng với sinh viên (sẽ đúng)
-                    answer = "A"; // Trùng với sinh viên
-                }
-                else if (i <= 40)
-                {
-                    // 20 câu tiếp: đáp án khác với sinh viên (sẽ sai)
-                    answer = "C"; // Khác với sinh viên (B)
-                }
-                else
-                {
-                    // 10 câu cuối: không có đáp án (câu chưa trả lời)
-                    answer = "-";
-                }
-
-                answers.Add($"({questionNo}:{answer})");
-            }
-
-            return string.Join(";", answers);
-        }
-        */
-
         // ===================== API Integration (DÙNG DỮ LIỆU THẬT) =====================
         // Khi sử dụng API thật, hệ thống sẽ:
-        // 1. Kiểm tra quyền truy cập từ localStorage
-        // 2. Lấy dữ liệu kết quả bài thi từ localStorage
-        // 3. Parse JSON thành ExamResultDataDto
-        // 4. Xây dựng heatmap từ StudentAnswersString và AnswerKey
-        // 5. Tính toán lại điểm số dựa trên kết quả thực tế
+        // 1. Kiểm tra quyền truy cập từ localStorage (currentStudentExamSessionId)
+        // 2. Lấy dữ liệu kết quả bài thi từ localStorage (examResult_{sessionId})
+        // 3. Parse JSON thành SubmitExamData
+        // 4. Xây dựng heatmap từ StudentAnswersString và AnswerKey để hiển thị trạng thái từng câu
+        // 5. Sử dụng trực tiếp điểm số và số câu đúng từ API
         // ===================== Access Validation =====================
         private async Task<bool> ValidateAccessAsync()
         {
             try
             {
-                var examCompletedFlag = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "examCompletedFlag");
-                var examSubmitTimeStr = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "examSubmitTime");
                 var sessionIdStr = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "currentStudentExamSessionId");
 
-                if (string.IsNullOrEmpty(examCompletedFlag) ||
-                    string.IsNullOrEmpty(examSubmitTimeStr) ||
-                    string.IsNullOrEmpty(sessionIdStr))
+                if (string.IsNullOrEmpty(sessionIdStr))
                 {
                     SetErrorAndRedirect("Truy cập không hợp lệ. Vui lòng làm bài thi trước.");
                     return false;
                 }
 
-                if (DateTime.TryParse(examSubmitTimeStr, out var examSubmitTime))
+                // Kiểm tra xem có dữ liệu kết quả tương ứng không
+                var examResultJson = await JSRuntime.InvokeAsync<string>("localStorage.getItem", $"examResult_{sessionIdStr}");
+                if (string.IsNullOrEmpty(examResultJson))
                 {
-                    var timeDiff = DateTime.Now - examSubmitTime;
-                    if (timeDiff.TotalMinutes > 30)
-                    {
-                        SetErrorAndRedirect("Phiên xem kết quả đã hết hạn. Vui lòng liên hệ giảng viên.");
-                        return false;
-                    }
+                    SetErrorAndRedirect("Không tìm thấy dữ liệu kết quả bài thi.");
+                    return false;
                 }
 
                 return true;
@@ -272,29 +140,17 @@ namespace frontend_manage.Pages.Exam
             }
         }
 
-        private async Task<string?> GetExamResultJsonAsync()
-        {
-            try
-            {
-                var sessionIdStr = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "currentStudentExamSessionId");
-                if (int.TryParse(sessionIdStr, out int sessionId))
-                {
-                    return await JSRuntime.InvokeAsync<string>("localStorage.getItem", $"examResult_{sessionId}");
-                }
-            }
-            catch { /* Ignore */ }
-            return null;
-        }
+
 
         // ===================== Data Parsing =====================
-        private ExamResultDataDto? ParseExamResult(string json)
+        private SubmitExamData? ParseExamResult(string json)
         {
             try
             {
                 var jsonElement = JsonSerializer.Deserialize<JsonElement>(json);
                 if (jsonElement.ValueKind == JsonValueKind.Object)
                 {
-                    return new ExamResultDataDto
+                    return new SubmitExamData
                     {
                         StudentCode = jsonElement.GetProperty("StudentCode").GetString() ?? "",
                         ShuffledExamPaperId = jsonElement.GetProperty("ShuffledExamPaperId").GetInt32(),
@@ -315,47 +171,13 @@ namespace frontend_manage.Pages.Exam
             return null;
         }
 
-        // ===================== Score Calculation (API THẬT) =====================
-        // Logic tính điểm với dữ liệu thật:
-        // - Điểm số từ API có thể không chính xác hoặc cũ
-        // - Hệ thống sẽ tính toán lại dựa trên heatmap thực tế
-        // - Đảm bảo tính nhất quán giữa hiển thị và dữ liệu
-        // - Hỗ trợ cả trường hợp câu chưa trả lời
-        private void CalculateScoreFromHeatmap()
-        {
-            if (result == null || heatCells?.Count == 0) return;
 
-            var totalQuestions = result.TotalQuestions;
-            var correctAnswers = heatCells.Count(c => c.StatusCss == "ok");
-            var wrongAnswers = heatCells.Count(c => c.StatusCss == "bad");
-            var emptyAnswers = heatCells.Count(c => c.StatusCss == "empty");
-
-            // Cập nhật số câu đúng thực tế
-            result.CorrectAnswers = correctAnswers;
-
-            // Tính điểm: 10 điểm cho 100% câu đúng
-            var score = totalQuestions > 0 ? (double)correctAnswers / totalQuestions * 10.0 : 0.0;
-            result.Score = Math.Round(score, 2);
-
-            Console.WriteLine($"CalculateScoreFromHeatmap - Total: {totalQuestions}, Correct: {correctAnswers}, Wrong: {wrongAnswers}, Empty: {emptyAnswers}");
-            Console.WriteLine($"CalculateScoreFromHeatmap - Calculated Score: {result.Score}");
-            
-            // Log để debug
-            Console.WriteLine($"CalculateScoreFromHeatmap - Final result.Score: {result.Score}, result.CorrectAnswers: {result.CorrectAnswers}");
-            
-            // Log test case results
-            Console.WriteLine("=== TEST CASE RESULTS ===");
-            Console.WriteLine($"Expected: 20 correct, 20 wrong, 10 empty");
-            Console.WriteLine($"Actual: {correctAnswers} correct, {wrongAnswers} wrong, {emptyAnswers} empty");
-            Console.WriteLine($"Score: {result.Score}/10.0 ({(result.Score/10.0*100):0.0}%)");
-            Console.WriteLine("========================");
-        }
 
         // ===================== Heatmap Building (API THẬT) =====================
         // Logic xây dựng heatmap với dữ liệu thật:
-        // - Ưu tiên sử dụng StudentAnswersString và AnswerKey từ API
+        // - Ưu tiên sử dụng StudentAnswersString và AnswerKey từ API để hiển thị trạng thái chi tiết từng câu
         // - Fallback về CreateHeatmapFromApiData nếu không có dữ liệu chi tiết
-        // - Đảm bảo hiển thị chính xác trạng thái từng câu hỏi
+        // - Heatmap chỉ dùng để hiển thị trạng thái, không dùng để tính toán điểm số
         private void BuildHeatmap()
         {
             if (result == null) return;
@@ -375,6 +197,7 @@ namespace frontend_manage.Pages.Exam
 
         private void CreateHeatmapFromRealData()
         {
+            // Tạo heatmap chi tiết từ dữ liệu thực tế của sinh viên và đáp án
             var studentAnswers = ParseAnswerString(result!.StudentAnswersString);
             var correctAnswers = ParseAnswerString(result!.AnswerKey);
 
@@ -402,7 +225,8 @@ namespace frontend_manage.Pages.Exam
                 questionMapping[i + 1] = qids[i];
             }
 
-            for (int displayOrder = 1; displayOrder <= result.TotalQuestions; displayOrder++)
+            var totalQuestions = result.TotalQuestions ?? 0;
+            for (int displayOrder = 1; displayOrder <= totalQuestions; displayOrder++)
             {
                 if (questionMapping.TryGetValue(displayOrder, out var qid))
                 {
@@ -446,8 +270,9 @@ namespace frontend_manage.Pages.Exam
 
         private void CreateHeatmapFromApiData()
         {
-            var correctCount = result!.CorrectAnswers;
-            var totalQuestions = result!.TotalQuestions;
+            // Fallback: Tạo heatmap đơn giản dựa trên số câu đúng từ API
+            var correctCount = result!.CorrectAnswers ?? 0;
+            var totalQuestions = result!.TotalQuestions ?? 0;
 
             for (int i = 1; i <= totalQuestions; i++)
             {
@@ -465,6 +290,7 @@ namespace frontend_manage.Pages.Exam
 
         private Dictionary<int, string> ParseAnswerString(string answerString)
         {
+            // Parse chuỗi đáp án từ API thành Dictionary để xây dựng heatmap
             var dict = new Dictionary<int, string>();
             if (string.IsNullOrWhiteSpace(answerString))
             {
@@ -498,7 +324,7 @@ namespace frontend_manage.Pages.Exam
         }
 
         // ============= So sánh / Hiển thị trạng thái =============
-        // Quy tắc:
+        // Quy tắc xác định trạng thái câu hỏi cho heatmap:
         // - Chỉ 'ok' khi CẢ HAI đều không rỗng và bằng nhau sau Normalize
         // - Nếu student là "-" (bỏ trống), coi là chưa trả lời -> "empty"
         // - Nếu correct là "-" (không có đáp án), coi là "bad" (sai)
@@ -535,7 +361,8 @@ namespace frontend_manage.Pages.Exam
             return s == c ? "Đúng" : "Sai";
         }
 
-        // Chuẩn hoá đáp án để so sánh công bằng, hỗ trợ cả OptionId số & A/B/C/D, multi-select.
+        // Chuẩn hoá đáp án để so sánh công bằng khi xây dựng heatmap
+        // Hỗ trợ cả OptionId số & A/B/C/D, multi-select
         // Lưu ý: "-" được giữ nguyên để xử lý đặc biệt trong GetStatusCss/GetStatusText
         private static string NormalizeAnswer(string a)
         {
@@ -580,9 +407,7 @@ namespace frontend_manage.Pages.Exam
         }
 
         // ===================== Computed Properties =====================
-        private double ScorePercent => result?.TotalQuestions > 0
-            ? (double)(result.CorrectAnswers) / result.TotalQuestions * 100.0
-            : 0.0;
+        // Sử dụng trực tiếp dữ liệu từ API, không tính toán lại
 
         private string ScoreSvgDataUri => BuildScoreSvgDataUri(
             result?.Score ?? 0,

@@ -27,8 +27,8 @@ else if (shuffledExam == null)
 }
 else
 {
- 
-    
+
+
     <MudPaper Elevation="4" Class="pa-4">
         <MudGrid Class="noselect">
             <!-- Main Content -->
@@ -37,7 +37,7 @@ else
                     <MudText Typo="Typo.h5" Class="mb-3" Style="font-weight: bold; color: #1976d2; text-align: center;">
                         @(shuffledExam?.Title ?? "Đề thi")
                     </MudText>
-                    
+
                     <!-- Test LaTeX component - có thể xóa sau khi test xong -->
                     <LaTeXTest />
                     @{
@@ -48,7 +48,7 @@ else
                         @foreach (var question in mappedQuestions)
                         {
                             int startChildQuestionNumber = questionNumber;
-                            
+
                             // Tính toán số thứ tự câu hỏi
                             if (question.ChildQuestions?.Any() == true)
                             {
@@ -60,17 +60,17 @@ else
                                 // Câu đơn: tăng questionNumber sau khi hiển thị
                                 questionNumber++;
                             }
-                            
+
                             <QuestionItem Question="@question"
-                                        QuestionNumber="@(question.ChildQuestions?.Any() == true ? 0 : questionNumber - 1)"
-                                        StartChildQuestionNumber="@startChildQuestionNumber"
-                                        SelectedAnswers="@selectedAnswers"
-                                        SelectedChildAnswers="@selectedChildAnswers"
-                                        OnAnswerSelected="@HandleAnswerSelected"
-                                        OnChildAnswerSelected="@HandleChildAnswerSelected"
-                                        OnAnswersChanged="@(() => StateHasChanged())"
-                                        ShuffledExamPaperCore="@(shuffledExam?.ShuffledExamPaperCore ?? string.Empty)"
-                                        BaseAddress="@(Http.BaseAddress?.ToString() ?? "http://localhost:5163/")" />
+                                          QuestionNumber="@(question.ChildQuestions?.Any() == true ? 0 : questionNumber - 1)"
+                                          StartChildQuestionNumber="@startChildQuestionNumber"
+                                          SelectedAnswers="@selectedAnswers"
+                                          SelectedChildAnswers="@selectedChildAnswers"
+                                          OnAnswerSelected="@HandleAnswerSelected"
+                                          OnChildAnswerSelected="@HandleChildAnswerSelected"
+                                          OnAnswersChanged="@(() => StateHasChanged())"
+                                          ShuffledExamPaperCore="@(shuffledExam?.ShuffledExamPaperCore ?? string.Empty)"
+                                          BaseAddress="@(Http.BaseAddress?.ToString() ?? "http://localhost:5163/")" />
                         }
                     }
                 </MudPaper>
@@ -79,43 +79,43 @@ else
             <!-- Sidebar Info -->
             <MudItem xs="12" md="3" Style="position: sticky; top: 0; overflow-y: auto; height: 100%">
                 <div style="display: flex; flex-direction: column; gap: 0;">
-                <!-- Timer and Submit Button -->
-                <ExamTimer StudentExamSessionId="@(studentExamSessionId ?? 0)"
-                          TotalDuration="@(studentSession?.Duration ?? 0)"
-                          ExtraMinutes="@(studentSession?.ExtraMinutes ?? 0)"
-                          IsSubmitDisabled="false"
-                          OnSubmitExam="@OnSubmitExamAsync"
-                          OnTimerInitialized="@OnTimerInitialized"
-                          OnTimeUp="@OnTimeUp" />
-                
-                <!-- Student Info -->
-                <StudentInfo StudentCode="@(studentSession?.StudentCode ?? string.Empty)"
-                           ExamPaperCode="@(shuffledExam?.ShuffledExamPaperCore ?? string.Empty)"
-                           SubjectName="@(shuffledExam?.SubjectName ?? string.Empty)"
-                           SubjectCode="@(shuffledExam?.SubjectCode ?? string.Empty)"
-                           RoomName="@(studentSession?.RoomName ?? string.Empty)"
-                           Duration="@(studentSession?.Duration ?? 0)"
-                           ExtraMinutes="@(studentSession?.ExtraMinutes ?? 0)" />
+                    <!-- Timer and Submit Button -->
+                    <ExamTimer StudentExamSessionId="@(studentExamSessionId ?? 0)"
+                               TotalDuration="@(studentSession?.Duration ?? 0)"
+                               ExtraMinutes="@(studentSession?.ExtraMinutes ?? 0)"
+                               IsSubmitDisabled="false"
+                               OnSubmitExam="@OnSubmitExamAsync"
+                               OnTimerInitialized="@OnTimerInitialized"
+                               OnTimeUp="@OnTimeUp" />
+
+                    <!-- Student Info -->
+                    <StudentInfo StudentCode="@(studentSession?.StudentCode ?? string.Empty)"
+                                 ExamPaperCode="@(shuffledExam?.ShuffledExamPaperCore ?? string.Empty)"
+                                 SubjectName="@(shuffledExam?.SubjectName ?? string.Empty)"
+                                 SubjectCode="@(shuffledExam?.SubjectCode ?? string.Empty)"
+                                 RoomName="@(studentSession?.RoomName ?? string.Empty)"
+                                 Duration="@(studentSession?.Duration ?? 0)"
+                                 ExtraMinutes="@(studentSession?.ExtraMinutes ?? 0)" />
                 </div>
                 <!-- Question Navigation -->
                 <QuestionNavigation Questions="@mappedQuestions"
-                                  SelectedAnswers="@selectedAnswers"
-                                  SelectedChildAnswers="@selectedChildAnswers" />
-                
-                    @if (lastSaveTime.HasValue)
-                    {
+                                    SelectedAnswers="@selectedAnswers"
+                                    SelectedChildAnswers="@selectedChildAnswers" />
+
+                @if (lastSaveTime.HasValue)
+                {
                     <MudPaper Class="pa-2 mt-2" Style="text-align: center; border: 1px solid #ccc;">
                         <MudText Typo="Typo.caption" Color="Color.Success">
                             <MudIcon Icon="Icons.Material.Filled.Save" Size="Size.Small" Class="mr-1" />
                             Lưu lần cuối: @lastSaveTime.Value.ToString("HH:mm:ss")
                         </MudText>
                     </MudPaper>
-                    }
-                    
+                }
 
-                
-                
-                
+
+
+
+
             </MudItem>
         </MudGrid>
     </MudPaper>
@@ -245,4 +245,3 @@ else
 
     // Audio control moved to wwwroot/js/exam-audio.js
 </script>
-
