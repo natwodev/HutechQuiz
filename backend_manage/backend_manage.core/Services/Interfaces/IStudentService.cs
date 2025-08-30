@@ -30,7 +30,10 @@ public interface IStudentService
         string userId);
     
     // Method để nộp bài thi
-    Task<(bool Success, string Message, ExamSubmissionDto? SubmissionData)> SubmitExamAsync(string studentCode, int studentExamSessionId);
+    Task<(bool Success, string Message)> SubmitExamAsync(string studentCode, int studentExamSessionId);
+    
+    // Method để lấy kết quả nộp bài
+    Task<ExamSubmissionDto?> GetSubmissionResultAsync(string studentCode, int studentExamSessionId);
     
     // Method để lấy danh sách điểm sinh viên theo ExamSessionSubjectId
     Task<(IEnumerable<StudentGradeDto> Grades, string SubjectCode)> GetStudentGradesByExamSessionSubjectAsync(int examSessionSubjectId);

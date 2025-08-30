@@ -136,18 +136,18 @@ namespace backend_manage.core.Services.AuthService
         }
 
         // ============ Monitor actions ============
-        public async Task<(bool Success, string Message, ExamSubmissionDto? Submission)> ForceSubmitAsync(int studentExamSessionId, string studentCode)
+        public async Task<(bool Success, string Message)> ForceSubmitAsync(int studentExamSessionId, string studentCode)
         {
             var session = await _studentExamSessionRepository.GetQueryable()
                 .FirstOrDefaultAsync(s => s.StudentExamSessionId == studentExamSessionId && s.StudentCode == studentCode);
 
             if (session == null)
-                return (false, "Không tìm thấy phiên thi của sinh viên.", null);
+                return (false, "Không tìm thấy phiên thi của sinh viên.");
 
             if (session.IsCompleted)
-                return (true, "Phiên thi đã được nộp trước đó.", null);
-            var (success, message, submission) = await _studentService.SubmitExamAsync(studentCode, studentExamSessionId);
-            return (success, message, submission);
+                return (true, "Phiên thi đã được nộp trước đó.");
+            var (success, message) = await _studentService.SubmitExamAsync(studentCode, studentExamSessionId);
+            return (success, message);
         }
 
         
