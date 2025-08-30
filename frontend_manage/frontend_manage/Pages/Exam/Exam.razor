@@ -1,5 +1,4 @@
 @page "/Exam"
-@inject IJSRuntime JSRuntime
 @inject NavigationManager Navigation
 @inject StudentService StudentService
 @inject ISnackbar Snackbar
@@ -121,12 +120,13 @@ else
     </MudPaper>
 }
 
+
 <style>
+   
     .mud-main-content {
         padding: 0;
     }
-
-    /*Chống bôi đen văn bản copy*/
+       /*Chống bôi đen văn bản copy*/
     .noselect {
         -webkit-user-select: none; /* Safari */
         -moz-user-select: none; /* Firefox */
@@ -232,6 +232,7 @@ else
             box-sizing: border-box;
             max-width: 100%;
         }
+       
 </style>
 
 <script src="js/exam-audio.js"></script>
@@ -245,4 +246,3 @@ else
 
     // Audio control moved to wwwroot/js/exam-audio.js
 </script>
-

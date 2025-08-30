@@ -54,6 +54,6 @@ namespace frontend_manage.Services
             {
                 Console.WriteLine($"Error clearing typeset: {ex.Message}");
             }
-            }
+        }
     }
 }

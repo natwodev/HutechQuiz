@@ -14,7 +14,28 @@
     <script id="MathJax-script" async
             src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
     </script>
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']],
+                processEscapes: true,
+                processEnvironments: true
+            },
+            svg: {
+                fontCache: 'global'
+            },
+            startup: {
+                pageReady: () => {
+                    return MathJax.startup.defaultPageReady().then(() => {
+                        console.log('MathJax is ready');
+                    });
+                }
+            }
+        };
+    </script>
     <link href="css/app.css" rel="stylesheet" />
+    <link href="css/result-page.css" rel="stylesheet" />
     <!--Tải MudBlazor-->
     <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" rel="stylesheet" />
     <link href="_content/MudBlazor/MudBlazor.min.css" rel="stylesheet" />
@@ -53,37 +74,37 @@
     </script>
     <script>
         // Chặn chuột phải
-        document.addEventListener('contextmenu', function(e) {
+        document.addEventListener('contextmenu', function (e) {
             e.preventDefault();
             return false;
         });
 
         // Chặn F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+U
-        document.addEventListener('keydown', function(e) {
+        document.addEventListener('keydown', function (e) {
             // Chặn F12
             if (e.key === 'F12') {
                 e.preventDefault();
                 return false;
             }
-            
+
             // Chặn Ctrl+Shift+I (Developer Tools)
             if (e.ctrlKey && e.shiftKey && e.key === 'I') {
                 e.preventDefault();
                 return false;
             }
-            
+
             // Chặn Ctrl+Shift+J (Console)
             if (e.ctrlKey && e.shiftKey && e.key === 'J') {
                 e.preventDefault();
                 return false;
             }
-            
+
             // Chặn Ctrl+U (View Source)
             if (e.ctrlKey && e.key === 'u') {
                 e.preventDefault();
                 return false;
             }
-            
+
             // Chặn Ctrl+Shift+C (Inspect Element)
             if (e.ctrlKey && e.shiftKey && e.key === 'C') {
                 e.preventDefault();
@@ -97,7 +118,7 @@
             const threshold = 160;
             const widthThreshold = window.outerWidth - window.innerWidth > threshold;
             const heightThreshold = window.outerHeight - window.innerHeight > threshold;
-            
+
             if (widthThreshold || heightThreshold) {
                 if (!devtools.open) {
                     devtools.open = true;
@@ -112,7 +133,7 @@
         }, 500);
 
         // Fetch với credentials để gửi cookie
-        window.fetchWithCredentials = async function(url, method, body) {
+        window.fetchWithCredentials = async function (url, method, body) {
             try {
                 const options = {
                     method: method,
@@ -121,17 +142,17 @@
                         'Content-Type': 'application/json',
                     },
                 };
-                
+
                 if (body && method !== 'GET') {
                     options.body = body;
                 }
 
                 const response = await fetch(url, options);
-                
+
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
-                
+
                 return await response.text();
             } catch (error) {
                 console.error('Fetch error:', error);
@@ -140,11 +161,11 @@
         };
 
         // Chặn console.log
-        console.log = function() {};
-        console.info = function() {};
-        console.warn = function() {};
-        console.error = function() {};
-        console.debug = function() {};
+        console.log = function () { };
+        console.info = function () { };
+        console.warn = function () { };
+        console.error = function () { };
+        console.debug = function () { };
     </script>
 </body>
 

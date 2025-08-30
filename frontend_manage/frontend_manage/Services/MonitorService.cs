@@ -284,4 +284,6 @@ public class MonitorService
         public int examSessionSubjectId { get; set; }
         public bool isActive { get; set; }
     }
+
+
 }

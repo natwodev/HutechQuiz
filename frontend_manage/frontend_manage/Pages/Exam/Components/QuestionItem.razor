@@ -13,7 +13,7 @@
         { 
             // Câu cha: hiển thị phạm vi câu hỏi con (không có MudPaper)
             <MudText id="@($"question-parent-{Question.OriginalExamPaperDetailId}")" Typo="Typo.body1" GutterBottom="true">
-                <b>@((MarkupString)ProcessQuestionContentAsync(Question.QuestionContent).Result)</b>
+                <b>@((MarkupString)ProcessQuestionContent(Question.QuestionContent))</b>
             </MudText>
         }
         else
@@ -21,7 +21,7 @@
             // Câu đơn: có số thứ tự và MudPaper riêng
             <MudPaper Class="pa-3 mb-3" Style="border: 1px solid #e0e0e0; border-radius: 8px;">
                 <MudText id="@($"question-{QuestionNumber}")" Typo="Typo.body1" GutterBottom="true">
-                    <b>Câu @(QuestionNumber): @((MarkupString)ProcessQuestionContentAsync(Question.QuestionContent).Result)</b>
+                    <b>Câu @(QuestionNumber): @((MarkupString)ProcessQuestionContent(Question.QuestionContent))</b>
                 </MudText>
                 
                 @if (Question.Answers != null && Question.Answers?.Count > 0)
@@ -61,7 +61,7 @@
                 @if (!string.IsNullOrEmpty(childQuestion.QuestionContent))
                 {
                     <MudText id="@($"question-{childQuestionNumber}")" Typo="Typo.body1" GutterBottom="true">
-                        <b>Câu @(childQuestionNumber): @((MarkupString)ProcessQuestionContentAsync(childQuestion.QuestionContent).Result)</b>
+                        <b>Câu @(childQuestionNumber): @((MarkupString)ProcessQuestionContent(childQuestion.QuestionContent))</b>
                 </MudText>
                 }
 
@@ -92,4 +92,3 @@
         }
     }
 }
-

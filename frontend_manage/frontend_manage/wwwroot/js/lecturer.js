@@ -54,4 +54,39 @@ window.refreshPage = function () {
 // Function to go back
 window.goBack = function () {
     window.history.back();
+};
+
+// Function to download Excel file
+window.downloadExcelFile = function (fileName, base64Content) {
+    try {
+        // Convert base64 to binary
+        const binaryString = atob(base64Content);
+        const bytes = new Uint8Array(binaryString.length);
+        for (let i = 0; i < binaryString.length; i++) {
+            bytes[i] = binaryString.charCodeAt(i);
+        }
+        
+        // Create blob with Excel MIME type
+        const blob = new Blob([bytes], { 
+            type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' 
+        });
+        
+        // Create download link
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', fileName);
+        link.style.visibility = 'hidden';
+        
+        // Trigger download
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        // Clean up
+        URL.revokeObjectURL(url);
+    } catch (error) {
+        console.error('Error downloading Excel file:', error);
+        alert('Lỗi khi tải file Excel: ' + error.message);
+    }
 }; 

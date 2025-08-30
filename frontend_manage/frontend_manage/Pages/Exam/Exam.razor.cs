@@ -48,6 +48,9 @@ namespace frontend_manage.Pages.Exam
 
         // MathJax service
         [Inject] private IMathJaxService MathJaxService { get; set; } = default!;
+        
+        // JS Runtime
+        [Inject] private IJSRuntime JSRuntime { get; set; } = default!;
 
         protected override async Task OnInitializedAsync()
         {
@@ -102,16 +105,17 @@ namespace frontend_manage.Pages.Exam
             if (firstRender && mappedQuestions != null)
             {
                 // Đợi một chút để DOM được render hoàn toàn
-                await Task.Delay(100);
+                await Task.Delay(1000);
                 
                 // Gọi MathJax để render LaTeX
                 try
                 {
-                    await MathJaxService.TypesetAsync();
+                    await JSRuntime.InvokeVoidAsync("MathJax.typesetPromise");
+                    Console.WriteLine("Exam: MathJax typeset completed");
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"Error typesetting MathJax: {ex.Message}");
+                    Console.WriteLine($"Exam: Error typesetting MathJax: {ex.Message}");
                 }
             }
         }
@@ -649,31 +653,5 @@ namespace frontend_manage.Pages.Exam
             autoSaveTimer?.Stop();
             autoSaveTimer?.Dispose();
         }
-
-
-
-       
-        
-
-
-        
-
-
-       
-       
-       
-       
-       
-       
-       
-       
-       
-       
-       
-
-        
-
-        
-        
     }
 }
