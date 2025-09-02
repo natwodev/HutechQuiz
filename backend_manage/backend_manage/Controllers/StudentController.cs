@@ -47,8 +47,7 @@ public class StudentController : ControllerBase
         });
     }
 
-
-
+    
     [HttpGet("by-code/{studentCode}")]
     public async Task<IActionResult> GetByStudentCode(string studentCode)
     {
@@ -231,21 +230,16 @@ public async Task<IActionResult> UpdateAnswer([FromBody] SaveAnswerDto request)
             _logger.LogInformation("🔄 Sinh viên {StudentCode} yêu cầu nộp bài thi cho phiên {SessionId}", 
                 studentCode, request.StudentExamSessionId);
 
-            var (success, message, submissionData) = await _studentService.SubmitExamAsync(
-                studentCode, 
-                request.StudentExamSessionId
-            );
+            var (success, message) = await _studentService.SubmitExamAsync(studentCode, request.StudentExamSessionId);
 
             if (success)
             {
-                _logger.LogInformation("✅ Sinh viên {StudentCode} đã nộp bài thi thành công. Điểm: {Score}", 
-                    studentCode, submissionData?.Score);
+                _logger.LogInformation("✅ Sinh viên {StudentCode} đã nộp bài thi thành công", studentCode);
 
                 return Ok(new
                 {
                     success = true,
-                    message,
-                    data = submissionData
+                    message = "Nộp bài thi thành công"
                 });
             }
             else
@@ -277,6 +271,101 @@ public async Task<IActionResult> UpdateAnswer([FromBody] SaveAnswerDto request)
         return Ok(new { message });
     }
     
+    [HttpGet("grades/{examSessionSubjectId}")]
+    [Authorize(Policy = "AdminOnly")]
+    [Authorize(Policy = "LecturerOnly")]
+    public async Task<IActionResult> GetStudentGrades(int examSessionSubjectId)
+    {
+        try
+        {
+            _logger.LogInformation("Yêu cầu lấy danh sách điểm cho ExamSessionSubjectId: {ExamSessionSubjectId}", examSessionSubjectId);
+            
+            var (grades, subjectCode) = await _studentService.GetStudentGradesByExamSessionSubjectAsync(examSessionSubjectId);
+            
+            return Ok(new { 
+                success = true, 
+                data = grades,
+                subjectCode = subjectCode,
+                count = grades.Count()
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Lỗi khi lấy danh sách điểm cho ExamSessionSubjectId: {ExamSessionSubjectId}", examSessionSubjectId);
+            return StatusCode(500, new { success = false, message = "Lỗi server khi lấy danh sách điểm" });
+        }
+    }
+    
+    [HttpGet("grades/{examSessionSubjectId}/export")]
+    [Authorize(Policy = "LecturerOnly")]
+    public async Task<IActionResult> ExportStudentGrades(int examSessionSubjectId)
+    {
+        try
+        {
+            _logger.LogInformation("Yêu cầu export Excel bảng điểm cho ExamSessionSubjectId: {ExamSessionSubjectId}", examSessionSubjectId);
+            
+            // Lấy dữ liệu điểm và mã môn học
+            var (grades, subjectCode) = await _studentService.GetStudentGradesByExamSessionSubjectAsync(examSessionSubjectId);
+            
+            // Tạo file Excel
+            var excelBytes = await _studentService.ExportStudentGradesToExcelAsync(grades);
+            
+            // Tạo tên file với mã môn học
+            string fileName = $"BangDiem_{subjectCode}_ESS{examSessionSubjectId}_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
+            
+            // Trả về file Excel
+            return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Lỗi khi export Excel bảng điểm cho ExamSessionSubjectId: {ExamSessionSubjectId}", examSessionSubjectId);
+            return StatusCode(500, new { success = false, message = "Lỗi server khi export bảng điểm" });
+        }
+    }
+
+    [HttpPost("get-submission-result")]
+    public async Task<IActionResult> GetSubmissionResult([FromBody] GetSubmissionResultRequest request)
+    {
+        try
+        {
+            var studentCode = User.FindFirst("studentCode")?.Value;
+            if (string.IsNullOrEmpty(studentCode))
+            {
+                return Unauthorized();
+            }
+
+            if (request.StudentExamSessionId <= 0)
+            {
+                return BadRequest();
+            }
+
+            _logger.LogInformation("🔍 Sinh viên {StudentCode} yêu cầu lấy kết quả nộp bài cho phiên {SessionId}", 
+                studentCode, request.StudentExamSessionId);
+
+            var submissionData = await _studentService.GetSubmissionResultAsync(studentCode, request.StudentExamSessionId);
+
+            if (submissionData != null)
+            {
+                _logger.LogInformation("✅ Lấy kết quả nộp bài thành công cho sinh viên {StudentCode}. Điểm: {Score}", 
+                    studentCode, submissionData.Score);
+
+                return Ok(submissionData);
+            }
+            else
+            {
+                _logger.LogWarning("⚠️ Không thể lấy kết quả nộp bài cho sinh viên {StudentCode}", studentCode);
+
+                return NotFound();
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "❌ Lỗi khi lấy kết quả nộp bài cho sinh viên {StudentCode}", 
+                User.FindFirst("studentCode")?.Value);
+
+            return StatusCode(500);
+        }
+    }
 
 }
 
@@ -287,6 +376,11 @@ public class ActiveLoginRequest
 }
 
 public class SubmitExamRequest
+{
+    public int StudentExamSessionId { get; set; }
+}
+
+public class GetSubmissionResultRequest
 {
     public int StudentExamSessionId { get; set; }
 }

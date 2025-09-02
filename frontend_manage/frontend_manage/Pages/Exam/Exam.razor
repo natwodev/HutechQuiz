@@ -1,5 +1,4 @@
 @page "/Exam"
-@inject IJSRuntime JSRuntime
 @inject NavigationManager Navigation
 @inject StudentService StudentService
 @inject ISnackbar Snackbar
@@ -37,6 +36,9 @@ else
                     <MudText Typo="Typo.h5" Class="mb-3" Style="font-weight: bold; color: #1976d2; text-align: center;">
                         @(shuffledExam?.Title ?? "Đề thi")
                     </MudText>
+                    
+                    <!-- Test LaTeX component - có thể xóa sau khi test xong -->
+                    <LaTeXTest />
                     @{
                         int questionNumber = 1; // Số thứ tự câu hỏi
                     }
@@ -65,7 +67,9 @@ else
                                         SelectedChildAnswers="@selectedChildAnswers"
                                         OnAnswerSelected="@HandleAnswerSelected"
                                         OnChildAnswerSelected="@HandleChildAnswerSelected"
-                                        ProcessQuestionContentFunction="@ProcessQuestionContent" />
+                                        OnAnswersChanged="@(() => StateHasChanged())"
+                                        ShuffledExamPaperCore="@(shuffledExam?.ShuffledExamPaperCore ?? string.Empty)"
+                                        BaseAddress="@(Http.BaseAddress?.ToString() ?? "http://localhost:5163/")" />
                         }
                     }
                 </MudPaper>
@@ -75,12 +79,13 @@ else
             <MudItem xs="12" md="3" Style="position: sticky; top: 0; overflow-y: auto; height: 100%">
                 <div style="display: flex; flex-direction: column; gap: 0;">
                 <!-- Timer and Submit Button -->
-                <ExamTimer FormattedTime="@GetFormattedTime()"
-                          RemainingMinutes="@remainingMinutes"
+                <ExamTimer StudentExamSessionId="@(studentExamSessionId ?? 0)"
+                          TotalDuration="@(studentSession?.Duration ?? 0)"
                           ExtraMinutes="@(studentSession?.ExtraMinutes ?? 0)"
-                          IsTimeUp="@isTimeUp"
                           IsSubmitDisabled="false"
-                          OnSubmitExam="@OnSubmitExamAsync" />
+                          OnSubmitExam="@OnSubmitExamAsync"
+                          OnTimerInitialized="@OnTimerInitialized"
+                          OnTimeUp="@OnTimeUp" />
                 
                 <!-- Student Info -->
                 <StudentInfo StudentCode="@(studentSession?.StudentCode ?? string.Empty)"
@@ -94,8 +99,7 @@ else
                 <!-- Question Navigation -->
                 <QuestionNavigation Questions="@mappedQuestions"
                                   SelectedAnswers="@selectedAnswers"
-                                  SelectedChildAnswers="@selectedChildAnswers"
-                                  OnQuestionClick="@ScrollToQuestionAsync" />
+                                  SelectedChildAnswers="@selectedChildAnswers" />
                 
                     @if (lastSaveTime.HasValue)
                     {
@@ -106,6 +110,8 @@ else
                         </MudText>
                     </MudPaper>
                     }
+                    
+
                 
                 
                 
@@ -114,12 +120,13 @@ else
     </MudPaper>
 }
 
+
 <style>
+   
     .mud-main-content {
         padding: 0;
     }
-
-    /*Chống bôi đen văn bản copy*/
+       /*Chống bôi đen văn bản copy*/
     .noselect {
         -webkit-user-select: none; /* Safari */
         -moz-user-select: none; /* Firefox */
@@ -225,6 +232,7 @@ else
             box-sizing: border-box;
             max-width: 100%;
         }
+       
 </style>
 
 <script src="js/exam-audio.js"></script>
@@ -238,4 +246,3 @@ else
 
     // Audio control moved to wwwroot/js/exam-audio.js
 </script>
-

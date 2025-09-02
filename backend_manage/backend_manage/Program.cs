@@ -53,6 +53,7 @@ builder.Services.ConfigureServices(configuration);
 
 try
 {
+    
     var app = builder.Build();
 /*
     using (var scope = app.Services.CreateScope())

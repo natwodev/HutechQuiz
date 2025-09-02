@@ -62,7 +62,7 @@
                 {
                     <MudText id="@($"question-{childQuestionNumber}")" Typo="Typo.body1" GutterBottom="true">
                         <b>Câu @(childQuestionNumber): @((MarkupString)ProcessQuestionContent(childQuestion.QuestionContent))</b>
-                    </MudText>
+                </MudText>
                 }
 
                 @if (childQuestion.Answers != null && childQuestion.Answers?.Count > 0)
@@ -92,4 +92,3 @@
         }
     }
 }
-

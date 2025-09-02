@@ -6,9 +6,9 @@
         <MudItem xs="6" Style="align-content: center">
             <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
                 <MudText Typo="Typo.h4" 
-                         Color="@(IsTimeUp ? Color.Error: RemainingMinutes <= 5 ? Color.Warning : Color.Primary)" 
+                         Color="@(isTimeUp ? Color.Error: remainingMinutes <= 5 ? Color.Warning : Color.Primary)" 
                          id="time-clock">
-                    @FormattedTime
+                    @GetFormattedTime()
                 </MudText>
                 @if (ExtraMinutes > 0)
                 {
