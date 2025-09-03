@@ -13,7 +13,7 @@ namespace frontend_manage.Pages.Exam.Components
         public double Duration { get; set; } // Thời gian còn lại tính bằng phút
     }
 
-    public partial class ExamTimer : ComponentBase
+    public partial class ExamTimer : BaseComponent
     {
         [Parameter] public string FormattedTime { get; set; } = "00:00";
         [Parameter] public int RemainingMinutes { get; set; }

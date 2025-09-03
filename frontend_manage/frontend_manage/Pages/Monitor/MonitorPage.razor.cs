@@ -11,11 +11,11 @@ using Microsoft.JSInterop;
 
 namespace frontend_manage.Pages.Monitor
 {
-    public partial class MonitorPage : ComponentBase
+    public partial class MonitorPage : BaseComponent
     {
-        [Inject] private NavigationManager Navigation { get; set; }
+        // [Inject] private NavigationManager Navigation { get; set; }
         [Inject] private MonitorService MonitorService { get; set; }
-        [Inject] private IJSRuntime JSRuntime { get; set; }
+        // [Inject] private IJSRuntime JSRuntime { get; set; }
         [Inject] private NotificationService NotificationService { get; set; }
 
         // Không còn sử dụng query string parameters

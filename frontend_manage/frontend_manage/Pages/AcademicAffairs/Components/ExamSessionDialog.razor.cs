@@ -5,7 +5,7 @@ using frontend_manage.Services.AcademicAffairs;
 
 namespace frontend_manage.Pages.AcademicAffairs.Components
 {
-    public partial class ExamSessionDialog : ComponentBase
+    public partial class ExamSessionDialog : BaseComponent
     {
         [Inject] 
         public ExamBatchDetailService ExamBatchDetailService { get; set; } = default!;

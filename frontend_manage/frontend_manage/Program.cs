@@ -1,17 +1,9 @@
 
 using frontend_manage;
-using frontend_manage.Pages.Admin;
-using frontend_manage.Pages.StudentLogin;
-using frontend_manage.Pages.Exam;
-using frontend_manage.Pages.Monitor;
+using frontend_manage.Services;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
-using MudBlazor.Services;
 using Microsoft.Extensions.Http;
-using Microsoft.JSInterop;
-
-using frontend_manage.Services;
-using frontend_manage.Services.AcademicAffairs;
 
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
@@ -19,29 +11,8 @@ var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
-// Add MudBlazor services
-builder.Services.AddMudServices();
-
-builder.Services.AddScoped<AuthService>();
-builder.Services.AddScoped<StudentService>();
-
-builder.Services.AddScoped<MonitorService>();
-builder.Services.AddSingleton<NotificationService>();
-builder.Services.AddScoped<Api>();
-
-// Academic Affairs Services
-builder.Services.AddScoped<AcademicYearService>();
-builder.Services.AddScoped<SemesterService>();
-builder.Services.AddScoped<ExamBatchService>();
-builder.Services.AddScoped<ExamBatchDetailService>();
-builder.Services.AddScoped<ExamSessionService>();
-builder.Services.AddScoped<ExamSessionSubjectService>();
-
-// Đăng ký MathJax service
-builder.Services.AddScoped<IMathJaxService, MathJaxService>();
-
-// Đăng ký AuthHeaderHandler
-builder.Services.AddScoped<AuthHeaderHandler>();
+// Add application services
+builder.Services.AddApplicationServices();
 
 // Cấu hình HttpClient với AuthHeaderHandler cho Blazor WebAssembly
 builder.Services.AddHttpClient("API", client =>

@@ -8,7 +8,7 @@ using frontend_manage.Services;
 
 namespace frontend_manage.Pages.Exam.Components
 {
-    public partial class QuestionItem : ComponentBase, IDisposable
+    public partial class QuestionItem : BaseComponent, IDisposable
     {
         [Parameter] public QuestionStructureDto? Question { get; set; }
         [Parameter] public int QuestionNumber { get; set; }
@@ -127,7 +127,7 @@ namespace frontend_manage.Pages.Exam.Components
         private async Task HandleAnswerSelectedWithDebounce(AnswerSelectedArgs args)
         {
             SelectedAnswers[args.QuestionId] = args.AnswerId.ToString();
-            await InvokeAsync(StateHasChanged);
+            await InvokeAsync(() => StateHasChanged());
             await OnAnswersChanged.InvokeAsync();
 
             DebounceAnswer(args, isChild: false);
@@ -136,7 +136,7 @@ namespace frontend_manage.Pages.Exam.Components
         private async Task HandleChildAnswerSelectedWithDebounce(AnswerSelectedArgs args)
         {
             SelectedChildAnswers[args.QuestionId] = args.AnswerId.ToString();
-            await InvokeAsync(StateHasChanged);
+            await InvokeAsync(() => StateHasChanged());
             await OnAnswersChanged.InvokeAsync();
 
             DebounceAnswer(args, isChild: true);

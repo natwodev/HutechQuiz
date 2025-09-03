@@ -6,10 +6,10 @@ using frontend_manage.Services;
 
 namespace frontend_manage.Pages.Monitor
 {
-    public partial class ExamRoomManagement : ComponentBase, IDisposable
+    public partial class ExamRoomManagement : BaseComponent, IDisposable
     {
-        [Inject] private NavigationManager Navigation { get; set; }
-        [Inject] private IJSRuntime JSRuntime { get; set; }
+        // [Inject] private NavigationManager Navigation { get; set; }
+        // [Inject] private IJSRuntime JSRuntime { get; set; }
         [Inject] private AuthService AuthService { get; set; }
         [Inject] private MonitorService MonitorService { get; set; }
         [Inject] private NotificationService NotificationService { get; set; }

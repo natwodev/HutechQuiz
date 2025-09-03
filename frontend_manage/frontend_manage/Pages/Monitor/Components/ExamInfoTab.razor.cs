@@ -5,7 +5,7 @@ using frontend_manage.DTOs;
 
 namespace frontend_manage.Pages.Monitor.Components;
 
-public partial class ExamInfoTab : ComponentBase
+public partial class ExamInfoTab : BaseComponent
 {
     [Inject] private MonitorService MonitorService { get; set; } = default!;
 

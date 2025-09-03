@@ -6,10 +6,10 @@ using System.Threading;
 
 namespace frontend_manage.Pages.StudentLogin;
 
-public partial class Login : ComponentBase, IDisposable
+public partial class Login : BaseComponent, IDisposable
 {
     [Inject] private AuthService AuthService { get; set; }
-    [Inject] private NavigationManager Navigation { get; set; }
+    // [Inject] private NavigationManager Navigation { get; set; }
 
     private StudentLoginRequestDto loginModel = new();
     private string? ErrorMessage;

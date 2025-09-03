@@ -14,7 +14,7 @@ using frontend_manage.Services;
 namespace frontend_manage.Pages.Exam
 {
 
-    public partial class Exam
+    public partial class Exam : BaseComponent
     {
         [Parameter]
         [SupplyParameterFromQuery]
@@ -47,10 +47,10 @@ namespace frontend_manage.Pages.Exam
         private DateTime examStartTime;
 
         // MathJax service
-        [Inject] private IMathJaxService MathJaxService { get; set; } = default!;
+        // private IMathJaxService MathJaxService => Services.MathJaxService;
         
         // JS Runtime
-        [Inject] private IJSRuntime JSRuntime { get; set; } = default!;
+        // private IJSRuntime JSRuntime => Services.JSRuntime;
 
         protected override async Task OnInitializedAsync()
         {

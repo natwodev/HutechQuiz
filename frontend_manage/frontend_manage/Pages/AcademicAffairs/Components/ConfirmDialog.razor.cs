@@ -3,7 +3,7 @@ using MudBlazor;
 
 namespace frontend_manage.Pages.AcademicAffairs.Components
 {
-    public partial class ConfirmDialog : ComponentBase
+    public partial class ConfirmDialog : BaseComponent
     {
         [CascadingParameter] 
         public dynamic MudDialog { get; set; } = default!;

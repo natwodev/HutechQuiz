@@ -13,10 +13,10 @@ using frontend_manage.DTOs;
 
 namespace frontend_manage.Pages.Exam
 {
-    public partial class Result : ComponentBase
+    public partial class Result : BaseComponent
     {
-        [Inject] private IJSRuntime JSRuntime { get; set; } = default!;
-        [Inject] private NavigationManager Navigation { get; set; } = default!;
+        // [Inject] private IJSRuntime JSRuntime { get; set; } = default!;
+        // [Inject] private NavigationManager Navigation { get; set; } = default!;
 
         // ===================== State =====================
         private SubmitExamData? result;

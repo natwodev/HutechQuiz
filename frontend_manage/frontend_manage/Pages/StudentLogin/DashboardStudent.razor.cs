@@ -6,15 +6,15 @@ using MudBlazor;
 
 namespace frontend_manage.Pages.StudentLogin
 {
-    public partial class DashboardStudent : ComponentBase, IDisposable
+    public partial class DashboardStudent : BaseComponent, IDisposable
     {
         // Xóa các Inject không cần thiết
         // [Inject] private AuthService AuthService { get; set; }
-        [Inject] private NavigationManager Navigation { get; set; }
-        [Inject] private IJSRuntime JSRuntime { get; set; }
+        // [Inject] private NavigationManager Navigation { get; set; }
+        // [Inject] private IJSRuntime JSRuntime { get; set; }
         // [Inject] private HttpClient Http { get; set; }
-        [Inject] private StudentService StudentService { get; set; }
-        [Inject] private ISnackbar Snackbar { get; set; }
+        // [Inject] private StudentService StudentService { get; set; }
+        // [Inject] private ISnackbar Snackbar { get; set; }
 
         private bool isStudent;
         private bool isStudentChecked = false;

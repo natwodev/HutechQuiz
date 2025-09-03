@@ -13,7 +13,7 @@ using System.IO;
 
 namespace frontend_manage.Pages.Monitor.Components
 {
-    public partial class StudentListTab : ComponentBase
+    public partial class StudentListTab : BaseComponent
     {
         [Inject]
         private ISnackbar Snackbar { get; set; }

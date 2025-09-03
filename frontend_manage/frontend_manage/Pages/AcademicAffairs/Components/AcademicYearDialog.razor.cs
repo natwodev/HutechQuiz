@@ -4,7 +4,7 @@ using frontend_manage.DTOs.AcademicAffairs;
 
 namespace frontend_manage.Pages.AcademicAffairs.Components
 {
-    public partial class AcademicYearDialog : ComponentBase
+    public partial class AcademicYearDialog : BaseComponent
     {
         [CascadingParameter] 
         public dynamic MudDialog { get; set; } = default!;

@@ -4,7 +4,7 @@ using frontend_manage.DTOs;
 
 namespace frontend_manage.Pages.Exam.Components
 {
-    public partial class QuestionNavigation : ComponentBase
+    public partial class QuestionNavigation : BaseComponent
     {
         [Parameter] public List<QuestionStructureDto>? Questions { get; set; }
         [Parameter] public Dictionary<int, string> SelectedAnswers { get; set; } = new();
