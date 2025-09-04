@@ -1,20 +1,26 @@
 @using frontend_manage.Services
 @inject NotificationService NotificationService
 
-<div class="alert alert-info" role="alert" style="position:fixed; top:10px; right:10px;" hidden="@(!showNotification)">
-    <strong>@message</strong><br />
-    Giờ thi: @(examTime.Hour >= 24 ? "23:59" : examTime.ToString("HH:mm")) @examTime.ToString("dd/MM/yyyy")
+<div class="alert alert-info" role="alert" style="position:fixed; top:10px; right:10px; z-index:9999; background:white; border:2px solid #17a2b8; border-radius:8px; padding:15px; box-shadow:0 4px 20px rgba(0,0,0,0.3); min-width:300px; max-width:400px;" hidden="@(!showNotification)">
+    <strong style="color:#17a2b8; font-size:16px;">@message</strong><br />
+    <span style="color:#666; font-size:14px;">Giờ thi: @(examTime.Hour >= 24 ? "23:59" : examTime.ToString("HH:mm")) @examTime.ToString("dd/MM/yyyy")</span>
 </div>
 
 @code {
     private string message;
     private DateTime examTime;
     private bool showNotification;
+    private CancellationTokenSource? _cancellationTokenSource;
 
     protected override async Task OnInitializedAsync()
     {
         NotificationService.OnExamReminderReceived += (msg, time) =>
         {
+            Console.WriteLine($"Received notification: {msg} at {time}");
+            
+            // Cancel previous notification timer if exists
+            _cancellationTokenSource?.Cancel();
+            
             message = msg;
             examTime = time;
             showNotification = true;
@@ -30,15 +36,29 @@
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Lỗi kết nối SignalR: {ex.Message}");
-            // Có thể show thông báo UI nếu muốn
         }
     }
 
     private async Task HideAfterDelay()
     {
-        await Task.Delay(10000); // ẩn sau 10 giây
-        showNotification = false;
-        StateHasChanged();
+        // Create new cancellation token for this notification
+        _cancellationTokenSource = new CancellationTokenSource();
+        
+        try
+        {
+            await Task.Delay(10000, _cancellationTokenSource.Token); // ẩn sau 10 giây
+            showNotification = false;
+            StateHasChanged();
+        }
+        catch (OperationCanceledException)
+        {
+            // Notification was cancelled, do nothing
+        }
+    }
+
+    public void Dispose()
+    {
+        _cancellationTokenSource?.Cancel();
+        _cancellationTokenSource?.Dispose();
     }
 }

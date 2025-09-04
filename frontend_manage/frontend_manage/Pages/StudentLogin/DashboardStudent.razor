@@ -6,10 +6,10 @@
 
 <div style="position:fixed; inset:0; width:100vw; height:100vh; z-index:-1; background: url('/images/Home_Page2.jpg') no-repeat center center fixed; background-size: cover;"></div>
 
-<MudContainer MaxWidth="MaxWidth.False" Style="min-height: 100vh; height: 100vh; margin: 0; padding: 0;">
-    <MudGrid Justify="Justify.Center" AlignItems="AlignItems.Center" Style="min-height: 100vh; height: 100vh; margin: 0;">
-        <MudItem xs="12" sm="10" md="8" lg="6">
-            <MudPaper Elevation="24" Class="pa-4" Style="border-radius: 24px; max-width: 800px; width: 100%; margin: auto; background: white;">
+<MudContainer MaxWidth="MaxWidth.False" Style="margin: 0; padding: 0;">
+    <MudGrid Justify="Justify.Center" AlignItems="AlignItems.Center" Style="margin: 0; padding: 20px 0; min-height: 100vh; display: flex; align-items: center; justify-content: center;">
+        <MudItem xs="12" sm="10" md="8" lg="6" Style="display: flex; justify-content: center;">
+            <MudPaper Elevation="24" Class="pa-4" Style="border-radius: 24px; max-width: 800px; width: 100%; background: white;">
                 <MudStack Spacing="3" AlignItems="AlignItems.Center">
                     <MudImage Src="images/exam/Logo.svg" Width="200" />
                     <MudDivider />
@@ -21,36 +21,36 @@
                             <MudCard Elevation="4" Style="height: 100%; border-radius: 16px; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);">
                                 <MudCardContent Style="padding: 20px;">
                                     <MudStack Spacing="2">
-                                        <MudText Typo="Typo.h6" Color="Color.Primary" Class="mb-2" Style="font-weight: 600; text-align: center; letter-spacing: 0.5px;">
+                                        <MudText Typo="Typo.body1" Color="Color.Primary" Class="mb-1" Style="font-weight: 600; text-align: center; letter-spacing: 0.3px;">
                                             THÔNG TIN SINH VIÊN
                                         </MudText>
                                         
-                                        <MudDivider Style="margin: 6px 0;" />
+                                        <MudDivider Style="margin: 4px 0;" />
                                         
-                                        <MudStack Spacing="2">
-                                            <MudPaper Elevation="2" Style="padding: 12px 16px; border-radius: 8px; background: white;">
-                                                <MudText Typo="Typo.body2" StartIcon="@Icons.Material.Filled.Badge" Style="font-weight: 500;">
-                                                    <span style="color: #666; font-size: 0.85rem;">Mã số sinh viên:</span>
-                                                    <span style="color: #1976d2; font-weight: 600; margin-left: 6px;">@studentInfo?.StudentCode</span>
+                                        <MudStack Spacing="1">
+                                            <MudPaper Elevation="2" Style="padding: 8px 12px; border-radius: 6px; background: white;">
+                                                <MudText Typo="Typo.body2" StartIcon="@Icons.Material.Filled.Badge" Style="font-weight: 500; font-size: 0.8rem;">
+                                                    <span style="color: #666; font-size: 0.75rem;">Mã số sinh viên:</span>
+                                                    <span style="color: #1976d2; font-weight: 600; margin-left: 4px;">@studentInfo?.StudentCode</span>
                                                 </MudText>
                                             </MudPaper>
                                             
-                                            <MudPaper Elevation="2" Style="padding: 12px 16px; border-radius: 8px; background: white;">
-                                                <MudText Typo="Typo.body2" StartIcon="@Icons.Material.Filled.Person" Style="font-weight: 500;">
-                                                    <span style="color: #666; font-size: 0.85rem;">Họ và tên:</span>
-                                                    <span style="color: #1976d2; font-weight: 600; margin-left: 6px;">@studentInfo?.FirstName @studentInfo?.LastName</span>
+                                            <MudPaper Elevation="2" Style="padding: 8px 12px; border-radius: 6px; background: white;">
+                                                <MudText Typo="Typo.body2" StartIcon="@Icons.Material.Filled.Person" Style="font-weight: 500; font-size: 0.8rem;">
+                                                    <span style="color: #666; font-size: 0.75rem;">Họ và tên:</span>
+                                                    <span style="color: #1976d2; font-weight: 600; margin-left: 4px;">@studentInfo?.FirstName @studentInfo?.LastName</span>
                                                 </MudText>
                                             </MudPaper>
                                             
-                                            <MudPaper Elevation="2" Style="padding: 12px 16px; border-radius: 8px; background: white;">
-                                                <MudText Typo="Typo.body2" StartIcon="@Icons.Material.Filled.Schedule" Style="font-weight: 500;">
-                                                    <span style="color: #666; font-size: 0.85rem;">Thời gian hiện tại:</span>
-                                                    <span style="color: #1976d2; font-weight: 600; margin-left: 6px;">@currentTime</span>
+                                            <MudPaper Elevation="2" Style="padding: 8px 12px; border-radius: 6px; background: white;">
+                                                <MudText Typo="Typo.body2" StartIcon="@Icons.Material.Filled.Schedule" Style="font-weight: 500; font-size: 0.8rem;">
+                                                    <span style="color: #666; font-size: 0.75rem;">Thời gian hiện tại:</span>
+                                                    <span style="color: #1976d2; font-weight: 600; margin-left: 4px;">@currentTime</span>
                                                 </MudText>
                                             </MudPaper>
                                         </MudStack>
                                         
-                                        <MudDivider Class="my-3" />
+                                        <MudDivider Class="my-2" />
                                         
                                         <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.Logout" OnClick="Logout" Style="border-radius: 12px; font-weight: 500; height: 36px; width: 100%;">
                                             Đăng xuất
@@ -64,61 +64,90 @@
                         <MudItem xs="12" md="7">
                             <MudCard Elevation="4" Style="height: 100%; border-radius: 16px; background: linear-gradient(135deg, #f1f3f4 0%, #e8eaed 100%);">
                                 <MudCardContent Style="padding: 20px;">
-                                    <MudStack Spacing="2">
-                                        <MudText Typo="Typo.h6" Color="Color.Primary" Class="mb-2" Style="font-weight: 600; text-align: center; letter-spacing: 0.5px;">
+                                    <MudStack Spacing="1" AlignItems="AlignItems.Center">
+                                        <MudText Typo="Typo.h6" Color="Color.Primary" Class="mb-1" Style="font-weight: 600; text-align: center; letter-spacing: 0.5px;">
                                             DANH SÁCH CA THI
                                         </MudText>
                                         
-                                        <MudDivider Style="margin: 6px 0;" />
+                                        <MudDivider Style="margin: 1px 0;" />
                                         
                                         @if (examSessions == null)
                                         {
-                                            <MudStack AlignItems="AlignItems.Center" Spacing="2">
+                                            <MudStack AlignItems="AlignItems.Center" Spacing="1">
                                                 <MudProgressCircular Indeterminate Color="Color.Primary" Size="Size.Small" />
-                                                <MudText Style="font-weight: 500; font-size: 0.9rem;">Đang tải dữ liệu ca thi...</MudText>
+                                                <MudText Style="font-weight: 500; font-size: 0.85rem;">Đang tải dữ liệu ca thi...</MudText>
                                             </MudStack>
                                         }
                                         else if (examSessions.Count == 0)
                                         {
-                                            <MudAlert Severity="Severity.Info" Variant="Variant.Filled" Style="border-radius: 12px; font-size: 0.9rem;">
-                                                Bạn chưa có ca thi nào.
+                                            <MudAlert Severity="Severity.Info" Variant="Variant.Filled" Style="border-radius: 10px; font-size: 0.85rem; margin: 8px 0;">
+                                                Bạn chưa có ca thi nào hoặc tất cả ca thi đã kết thúc.
                                             </MudAlert>
                                         }
                                         else
                                         {
-                                            <MudList T="object" Dense="true" Style="width: 100%; max-height: 400px; overflow-y: auto;">
+                                            <MudList T="object" Dense="true" Style="width: 100%; max-height: 350px; overflow-y: auto; padding: 8px 0;">
                                                 @foreach (var session in examSessions)
                                                 {
                                                     <MudListItem T="object"
                                                                  Style="@GetSessionStyle(session.ExamSessionSubjectId)"
                                                                  @onclick="() => selectedExamSessionId = session.ExamSessionSubjectId">
 
-                                                        <MudCard Elevation="2" Style="width: 100%; border-radius: 10px; margin: 4px 0;">
-                                                            <MudCardContent Style="padding: 12px;">
+                                                        <MudCard Elevation="2" Style="width: 100%; border-radius: 8px; margin: 2px 0; position: relative; overflow: visible;">
+                                                            <!-- Sticker thời gian ở trên đầu -->
+                                                            @{
+                                                                var timeStatus = GetTimeStatus(session);
+                                                            }
+                                                            @if (timeStatus.isTooEarly || timeStatus.isTooLate)
+                                                            {
+                                                                <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 100;">
+                                                                    @if (timeStatus.isTooEarly)
+                                                                    {
+                                                                        <MudChip Color="Color.Warning" Variant="Variant.Outlined" Size="Size.Small" Icon="@Icons.Material.Filled.Schedule" Style="font-size: 0.9rem; height: 30px; padding: 0 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.3); white-space: nowrap;">
+                                                                            Chưa đến giờ
+                                                                        </MudChip>
+                                                                    }
+                                                                    else if (timeStatus.isTooLate)
+                                                                    {
+                                                                        <MudChip Color="Color.Error" Variant="Variant.Outlined" Size="Size.Small" Icon="@Icons.Material.Filled.Block" Style="font-size: 0.9rem; height: 30px; padding: 0 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.3); white-space: nowrap;">
+                                                                            Đã quá giờ
+                                                                        </MudChip>
+                                                                    }
+                                                                </div>
+                                                            }
+                                                            
+                                                            <MudCardContent Style="padding: 8px;">
                                                                 <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
                                                                     <!-- Bên trái: thông tin ca thi -->
-                                                                    <div style="display: flex; flex-direction: column; font-size: 0.8rem; flex: 1;">
-                                                                        <MudText Typo="Typo.body2" Color="Color.Primary" Style="font-weight: 600; font-size: 0.9rem;"><b>@session.SubjectName</b></MudText>
-                                                                        <MudText Typo="Typo.caption" Style="font-weight: 500;">Phòng: <b style="color: #1976d2;">@session.RoomName</b></MudText>
-                                                                        <MudText Typo="Typo.caption" Style="font-weight: 500;">Thời lượng: <b style="color: #1976d2;">@session.Duration phút</b></MudText>
-                                                                        <MudText Typo="Typo.caption" Style="font-weight: 500;">Cộng thêm: <b style="color: #1976d2;">@session.ExtraMinutes phút</b></MudText>
-                                                                        <MudText Typo="Typo.caption" Style="font-weight: 500;">Bắt đầu: <b style="color: #1976d2;">@(session.StartTime.ToString("HH:mm dd/MM/yyyy"))</b></MudText>
+                                                                    <div style="display: flex; flex-direction: column; font-size: 0.75rem; flex: 1;">
+                                                                        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 2px;">
+                                                                            <MudText Typo="Typo.body2" Color="Color.Primary" Style="font-weight: 600; font-size: 0.85rem;"><b>@session.SubjectName</b></MudText>
+                                                                            <MudText Typo="Typo.caption" Style="font-weight: 500;"><b style="color: #1976d2;">@session.RoomName</b></MudText>
+                                                                        </div>
+                                                                        <MudText Typo="Typo.caption" Style="font-weight: 500; margin-bottom: 2px;">Thời lượng: <b style="color: #1976d2;">@(session.ExtraMinutes > 0 ? $"{session.Duration} + {session.ExtraMinutes} phút" : $"{session.Duration} phút")</b></MudText>
+                                                                        <MudText Typo="Typo.caption" Style="font-weight: 500; margin-bottom: 2px;">Bắt đầu: <b style="color: #1976d2;">@FormatExamTime(session.ExamSessionStartTime)</b></MudText>
+                                                                        <MudText Typo="Typo.caption" Style="font-weight: 500;">Kết thúc: <b style="color: #1976d2;">@FormatExamTime(session.ExamSessionStartTime.AddMinutes(session.Duration + session.ExtraMinutes))</b></MudText>
                                                                     </div>
 
                                                                     <!-- Bên phải: nút Bắt đầu nếu là phiên đã chọn -->
                                                                 @if (selectedExamSessionId == session.ExamSessionSubjectId)
                                                                 {
-                                                                        <MudButton Disabled="@_processing" OnClick="@(() => ProcessSomething(session))" Variant="Variant.Filled" Color="Color.Success" Class="ml-3" Style="border-radius: 8px; font-weight: 500; min-width: 80px; height: 32px; font-size: 0.75rem;">
-                                                                            @if (_processing)
+                                                                        <div style="display:flex; align-items:center; gap:6px;">
+                                                                            @if (timeStatus.isInValidTime)
                                                                             {
-                                                                                <MudProgressCircular Size="Size.Small" Indeterminate="true" Color="Color.Inherit" Class="me-1" />
-                                                                                <MudText Style="font-size: 0.7rem;">Đang xử lý...</MudText>
+                                                                                <MudButton Disabled="@_processing" OnClick="@(() => ProcessSomething(session))" Variant="Variant.Filled" Color="Color.Success" Class="ml-2" Style="border-radius: 6px; font-weight: 500; min-width: 70px; height: 28px; font-size: 0.7rem;">
+                                                                                    @if (_processing)
+                                                                                    {
+                                                                                        <MudProgressCircular Size="Size.Small" Indeterminate="true" Color="Color.Inherit" Class="me-1" />
+                                                                                        <MudText Style="font-size: 0.65rem;">Đang xử lý...</MudText>
+                                                                                    }
+                                                                                    else
+                                                                                    {
+                                                                                        <MudText Style="font-size: 0.7rem;">Bắt đầu</MudText>
+                                                                                    }
+                                                                                </MudButton>
                                                                             }
-                                                                            else
-                                                                            {
-                                                                                <MudText Style="font-size: 0.75rem;">Bắt đầu</MudText>
-                                                                            }
-                                                                        </MudButton>
+                                                                        </div>
                                                                 }
 
                                                                 </div>

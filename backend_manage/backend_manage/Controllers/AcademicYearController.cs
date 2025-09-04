@@ -1,5 +1,5 @@
-using backend_manage.DTOs;
-using backend_manage.Services.Interfaces;
+using backend_manage.core.Services.Interfaces;
+using backend_manage.shared.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -17,7 +17,7 @@ namespace backend_manage.Controllers
         }
        
         [HttpGet]
-        [Authorize(Policy = "AdminOnly")]
+        [Authorize(Policy = "AcademicAffairsOrAdmin")]
         public async Task<IActionResult> GetAll()
         {
             var result = await _academicYearService.GetAllAsync();
@@ -25,7 +25,7 @@ namespace backend_manage.Controllers
         }
 
         [HttpGet("{id}")]
-        [Authorize(Policy = "AdminOnly")]
+        [Authorize(Policy = "AcademicAffairsOrAdmin")]
         public async Task<IActionResult> GetById(string id)
         {
             var result = await _academicYearService.GetByIdAsync(id);
@@ -35,7 +35,7 @@ namespace backend_manage.Controllers
         
         #region Post Methods 
         [HttpPost]
-        [Authorize(Policy = "AdminOnly")]
+        [Authorize(Policy = "AcademicAffairsOrAdmin")]
         public async Task<IActionResult> Create([FromBody] AcademicYearCreateDto dto)
         {
             var result = await _academicYearService.AddAsync(dto);
@@ -44,8 +44,8 @@ namespace backend_manage.Controllers
         #endregion
 
         [HttpPut("{id}")]
-        [Authorize(Policy = "AdminOnly")]
-        public async Task<IActionResult> Update(string id, [FromBody] AcademicYearUpdateDto dto)
+        [Authorize(Policy = "AcademicAffairsOrAdmin")]
+        public async Task<IActionResult> Update(int id, [FromBody] AcademicYearUpdateDto dto)
         {
             var result = await _academicYearService.UpdateAsync(id, dto);
             if (result == null) return NotFound();
@@ -53,7 +53,7 @@ namespace backend_manage.Controllers
         }
 
         [HttpDelete("{id}")]
-        [Authorize(Policy = "AdminOnly")]
+        [Authorize(Policy = "AcademicAffairsOrAdmin")]
         public async Task<IActionResult> Delete(string id)
         {
             var success = await _academicYearService.DeleteAsync(id);

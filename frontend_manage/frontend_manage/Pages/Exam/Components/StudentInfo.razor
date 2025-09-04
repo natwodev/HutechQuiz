@@ -1,0 +1,17 @@
+@using MudBlazor
+
+<!-- Student Info -->
+<MudPaper Class="pa-3" Style="text-align: center; border: 1px solid #ccc; margin-bottom: 0;">
+    <MudImage Src="images/exam/Ellipse 1.svg" Width="100" Height="100" Class="mb-2" Style="object-fit: contain;" />
+    <MudDivider Class="mb-2" />
+    <MudText Typo="Typo.subtitle2"><b>Mã sinh viên:</b> @StudentCode</MudText>
+    <MudText Typo="Typo.subtitle2"><b>Mã đề:</b> @ExamPaperCode</MudText>
+    <MudText Typo="Typo.subtitle2"><b>Môn học:</b> @SubjectName (@SubjectCode)</MudText>
+    <MudText Typo="Typo.subtitle2"><b>Phòng thi:</b> @RoomName</MudText>
+    <MudText Typo="Typo.subtitle2"><b>Thời gian:</b> @Duration phút</MudText>
+    @if (ExtraMinutes > 0)
+    {
+        <MudText Typo="Typo.subtitle2"><b>Thêm:</b> +@ExtraMinutes phút</MudText>
+    }
+</MudPaper>
+

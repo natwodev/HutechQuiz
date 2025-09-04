@@ -1,77 +1,285 @@
-using backend_manage.DTOs;
-using backend_manage.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Collections.Generic;
+using System;
 using System.Threading.Tasks;
+using backend_manage.core.Services.Interfaces;
+using backend_manage.shared.DTOs;
 
 namespace backend_manage.Controllers
 {
-    [Route("api/[controller]")]
     [ApiController]
+    [Route("api/[controller]")]
+    [Authorize]
     public class ExamSessionSubjectController : ControllerBase
     {
         private readonly IExamSessionSubjectService _examSessionSubjectService;
+
         public ExamSessionSubjectController(IExamSessionSubjectService examSessionSubjectService)
         {
             _examSessionSubjectService = examSessionSubjectService;
         }
-
+        
         [HttpGet]
-        [Authorize(Policy = "AdminOnly")]
-        public async Task<IActionResult> GetAll()
+        public async Task<ActionResult<IEnumerable<ExamSessionSubjectDto>>> GetAll()
         {
-            var result = await _examSessionSubjectService.GetAllAsync();
-            return Ok(result);
+            try
+            {
+                var result = await _examSessionSubjectService.GetAllAsync();
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Lỗi nội bộ: {ex.Message}");
+            }
         }
-
+        
         [HttpGet("{id}")]
-        [Authorize(Policy = "AdminOnly")]
-        public async Task<IActionResult> GetById(string id)
+        public async Task<ActionResult<ExamSessionSubjectDto>> GetById(int id)
         {
-            var result = await _examSessionSubjectService.GetByIdAsync(id);
-            if (result == null) return NotFound();
-            return Ok(result);
+            try
+            {
+                var result = await _examSessionSubjectService.GetByIdAsync(id);
+                if (result == null)
+                    return NotFound($"Không tìm thấy ExamSessionSubject với ID: {id}");
+                
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Lỗi nội bộ: {ex.Message}");
+            }
         }
 
         [HttpPost]
-        [Authorize(Policy = "AdminOnly")]
-        public async Task<IActionResult> Create([FromBody] ExamSessionSubjectCreateDto dto)
+        public async Task<ActionResult<ExamSessionSubjectDto>> Create(ExamSessionSubjectCreateDto dto)
         {
-            var result = await _examSessionSubjectService.AddAsync(dto);
-            return CreatedAtAction(nameof(GetById), new { id = result.ExamSessionSubjectId }, result);
-        }
+            try
+            {
+                if (!ModelState.IsValid)
+                    return BadRequest(ModelState);
 
+                var result = await _examSessionSubjectService.AddAsync(dto);
+                return CreatedAtAction(nameof(GetById), new { id = result.ExamSessionSubjectId }, result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Lỗi nội bộ: {ex.Message}");
+            }
+        }
+        
         [HttpPut("{id}")]
-        [Authorize(Policy = "AdminOnly")]
-        public async Task<IActionResult> Update(string id, [FromBody] ExamSessionSubjectUpdateDto dto)
+        public async Task<ActionResult<ExamSessionSubjectDto>> Update(int id, ExamSessionSubjectUpdateDto dto)
         {
-            var result = await _examSessionSubjectService.UpdateAsync(id, dto);
-            if (result == null) return NotFound();
-            return Ok(result);
-        }
+            try
+            {
+                if (!ModelState.IsValid)
+                    return BadRequest(ModelState);
 
+                var result = await _examSessionSubjectService.UpdateAsync(id, dto);
+                if (result == null)
+                    return NotFound($"Không tìm thấy ExamSessionSubject với ID: {id}");
+                
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Lỗi nội bộ: {ex.Message}");
+            }
+        }
+        
         [HttpDelete("{id}")]
-        [Authorize(Policy = "AdminOnly")]
-        public async Task<IActionResult> Delete(string id)
+        public async Task<ActionResult> Delete(int id)
         {
-            var success = await _examSessionSubjectService.DeleteAsync(id);
-            if (!success) return NotFound();
-            return NoContent();
+            try
+            {
+                var result = await _examSessionSubjectService.DeleteAsync(id);
+                if (!result)
+                    return NotFound($"Không tìm thấy ExamSessionSubject với ID: {id}");
+                
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Lỗi nội bộ: {ex.Message}");
+            }
+        }
+        
+        [HttpGet("room/{examRoomId}")]
+        public async Task<ActionResult<IEnumerable<ExamSessionSubjectDto>>> GetByExamRoomId(int examRoomId)
+        {
+            try
+            {
+                var result = await _examSessionSubjectService.GetByExamRoomIdAsync(examRoomId);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Lỗi nội bộ: {ex.Message}");
+            }
+        }
+        
+        [HttpGet("lecturer/{lecturerId}")]
+        public async Task<ActionResult<IEnumerable<ExamSessionSubjectDto>>> GetByLecturerId(int lecturerId)
+        {
+            try
+            {
+                var result = await _examSessionSubjectService.GetByLecturerIdAsync(lecturerId);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Lỗi nội bộ: {ex.Message}");
+            }
+        }
+        
+        [HttpPost("assign-lecturer")]
+        public async Task<ActionResult> AssignLecturer(AssignLecturerDto dto)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                    return BadRequest(ModelState);
+
+                await _examSessionSubjectService.AssignLecturerAsync(dto);
+                return Ok(new { message = "Phân công giảng viên thành công" });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Lỗi nội bộ: {ex.Message}");
+            }
+        }
+        
+        [HttpPost("unassign-lecturer")]
+        public async Task<ActionResult> UnassignLecturer(UnassignLecturerDto dto)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                    return BadRequest(ModelState);
+
+                await _examSessionSubjectService.UnassignLecturerAsync(dto);
+                return Ok(new { message = "Hủy phân công giảng viên thành công" });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Lỗi nội bộ: {ex.Message}");
+            }
+        }
+        
+        [HttpPut("{examSessionSubjectId}/exam-room")]
+        public async Task<ActionResult> UpdateExamRoom(int examSessionSubjectId, [FromBody] int? examRoomId)
+        {
+            try
+            {
+                var result = await _examSessionSubjectService.UpdateExamRoomIdAsync(examSessionSubjectId, examRoomId);
+                if (!result)
+                    return NotFound($"Không tìm thấy ExamSessionSubject với ID: {examSessionSubjectId}");
+
+                return Ok(new { message = "Cập nhật phòng thi thành công" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Lỗi nội bộ: {ex.Message}");
+            }
+        }
+        
+        [HttpPut("{examSessionSubjectId}/original-exam-paper")]
+        public async Task<ActionResult> UpdateOriginalExamPaper(int examSessionSubjectId, [FromBody] int originalExamPaperId)
+        {
+            try
+            {
+                var result = await _examSessionSubjectService.UpdateOriginalExamPaperIdAsync(examSessionSubjectId, originalExamPaperId);
+                if (!result)
+                    return NotFound($"Không tìm thấy ExamSessionSubject với ID: {examSessionSubjectId}");
+
+                return Ok(new { message = "Cập nhật đề thi gốc thành công" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Lỗi nội bộ: {ex.Message}");
+            }
         }
 
-        [HttpPatch("{id}/original-exam-paper/{originalExamPaperId}")]
-        public async Task<IActionResult> UpdateOriginalExamPaperId(int id, int originalExamPaperId)
+        [HttpPost("is-active")]
+        public async Task<ActionResult> UpdateIsActive([FromBody] ActiveExamSessionSubject request)
         {
-            var success = await _examSessionSubjectService.UpdateOriginalExamPaperIdAsync(id, originalExamPaperId);
-            if (!success) return NotFound();
-            return Ok(new { message = "Cập nhật OriginalExamPaperId thành công." });
+            try
+            {
+                await _examSessionSubjectService.UpdateIsActiveAsync(request.examSessionSubjectId, request.isActive);
+
+                return Ok(new { message = "Cập nhật trạng thái hoạt động thành công" });
+            }
+            catch (ArgumentException ex)
+            {
+                return NotFound(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Lỗi nội bộ: {ex.Message}");
+            }
         }
 
-        [HttpGet("with-rooms")]
-        public async Task<IActionResult> GetAllWithRooms()
+        public class ActiveExamSessionSubject
         {
-            var result = await _examSessionSubjectService.GetAllWithRoomsAsync();
-            return Ok(result);
+            public int examSessionSubjectId { get; set; }
+            public bool isActive { get; set; }
+        }
+        
+        [HttpGet("{examSessionSubjectId}/with-students")]
+        public async Task<ActionResult<object>> GetWithStudents(int examSessionSubjectId)
+        {
+            try
+            {
+                var result = await _examSessionSubjectService.GetExamSessionSubjectWithStudentsAsync(examSessionSubjectId);
+                return Ok(new
+                {
+                    Subject = result.SubjectExamRoomStatus,
+                    Students = result.Students
+                });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Lỗi nội bộ: {ex.Message}");
+            }
+        }
+
+
+        [HttpGet("lecturer/subject-exam-room-status")]
+        public async Task<ActionResult<IEnumerable<SubjectExamRoomStatusDto>>> GetSubjectExamRoomStatusByLecturerId()
+        {
+            try
+            {
+                var lecturerId = User.FindFirst("id")?.Value;
+                if (string.IsNullOrEmpty(lecturerId))
+                {
+                    return Unauthorized(new { message = "Không tìm thấy thông tin giảng viên trong token" });
+                }
+
+                if (!int.TryParse(lecturerId, out int id))
+                {
+                    return BadRequest(new { message = "ID giảng viên không hợp lệ" });
+                }
+
+                var result = await _examSessionSubjectService.GetSubjectExamRoomStatusByLecturerIdAsync(id);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Lỗi nội bộ: {ex.Message}");
+            }
         }
     }
 } 

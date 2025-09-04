@@ -1,0 +1,163 @@
+@using frontend_manage.Services
+@using frontend_manage.DTOs
+@using frontend_manage.Pages.Monitor.Components
+@using frontend_manage.Enums
+@using Microsoft.AspNetCore.Components
+@using Microsoft.AspNetCore.Components.Web
+@using Microsoft.AspNetCore.SignalR.Client
+@using MudBlazor
+@using System.Collections.Generic
+@using System.Linq
+@using System.Threading.Tasks
+
+<link href="css/monitor/StudentListTab.css" rel="stylesheet" />
+
+<div class="student-list-tab">
+    <div class="student-list-header">
+        <div class="title-area">
+            <h2>DANH SÁCH SINH VIÊN</h2>
+            @if (Students != null && Students.Any())
+            {
+                <div class="exam-info">
+                    Ca thi: <strong>@(ExamSessionName ?? ExamSessionSubjectId?.ToString() ?? "N/A")</strong> | 
+                    Số sinh viên: <strong>@Students.Count</strong>
+                </div>
+            }
+        </div>
+        <div class="search-area">
+            <MudButton Variant="Variant.Filled" Color="Color.Success" Class="excel-button" Size="Size.Small" OnClick="ExportStudentGradesToExcelAsync" Disabled="@(Students == null || !Students.Any())">
+                <MudIcon Icon="@Icons.Material.Filled.TableChart" Class="mr-1" />
+                Tải danh sách bảng điểm
+            </MudButton>
+            <div class="search-input-wrapper">
+                <MudIcon Icon="@Icons.Material.Filled.Search" Class="search-icon" Size="Size.Small"/>
+                <input type="text" class="search-input" placeholder="Tìm kiếm theo mã SV hoặc họ tên..." @bind="searchText" @bind:event="oninput"/>
+            </div>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="search-button" Size="Size.Small" OnClick="PerformSearch">Tìm kiếm</MudButton>
+        </div>
+    </div>
+
+    @if (Students != null && Students.Any())
+    {
+        <div class="stats-cards">
+            <div class="stat-card">
+                <div class="stat-icon blue">
+                    <MudIcon Icon="@Icons.Material.Filled.People" Size="Size.Large" />
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value">@TotalStudents</div>
+                    <div class="stat-label">Tổng số SV</div>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon green">
+                    <MudIcon Icon="@Icons.Material.Filled.Login" Size="Size.Large" />
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value">@LoggedInStudents</div>
+                    <div class="stat-label">Đã đăng nhập</div>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon amber">
+                    <MudIcon Icon="@Icons.Material.Filled.Edit" Size="Size.Large" />
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value">@TakingExamStudents</div>
+                    <div class="stat-label">Đang thi</div>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon purple">
+                    <MudIcon Icon="@Icons.Material.Filled.AssignmentTurnedIn" Size="Size.Large" />
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value">@SubmittedStudents</div>
+                    <div class="stat-label">Đã nộp bài</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="student-table-container">
+            <table class="student-table">
+                <thead>
+                    <tr>
+                        <th style="width: 5%">STT</th>
+                        <th style="width: 8%">Mã SV</th>
+                        <th style="width: 20%">Họ tên</th>
+                        <th style="width: 18%">Trạng thái thi</th>
+                        <th style="width: 15%">Trạng thái đăng nhập</th>
+                        <th style="width: 8%">Giờ cộng</th>
+                        <th style="width: 8%">Điểm số</th>
+                        <th style="width: 12%">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var student in FilteredStudents)
+                    {
+                        var index = Students.IndexOf(student) + 1;
+                        <tr>
+                            <td>@index</td>
+                            <td>@($"#{student.StudentCode}")</td>
+                            <td>@($"{student.FirstName} {student.LastName}")</td>
+                            <td>
+                                @{
+                                    var examStatus = GetExamStatus(student);
+                                    var statusDisplayName = GetExamStatusDisplayName(examStatus);
+                                    var statusCssClass = GetExamStatusCssClass(examStatus);
+                                }
+                                <span class="@statusCssClass">@statusDisplayName</span>
+                            </td>
+                            <td>
+                                @if (student.IsLogin)
+                                {
+                                    <span class="status-tag success">Đã đăng nhập</span>
+                                }
+                                else
+                                {
+                                    <span class="status-tag danger">Chưa đăng nhập</span>
+                                }
+                            </td>
+                            <td>@student.ExtraMinutes phút</td>
+                            <td>@(student.Score.ToString("0.0"))</td>
+                            <td class="actions-cell">
+                                <MudIconButton Icon="@Icons.Material.Filled.Timer" Size="Size.Small" 
+                                              Color="Color.Warning" Class="mx-1"
+                                              OnClick="() => AddExtraTime(student)" 
+                                              Title="Thêm thời gian thi" />
+                                <MudIconButton Icon="@Icons.Material.Filled.Settings" Size="Size.Small" 
+                                              Color="Color.Default" Class="mx-1"
+                                              OnClick="() => ManageStudent(student.StudentCode)" 
+                                              Title="Quản lý" />
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+
+            @if (!FilteredStudents.Any())
+            {
+                <div class="no-data">
+                    Không tìm thấy sinh viên nào
+                </div>
+            }
+        </div>
+
+        <div class="table-actions">
+            <div class="total-info">
+                <span>Tổng số @TotalStudents sinh viên</span>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="no-data">
+            <MudAlert Severity="Severity.Info" Variant="Variant.Filled">
+                Không có dữ liệu sinh viên
+            </MudAlert>
+        </div>
+    }
+</div>

@@ -1,0 +1,180 @@
+@using frontend_manage.DTOs.AcademicAffairs
+@using MudBlazor
+@using frontend_manage.Services.AcademicAffairs
+@using System.Linq
+@inject ExamSessionService ExamSessionService
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+
+<MudCard Elevation="0">
+    <MudCardHeader>
+        <MudText Typo="Typo.h6">Quản lý Ca thi</MudText>
+        <MudSpacer />
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add" 
+                  OnClick="OpenCreateDialog">Thêm ca thi</MudButton>
+    </MudCardHeader>
+    <MudCardContent>
+        <MudTable Items="@ExamSessions" Hover="true" Dense="false" Striped="true" Filter="new Func<frontend_manage.DTOs.AcademicAffairs.ExamSessionDto, bool>(FilterFunc)" 
+                 @bind-SelectedItem="selectedItem">
+            <ToolBarContent>
+                <MudTextField @bind-Value="searchString" Placeholder="Tìm kiếm" Adornment="Adornment.Start" 
+                             AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+            </ToolBarContent>
+            <HeaderContent>
+                <MudTh>ID</MudTh>
+                <MudTh>Tên ca thi</MudTh>
+                <MudTh>Thời gian bắt đầu</MudTh>
+                <MudTh>Thời gian kết thúc</MudTh>
+                <MudTh>Đợt thi</MudTh>
+                <MudTh>Hoạt động</MudTh>
+                <MudTh>Hoàn thành</MudTh>
+                <MudTh>Thao tác</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="ID">@context.ExamSessionId</MudTd>
+                <MudTd DataLabel="Tên ca thi">@context.Name</MudTd>
+                <MudTd DataLabel="Thời gian bắt đầu">@context.StartTime.ToString("dd/MM/yyyy HH:mm")</MudTd>
+                <MudTd DataLabel="Thời gian kết thúc">@context.EndTime.ToString("dd/MM/yyyy HH:mm")</MudTd>
+                <MudTd DataLabel="Đợt thi">@GetExamBatchName(context.ExamBatchId)</MudTd>
+                <MudTd DataLabel="Hoạt động">
+                    <MudChip T="bool" Color="@(context.IsActive ? Color.Success : Color.Error)" Size="Size.Small">
+                        @(context.IsActive ? "Đang hoạt động" : "Không hoạt động")
+                    </MudChip>
+                </MudTd>
+                <MudTd DataLabel="Hoàn thành">
+                    <MudChip T="bool" Color="@(context.IsCompleted ? Color.Success : Color.Warning)" Size="Size.Small">
+                        @(context.IsCompleted ? "Đã hoàn thành" : "Chưa hoàn thành")
+                    </MudChip>
+                </MudTd>
+                <MudTd>
+                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Size="Size.Small" 
+                                  OnClick="@(() => OpenEditDialog(context))" />
+                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" 
+                                  OnClick="@(() => OpenDeleteDialog(context))" />
+                </MudTd>
+            </RowTemplate>
+            <PagerContent>
+                <MudTablePager PageSizeOptions="new int[] { 5, 10, 25, 50 }" />
+            </PagerContent>
+        </MudTable>
+    </MudCardContent>
+</MudCard>
+
+@code {
+    [Parameter]
+    public List<frontend_manage.DTOs.AcademicAffairs.ExamSessionDto> ExamSessions { get; set; } = new();
+    
+    [Parameter]
+    public List<ExamBatchDto> ExamBatches { get; set; } = new();
+    
+    [Parameter]
+    public EventCallback OnExamSessionUpdated { get; set; }
+    
+    private frontend_manage.DTOs.AcademicAffairs.ExamSessionDto selectedItem = null;
+    private string searchString = "";
+    
+    private string GetExamBatchName(int examBatchId)
+    {
+        var examBatch = ExamBatches.FirstOrDefault(eb => eb.ExamBatchId == examBatchId);
+        return examBatch?.BatchName ?? "N/A";
+    }
+    
+    private bool FilterFunc(frontend_manage.DTOs.AcademicAffairs.ExamSessionDto examSession) => 
+        string.IsNullOrWhiteSpace(searchString) || 
+        examSession.Name.Contains(searchString, StringComparison.OrdinalIgnoreCase) ||
+        GetExamBatchName(examSession.ExamBatchId).Contains(searchString, StringComparison.OrdinalIgnoreCase);
+    
+    private async Task OpenCreateDialog()
+    {
+        var parameters = new DialogParameters
+        {
+            { "Title", "Thêm ca thi mới" },
+            { "ButtonText", "Thêm" },
+            { "Color", Color.Primary },
+            { "ExamBatches", ExamBatches }
+        };
+        
+        var dialog = await DialogService.ShowAsync<ExamSessionDialog>("Thêm ca thi", parameters);
+        var result = await dialog.Result;
+        
+        if (!result.Canceled)
+        {
+            var newExamSession = (ExamSessionCreateDto)result.Data;
+            try
+            {
+                await ExamSessionService.CreateAsync(newExamSession);
+                await OnExamSessionUpdated.InvokeAsync();
+                Snackbar.Add("Thêm ca thi thành công", Severity.Success);
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Lỗi: {ex.Message}", Severity.Error);
+            }
+        }
+    }
+    
+    private async Task OpenEditDialog(frontend_manage.DTOs.AcademicAffairs.ExamSessionDto examSession)
+    {
+        var parameters = new DialogParameters
+        {
+            { "Title", "Cập nhật ca thi" },
+            { "ButtonText", "Cập nhật" },
+            { "Color", Color.Primary },
+            { "ExamBatches", ExamBatches },
+            { "ExamSession", new ExamSessionUpdateDto { 
+                Name = examSession.Name,
+                StartTime = examSession.StartTime,
+                EndTime = examSession.EndTime,
+                ExamBatchDetailId = examSession.ExamBatchDetailId,
+                IsActive = examSession.IsActive,
+                IsCompleted = examSession.IsCompleted
+            } }
+        };
+        
+        var dialog = await DialogService.ShowAsync<ExamSessionDialog>("Cập nhật ca thi", parameters);
+        var result = await dialog.Result;
+        
+        if (!result.Canceled)
+        {
+            var updatedExamSession = (ExamSessionUpdateDto)result.Data;
+            try
+            {
+                await ExamSessionService.UpdateAsync(examSession.ExamSessionId, updatedExamSession);
+                await OnExamSessionUpdated.InvokeAsync();
+                Snackbar.Add("Cập nhật ca thi thành công", Severity.Success);
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Lỗi: {ex.Message}", Severity.Error);
+            }
+        }
+    }
+    
+    private async Task OpenDeleteDialog(frontend_manage.DTOs.AcademicAffairs.ExamSessionDto examSession)
+    {
+        var parameters = new DialogParameters
+        {
+            { "ContentText", $"Bạn có chắc chắn muốn xóa ca thi '{examSession.Name}'?" },
+            { "ButtonText", "Xóa" },
+            { "Color", Color.Error }
+        };
+        
+        var options = new DialogOptions { CloseOnEscapeKey = true, CloseButton = true };
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>("Xác nhận xóa", parameters, options);
+        var result = await dialog.Result;
+        
+        if (!result.Canceled)
+        {
+            try
+            {
+                await ExamSessionService.DeleteAsync(examSession.ExamSessionId);
+                await OnExamSessionUpdated.InvokeAsync();
+                Snackbar.Add("Xóa ca thi thành công", Severity.Success);
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Lỗi: {ex.Message}", Severity.Error);
+            }
+        }
+    }
+}

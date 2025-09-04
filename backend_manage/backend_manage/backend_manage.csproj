@@ -80,11 +80,26 @@
       <_ContentIncludedByDefault Remove="wwwroot\EPZ\CNPMNN1\62b9864d-56c1-46ec-89c5-24d3021876fc\62b9864d-56c1-46ec-89c5-24d3021876fc.xml" />
       <_ContentIncludedByDefault Remove="wwwroot\EPZ\CNPMNN1\62b9864d-56c1-46ec-89c5-24d3021876fc\Data\Audio\874ec53e-0423-488e-ad8a-66263a907bd5.mp3" />
       <_ContentIncludedByDefault Remove="wwwroot\EPZ\CNPMNN1\62b9864d-56c1-46ec-89c5-24d3021876fc\Data\Audio\ea2ed0e6-d5d5-4532-aba8-ee940becfd87.mp3" />
+      <_ContentIncludedByDefault Remove="wwwroot\EPZ\CNPMNN1\a87e988f-b09f-47be-aacc-23fc887e93a7\a87e988f-b09f-47be-aacc-23fc887e93a7.xml" />
+      <_ContentIncludedByDefault Remove="wwwroot\EPZ\CNPMNN1\a87e988f-b09f-47be-aacc-23fc887e93a7\Data\Audio\69024ffe-d9d6-4308-a846-508ccd33e4b3.mp3" />
+      <_ContentIncludedByDefault Remove="wwwroot\EPZ\CNPMNN1\Data\Audio\69024ffe-d9d6-4308-a846-508ccd33e4b3.mp3" />
+      <_ContentIncludedByDefault Remove="wwwroot\EPZ\CNPMNN1\Data\Audio\874ec53e-0423-488e-ad8a-66263a907bd5.mp3" />
+      <_ContentIncludedByDefault Remove="wwwroot\EPZ\CNPMNN1\Data\Audio\ea2ed0e6-d5d5-4532-aba8-ee940becfd87.mp3" />
+      <_ContentIncludedByDefault Remove="wwwroot\EPZ\CNPMNN2\a87e988f-b09f-47be-aacc-23fc887e93a7\a87e988f-b09f-47be-aacc-23fc887e93a7.xml" />
+      <_ContentIncludedByDefault Remove="wwwroot\EPZ\CNPMNN2\a87e988f-b09f-47be-aacc-23fc887e93a7\Data\Audio\69024ffe-d9d6-4308-a846-508ccd33e4b3.mp3" />
+      <_ContentIncludedByDefault Remove="wwwroot\EPZ\CNPMNN2\62b9864d-56c1-46ec-89c5-24d3021876fc\62b9864d-56c1-46ec-89c5-24d3021876fc.xml" />
+      <_ContentIncludedByDefault Remove="wwwroot\EPZ\CNPMNN2\Data\Audio\874ec53e-0423-488e-ad8a-66263a907bd5.mp3" />
+      <_ContentIncludedByDefault Remove="wwwroot\EPZ\CNPMNN2\Data\Audio\ea2ed0e6-d5d5-4532-aba8-ee940becfd87.mp3" />
     </ItemGroup>
 
     <ItemGroup>
       <Folder Include="Logs\" />
       <Folder Include="wwwroot\EPZ\" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\backend_manage.core\backend_manage.core.csproj" />
+      <ProjectReference Include="..\backend_manage.shared\backend_manage.shared.csproj" />
     </ItemGroup>
 
 </Project>

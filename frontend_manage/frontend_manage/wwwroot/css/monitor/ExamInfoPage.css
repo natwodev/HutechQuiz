@@ -1,0 +1,252 @@
+﻿body {
+}
+.exam-info-tab {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.exam-info-header {
+    margin-bottom: 15px;
+}
+
+    .exam-info-header h2 {
+        margin: 0;
+        font-size: 1.2rem;
+        color: #264488;
+        font-weight: 600;
+    }
+
+.exam-info-content {
+    flex: 1;
+}
+
+.exam-details-card {
+    height: 100%;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08) !important;
+    border-radius: 6px !important;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: 100px 1fr;
+    row-gap: 10px;
+    column-gap: 12px;
+    font-size: 0.9rem;
+}
+
+.info-label {
+    font-weight: 600;
+    color: #5f6368;
+}
+
+.info-value {
+    color: #202124;
+    font-weight: 500;
+}
+
+.time-status {
+    margin-bottom: 20px;
+}
+
+.time-status-item {
+    display: flex;
+    margin-bottom: 8px;
+    align-items: center;
+}
+
+.time-status-label {
+    width: 140px;
+    font-weight: 600;
+    color: #5f6368;
+    font-size: 0.9rem;
+}
+
+.time-status-value {
+    font-weight: 700;
+}
+
+.status-active {
+    color: #0f9d58;
+}
+
+.time-remaining {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #f4b400;
+    letter-spacing: 1px;
+}
+
+.time-marks {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 10px;
+    margin-bottom: 20px;
+    font-size: 0.8rem;
+    color: #666;
+}
+
+.time-controls {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 15px;
+    gap: 8px;
+}
+
+    .time-controls .mud-button {
+        text-transform: none;
+        border-radius: 4px !important;
+        font-weight: 500;
+        padding: 4px 12px;
+        font-size: 0.85rem;
+    }
+
+.proctors-card {
+    margin-top: 15px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08) !important;
+    border-radius: 6px !important;
+}
+
+.proctors-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.proctor-item {
+    display: flex;
+    align-items: center;
+    padding: 6px;
+    border-radius: 3px;
+    background-color: #f9f9f9;
+}
+
+.proctor-avatar {
+    position: relative;
+    margin-right: 12px;
+}
+
+.proctor-status-dot {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    border: 2px solid #fff;
+}
+
+    .proctor-status-dot.online {
+        background-color: #0f9d58;
+    }
+
+    .proctor-status-dot.offline {
+        background-color: #ea4335;
+    }
+
+.proctor-info {
+    flex: 1;
+}
+
+.proctor-name {
+    font-weight: 600;
+    color: #202124;
+}
+
+.proctor-role {
+    font-size: 0.8rem;
+    color: #5f6368;
+    margin-top: 2px;
+}
+
+.status-tag {
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    display: inline-block;
+    white-space: nowrap;
+}
+
+    .status-tag.success {
+        background-color: #e6f7ed;
+        color: #0f9d58;
+    }
+
+    .status-tag.danger {
+        background-color: #fce8e6;
+        color: #ea4335;
+    }
+
+.exam-notes-card {
+    margin-top: 15px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08) !important;
+    border-radius: 6px !important;
+}
+
+.notes-content ul {
+    margin-bottom: 15px;
+    padding-left: 15px;
+    font-size: 0.85rem;
+}
+
+.notes-content li {
+    margin-bottom: 6px;
+}
+
+.notes-actions {
+    margin-top: 16px;
+    display: flex;
+    justify-content: flex-end;
+}
+
+/* Common card styles */
+.mud-card {
+    height: 100%;
+    border-radius: 6px !important;
+    overflow: hidden;
+}
+
+.mud-card-header {
+    padding-bottom: 6px;
+    border-bottom: 1px solid #f0f0f0;
+    padding-top: 8px;
+    padding-left: 12px;
+    padding-right: 12px;
+}
+
+    .mud-card-header .mud-card-header-content {
+        overflow: visible;
+    }
+
+        .mud-card-header .mud-card-header-content .mud-typography {
+            font-weight: 600;
+            color: #264488;
+            font-size: 0.95rem;
+        }
+
+.mud-card-content {
+    padding: 12px 15px;
+}
+
+::deep .mud-progress-linear {
+    height: 8px !important;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+::deep .mud-progress-linear-striped {
+    background-image: linear-gradient( 45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, transparent 75%, transparent ) !important;
+    background-size: 40px 40px !important;
+    animation: mud-progress-linear-stripe 1s linear infinite !important;
+}
+
+@@keyframes mud-progress-linear-stripe {
+    from {
+        background-position: 40px 0;
+    }
+
+    to {
+        background-position: 0 0;
+    }
+}

@@ -1,0 +1,167 @@
+@page "/monitor"
+@using Microsoft.AspNetCore.Components
+@using frontend_manage.Services
+@using frontend_manage.Pages.Monitor.Components
+@using Microsoft.AspNetCore.Components.Web
+@using Microsoft.AspNetCore.SignalR.Client
+@using MudBlazor
+@using System.Collections.Generic
+@using System.Linq
+@using System.Threading.Tasks
+@inherits ComponentBase
+@implements IDisposable
+
+<link href="css/monitor/MonitorPage.css" rel="stylesheet" />
+
+<div class="monitor-page">
+    <!-- Header -->
+    <div class="monitor-header">
+        <div class="header-left">
+            <div class="logo-container">
+                <img src="/images/logo-dai-hoc-hutech_012634748.png" alt="HUTECH" class="logo" />
+            </div>
+            <div class="header-titles">
+                <h1>TRƯỜNG ĐẠI HỌC CÔNG NGHỆ THÀNH PHỐ HỒ CHÍ MINH (HUTECH)</h1>
+                <div class="subtitle">
+                    EXAM SUITE - MONITOR <span class="edition-tag">Professional Edition</span>
+                </div>
+                <div class="header-description">Hệ thống quản lý và theo dõi Ca thi</div>
+            </div>
+        </div>
+        <div class="header-right">
+            <span class="mode-tag">Monitor (Testing Mode)</span>
+            
+
+            
+            <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" Color="Color.Inherit" OnClick="GoBackToExamRoomManagement" Title="Quay lại quản lý phòng thi" />
+            <MudIconButton Icon="@Icons.Material.Filled.AccountCircle" Color="Color.Inherit" />
+            <MudIconButton Icon="@Icons.Material.Filled.Notifications" Color="Color.Inherit" />
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <div class="monitor-nav">
+        <div class="nav-item @(activeTab == 0 ? "active" : "")" @onclick="() => ActivateTab(0)">
+            <MudIcon Icon="@Icons.Material.Filled.PeopleAlt" />
+            <span>DANH SÁCH SINH VIÊN</span>
+
+        </div>
+        <div class="nav-item @(activeTab == 1 ? "active" : "")" @onclick="() => ActivateTab(1)">
+            <MudIcon Icon="@Icons.Material.Filled.Info" />
+            <span>THÔNG TIN CA THI</span>
+        </div>
+    </div>
+
+
+
+    <!-- Content Area -->
+    <div class="monitor-content">
+        @if (isLoading)
+        {
+            <div class="@(activeTab == 0 ? "tab-content-active" : "tab-content-hidden")">
+                @if (activeTab == 0 || previousTab == 0)
+                {
+                    <div class="loading-container">
+                        <div class="loading-spinner"></div>
+                        <div class="loading-text">Đang tải dữ liệu...</div>
+                    </div>
+                }
+            </div>
+            <div class="@(activeTab == 1 ? "tab-content-active" : "tab-content-hidden")">
+                @if (activeTab == 1 || previousTab == 1)
+                {
+                    <div class="loading-container">
+                        <div class="loading-spinner"></div>
+                        <div class="loading-text">Đang tải dữ liệu...</div>
+                    </div>
+                }
+            </div>
+        }
+        else if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <div class="@(activeTab == 0 ? "tab-content-active" : "tab-content-hidden")">
+                @if (activeTab == 0 || previousTab == 0)
+                {
+                    <div class="error-container">
+                        <MudAlert Severity="Severity.Error" Variant="Variant.Filled">
+                            @errorMessage
+                        </MudAlert>
+                    </div>
+                }
+            </div>
+            <div class="@(activeTab == 1 ? "tab-content-active" : "tab-content-hidden")">
+                @if (activeTab == 1 || previousTab == 1)
+                {
+                    <div class="error-container">
+                        <MudAlert Severity="Severity.Error" Variant="Variant.Filled">
+                            @errorMessage
+                        </MudAlert>
+                    </div>
+                }
+            </div>
+        }
+        else if (examData != null)
+        {
+            <div class="@(activeTab == 0 ? "tab-content-active" : "tab-content-hidden")">
+                @if (activeTab == 0 || previousTab == 0)
+                {
+                    <StudentListTab Students="@examData.Students" ExamSessionSubjectId="@ExamSessionSubjectId" ExamSessionName="@examData.Subject?.ExamSessionName" ExamSessionStartTime="@examData.Subject?.ExamSessionStartTime" />
+                }
+            </div>
+            <div class="@(activeTab == 1 ? "tab-content-active" : "tab-content-hidden")">
+                @if (activeTab == 1 || previousTab == 1)
+                {
+                    <ExamInfoTab Subject="@examData.Subject" ExamSessionSubjectId="@ExamSessionSubjectId" />
+                }
+            </div>
+        }
+        else
+        {
+            <div class="@(activeTab == 0 ? "tab-content-active" : "tab-content-hidden")">
+                @if (activeTab == 0 || previousTab == 0)
+                {
+                    <div class="no-data-container">
+                        <MudAlert Severity="Severity.Info" Variant="Variant.Filled">
+                            Vui lòng chọn phòng thi để xem danh sách sinh viên
+                        </MudAlert>
+                    </div>
+                }
+            </div>
+            <div class="@(activeTab == 1 ? "tab-content-active" : "tab-content-hidden")">
+                @if (activeTab == 1 || previousTab == 1)
+                {
+                    <div class="no-data-container">
+                        <MudAlert Severity="Severity.Info" Variant="Variant.Filled">
+                            Vui lòng chọn phòng thi để xem thông tin ca thi
+                        </MudAlert>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+
+    <!-- Footer -->
+    <div class="monitor-footer">
+        <div class="footer-left">
+            <MudIcon Icon="@Icons.Material.Filled.AccessTime" Size="Size.Small" Class="footer-icon" />
+            <span class="footer-time">@currentTime</span>
+            <span class="footer-date">@currentDate</span>
+        </div>
+        <div class="footer-center">
+            <div class="footer-logo">
+                <span class="footer-brand">HUTECH</span>
+                <span class="footer-divider">|</span>
+                <span>Exam Monitoring System</span>
+            </div>
+            <div class="footer-copyright">© 2025 Trường Đại học Công nghệ TP.HCM. All rights reserved.</div>
+        </div>
+        <div class="footer-right">
+            <span class="footer-version">Version 1.0.1</span>
+            <span class="footer-divider">|</span>
+            <span class="footer-developers">Developed by Natwodev & Juo</span>
+            <MudIcon Icon="@Icons.Custom.Brands.GitHub" Size="Size.Small" Class="footer-icon ms-1" />
+        </div>
+    </div>
+</div>
+
+@* Code is now in MonitorPage.razor.cs *@

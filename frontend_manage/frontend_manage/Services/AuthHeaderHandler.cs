@@ -1,5 +1,7 @@
 using System.Net.Http.Headers;
+using System.Text.Json;
 using Microsoft.JSInterop;
+using System.Diagnostics;
 
 namespace frontend_manage.Services;
 
@@ -15,28 +17,49 @@ public class AuthHeaderHandler : DelegatingHandler
 
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
-        Console.WriteLine($"🔄 AuthHeaderHandler: Request URL: {request.RequestUri}");
+        Debug.WriteLine($"[AuthHeaderHandler] Called for: {request.RequestUri}");
         
-        if (!request.RequestUri?.AbsolutePath.Contains("api/auth/login", StringComparison.OrdinalIgnoreCase) ?? false)
+        // Bỏ qua các API authentication
+        if (request.RequestUri?.AbsolutePath.Contains("api/auth/", StringComparison.OrdinalIgnoreCase) ?? false)
         {
-            var token = await _jsRuntime.InvokeAsync<string>("localStorage.getItem", TokenKey);
-            Console.WriteLine($"🔄 AuthHeaderHandler: Token from localStorage: {(string.IsNullOrEmpty(token) ? "NULL" : "EXISTS")}");
-            
-            if (!string.IsNullOrEmpty(token))
+            Debug.WriteLine("[AuthHeaderHandler] Skipping auth header for auth API");
+            return await base.SendAsync(request, cancellationToken);
+        }
+
+        try
+        {
+            // Kiểm tra loại authentication
+            var authType = await _jsRuntime.InvokeAsync<string>("localStorage.getItem", "authType");
+            Debug.WriteLine($"[AuthHeaderHandler] Auth Type: {authType ?? "null"}");
+
+            if (authType == "cookie")
             {
-                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
-                Console.WriteLine($"🔄 AuthHeaderHandler: Added Bearer token to request");
+                // Cookie authentication - Blazor WebAssembly sẽ sử dụng JavaScript fetch
+                // HttpClient bình thường không thể gửi cookie tự động
+                Debug.WriteLine("[AuthHeaderHandler] Cookie auth detected - consider using CookieHttpService for API calls");
             }
             else
             {
-                Console.WriteLine($"❌ AuthHeaderHandler: No token found in localStorage");
+                // JWT authentication - thêm Bearer token
+                var token = await _jsRuntime.InvokeAsync<string>("localStorage.getItem", TokenKey);
+                Debug.WriteLine($"[AuthHeaderHandler] JWT Token: {token ?? "null"}");
+
+                if (!string.IsNullOrEmpty(token))
+                {
+                    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                    Debug.WriteLine($"[AuthHeaderHandler] Added Bearer token from JWT auth");
+                }
             }
+            
+            // Log final authorization header
+            var authHeader = request.Headers.Authorization?.ToString();
+            Debug.WriteLine($"[AuthHeaderHandler] Final Authorization Header: {authHeader ?? "None"}");
         }
-        else
+        catch (Exception ex)
         {
-            Console.WriteLine($"🔄 AuthHeaderHandler: Skipping token for login request");
+            Debug.WriteLine($"[AuthHeaderHandler] Error: {ex.Message}");
         }
 
         return await base.SendAsync(request, cancellationToken);
     }
-} 
+}

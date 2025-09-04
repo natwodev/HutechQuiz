@@ -1,11 +1,10 @@
-using backend_manage.DTOs;
-using backend_manage.Extensions;
+
+using backend_manage.core.Extensions;
 using OfficeOpenXml;
 using Serilog;
 using Microsoft.EntityFrameworkCore;
-using backend_manage.Messages.RabbitMQ;
-using backend_manage.Services.AuthService.Helpers;
-using StackExchange.Redis;
+
+
 
 
 
@@ -51,27 +50,24 @@ var configuration = builder.Configuration;
 // Đăng ký dịch vụ
 builder.Services.ConfigureServices(configuration);
 
+
 try
 {
+    
     var app = builder.Build();
-
+/*
     using (var scope = app.Services.CreateScope())
     {
         var services = scope.ServiceProvider;
-        await backend_manage.Data.SeedData.InitializeAsync(services);
+        await backend_manage.core.Data.SeedData.InitializeAsync(services);
     }
-
-    // Gọi hàm test
-    backend_manage.Test.ExamPaperHelperTest.TestCreateEmptyAnswersString();
-    
-    // Test UpdateAnswerString
-    backend_manage.Test.TestHelper.test();
+*/
 
     // Health check Redis khi khởi động
     try
     {
         using var scope = app.Services.CreateScope();
-        var redisService = scope.ServiceProvider.GetRequiredService<backend_manage.Services.Interfaces.IRedisService>();
+        var redisService = scope.ServiceProvider.GetRequiredService<backend_manage.core.Services.Interfaces.IRedisService>();
         var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
         
         if (redisService.IsConnected)
