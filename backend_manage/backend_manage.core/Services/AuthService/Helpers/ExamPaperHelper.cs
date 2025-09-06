@@ -48,6 +48,8 @@ public class ExamPaperHelper
 
     //dùng để bắt đầu thi()
     #region GetStudentExamSessionAndExamPaperAsync
+    
+    #region GetStudentExamSessionAndExamPaperAsync
     public async Task<(StudentExamSessionCacheDto studentExamSessionDto, ShuffledExamPaperDto? existingExamPaper, OriginalExamPaperDto? originalExamPaper)> GetStudentExamSessionAndExamPaperAsync(string studentCode, int studentExamSessionId)
     {
         var (redisAvailable, studentExamSessionDto) = await _sessionCacheHelper.GetStudentExamSessionAsync(studentCode, studentExamSessionId);
@@ -116,6 +118,17 @@ public class ExamPaperHelper
             _logger.LogInformation("Cập nhật đề thi vào phiên thi trên redis và db");
             studentExamSessionDto.ShuffledExamPaperId = newExamPaper.ShuffledExamPaperId;
             studentExamSessionDto.StartTime = DateTimeHelper.GetVietnamTime();
+            
+            // Tính toán thời gian còn lại khi bắt đầu làm bài
+            // A: StartTime (thời gian bắt đầu gốc) = studentExamSessionDto.ExamSessionStartTime
+            // B: Thời gian sinh viên vào làm bài = DateTimeHelper.GetVietnamTime()
+            // C: Số phút đã qua = B - A
+            // D: RemainingMinutes = (Duration + ExtraMinutes) - C
+            var originalExamStartTime = studentExamSessionDto.ExamSessionStartTime; // A
+            var studentStartTime = DateTimeHelper.GetVietnamTime(); // B
+            var initialMinutesPassed = (int)(studentStartTime - originalExamStartTime).TotalMinutes; // C
+            studentExamSessionDto.RemainingMinutes = (studentExamSessionDto.Duration + studentExamSessionDto.ExtraMinutes) - initialMinutesPassed; // D
+            
             var originalExamPaper = await GetOriginalExamPaperAsync(newExamPaper.OriginalExamPaperId);
 
             // Tạo chuỗi đáp án rỗng dựa trên cấu trúc đề thi thực tế
@@ -131,7 +144,8 @@ public class ExamPaperHelper
                 StartTime = DateTimeHelper.GetVietnamTime(),
                 ShuffledExamPaperId = newExamPaper.ShuffledExamPaperId,
                 StudentAnswersString = emptyAnswers,
-                IsCompleted = false
+                IsCompleted = false,
+                RemainingMinutes = studentExamSessionDto.RemainingMinutes
             };
             
             _rabbitMqService.Publish("start_exam_queue",startExamMessage);
@@ -142,6 +156,18 @@ public class ExamPaperHelper
         }
 
         _logger.LogInformation("Đã có đề thi, tiến hành lấy từ Redis với ID {ShuffledExamPaperId}", studentExamSessionDto.ShuffledExamPaperId.Value);
+        
+        // Cập nhật RemainingMinutes mỗi lần sinh viên nhấn "Bắt đầu thi"
+        // A: StartTime (thời gian bắt đầu gốc) = studentExamSessionDto.ExamSessionStartTime
+        // B: Thời gian sinh viên vào làm bài hiện tại = DateTimeHelper.GetVietnamTime()
+        // C: Số phút đã qua = B - A
+        // D: RemainingMinutes = (Duration + ExtraMinutes) - C
+        var currentMinutesPassed = (int)(DateTimeHelper.GetVietnamTime() - studentExamSessionDto.ExamSessionStartTime).TotalMinutes; // C
+        studentExamSessionDto.RemainingMinutes = (studentExamSessionDto.Duration + studentExamSessionDto.ExtraMinutes) - currentMinutesPassed; // D
+        
+        // Cập nhật Redis cache với RemainingMinutes mới
+        await _sessionCacheHelper.UpdateStudentExamSessionAsync(studentCode, studentExamSessionDto);
+        
         var (success, existingExamPaper) = await GetExamFromRedisAsync(studentExamSessionDto.ShuffledExamPaperId.Value);
         
         // Nếu không lấy được từ Redis, thử lấy từ database
@@ -153,7 +179,9 @@ public class ExamPaperHelper
         var originalExamPapers = await GetOriginalExamPaperAsync(existingExamPaper.OriginalExamPaperId);
         return (studentExamSessionDto, existingExamPaper, originalExamPapers);
     }
+    #endregion
     
+    #region CreateNewExamPaperAsync
     
     //chọn đề thi cho sinh viên
     private async Task<ShuffledExamPaperDto> CreateNewExamPaperAsync(int examSessionSubjectId, string studentCode)
@@ -174,7 +202,10 @@ public class ExamPaperHelper
         return paperDto;
     }
     
-     public async Task<ShuffledExamPaper> GetRandomExamPaperAsync(int examSessionSubjectId)
+    #endregion
+    
+    #region GetRandomExamPaperAsync
+    public async Task<ShuffledExamPaper> GetRandomExamPaperAsync(int examSessionSubjectId)
     {
         _logger.LogInformation("Sinh viên chưa được gán đề thi, đang chọn đề ngẫu nhiên");
         
@@ -233,11 +264,13 @@ public class ExamPaperHelper
         _logger.LogInformation("Đã chọn ngẫu nhiên đề thi {ShuffledExamPaperId}", selectedExamPaper.ShuffledExamPaperId);
         return selectedExamPaper;
     }
-     
     #endregion
     
-    
+    #endregion
 
+
+
+    #region TryGetExamFromCacheAsync
     private async Task<ShuffledExamPaperDto?> TryGetExamFromCacheAsync(int shuffledExamPaperId, string studentCode)
     {
         try
@@ -256,8 +289,10 @@ public class ExamPaperHelper
         }
         return null;
     }
-
+    #endregion
    
+    
+    
     private async Task<int?> GetRandomPaperIdFromCacheAsync(int originalExamPaperId)
     {
         try
@@ -740,8 +775,11 @@ public class ExamPaperHelper
             return (false, null);
         }
     }
+
+
+    #region CacheOriginalExamPaperAsync
     
-    private async Task<bool> CacheOriginalExamPaperAsync(int originalExamPaperId, OriginalExamPaperDto examPaperDto)
+    private async Task CacheOriginalExamPaperAsync(int originalExamPaperId, OriginalExamPaperDto examPaperDto)
     {
         try
         {
@@ -750,7 +788,7 @@ public class ExamPaperHelper
             {
                 _logger.LogWarning("Redis không khả dụng, bỏ qua cache đề thi gốc vào Redis cho {OriginalExamPaperId}", 
                     originalExamPaperId);
-                return false;
+                return;
             }
 
             var db = _redisService.GetDatabase();
@@ -765,13 +803,14 @@ public class ExamPaperHelper
             await db.StringSetAsync(cacheKey, jsonString, TimeSpan.FromHours(6));
             
             _logger.LogInformation("Đã cache đề thi gốc {OriginalExamPaperId} vào Redis", originalExamPaperId);
-            return true;
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Lỗi khi cache đề thi gốc {OriginalExamPaperId} vào Redis", originalExamPaperId);
-            return false;
         }
     }
+        
+
+    #endregion
     
 } 

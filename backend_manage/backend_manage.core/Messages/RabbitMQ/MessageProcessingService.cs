@@ -83,6 +83,7 @@ public class MessageProcessingService : IMessageProcessingService
                 studentExamSession.ShuffledExamPaperId = startExamMessage.ShuffledExamPaperId;
                 studentExamSession.StudentAnswersString = startExamMessage.StudentAnswersString;
                 studentExamSession.IsCompleted = startExamMessage.IsCompleted;
+                studentExamSession.RemainingMinutes = startExamMessage.RemainingMinutes;
 
                 await dbContext.SaveChangesAsync();
 

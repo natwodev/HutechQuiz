@@ -15,6 +15,7 @@ namespace backend_manage.shared.DTOs
         public int? ShuffledExamPaperId { get; set; }
         public int ExtraMinutes { get; set; }
         public string? ReasonForExtra { get; set; }
+        public int RemainingMinutes { get; set; }
         public int? CorrectAnswers { get; set; }
         public int? TotalQuestions { get; set; }
         public double Score { get; set; }
