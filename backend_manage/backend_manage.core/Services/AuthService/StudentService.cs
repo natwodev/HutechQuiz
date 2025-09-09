@@ -707,11 +707,7 @@ public class StudentService : IStudentService
                 return null;
             }
 
-            if (!studentExamSession.IsCompleted)
-            {
-                _logger.LogWarning("⚠️ Phiên thi của sinh viên {StudentCode} chưa được hoàn thành", studentCode);
-                return null;
-            }
+            // Đã loại bỏ ràng buộc IsCompleted để sinh viên có thể xem kết quả bất kỳ lúc nào
 
             // Lấy answer key từ ShuffledExamPaper
             string answerKey = null;

@@ -1,4 +1,6 @@
 using backend_manage.core.Data;
+using backend_manage.core.Hubs;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
@@ -181,6 +183,38 @@ public class MessageProcessingService : IMessageProcessingService
                 studentExamSession.UpdatedBy = "system"; // Hoặc có thể lấy từ context
 
                 await dbContext.SaveChangesAsync();
+
+                // Gửi điểm số qua SignalR đến sinh viên cụ thể
+                try
+                {
+                    var hubContext = scope.ServiceProvider.GetRequiredService<IHubContext<NotificationHub>>();
+                    var groupName = $"student_{examSubmissionMessage.StudentCode}";
+                    
+                    var scoreData = new
+                    {
+                        studentCode = examSubmissionMessage.StudentCode,
+                        shuffledExamPaperId = examSubmissionMessage.ShuffledExamPaperId,
+                        score = examSubmissionMessage.Score,
+                        correctAnswers = examSubmissionMessage.CorrectAnswers,
+                        totalQuestions = examSubmissionMessage.TotalQuestions,
+                        startTime = studentExamSession.StartTime,
+                        endTime = examSubmissionMessage.EndTime,
+                        studentAnswersString = examSubmissionMessage.StudentAnswersString,
+                        answerKey = studentExamSession.ShuffledExamPaper?.AnswerKey ?? "",
+                        isCompleted = examSubmissionMessage.IsCompleted,
+                        message = $"Bài thi đã được chấm điểm: {examSubmissionMessage.Score:F2}/10"
+                    };
+
+                    await hubContext.Clients.Group(groupName).SendAsync("ReceiveExamScore", scoreData);
+                    
+                    _logger.LogInformation("📤 Đã gửi điểm số qua SignalR đến sinh viên {StudentCode}. Điểm: {Score}", 
+                        examSubmissionMessage.StudentCode, examSubmissionMessage.Score);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "❌ Lỗi khi gửi điểm số qua SignalR đến sinh viên {StudentCode}", 
+                        examSubmissionMessage.StudentCode);
+                }
 
                 _logger.LogInformation(
                     "📝 Đã cập nhật nộp bài thi thành công: StudentCode={StudentCode}, ShuffledExamPaperId={ShuffledExamPaperId}, Score={Score}, CorrectAnswers={CorrectAnswers}/{TotalQuestions}, EndTime={EndTime}",
