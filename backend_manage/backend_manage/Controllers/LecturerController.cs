@@ -92,7 +92,7 @@ namespace backend_manage.Controllers
                 return BadRequest(new { message = "Thiếu thông tin yêu cầu." });
             }
 
-            var (success, message, submission) = await _lecturerService.ForceSubmitAsync(
+            var (success, message) = await _lecturerService.ForceSubmitAsync(
                 dto.StudentExamSessionId,
                 dto.StudentCode);
             if (!success)
@@ -100,7 +100,7 @@ namespace backend_manage.Controllers
                 return BadRequest(new { message });
             }
 
-            return Ok(new { message, submission });
+            return Ok(new { message = "Nộp bài thành công cho sinh viên" });
         }
 
         public class ForceSubmitRequest

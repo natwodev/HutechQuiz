@@ -11,7 +11,7 @@ namespace backend_manage.core.Services.Interfaces
         Task<LecturerDto> GetProfileAsync(string lecturerCode);
 
         // Monitor actions
-        Task<(bool Success, string Message, ExamSubmissionDto? Submission)> ForceSubmitAsync(
+        Task<(bool Success, string Message)> ForceSubmitAsync(
             int studentExamSessionId,
             string studentCode);
 

@@ -658,7 +658,7 @@ public class StudentService : IStudentService
     #endregion
     
     #region SubmitExamAsync
-    public async Task<(bool Success, string Message, ExamSubmissionDto? SubmissionData)> SubmitExamAsync(string studentCode, int studentExamSessionId)
+    public async Task<(bool Success, string Message)> SubmitExamAsync(string studentCode, int studentExamSessionId)
     {
         try
         {
@@ -668,38 +668,85 @@ public class StudentService : IStudentService
             if (!success)
             {
                 _logger.LogWarning("⚠️ Không thể nộp bài thi cho sinh viên {StudentCode}: {Message}", studentCode, message);
-                return (false, message, null);
+                return (false, message);
             }
             
             if (studentExamSessionDto == null)
             {
                 _logger.LogError("❌ Không thể lấy thông tin phiên thi sau khi nộp bài");
-                return (false, "Không thể lấy thông tin phiên thi", null);
+                return (false, "Không thể lấy thông tin phiên thi");
+            }
+
+            _logger.LogInformation("✅ Hoàn thành nộp bài thi cho sinh viên {StudentCode}", studentCode);
+            
+            return (true, "Nộp bài thi thành công");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "❌ Lỗi khi nộp bài thi cho sinh viên {StudentCode}", studentCode);
+            return (false, $"Lỗi hệ thống: {ex.Message}");
+        }
+    }
+    #endregion
+    
+    #region GetSubmissionResultAsync
+    public async Task<ExamSubmissionDto?> GetSubmissionResultAsync(string studentCode, int studentExamSessionId)
+    {
+        try
+        {
+            _logger.LogInformation("🔍 Lấy kết quả nộp bài cho sinh viên {StudentCode} với session {SessionId}", studentCode, studentExamSessionId);
+            
+            // Lấy thông tin StudentExamSession từ database
+            var studentExamSession = await _studentExamSessionRepository.GetQueryable()
+                .Include(ses => ses.ShuffledExamPaper)
+                .FirstOrDefaultAsync(ses => ses.StudentCode == studentCode && ses.StudentExamSessionId == studentExamSessionId);
+
+            if (studentExamSession == null)
+            {
+                _logger.LogWarning("❌ Không tìm thấy phiên thi cho sinh viên {StudentCode} với ID {SessionId}", studentCode, studentExamSessionId);
+                return null;
+            }
+
+            if (!studentExamSession.IsCompleted)
+            {
+                _logger.LogWarning("⚠️ Phiên thi của sinh viên {StudentCode} chưa được hoàn thành", studentCode);
+                return null;
+            }
+
+            // Lấy answer key từ ShuffledExamPaper
+            string answerKey = null;
+            if (studentExamSession.ShuffledExamPaper != null)
+            {
+                answerKey = studentExamSession.ShuffledExamPaper.AnswerKey;
+            }
+            else if (studentExamSession.ShuffledExamPaperId.HasValue)
+            {
+                // Nếu chưa load ShuffledExamPaper, lấy từ database
+                var shuffledPaper = await _shuffledExamPaperRepository.GetByIdAsync(studentExamSession.ShuffledExamPaperId.Value);
+                answerKey = shuffledPaper?.AnswerKey;
             }
 
             var submissionData = new ExamSubmissionDto
             {
                 StudentCode = studentCode,
-                ShuffledExamPaperId = studentExamSessionDto.ShuffledExamPaperId ?? 0,
-                Score = score,
-                CorrectAnswers = studentExamSessionDto.CorrectAnswers,
-                TotalQuestions = studentExamSessionDto.TotalQuestions,
-                StartTime = studentExamSessionDto.StartTime,
-                EndTime = studentExamSessionDto.EndTime ?? DateTimeHelper.GetVietnamTime(),
-                StudentAnswersString = studentExamSessionDto.StudentAnswersString,
-                AnswerKey = answerKey
+                ShuffledExamPaperId = studentExamSession.ShuffledExamPaperId ?? 0,
+                Score = studentExamSession.Score,
+                CorrectAnswers = studentExamSession.CorrectAnswers,
+                TotalQuestions = studentExamSession.TotalQuestions,
+                StartTime = studentExamSession.StartTime,
+                EndTime = studentExamSession.EndTime ?? DateTimeHelper.GetVietnamTime(),
+                StudentAnswersString = studentExamSession.StudentAnswersString,
+                AnswerKey = answerKey ?? ""
             };
 
-            _logger.LogInformation("✅ Hoàn thành nộp bài thi cho sinh viên {StudentCode}. Điểm: {Score}", studentCode, score);
+            _logger.LogInformation("✅ Lấy kết quả nộp bài thành công cho sinh viên {StudentCode}. Điểm: {Score}", studentCode, submissionData.Score);
             
-           
-            
-            return (true, message, submissionData);
+            return submissionData;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "❌ Lỗi khi nộp bài thi cho sinh viên {StudentCode}", studentCode);
-            return (false, $"Lỗi hệ thống: {ex.Message}", null);
+            _logger.LogError(ex, "❌ Lỗi khi lấy kết quả nộp bài cho sinh viên {StudentCode}", studentCode);
+            return null;
         }
     }
     #endregion
