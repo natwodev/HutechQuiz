@@ -166,16 +166,7 @@ public class StudentService : IStudentService
         {
             IsSuccess = true,
             Token = tokenString,
-            Role = "Student",
-            StudentInfo = new
-            {
-                student.StudentId,
-                student.StudentCode,
-                student.FirstName,
-                student.LastName,
-                student.Gender,
-                student.DateOfBirth
-            }
+            Role = "Student"
         };
     }
     #endregion  
@@ -300,7 +291,6 @@ public class StudentService : IStudentService
     }
     #endregion
     
-    //đã tối ưu
     #region ImportFromExcelAsync
     public async Task<StudentImportResultDto> ImportFromExcelAsync(IFormFile file, string examSessionSubjectCore)
     {
@@ -348,7 +338,6 @@ public class StudentService : IStudentService
     }
     #endregion
     
-    //đã tối ưu
     #region ImportFromExcelStreamAsync
     public async Task<StudentImportResultDto> ImportFromExcelStreamAsync(Stream stream, string examSessionSubjectCore, string userId)
     {
@@ -370,8 +359,6 @@ public class StudentService : IStudentService
     }
     #endregion
 
-    
-    //Đang tối ưu lấy được đề và phiên khi k có redis / chưa cập nhật vào db và redis 
     #region StartExamAsync
     public async Task<(StudentExamSessionCacheDto studentExamSessionCacheDto, ShuffledExamPaperDto? shuffledExamPaperDto, OriginalExamPaperDto? originalExamPaperDto)> StartExamAsync(string studentCode, int studentExamSessionId)
     {
@@ -629,7 +616,7 @@ public class StudentService : IStudentService
     }
     #endregion
 
-    // Helper methods để tái sử dụng code
+    
     #region UpdateSingleAnswerAsync
     public async Task<(bool Success, string Message, string? NewAnswersString)> UpdateSingleAnswerAsync(string studentCode, int studentExamSessionId, int key ,int value)
     {
