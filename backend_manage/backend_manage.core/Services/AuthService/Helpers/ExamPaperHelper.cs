@@ -336,9 +336,9 @@ public class ExamPaperHelper
     
     
     
-    
+      
     // Cache danh sách ShuffledExamPaperId theo OriginalExamPaperId
-    private async Task CacheAvailablePapersAsync(int originalExamPaperId, List<ShuffledExamPaper> papers)
+    public async Task CacheAvailablePapersAsync(int originalExamPaperId, List<ShuffledExamPaper> papers)
     {
         try
         {
