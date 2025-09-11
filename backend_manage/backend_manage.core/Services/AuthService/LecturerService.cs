@@ -42,35 +42,8 @@ namespace backend_manage.core.Services.AuthService
             _studentService = studentService;
         }
 
-        public async Task<LecturerDto> AddLecturerAsync(LecturerCreateDto dto)
-        {
-            var lecturer = _mapper.Map<Lecturer>(dto);
-            lecturer.CreatedAt = DateTime.UtcNow;
-            var userId = _httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
-            lecturer.CreatedBy = userId;
-            
-            // Lưu giảng viên
-            await _lecturerRepository.AddAsync(lecturer);
 
-            return _mapper.Map<LecturerDto>(lecturer);
-        }
-
-        public async Task<IEnumerable<LecturerDto>> GetAllLecturersAsync()
-        {
-            var lecturers = await _lecturerRepository.GetQueryable()
-                .Include(l => l.Department)
-                .ToListAsync();
-            return lecturers.Select(l => _mapper.Map<LecturerDto>(l));
-        }
-
-        public async Task<LecturerDto> GetByLecturerCodeAsync(string lecturerCode)
-        {
-            var lecturer = await _lecturerRepository.GetQueryable()
-                .Include(l => l.Department)
-                .FirstOrDefaultAsync(l => l.LecturerCode == lecturerCode);
-            return lecturer == null ? null : _mapper.Map<LecturerDto>(lecturer);
-        }
-
+        #region LoginAsync
         public async Task<LecturerAuthResultDto> LoginAsync(string lecturerCode1, string lecturerCode2)
         {
             // Kiểm tra mã giảng viên phải khớp nhau (tương tự như sinh viên)
@@ -125,7 +98,47 @@ namespace backend_manage.core.Services.AuthService
                 Role = "Lecturer"
             };
         }
+        #endregion
+        
+        
+        #region AddLecturerAsync
+        public async Task<LecturerDto> AddLecturerAsync(LecturerCreateDto dto)
+        {
+            var lecturer = _mapper.Map<Lecturer>(dto);
+            lecturer.CreatedAt = DateTime.UtcNow;
+            var userId = _httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+            lecturer.CreatedBy = userId;
+            
+            // Lưu giảng viên
+            await _lecturerRepository.AddAsync(lecturer);
 
+            return _mapper.Map<LecturerDto>(lecturer);
+        }
+        #endregion
+        
+        #region GetAllLecturersAsync
+        public async Task<IEnumerable<LecturerDto>> GetAllLecturersAsync()
+        {
+            var lecturers = await _lecturerRepository.GetQueryable()
+                .Include(l => l.Department)
+                .ToListAsync();
+            return lecturers.Select(l => _mapper.Map<LecturerDto>(l));
+        }
+        #endregion
+
+        #region GetByLecturerCodeAsync
+        public async Task<LecturerDto> GetByLecturerCodeAsync(string lecturerCode)
+        {
+            var lecturer = await _lecturerRepository.GetQueryable()
+                .Include(l => l.Department)
+                .FirstOrDefaultAsync(l => l.LecturerCode == lecturerCode);
+            return lecturer == null ? null : _mapper.Map<LecturerDto>(lecturer);
+        }
+        #endregion
+        
+
+        
+        #region GetProfileAsync
         public async Task<LecturerDto> GetProfileAsync(string lecturerCode)
         {
             var lecturer = await _lecturerRepository.GetQueryable()
@@ -134,8 +147,9 @@ namespace backend_manage.core.Services.AuthService
             
             return lecturer == null ? null : _mapper.Map<LecturerDto>(lecturer);
         }
-
-        // ============ Monitor actions ============
+        #endregion
+        
+        #region ForceSubmitAsync
         public async Task<(bool Success, string Message)> ForceSubmitAsync(int studentExamSessionId, string studentCode)
         {
             var session = await _studentExamSessionRepository.GetQueryable()
@@ -149,8 +163,7 @@ namespace backend_manage.core.Services.AuthService
             var (success, message) = await _studentService.SubmitExamAsync(studentCode, studentExamSessionId);
             return (success, message);
         }
-
-        
+        #endregion
     }
 } 
 
