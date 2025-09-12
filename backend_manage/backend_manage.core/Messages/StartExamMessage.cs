@@ -8,5 +8,6 @@ public class StartExamMessage
     public int ShuffledExamPaperId { get; set; }
     public string StudentAnswersString { get; set; }
     public bool IsCompleted { get; set; }
+    public int RemainingMinutes { get; set; }
 
 }
