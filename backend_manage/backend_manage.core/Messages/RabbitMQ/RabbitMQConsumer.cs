@@ -283,19 +283,7 @@ namespace backend_manage.core.Messages.RabbitMQ
                     message.TotalQuestions,
                     message.EndTime
                 );
-                using var studentServiceScope = _serviceScopeFactory.CreateScope();
-                var studentService = studentServiceScope.ServiceProvider.GetRequiredService<IStudentService>();
-                
-                var (statusList, subjectInfo) = await studentService.GetStudentsByExamSessionSubjectAsync(studentExamSession.ExamSessionSubjectId);
 
-                var groupName = $"lecturer_subject_{studentExamSession.ExamSessionSubjectId}";
-            
-                await _hubContext.Clients
-                    .Group(groupName)
-                    .SendAsync("RoomStatusUpdated", new StudentListResponse { 
-                        Students = statusList.ToList(),
-                        Subject = subjectInfo
-                    });
             }
             catch (Exception ex)
             {

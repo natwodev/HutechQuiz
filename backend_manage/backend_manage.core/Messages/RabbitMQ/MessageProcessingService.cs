@@ -1,4 +1,8 @@
 using backend_manage.core.Data;
+using backend_manage.core.Hubs;
+using backend_manage.core.Services.Interfaces;
+using backend_manage.shared.DTOs;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
@@ -83,6 +87,7 @@ public class MessageProcessingService : IMessageProcessingService
                 studentExamSession.ShuffledExamPaperId = startExamMessage.ShuffledExamPaperId;
                 studentExamSession.StudentAnswersString = startExamMessage.StudentAnswersString;
                 studentExamSession.IsCompleted = startExamMessage.IsCompleted;
+                studentExamSession.RemainingMinutes = startExamMessage.RemainingMinutes;
 
                 await dbContext.SaveChangesAsync();
 
@@ -181,15 +186,52 @@ public class MessageProcessingService : IMessageProcessingService
 
                 await dbContext.SaveChangesAsync();
 
-                _logger.LogInformation(
-                    "📝 Đã cập nhật nộp bài thi thành công: StudentCode={StudentCode}, ShuffledExamPaperId={ShuffledExamPaperId}, Score={Score}, CorrectAnswers={CorrectAnswers}/{TotalQuestions}, EndTime={EndTime}",
-                    examSubmissionMessage.StudentCode, 
-                    examSubmissionMessage.ShuffledExamPaperId, 
-                    examSubmissionMessage.Score, 
-                    examSubmissionMessage.CorrectAnswers, 
-                    examSubmissionMessage.TotalQuestions,
-                    examSubmissionMessage.EndTime
-                );
+                // Gửi điểm số qua SignalR đến sinh viên cụ thể và tới monitor 
+                try
+                {
+                    var hubContext = scope.ServiceProvider.GetRequiredService<IHubContext<NotificationHub>>();
+                    
+                    using var studentServiceScope = _serviceScopeFactory.CreateScope();
+                    var studentService = studentServiceScope.ServiceProvider.GetRequiredService<IStudentService>();
+                    
+                    
+                    var groupName1 = $"student_{examSubmissionMessage.StudentCode}";
+                    
+                    var groupName2 = $"lecturer_subject_{studentExamSession.ExamSessionSubjectId}";
+                    
+                    var scoreData = new
+                    {
+                        studentCode = examSubmissionMessage.StudentCode,
+                        shuffledExamPaperId = examSubmissionMessage.ShuffledExamPaperId,
+                        score = examSubmissionMessage.Score,
+                        correctAnswers = examSubmissionMessage.CorrectAnswers,
+                        totalQuestions = examSubmissionMessage.TotalQuestions,
+                        startTime = studentExamSession.StartTime,
+                        endTime = examSubmissionMessage.EndTime,
+                        studentAnswersString = examSubmissionMessage.StudentAnswersString,
+                        answerKey = studentExamSession.ShuffledExamPaper?.AnswerKey ?? "",
+                        isCompleted = examSubmissionMessage.IsCompleted,
+                        message = $"Bài thi đã được chấm điểm: {examSubmissionMessage.Score:F2}/10"
+                    };
+                    
+                    //gửi tới sinh viên cụ thể
+                    await hubContext.Clients.Group(groupName1).SendAsync("ReceiveExamScore", scoreData); 
+                    
+                    //gửi tới monitor lại danh sách sinh viên 
+                    var (statusList, subjectInfo) = await studentService.GetStudentsByExamSessionSubjectAsync(studentExamSession.ExamSessionSubjectId);
+                    await hubContext.Clients.Group(groupName2).SendAsync("RoomStatusUpdated", new StudentListResponse { 
+                        Students = statusList.ToList(),
+                        Subject = subjectInfo
+                    });
+                    
+                    _logger.LogInformation("📤 Đã gửi điểm số qua SignalR đến sinh viên {StudentCode}. Điểm: {Score}", 
+                        examSubmissionMessage.StudentCode, examSubmissionMessage.Score);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "❌ Lỗi khi gửi điểm số qua SignalR đến sinh viên {StudentCode}", 
+                        examSubmissionMessage.StudentCode);
+                }
             }
             else
             {

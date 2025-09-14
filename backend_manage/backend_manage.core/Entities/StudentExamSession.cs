@@ -42,6 +42,10 @@ public class StudentExamSession : BaseEntity
     [MaxLength(200)]
     public string? ReasonForExtra { get; set; }
 
+    // Thời gian còn lại để làm bài (tính bằng phút)
+    // Được tính toán dựa trên Duration + ExtraMinutes - thời gian đã làm
+    public int? RemainingMinutes { get; set; }
+
     // Số câu trả lời đúng của sinh viên
     public int? CorrectAnswers { get; set; }
     
