@@ -7,20 +7,36 @@ namespace backend_manage.core.Hubs
         private static string LecturerGroupName(int examSessionSubjectId)
             => $"lecturer_subject_{examSessionSubjectId}";
 
+        private static string StudentGroupName(string studentCode)
+            => $"student_{studentCode}";
+
         public async Task SendMessage(string message, DateTime examTime)
         {
             await Clients.All.SendAsync("ReceiveMessage", message, examTime);
         }
 
-            public async Task JoinLecturerView(int examSessionSubjectId)
-    {
-        var group = LecturerGroupName(examSessionSubjectId);
-        await Groups.AddToGroupAsync(Context.ConnectionId, group);
-    }
+        public async Task JoinLecturerView(int examSessionSubjectId)
+        {
+            var group = LecturerGroupName(examSessionSubjectId);
+            await Groups.AddToGroupAsync(Context.ConnectionId, group);
+        }
 
         public async Task LeaveLecturerView(int examSessionSubjectId)
         {
             var group = LecturerGroupName(examSessionSubjectId);
+            await Groups.RemoveFromGroupAsync(Context.ConnectionId, group);
+        }
+
+        // Student group methods
+        public async Task JoinStudentGroup(string studentCode)
+        {
+            var group = StudentGroupName(studentCode);
+            await Groups.AddToGroupAsync(Context.ConnectionId, group);
+        }
+
+        public async Task LeaveStudentGroup(string studentCode)
+        {
+            var group = StudentGroupName(studentCode);
             await Groups.RemoveFromGroupAsync(Context.ConnectionId, group);
         }
 

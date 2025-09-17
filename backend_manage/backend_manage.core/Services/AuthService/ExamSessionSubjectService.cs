@@ -3,6 +3,7 @@ using AutoMapper;
 using backend_manage.core.Entities;
 using backend_manage.core.Hubs;
 using backend_manage.core.Repositories.Interfaces;
+using backend_manage.core.Services.AuthService.Helpers;
 using backend_manage.core.Services.Interfaces;
 using backend_manage.shared.DTOs;
 using Microsoft.AspNetCore.Http;
@@ -16,17 +17,26 @@ namespace backend_manage.core.Services.AuthService
         private readonly IRepository<Lecturer> _lecturerRepository;
         private readonly IMapper _mapper;
         private readonly IHttpContextAccessor _httpContextAccessor;
-
+        private readonly IRepository<ExamSessionSubject> _examSessionSubjectRepository;
+        private readonly IRepository<ShuffledExamPaper> _shuffledExamPaperRepository;
+        private readonly ExamPaperHelper _examPaperHelper;
         public ExamSessionSubjectService(
             IRepository<ExamSessionSubject> repository,
             IRepository<Lecturer> lecturerRepository,
             IMapper mapper,
-            IHttpContextAccessor httpContextAccessor)
+            IHttpContextAccessor httpContextAccessor, 
+            IRepository<ExamSessionSubject> examSessionSubjectRepository,
+            IRepository<ShuffledExamPaper> shuffledExamPaperRepository,
+            ExamPaperHelper examPaperHelper
+            )
         {
             _repository = repository;
             _lecturerRepository = lecturerRepository;
             _mapper = mapper;
             _httpContextAccessor = httpContextAccessor;
+            _examSessionSubjectRepository = examSessionSubjectRepository;
+            _shuffledExamPaperRepository = shuffledExamPaperRepository;
+            _examPaperHelper = examPaperHelper;
         }
 
         public async Task<IEnumerable<ExamSessionSubjectDto>> GetAllAsync()
@@ -166,7 +176,24 @@ namespace backend_manage.core.Services.AuthService
                             ?? _httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(updatedBy))
                 throw new UnauthorizedAccessException("Không thể xác định người dùng cập nhật trạng thái hoạt động.");
-
+            
+            // Lấy ExamSessionSubject và kiểm tra đề gốc
+            var examSessionSubject = await _examSessionSubjectRepository.GetQueryable()
+                .FirstOrDefaultAsync(x => x.ExamSessionSubjectId == examSessionSubjectId);
+            
+            
+            // Chỉ cache papers khi kích hoạt ca thi (isActive = true)
+            if (isActive && examSessionSubject?.OriginalExamPaperId != null)
+            {
+                var availablePapers = await _shuffledExamPaperRepository.GetQueryable()
+                    .Where(p => p.OriginalExamPaperId == examSessionSubject.OriginalExamPaperId && p.IsApproved == true)
+                    .ToListAsync();
+                
+                // Cache các đề thi hoán vị khả dụng cho đề gốc này
+                await _examPaperHelper.CacheAvailablePapersAsync(examSessionSubject.OriginalExamPaperId.Value, availablePapers);
+            }
+            
+            
             entity.UpdatedBy = updatedBy;
             entity.UpdatedAt = DateTimeHelper.GetVietnamTime();
             entity.Version++;

@@ -7,6 +7,7 @@ namespace backend_manage.shared.DTOs
         public string RoomName { get; set; } 
         public int Duration { get; set; }
         public int ExtraMinutes { get; set; }
+        public int RemainingMinutes { get; set; }
         public DateTime StartTime { get; set; }
         public DateTime EndTime { get; set; }
         public int StudentExamSessionId { get; set; }
