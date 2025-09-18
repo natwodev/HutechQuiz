@@ -33,7 +33,7 @@ public class NotificationService
         {
             OnRoomStatusUpdated?.Invoke(data);
         });
-
+        
         _hubConnection.On<object>("Connected", (data) =>
         {
             OnConnectedReceived?.Invoke(data);
@@ -44,6 +44,14 @@ public class NotificationService
             OnUserDisconnected?.Invoke(data);
         });
 
+        
+        //chưa cấu hình 
+        _hubConnection.On<object>("ReceiveExamScore", (data) =>
+        {
+            OnUserDisconnected?.Invoke(data);
+        });
+        
+        
         // Theo dõi trạng thái kết nối
         _hubConnection.Closed += async (error) =>
         {
