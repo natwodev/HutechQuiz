@@ -46,12 +46,19 @@
                     <MudSpacer />
                     <MudButton Variant="Variant.Text" OnClick="@Reload">Thử lại</MudButton>
                 </MudAlert>
+                
+                <!-- Log lỗi tạm thời -->
+                <MudPaper Elevation="0" Class="pa-3 mb-3" Style="background-color: #f5f5f5; max-height: 200px; overflow-y: auto;">
+                    <pre style="white-space: pre-wrap; word-break: break-word;">@debugInfo</pre>
+                </MudPaper>
+                
+                <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="@(() => Navigation.NavigateTo("/student-login"))" Class="mb-4">Quay lại trang đăng nhập</MudButton>
             }
             else if (result is not null)
             {
        
-                    var total = result.TotalQuestions;
-                    var correct = result.CorrectAnswers;
+                    var total = result.TotalQuestions ?? 0;
+                    var correct = result.CorrectAnswers ?? 0;
                     
                     // Tính toán chính xác dựa trên heatmap đã được xây dựng
                     var empty = heatCells?.Count(c => c.StatusCss == "empty") ?? 0;
@@ -78,7 +85,7 @@
                                 <div class="info-grid">
                                     <div class="info-row"><div class="k">Mã sinh viên</div><div class="v">@result.StudentCode</div></div>
                                     <div class="info-row"><div class="k">Mã đề thi</div><div class="v">@result.ShuffledExamPaperId</div></div>
-                                    <div class="info-row"><div class="k">Bắt đầu</div><div class="v">@result.StartTime.ToString("dd/MM/yyyy HH:mm:ss")</div></div>
+                                    <div class="info-row"><div class="k">Bắt đầu</div><div class="v">@(result.StartTime.HasValue ? result.StartTime.Value.ToString("dd/MM/yyyy HH:mm:ss") : "--")</div></div>
                                     <div class="info-row"><div class="k">Kết thúc</div><div class="v">@result.EndTime.ToString("dd/MM/yyyy HH:mm:ss")</div></div>
                                 </div>
 

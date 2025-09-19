@@ -424,28 +424,11 @@ namespace frontend_manage.Pages.Exam
 
                    if (submitResponse?.Success == true)
                    {
-                       // Lưu dữ liệu exam result vào localStorage để trang Result có thể đọc
-                       if (submitResponse.Data != null)
-                       {
-                           var examResultData = new
-                           {
-                               StudentCode = submitResponse.Data.StudentCode,
-                               ShuffledExamPaperId = submitResponse.Data.ShuffledExamPaperId,
-                               Score = submitResponse.Data.Score,
-                               CorrectAnswers = submitResponse.Data.CorrectAnswers,
-                               TotalQuestions = submitResponse.Data.TotalQuestions,
-                               StartTime = submitResponse.Data.StartTime,
-                               EndTime = submitResponse.Data.EndTime,
-                               StudentAnswersString = submitResponse.Data.StudentAnswersString,
-                               AnswerKey = submitResponse.Data.AnswerKey
-                           };
-                           
-                           var resultJson = JsonSerializer.Serialize(examResultData);
-                           await JSRuntime.InvokeVoidAsync("localStorage.setItem", $"examResult_{studentExamSessionId.Value}", resultJson);
-                           
-                           // Lưu studentExamSessionId để trang Result có thể đọc
-                           await JSRuntime.InvokeVoidAsync("localStorage.setItem", "currentStudentExamSessionId", studentExamSessionId.Value.ToString());
-                       }
+                       // Chỉ lưu studentExamSessionId để trang Result có thể gọi API get-submission-result
+                       await JSRuntime.InvokeVoidAsync("localStorage.setItem", "currentStudentExamSessionId", studentExamSessionId.Value.ToString());
+                       
+                       // Log để debug
+                       Console.WriteLine($"Nộp bài thành công, đã lưu studentExamSessionId={studentExamSessionId.Value} vào localStorage");
                        
                        Snackbar.Add("Nộp bài thành công!", Severity.Success);
                        Navigation.NavigateTo("/Exam/Result");

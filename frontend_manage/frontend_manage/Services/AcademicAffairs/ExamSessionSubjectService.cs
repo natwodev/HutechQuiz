@@ -16,7 +16,7 @@ namespace frontend_manage.Services.AcademicAffairs
         public ExamSessionSubjectService(HttpClient httpClient, IConfiguration configuration)
         {
             _httpClient = httpClient;
-            _baseUrl = configuration["ApiSettings:BaseUrl"] + "/api/ExamSessionSubject";
+            _baseUrl = _httpClient.BaseAddress + "api/ExamSessionSubject";
         }
 
         public async Task<List<ExamSessionSubjectDto>> GetAllAsync()

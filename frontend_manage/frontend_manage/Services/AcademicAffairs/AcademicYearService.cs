@@ -16,7 +16,7 @@ namespace frontend_manage.Services.AcademicAffairs
         public AcademicYearService(HttpClient httpClient, IConfiguration configuration)
         {
             _httpClient = httpClient;
-            _baseUrl = configuration["ApiSettings:BaseUrl"] + "/api/AcademicYear";
+            _baseUrl = _httpClient.BaseAddress + "api/AcademicYear";
         }
 
         public async Task<List<AcademicYearDto>> GetAllAsync()

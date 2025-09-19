@@ -1,47 +1,68 @@
 using Microsoft.AspNetCore.Components;
-using MudBlazor;
 using frontend_manage.DTOs.AcademicAffairs;
+using frontend_manage.Services.AcademicAffairs;
+using frontend_manage.Pages.AcademicAffairs.Components;
+using MudBlazor;
 
-namespace frontend_manage.Pages.AcademicAffairs.Components
+namespace frontend_manage.Pages.AcademicAffairs.Components;
+
+public partial class SemesterDialog : ComponentBase
 {
-    public partial class SemesterDialog : ComponentBase
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = null!;
+    [Inject] private SemesterService SemesterService { get; set; } = null!;
+    [Inject] private ISnackbar Snackbar { get; set; } = null!;
+
+    [Parameter] public SemesterCreateDto Semester { get; set; } = new();
+    [Parameter] public List<AcademicYearDto> AcademicYears { get; set; } = new();
+    [Parameter] public bool IsEdit { get; set; } = false;
+    [Parameter] public int? SemesterId { get; set; }
+
+    private MudForm _form = null!;
+    private bool _isValid = true;
+    private string[] _errors = Array.Empty<string>();
+    private bool _isLoading = false;
+    private SemesterCreateDto _semester = new();
+
+    protected override void OnInitialized()
     {
-        [CascadingParameter] 
-        public dynamic MudDialog { get; set; } = default!;
+        _semester = Semester;
+    }
 
-        [Parameter] 
-        public string Title { get; set; } = string.Empty;
+    private async Task SaveSemester()
+    {
+        if (!_isValid) return;
 
-        [Parameter] 
-        public string ButtonText { get; set; } = "Lưu";
+        _isLoading = true;
+        StateHasChanged();
 
-        [Parameter] 
-        public Color Color { get; set; } = Color.Primary;
-
-        [Parameter] 
-        public SemesterUpdateDto? Semester { get; set; }
-
-        [Parameter] 
-        public List<AcademicYearDto> AcademicYears { get; set; } = new();
-
-        private SemesterUpdateDto semester = new();
-
-        protected override void OnInitialized()
+        try
         {
-            if (Semester != null)
+            if (IsEdit && SemesterId.HasValue)
             {
-                semester = Semester;
+                var updateDto = new SemesterUpdateDto
+                {
+                    SemesterName = _semester.SemesterName,
+                    AcademicYearId = _semester.AcademicYearId
+                };
+                await SemesterService.UpdateAsync(SemesterId.Value, updateDto);
+                Snackbar.Add("Cập nhật học kỳ thành công", Severity.Success);
             }
-        }
+            else
+            {
+                await SemesterService.CreateAsync(_semester);
+                Snackbar.Add("Thêm học kỳ thành công", Severity.Success);
+            }
 
-        private void Cancel()
-        {
-            MudDialog.Cancel();
+            MudDialog.Close(DialogResult.Ok(true));
         }
-
-        private void Submit()
+        catch (Exception ex)
         {
-            MudDialog.Close(DialogResult.Ok(semester));
+            Snackbar.Add($"Lỗi: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isLoading = false;
+            StateHasChanged();
         }
     }
 }

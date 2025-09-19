@@ -1,97 +1,87 @@
 using Microsoft.AspNetCore.Components;
-using MudBlazor;
 using frontend_manage.DTOs.AcademicAffairs;
 using frontend_manage.Services.AcademicAffairs;
+using frontend_manage.Pages.AcademicAffairs.Components;
+using MudBlazor;
 
-namespace frontend_manage.Pages.AcademicAffairs.Components
+namespace frontend_manage.Pages.AcademicAffairs.Components;
+
+public partial class ExamSessionDialog : ComponentBase
 {
-    public partial class ExamSessionDialog : ComponentBase
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = null!;
+    [Inject] private ExamSessionService ExamSessionService { get; set; } = null!;
+    [Inject] private ISnackbar Snackbar { get; set; } = null!;
+
+    [Parameter] public ExamSessionCreateDto ExamSession { get; set; } = new();
+    [Parameter] public List<ExamBatchDto> ExamBatches { get; set; } = new();
+    [Parameter] public bool IsEdit { get; set; } = false;
+    [Parameter] public int? ExamSessionId { get; set; }
+
+    private MudForm _form = null!;
+    private bool _isValid = true;
+    private string[] _errors = Array.Empty<string>();
+    private bool _isLoading = false;
+    private ExamSessionCreateDto _examSession = new();
+    private TimeSpan? _startTime;
+    private TimeSpan? _endTime;
+
+    protected override void OnInitialized()
     {
-        [Inject] 
-        public ExamBatchDetailService ExamBatchDetailService { get; set; } = default!;
+        _examSession = ExamSession;
+        _startTime = ExamSession.StartTime.TimeOfDay;
+        _endTime = ExamSession.EndTime.TimeOfDay;
+    }
 
-        [CascadingParameter] 
-        public dynamic MudDialog { get; set; } = default!;
+    private async Task SaveExamSession()
+    {
+        if (!_isValid) return;
 
-        [Parameter] 
-        public string Title { get; set; } = string.Empty;
-
-        [Parameter] 
-        public string ButtonText { get; set; } = "Lưu";
-
-        [Parameter] 
-        public Color Color { get; set; } = Color.Primary;
-
-        [Parameter] 
-        public ExamSessionUpdateDto? ExamSession { get; set; }
-
-        [Parameter] 
-        public List<ExamBatchDto> ExamBatches { get; set; } = new();
-
-        private ExamSessionUpdateDto examSession = new()
+        if (_startTime.HasValue)
         {
-            StartTime = DateTime.Now.AddHours(1),
-            EndTime = DateTime.Now.AddHours(3)
-        };
-
-        private int selectedExamBatchId;
-        private List<ExamBatchDetailDto> examBatchDetails = new();
-
-        protected override async Task OnInitializedAsync()
+            var startDate = _examSession.StartTime.Date.Add(_startTime.Value);
+            _examSession.StartTime = startDate;
+        }
+        if (_endTime.HasValue)
         {
-            if (ExamSession != null)
+            var endDate = _examSession.EndTime.Date.Add(_endTime.Value);
+            _examSession.EndTime = endDate;
+        }
+
+        _isLoading = true;
+        StateHasChanged();
+
+        try
+        {
+            if (IsEdit && ExamSessionId.HasValue)
             {
-                examSession = ExamSession;
-                // Try to find the exam batch for the exam batch detail
-                var examBatchDetail = await GetExamBatchDetailAsync(examSession.ExamBatchDetailId);
-                if (examBatchDetail != null)
+                var updateDto = new ExamSessionUpdateDto
                 {
-                    selectedExamBatchId = examBatchDetail.ExamBatchId;
-                    await LoadExamBatchDetails(selectedExamBatchId);
-                }
+                    Name = _examSession.Name,
+                    StartTime = _examSession.StartTime,
+                    EndTime = _examSession.EndTime,
+                    IsActive = _examSession.IsActive,
+                    IsCompleted = _examSession.IsCompleted,
+                    ExamBatchDetailId = _examSession.ExamBatchDetailId
+                };
+                await ExamSessionService.UpdateAsync(ExamSessionId.Value, updateDto);
+                Snackbar.Add("Cập nhật ca thi thành công", Severity.Success);
             }
+            else
+            {
+                await ExamSessionService.CreateAsync(_examSession);
+                Snackbar.Add("Thêm ca thi thành công", Severity.Success);
+            }
+
+            MudDialog.Close(DialogResult.Ok(true));
         }
-
-        private async Task<ExamBatchDetailDto?> GetExamBatchDetailAsync(int id)
+        catch (Exception ex)
         {
-            try
-            {
-                return await ExamBatchDetailService.GetByIdAsync(id);
-            }
-            catch
-            {
-                return null;
-            }
+            Snackbar.Add($"Lỗi: {ex.Message}", Severity.Error);
         }
-
-        private async Task LoadExamBatchDetails(int examBatchId)
+        finally
         {
-            try
-            {
-                var allDetails = await ExamBatchDetailService.GetAllAsync();
-                examBatchDetails = allDetails.Where(d => d.ExamBatchId == examBatchId).ToList();
-            }
-            catch
-            {
-                examBatchDetails = new List<ExamBatchDetailDto>();
-            }
-        }
-
-        private void Cancel()
-        {
-            MudDialog.Cancel();
-        }
-
-        private void Submit()
-        {
-            // Validate that end time is after start time
-            if (examSession.EndTime <= examSession.StartTime)
-            {
-                // Show error
-                return;
-            }
-
-            MudDialog.Close(DialogResult.Ok(examSession));
+            _isLoading = false;
+            StateHasChanged();
         }
     }
 }

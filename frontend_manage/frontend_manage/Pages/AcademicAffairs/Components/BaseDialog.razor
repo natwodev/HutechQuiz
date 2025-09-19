@@ -1,0 +1,23 @@
+@using MudBlazor
+
+<MudDialog>
+    <DialogContent>
+        <MudText Typo="Typo.h6" Class="mb-4">@Title</MudText>
+        @ChildContent
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Hủy</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Save" Disabled="@IsLoading">
+            @if (IsLoading)
+            {
+                <MudProgressCircular Class="ms-n2" Color="Color.Inherit" Indeterminate="true" Size="Size.Small" />
+                <MudText Class="ms-2">Đang xử lý...</MudText>
+            }
+            else
+            {
+                @SaveText
+            }
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+

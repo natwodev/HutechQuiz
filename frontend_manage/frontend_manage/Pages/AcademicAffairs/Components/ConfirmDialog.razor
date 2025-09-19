@@ -2,10 +2,14 @@
 
 <MudDialog>
     <DialogContent>
-        <MudText>@ContentText</MudText>
+        <MudText Typo="Typo.h6" Class="mb-4">@Title</MudText>
+        <MudText>@Message</MudText>
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="Cancel">Hủy</MudButton>
-        <MudButton Color="@Color" Variant="Variant.Filled" OnClick="Submit">@ButtonText</MudButton>
+        <MudButton Color="Color.Error" Variant="Variant.Filled" OnClick="Confirm">
+            @ConfirmText
+        </MudButton>
     </DialogActions>
 </MudDialog>
+

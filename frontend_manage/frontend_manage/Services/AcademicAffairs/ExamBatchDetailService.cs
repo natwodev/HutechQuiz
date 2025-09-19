@@ -16,7 +16,7 @@ namespace frontend_manage.Services.AcademicAffairs
         public ExamBatchDetailService(HttpClient httpClient, IConfiguration configuration)
         {
             _httpClient = httpClient;
-            _baseUrl = configuration["ApiSettings:BaseUrl"] + "/api/ExamBatchDetail";
+            _baseUrl = _httpClient.BaseAddress + "api/ExamBatchDetail";
         }
 
         public async Task<List<ExamBatchDetailDto>> GetAllAsync()

@@ -12,7 +12,7 @@ public class SaveAnswerDto
     public int key { get; set; }
 
     // Dùng cho câu hỏi con trong câu cha
-    public int? value { get; set; }
+    public int value { get; set; }
     
 }
 
@@ -111,4 +111,39 @@ public class SubmitExamData
     
     [JsonPropertyName("answerKey")]
     public string AnswerKey { get; set; } = string.Empty;
+}
+
+public class ExamSubmissionDto
+{
+    [JsonPropertyName("studentCode")]
+    public string StudentCode { get; set; } = string.Empty;
+    
+    [JsonPropertyName("shuffledExamPaperId")]
+    public int ShuffledExamPaperId { get; set; }
+    
+    [JsonPropertyName("score")]
+    public double? Score { get; set; }
+    
+    [JsonPropertyName("correctAnswers")]
+    public int? CorrectAnswers { get; set; }
+    
+    [JsonPropertyName("totalQuestions")]
+    public int? TotalQuestions { get; set; }
+    
+    [JsonPropertyName("startTime")]
+    public DateTime? StartTime { get; set; }
+    
+    [JsonPropertyName("endTime")]
+    public DateTime EndTime { get; set; }
+    
+    [JsonPropertyName("studentAnswersString")]
+    public string StudentAnswersString { get; set; } = string.Empty;
+    
+    [JsonPropertyName("answerKey")]
+    public string AnswerKey { get; set; } = string.Empty;
+}
+
+public class GetSubmissionResultRequest
+{
+    public int StudentExamSessionId { get; set; }
 }

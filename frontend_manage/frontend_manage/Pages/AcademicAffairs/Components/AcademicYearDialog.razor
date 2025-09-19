@@ -1,11 +1,20 @@
+@using frontend_manage.DTOs.AcademicAffairs
+@using frontend_manage.Services.AcademicAffairs
+@using frontend_manage.Pages.AcademicAffairs.Components
 @using MudBlazor
 
-<MudDialog>
-    <DialogContent>
-        <MudTextField @bind-Value="academicYear.YearName" Label="Tên năm học" Required="true" RequiredError="Tên năm học không được để trống" />
-    </DialogContent>
-    <DialogActions>
-        <MudButton OnClick="Cancel">Hủy</MudButton>
-        <MudButton Color="@Color" Variant="Variant.Filled" OnClick="Submit">@ButtonText</MudButton>
-    </DialogActions>
-</MudDialog>
+<BaseDialog Title="@(IsEdit ? "Chỉnh sửa năm học" : "Thêm năm học mới")" 
+           SaveText="@(IsEdit ? "Cập nhật" : "Thêm mới")" 
+           IsLoading="@_isLoading" 
+           OnSave="SaveAcademicYear">
+    <MudForm @ref="_form" @bind-IsValid="@_isValid" @bind-Errors="@_errors">
+        <MudTextField @bind-Value="_academicYear.YearName"
+                     Label="Tên năm học"
+                     Required="true"
+                     RequiredError="Tên năm học là bắt buộc"
+                     MaxLength="50"
+                     Counter="50"
+                     Immediate="true" />
+    </MudForm>
+</BaseDialog>
+

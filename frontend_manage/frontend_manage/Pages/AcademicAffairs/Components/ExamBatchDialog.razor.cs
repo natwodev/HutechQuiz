@@ -1,58 +1,95 @@
 using Microsoft.AspNetCore.Components;
-using MudBlazor;
 using frontend_manage.DTOs.AcademicAffairs;
+using frontend_manage.Services.AcademicAffairs;
+using frontend_manage.Pages.AcademicAffairs.Components;
+using MudBlazor;
 
-namespace frontend_manage.Pages.AcademicAffairs.Components
+namespace frontend_manage.Pages.AcademicAffairs.Components;
+
+public partial class ExamBatchDialog : ComponentBase
 {
-    public partial class ExamBatchDialog : ComponentBase
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = null!;
+    [Inject] private ExamBatchService ExamBatchService { get; set; } = null!;
+    [Inject] private ISnackbar Snackbar { get; set; } = null!;
+
+    [Parameter] public ExamBatchCreateDto ExamBatch { get; set; } = new();
+    [Parameter] public List<SemesterDto> Semesters { get; set; } = new();
+    [Parameter] public bool IsEdit { get; set; } = false;
+    [Parameter] public int? ExamBatchId { get; set; }
+
+    private MudForm _form = null!;
+    private bool _isValid = true;
+    private string[] _errors = Array.Empty<string>();
+    private bool _isLoading = false;
+    private ExamBatchCreateDto _examBatch = new();
+    private DateTime? _startDate;
+    private DateTime? _endDate;
+
+    protected override void OnInitialized()
     {
-        [CascadingParameter] 
-        public dynamic MudDialog { get; set; } = default!;
+        _examBatch = ExamBatch;
+        _startDate = ExamBatch.StartDate;
+        _endDate = ExamBatch.EndDate;
+    }
 
-        [Parameter] 
-        public string Title { get; set; } = string.Empty;
+    private async Task SaveExamBatch()
+    {
+        if (!_isValid) return;
 
-        [Parameter] 
-        public string ButtonText { get; set; } = "Lưu";
+        if (_startDate.HasValue)
+            _examBatch.StartDate = _startDate.Value;
+        if (_endDate.HasValue)
+            _examBatch.EndDate = _endDate.Value;
 
-        [Parameter] 
-        public Color Color { get; set; } = Color.Primary;
+        _isLoading = true;
+        StateHasChanged();
 
-        [Parameter] 
-        public ExamBatchUpdateDto? ExamBatch { get; set; }
-
-        [Parameter] 
-        public List<SemesterDto> Semesters { get; set; } = new();
-
-        private ExamBatchUpdateDto examBatch = new()
+        try
         {
-            StartDate = DateTime.Now,
-            EndDate = DateTime.Now.AddDays(7)
-        };
-
-        protected override void OnInitialized()
-        {
-            if (ExamBatch != null)
+            if (IsEdit && ExamBatchId.HasValue)
             {
-                examBatch = ExamBatch;
+                var updateDto = new ExamBatchUpdateDto
+                {
+                    BatchName = _examBatch.BatchName,
+                    Description = _examBatch.Description,
+                    StartDate = _examBatch.StartDate,
+                    EndDate = _examBatch.EndDate,
+                    SemesterId = _examBatch.SemesterId,
+                    IsActive = _examBatch.IsActive,
+                    ExamBatchDetails = _examBatch.ExamBatchDetails.Select(d => new ExamBatchDetailUpdateDto
+                    {
+                        Name = d.Name,
+                        ExamBatchId = d.ExamBatchId,
+                        ExamSessions = d.ExamSessions.Select(s => new ExamSessionUpdateDto
+                        {
+                            Name = s.Name,
+                            StartTime = s.StartTime,
+                            EndTime = s.EndTime,
+                            IsActive = s.IsActive,
+                            IsCompleted = s.IsCompleted,
+                            ExamBatchDetailId = s.ExamBatchDetailId
+                        }).ToList()
+                    }).ToList()
+                };
+                await ExamBatchService.UpdateAsync(ExamBatchId.Value, updateDto);
+                Snackbar.Add("Cập nhật đợt thi thành công", Severity.Success);
             }
-        }
-
-        private void Cancel()
-        {
-            MudDialog.Cancel();
-        }
-
-        private void Submit()
-        {
-            // Validate that end date is after start date
-            if (examBatch.EndDate < examBatch.StartDate)
+            else
             {
-                // Show error
-                return;
+                await ExamBatchService.CreateAsync(_examBatch);
+                Snackbar.Add("Thêm đợt thi thành công", Severity.Success);
             }
 
-            MudDialog.Close(DialogResult.Ok(examBatch));
+            MudDialog.Close(DialogResult.Ok(true));
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Lỗi: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isLoading = false;
+            StateHasChanged();
         }
     }
 }

@@ -166,4 +166,59 @@ public class StudentService
         // Mặc định 5 giây nếu không có header
         return 5;
     }
+    
+    public async Task<ExamSubmissionDto?> GetSubmissionResultAsync(GetSubmissionResultRequest request)
+    {
+        try
+        {
+            Console.WriteLine($"Bắt đầu gọi API get-submission-result với StudentExamSessionId: {request.StudentExamSessionId}");
+            
+            var response = await _httpClient.PostAsJsonAsync("/api/Student/get-submission-result", request);
+            Console.WriteLine($"Kết quả gọi API: StatusCode={response.StatusCode}");
+            
+            if (response.IsSuccessStatusCode)
+            {
+                try
+                {
+                    var responseContent = await response.Content.ReadAsStringAsync();
+                    Console.WriteLine($"Nội dung phản hồi: {responseContent}");
+                    
+                    // Tạo lại nội dung để đọc lần nữa
+                    var contentCopy = new StringContent(responseContent, System.Text.Encoding.UTF8, "application/json");
+                    response = new HttpResponseMessage(response.StatusCode) { Content = contentCopy };
+                    
+                    var result = await response.Content.ReadFromJsonAsync<ExamSubmissionDto>();
+                    Console.WriteLine($"Parse JSON thành công: {(result != null ? "Có" : "Không")}. StudentCode: {result?.StudentCode}");
+                    return result;
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Lỗi khi xử lý phản hồi: {ex.Message}");
+                    return null;
+                }
+            }
+            else
+            {
+                // Xử lý lỗi và trả về null
+                var errorContent = await response.Content.ReadAsStringAsync();
+                var errorMessage = $"Lỗi khi lấy kết quả nộp bài: {response.StatusCode}. {errorContent}";
+                Console.WriteLine(errorMessage);
+                
+                // Tạo một đối tượng với thông tin lỗi để hiển thị
+                return new ExamSubmissionDto
+                {
+                    StudentCode = "ERROR",
+                    ShuffledExamPaperId = 0,
+                    StudentAnswersString = errorMessage,
+                    AnswerKey = $"StatusCode: {(int)response.StatusCode}"
+                };
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Lỗi kết nối khi lấy kết quả nộp bài: {ex.Message}");
+            Console.WriteLine($"Stack trace: {ex.StackTrace}");
+            return null;
+        }
+    }
 }

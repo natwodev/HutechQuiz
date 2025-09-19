@@ -1,36 +1,49 @@
+@using frontend_manage.DTOs.AcademicAffairs
+@using frontend_manage.Services.AcademicAffairs
+@using frontend_manage.Pages.AcademicAffairs.Components
 @using MudBlazor
 
-<MudDialog>
-    <DialogContent>
-        <MudTextField @bind-Value="examSession.Name" Label="Tên ca thi" Required="true" RequiredError="Tên ca thi không được để trống" />
+<BaseDialog Title="@(IsEdit ? "Chỉnh sửa ca thi" : "Thêm ca thi mới")" 
+           SaveText="@(IsEdit ? "Cập nhật" : "Thêm mới")" 
+           IsLoading="@_isLoading" 
+           OnSave="SaveExamSession">
+    <MudForm @ref="_form" @bind-IsValid="@_isValid" @bind-Errors="@_errors">
+        <MudTextField @bind-Value="_examSession.Name"
+                     Label="Tên ca thi"
+                     Required="true"
+                     RequiredError="Tên ca thi là bắt buộc"
+                     MaxLength="100"
+                     Counter="100"
+                     Immediate="true" />
         
-        <MudDateTimePicker Value="@examSession.StartTime" ValueChanged="@((DateTime? value) => examSession.StartTime = value ?? DateTime.Now)" Label="Thời gian bắt đầu" Required="true" RequiredError="Thời gian bắt đầu không được để trống" />
-        
-        <MudDateTimePicker Value="@examSession.EndTime" ValueChanged="@((DateTime? value) => examSession.EndTime = value ?? DateTime.Now.AddHours(3))" Label="Thời gian kết thúc" Required="true" RequiredError="Thời gian kết thúc không được để trống" />
-        
-        <MudSelect T="int" Label="Đợt thi" @bind-Value="selectedExamBatchId" Required="true" RequiredError="Vui lòng chọn đợt thi" 
-                   HelperText="Chọn đợt thi để tải chi tiết đợt thi" 
-                   OnValueChanged="@(async (int value) => await LoadExamBatchDetails(value))">
+        <MudSelect @bind-Value="_examSession.ExamBatchDetailId"
+                  Label="Chi tiết đợt thi"
+                  Required="true"
+                  RequiredError="Chi tiết đợt thi là bắt buộc"
+                  Immediate="true">
             @foreach (var examBatch in ExamBatches)
             {
-                <MudSelectItem Value="@examBatch.ExamBatchId">@examBatch.BatchName</MudSelectItem>
+                @foreach (var detail in examBatch.ExamBatchDetails)
+                {
+                    <MudSelectItem Value="@detail.ExamBatchDetailId">@detail.Name - @examBatch.BatchName</MudSelectItem>
+                }
             }
         </MudSelect>
         
-        <MudSelect T="int" Label="Chi tiết đợt thi" @bind-Value="examSession.ExamBatchDetailId" Required="true" RequiredError="Vui lòng chọn chi tiết đợt thi">
-            @foreach (var examBatchDetail in examBatchDetails)
-            {
-                <MudSelectItem Value="@examBatchDetail.ExamBatchDetailId">@examBatchDetail.Name</MudSelectItem>
-            }
-        </MudSelect>
+        <MudTimePicker @bind-Time="_startTime"
+                      Label="Thời gian bắt đầu"
+                      Required="true"
+                      RequiredError="Thời gian bắt đầu là bắt buộc"
+                      Immediate="true" />
         
-        <div class="d-flex gap-4">
-            <MudSwitch T="bool" @bind-Checked="examSession.IsActive" Label="Hoạt động" Color="Color.Primary" />
-            <MudSwitch T="bool" @bind-Checked="examSession.IsCompleted" Label="Đã hoàn thành" Color="Color.Success" />
-        </div>
-    </DialogContent>
-    <DialogActions>
-        <MudButton OnClick="Cancel">Hủy</MudButton>
-        <MudButton Color="@Color" Variant="Variant.Filled" OnClick="Submit">@ButtonText</MudButton>
-    </DialogActions>
-</MudDialog>
+        <MudTimePicker @bind-Time="_endTime"
+                      Label="Thời gian kết thúc"
+                      Required="true"
+                      RequiredError="Thời gian kết thúc là bắt buộc"
+                      Immediate="true" />
+        
+        <MudSwitch T="bool" @bind-Checked="_examSession.IsActive" Label="Trạng thái hoạt động" />
+        <MudSwitch T="bool" @bind-Checked="_examSession.IsCompleted" Label="Đã hoàn thành" />
+    </MudForm>
+</BaseDialog>
+

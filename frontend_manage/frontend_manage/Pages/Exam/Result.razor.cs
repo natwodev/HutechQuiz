@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Components.Web;
 using Microsoft.JSInterop;
 using System.Text.Json;
 using frontend_manage.DTOs;
+using frontend_manage.Services;
 
 namespace frontend_manage.Pages.Exam
 {
@@ -17,11 +18,13 @@ namespace frontend_manage.Pages.Exam
     {
         [Inject] private IJSRuntime JSRuntime { get; set; } = default!;
         [Inject] private NavigationManager Navigation { get; set; } = default!;
+        [Inject] private StudentService StudentService { get; set; } = default!;
 
         // ===================== State =====================
-        private SubmitExamData? result;
+        private ExamSubmissionDto? result;
         private bool isLoading = true;
         private string errorMessage = string.Empty;
+        private string debugInfo = string.Empty;
         private List<HeatCell> heatCells = new();
         private int rows = 7;
         private int cols = 1;
@@ -62,19 +65,66 @@ namespace frontend_manage.Pages.Exam
                 isLoading = true;
                 errorMessage = string.Empty;
 
-                // ===== DÙNG DỮ LIỆU THẬT =====
+                // Kiểm tra quyền truy cập
                 if (!await ValidateAccessAsync()) return;
 
-                // Dữ liệu đã được kiểm tra trong ValidateAccessAsync
+                // Lấy ID phiên thi từ localStorage
                 var sessionIdStr = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "currentStudentExamSessionId");
-                var examResultJson = await JSRuntime.InvokeAsync<string>("localStorage.getItem", $"examResult_{sessionIdStr}");
-
-                result = ParseExamResult(examResultJson);
-                if (result == null)
+                if (string.IsNullOrEmpty(sessionIdStr) || !int.TryParse(sessionIdStr, out int sessionId))
                 {
-                    SetErrorAndRedirect("Không thể đọc dữ liệu kết quả bài thi.");
+                    SetErrorAndRedirect("Không tìm thấy thông tin phiên thi.");
                     return;
                 }
+
+                // Gọi API get-submission-result để lấy kết quả
+                debugInfo += $"Gọi API get-submission-result với StudentExamSessionId: {sessionId}\n";
+                Console.WriteLine($"Gọi API get-submission-result với StudentExamSessionId: {sessionId}");
+                
+                // Kiểm tra xem StudentService có được inject không
+                if (StudentService == null)
+                {
+                    debugInfo += "Lỗi: StudentService là null\n";
+                    Console.WriteLine("Lỗi: StudentService là null");
+                    SetErrorAndRedirect("Không thể kết nối với dịch vụ", debugInfo);
+                    return;
+                }
+                
+                var request = new GetSubmissionResultRequest { StudentExamSessionId = sessionId };
+                debugInfo += $"Tạo request thành công: {JsonSerializer.Serialize(request)}\n";
+                
+                try {
+                    debugInfo += "Bắt đầu gọi StudentService.GetSubmissionResultAsync...\n";
+                    result = await StudentService.GetSubmissionResultAsync(request);
+                    debugInfo += $"Kết quả API: {(result != null ? "Thành công" : "Null")}\n";
+                    Console.WriteLine($"Kết quả API: {(result != null ? "Thành công" : "Null")}");
+                    
+                    if (result != null)
+                    {
+                        debugInfo += $"StudentCode: {result.StudentCode}, Score: {result.Score}\n";
+                    }
+                }
+                catch (Exception apiEx)
+                {
+                    debugInfo += $"Lỗi khi gọi API get-submission-result: {apiEx.Message}\n";
+                    debugInfo += $"Stack trace: {apiEx.StackTrace}\n";
+                    Console.WriteLine($"Lỗi khi gọi API get-submission-result: {apiEx.Message}");
+                    throw;
+                }
+                
+                if (result == null)
+                {
+                    var errorDetail = $"Thời gian: {DateTime.Now}\n";
+                    errorDetail += $"API: get-submission-result\n";
+                    errorDetail += $"StudentExamSessionId: {sessionId}\n";
+                    errorDetail += $"Kết quả: API trả về null\n";
+                    
+                    SetErrorAndRedirect("Không thể lấy kết quả bài thi từ server.", errorDetail);
+                    return;
+                }
+
+                // Lưu kết quả vào localStorage để sử dụng lại nếu cần
+                var resultJson = JsonSerializer.Serialize(result);
+                await JSRuntime.InvokeVoidAsync("localStorage.setItem", $"examResult_{sessionId}", resultJson);
 
                 BuildHeatmap();
 
@@ -95,6 +145,7 @@ namespace frontend_manage.Pages.Exam
             catch (Exception ex)
             {
                 errorMessage = $"Lỗi: {ex.Message}";
+                debugInfo = $"Chi tiết lỗi:\n{ex.Message}\n\nStack trace:\n{ex.StackTrace}";
             }
             finally
             {
@@ -123,14 +174,8 @@ namespace frontend_manage.Pages.Exam
                     return false;
                 }
 
-                // Kiểm tra xem có dữ liệu kết quả tương ứng không
-                var examResultJson = await JSRuntime.InvokeAsync<string>("localStorage.getItem", $"examResult_{sessionIdStr}");
-                if (string.IsNullOrEmpty(examResultJson))
-                {
-                    SetErrorAndRedirect("Không tìm thấy dữ liệu kết quả bài thi.");
-                    return false;
-                }
-
+                // Chỉ cần kiểm tra ID phiên thi, không cần kiểm tra dữ liệu kết quả
+                // vì dữ liệu sẽ được lấy từ API
                 return true;
             }
             catch
@@ -143,24 +188,24 @@ namespace frontend_manage.Pages.Exam
 
 
         // ===================== Data Parsing =====================
-        private SubmitExamData? ParseExamResult(string json)
+        private ExamSubmissionDto? ParseExamResult(string json)
         {
             try
             {
                 var jsonElement = JsonSerializer.Deserialize<JsonElement>(json);
                 if (jsonElement.ValueKind == JsonValueKind.Object)
                 {
-                    return new SubmitExamData
+                    return new ExamSubmissionDto
                     {
-                        StudentCode = jsonElement.GetProperty("StudentCode").GetString() ?? "",
-                        ShuffledExamPaperId = jsonElement.GetProperty("ShuffledExamPaperId").GetInt32(),
-                        Score = jsonElement.GetProperty("Score").GetDouble(),
-                        CorrectAnswers = jsonElement.GetProperty("CorrectAnswers").GetInt32(),
-                        TotalQuestions = jsonElement.GetProperty("TotalQuestions").GetInt32(),
-                        StartTime = jsonElement.GetProperty("StartTime").GetDateTime(),
-                        EndTime = jsonElement.GetProperty("EndTime").GetDateTime(),
-                        StudentAnswersString = jsonElement.GetProperty("StudentAnswersString").GetString() ?? "",
-                        AnswerKey = jsonElement.GetProperty("AnswerKey").GetString() ?? ""
+                        StudentCode = jsonElement.GetProperty("studentCode").GetString() ?? "",
+                        ShuffledExamPaperId = jsonElement.GetProperty("shuffledExamPaperId").GetInt32(),
+                        Score = jsonElement.GetProperty("score").ValueKind == JsonValueKind.Null ? null : jsonElement.GetProperty("score").GetDouble(),
+                        CorrectAnswers = jsonElement.GetProperty("correctAnswers").ValueKind == JsonValueKind.Null ? null : jsonElement.GetProperty("correctAnswers").GetInt32(),
+                        TotalQuestions = jsonElement.GetProperty("totalQuestions").ValueKind == JsonValueKind.Null ? null : jsonElement.GetProperty("totalQuestions").GetInt32(),
+                        StartTime = jsonElement.GetProperty("startTime").ValueKind == JsonValueKind.Null ? null : jsonElement.GetProperty("startTime").GetDateTime(),
+                        EndTime = jsonElement.GetProperty("endTime").GetDateTime(),
+                        StudentAnswersString = jsonElement.GetProperty("studentAnswersString").GetString() ?? "",
+                        AnswerKey = jsonElement.GetProperty("answerKey").GetString() ?? ""
                     };
                 }
             }
@@ -386,24 +431,25 @@ namespace frontend_manage.Pages.Exam
         }
 
         // ===================== Helper Methods =====================
-        private void SetErrorAndRedirect(string message)
+        private void SetErrorAndRedirect(string message, string? detail = null)
         {
             errorMessage = message;
-            _ = Task.Run(async () =>
+            
+            // Thêm thông tin chi tiết về lỗi để hiển thị trên giao diện
+            if (!string.IsNullOrEmpty(detail))
             {
-                await Task.Delay(2000);
-                await InvokeAsync(async () =>
-                {
-                    try
-                    {
-                        await JSRuntime.InvokeVoidAsync("window.location.assign", "/student-login");
-                    }
-                    catch
-                    {
-                        Navigation.NavigateTo("/student-login");
-                    }
-                });
-            });
+                debugInfo = detail;
+            }
+            else
+            {
+                // Nếu không có chi tiết, hiển thị thông tin cơ bản
+                debugInfo = $"Thời gian: {DateTime.Now}\n";
+                debugInfo += $"Lỗi: {message}\n";
+                debugInfo += $"URL: {Navigation.Uri}\n";
+            }
+            
+            Console.WriteLine($"Hiển thị lỗi: {message}");
+            StateHasChanged();
         }
 
         // ===================== Computed Properties =====================

@@ -1,18 +1,31 @@
+@using frontend_manage.DTOs.AcademicAffairs
+@using frontend_manage.Services.AcademicAffairs
+@using frontend_manage.Pages.AcademicAffairs.Components
 @using MudBlazor
 
-<MudDialog>
-    <DialogContent>
-        <MudTextField @bind-Value="semester.SemesterName" Label="Tên học kỳ" Required="true" RequiredError="Tên học kỳ không được để trống" />
+<BaseDialog Title="@(IsEdit ? "Chỉnh sửa học kỳ" : "Thêm học kỳ mới")" 
+           SaveText="@(IsEdit ? "Cập nhật" : "Thêm mới")" 
+           IsLoading="@_isLoading" 
+           OnSave="SaveSemester">
+    <MudForm @ref="_form" @bind-IsValid="@_isValid" @bind-Errors="@_errors">
+        <MudTextField @bind-Value="_semester.SemesterName"
+                     Label="Tên học kỳ"
+                     Required="true"
+                     RequiredError="Tên học kỳ là bắt buộc"
+                     MaxLength="50"
+                     Counter="50"
+                     Immediate="true" />
         
-        <MudSelect T="int" Label="Năm học" @bind-Value="semester.AcademicYearId" Required="true" RequiredError="Vui lòng chọn năm học">
+        <MudSelect @bind-Value="_semester.AcademicYearId"
+                  Label="Năm học"
+                  Required="true"
+                  RequiredError="Năm học là bắt buộc"
+                  Immediate="true">
             @foreach (var academicYear in AcademicYears)
             {
                 <MudSelectItem Value="@academicYear.AcademicYearId">@academicYear.YearName</MudSelectItem>
             }
         </MudSelect>
-    </DialogContent>
-    <DialogActions>
-        <MudButton OnClick="Cancel">Hủy</MudButton>
-        <MudButton Color="@Color" Variant="Variant.Filled" OnClick="Submit">@ButtonText</MudButton>
-    </DialogActions>
-</MudDialog>
+    </MudForm>
+</BaseDialog>
+

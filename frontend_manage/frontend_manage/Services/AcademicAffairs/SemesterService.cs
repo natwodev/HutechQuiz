@@ -16,7 +16,7 @@ namespace frontend_manage.Services.AcademicAffairs
         public SemesterService(HttpClient httpClient, IConfiguration configuration)
         {
             _httpClient = httpClient;
-            _baseUrl = configuration["ApiSettings:BaseUrl"] + "/api/Semester";
+            _baseUrl = _httpClient.BaseAddress + "api/Semester";
         }
 
         public async Task<List<SemesterDto>> GetAllAsync()

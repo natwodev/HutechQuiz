@@ -1,152 +1,40 @@
 @using frontend_manage.DTOs.AcademicAffairs
 @using frontend_manage.Services.AcademicAffairs
-@inject SemesterService SemesterService
-@inject ISnackbar Snackbar
-@inject IDialogService DialogService
+@using frontend_manage.Pages.AcademicAffairs.Components
 
-<MudCard Elevation="0">
-    <MudCardHeader>
-        <MudText Typo="Typo.h6">Quản lý Học kỳ</MudText>
+<MudCard Elevation="0" Style="background: transparent; border: none; height: 100%; display: flex; flex-direction: column;">
+    <MudCardHeader Style="background: transparent; border-bottom: 1px solid rgba(38, 68, 136, 0.2); flex-shrink: 0;">
+        <MudText Typo="Typo.h6" Style="color: var(--primary-color); font-weight: 600;">Quản lý Học kỳ</MudText>
         <MudSpacer />
         <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add" 
-                  OnClick="OpenCreateDialog">Thêm học kỳ</MudButton>
+                OnClick="OpenCreateDialog" Style="background: var(--secondary-gradient); border: none; border-radius: 12px; font-weight: 500; text-transform: none; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);">Thêm học kỳ</MudButton>
     </MudCardHeader>
-    <MudCardContent>
-        <MudTable Items="@Semesters" Hover="true" Dense="false" Striped="true" Filter="new Func<SemesterDto, bool>(FilterFunc)" 
-                 @bind-SelectedItem="selectedItem">
-            <ToolBarContent>
-                <MudTextField @bind-Value="searchString" Placeholder="Tìm kiếm" Adornment="Adornment.Start" 
-                             AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
-            </ToolBarContent>
+    <MudCardContent Style="background: transparent; flex: 1; overflow: hidden; padding: 0;">
+        <MudTable Items="@Semesters" Hover="true" Dense="false" Striped="true" 
+                  Style="background: var(--glass-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: 16px; overflow: hidden; height: 100%;">
             <HeaderContent>
-                <MudTh>ID</MudTh>
-                <MudTh>Tên học kỳ</MudTh>
-                <MudTh>Năm học</MudTh>
-                <MudTh>Thao tác</MudTh>
+                <MudTh Style="color: var(--primary-color); font-weight: 600; background: rgba(38, 68, 136, 0.1);">ID</MudTh>
+                <MudTh Style="color: var(--primary-color); font-weight: 600; background: rgba(38, 68, 136, 0.1);">Tên học kỳ</MudTh>
+                <MudTh Style="color: var(--primary-color); font-weight: 600; background: rgba(38, 68, 136, 0.1);">Năm học</MudTh>
+                <MudTh Style="color: var(--primary-color); font-weight: 600; background: rgba(38, 68, 136, 0.1);">Thao tác</MudTh>
             </HeaderContent>
             <RowTemplate>
-                <MudTd DataLabel="ID">@context.SemesterId</MudTd>
-                <MudTd DataLabel="Tên học kỳ">@context.SemesterName</MudTd>
-                <MudTd DataLabel="Năm học">@context.AcademicYearName</MudTd>
+                <MudTd DataLabel="ID" Style="color: var(--text-primary);">@context.SemesterId</MudTd>
+                <MudTd DataLabel="Tên học kỳ" Style="color: var(--text-primary);">@context.SemesterName</MudTd>
+                <MudTd DataLabel="Năm học" Style="color: var(--text-primary);">@context.AcademicYearName</MudTd>
                 <MudTd>
                     <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Size="Size.Small" 
-                                  OnClick="@(() => OpenEditDialog(context))" />
+                                OnClick="@(() => EditSemester(context))" 
+                                Style="background: var(--secondary-gradient); color: white; border-radius: 8px; margin-right: 8px;" />
                     <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" 
-                                  OnClick="@(() => OpenDeleteDialog(context))" />
+                                OnClick="@(() => DeleteSemester(context))" 
+                                Style="background: var(--error-gradient); color: white; border-radius: 8px;" />
                 </MudTd>
             </RowTemplate>
             <PagerContent>
-                <MudTablePager PageSizeOptions="new int[] { 5, 10, 25, 50 }" />
+                <MudTablePager PageSizeOptions="new int[] { 5, 10, 25, 50 }" Style="background: rgba(38, 68, 136, 0.1); color: var(--text-primary);" />
             </PagerContent>
         </MudTable>
     </MudCardContent>
 </MudCard>
 
-@code {
-    [Parameter]
-    public List<SemesterDto> Semesters { get; set; } = new();
-    
-    [Parameter]
-    public List<AcademicYearDto> AcademicYears { get; set; } = new();
-    
-    [Parameter]
-    public EventCallback OnSemesterUpdated { get; set; }
-    
-    private SemesterDto selectedItem = null;
-    private string searchString = "";
-    
-    private bool FilterFunc(SemesterDto semester) => 
-        string.IsNullOrWhiteSpace(searchString) || 
-        semester.SemesterName.Contains(searchString, StringComparison.OrdinalIgnoreCase) ||
-        semester.AcademicYearName.Contains(searchString, StringComparison.OrdinalIgnoreCase);
-    
-    private async Task OpenCreateDialog()
-    {
-        var parameters = new DialogParameters
-        {
-            { "Title", "Thêm học kỳ mới" },
-            { "ButtonText", "Thêm" },
-            { "Color", Color.Primary },
-            { "AcademicYears", AcademicYears }
-        };
-        
-        var dialog = await DialogService.ShowAsync<SemesterDialog>("Thêm học kỳ", parameters);
-        var result = await dialog.Result;
-        
-        if (!result.Canceled)
-        {
-            var newSemester = (SemesterCreateDto)result.Data;
-            try
-            {
-                await SemesterService.CreateAsync(newSemester);
-                await OnSemesterUpdated.InvokeAsync();
-                Snackbar.Add("Thêm học kỳ thành công", Severity.Success);
-            }
-            catch (Exception ex)
-            {
-                Snackbar.Add($"Lỗi: {ex.Message}", Severity.Error);
-            }
-        }
-    }
-    
-    private async Task OpenEditDialog(SemesterDto semester)
-    {
-        var parameters = new DialogParameters
-        {
-            { "Title", "Cập nhật học kỳ" },
-            { "ButtonText", "Cập nhật" },
-            { "Color", Color.Primary },
-            { "AcademicYears", AcademicYears },
-            { "Semester", new SemesterUpdateDto { 
-                SemesterName = semester.SemesterName, 
-                AcademicYearId = semester.AcademicYearId 
-            } }
-        };
-        
-        var dialog = await DialogService.ShowAsync<SemesterDialog>("Cập nhật học kỳ", parameters);
-        var result = await dialog.Result;
-        
-        if (!result.Canceled)
-        {
-            var updatedSemester = (SemesterUpdateDto)result.Data;
-            try
-            {
-                await SemesterService.UpdateAsync(semester.SemesterId, updatedSemester);
-                await OnSemesterUpdated.InvokeAsync();
-                Snackbar.Add("Cập nhật học kỳ thành công", Severity.Success);
-            }
-            catch (Exception ex)
-            {
-                Snackbar.Add($"Lỗi: {ex.Message}", Severity.Error);
-            }
-        }
-    }
-    
-    private async Task OpenDeleteDialog(SemesterDto semester)
-    {
-        var parameters = new DialogParameters
-        {
-            { "ContentText", $"Bạn có chắc chắn muốn xóa học kỳ '{semester.SemesterName}'?" },
-            { "ButtonText", "Xóa" },
-            { "Color", Color.Error }
-        };
-        
-        var options = new DialogOptions { CloseOnEscapeKey = true, CloseButton = true };
-        var dialog = await DialogService.ShowAsync<ConfirmDialog>("Xác nhận xóa", parameters, options);
-        var result = await dialog.Result;
-        
-        if (!result.Canceled)
-        {
-            try
-            {
-                await SemesterService.DeleteAsync(semester.SemesterId);
-                await OnSemesterUpdated.InvokeAsync();
-                Snackbar.Add("Xóa học kỳ thành công", Severity.Success);
-            }
-            catch (Exception ex)
-            {
-                Snackbar.Add($"Lỗi: {ex.Message}", Severity.Error);
-            }
-        }
-    }
-}

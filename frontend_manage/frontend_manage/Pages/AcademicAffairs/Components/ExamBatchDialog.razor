@@ -1,26 +1,51 @@
+@using frontend_manage.DTOs.AcademicAffairs
+@using frontend_manage.Services.AcademicAffairs
+@using frontend_manage.Pages.AcademicAffairs.Components
 @using MudBlazor
 
-<MudDialog>
-    <DialogContent>
-        <MudTextField @bind-Value="examBatch.BatchName" Label="Tên đợt thi" Required="true" RequiredError="Tên đợt thi không được để trống" />
+<BaseDialog Title="@(IsEdit ? "Chỉnh sửa đợt thi" : "Thêm đợt thi mới")" 
+           SaveText="@(IsEdit ? "Cập nhật" : "Thêm mới")" 
+           IsLoading="@_isLoading" 
+           OnSave="SaveExamBatch">
+    <MudForm @ref="_form" @bind-IsValid="@_isValid" @bind-Errors="@_errors">
+        <MudTextField @bind-Value="_examBatch.BatchName"
+                     Label="Tên đợt thi"
+                     Required="true"
+                     RequiredError="Tên đợt thi là bắt buộc"
+                     MaxLength="100"
+                     Counter="100"
+                     Immediate="true" />
         
-        <MudTextField @bind-Value="examBatch.Description" Label="Mô tả" Lines="3" />
+        <MudTextField @bind-Value="_examBatch.Description"
+                     Label="Mô tả"
+                     MaxLength="500"
+                     Counter="500"
+                     Lines="3" />
         
-        <MudDatePicker Date="@examBatch.StartDate" DateChanged="(value) => examBatch.StartDate = value ?? DateTime.Now" Label="Ngày bắt đầu" Required="true" RequiredError="Ngày bắt đầu không được để trống" />
-        
-        <MudDatePicker Date="@examBatch.EndDate" DateChanged="(value) => examBatch.EndDate = value ?? DateTime.Now.AddDays(7)" Label="Ngày kết thúc" Required="true" RequiredError="Ngày kết thúc không được để trống" />
-        
-        <MudSelect T="int" Label="Học kỳ" @bind-Value="examBatch.SemesterId" Required="true" RequiredError="Vui lòng chọn học kỳ">
+        <MudSelect @bind-Value="_examBatch.SemesterId"
+                  Label="Học kỳ"
+                  Required="true"
+                  RequiredError="Học kỳ là bắt buộc"
+                  Immediate="true">
             @foreach (var semester in Semesters)
             {
-                <MudSelectItem Value="@semester.SemesterId">@semester.SemesterName (@semester.AcademicYearName)</MudSelectItem>
+                <MudSelectItem Value="@semester.SemesterId">@semester.SemesterName</MudSelectItem>
             }
         </MudSelect>
         
-        <MudSwitch T="bool" @bind-Checked="examBatch.IsActive" Label="Hoạt động" Color="Color.Primary" />
-    </DialogContent>
-    <DialogActions>
-        <MudButton OnClick="Cancel">Hủy</MudButton>
-        <MudButton Color="@Color" Variant="Variant.Filled" OnClick="Submit">@ButtonText</MudButton>
-    </DialogActions>
-</MudDialog>
+        <MudDatePicker @bind-Date="_startDate"
+                      Label="Ngày bắt đầu"
+                      Required="true"
+                      RequiredError="Ngày bắt đầu là bắt buộc"
+                      Immediate="true" />
+        
+        <MudDatePicker @bind-Date="_endDate"
+                      Label="Ngày kết thúc"
+                      Required="true"
+                      RequiredError="Ngày kết thúc là bắt buộc"
+                      Immediate="true" />
+        
+        <MudSwitch T="bool" @bind-Checked="_examBatch.IsActive" Label="Trạng thái hoạt động" />
+    </MudForm>
+</BaseDialog>
+
