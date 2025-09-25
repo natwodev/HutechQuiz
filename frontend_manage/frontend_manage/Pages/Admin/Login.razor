@@ -44,9 +44,8 @@
 
     protected override async Task OnInitializedAsync()
     {
-        // Kiểm tra xem đã đăng nhập bằng cookie chưa
-        var authResult = await AuthService.CheckCookieAuth();
-        if (authResult.IsSuccess)
+        var isAuthenticated = await AuthService.IsAuthenticated();
+        if (isAuthenticated)
         {
             await NavigateBasedOnRole();
         }
@@ -56,8 +55,7 @@
     {
         ErrorMessage = null;
         
-        // Sử dụng cookie login cho admin
-        var result = await AuthService.LoginWithCookie(loginModel.UserName, loginModel.Password);
+        var result = await AuthService.Login(loginModel.UserName, loginModel.Password);
         if (result.IsSuccess)
         {
             await NavigateBasedOnRole();

@@ -14,7 +14,7 @@ public class AuthService
     private readonly IJSRuntime _jsRuntime;
     private const string TokenKey = "authToken";
     private const string StudentInfoKey = "studentInfo";
-    private const string CookieAuthKey = "cookieAuth";
+    // Removed cookie-based auth support
     public event Action? OnAuthStateChanged;
 
     public AuthService(HttpClient httpClient, NavigationManager navigationManager, IJSRuntime jsRuntime)
@@ -84,119 +84,7 @@ public class AuthService
         }
     }
 
-    // Cookie Authentication (cho admin)
-    public async Task<AuthResultDto> LoginWithCookie(string username, string password)
-    {
-        try
-        {
-            var loginModel = new LoginModelDto
-            {
-                UserName = username,
-                Password = password
-            };
-
-            var response = await _httpClient.PostAsJsonAsync("api/auth/login-cookie", loginModel);
-
-            if (response.IsSuccessStatusCode)
-            {
-                var responseContent = await response.Content.ReadAsStringAsync();
-                try
-                {
-                    var jsonDoc = JsonDocument.Parse(responseContent);
-                    var root = jsonDoc.RootElement;
-                    
-                    // Lưu thông tin user vào localStorage
-                    if (root.TryGetProperty("user", out var userElement))
-                    {
-                        await _jsRuntime.InvokeVoidAsync("localStorage.setItem", CookieAuthKey, userElement.GetRawText());
-                    }
-                    
-                    // Đánh dấu đã đăng nhập bằng cookie
-                    await _jsRuntime.InvokeVoidAsync("localStorage.setItem", "authType", "cookie");
-                    
-                    OnAuthStateChanged?.Invoke();
-                    return new AuthResultDto { IsSuccess = true, Token = null }; // Cookie không cần token
-                }
-                catch (JsonException)
-                {
-                    return new AuthResultDto { IsSuccess = false, ErrorMessage = "Phản hồi từ server không hợp lệ." };
-                }
-            }
-
-            var errorContent = await response.Content.ReadAsStringAsync();
-            try
-            {
-                var errorResult = JsonSerializer.Deserialize<AuthResultDto>(errorContent);
-                return errorResult ?? new AuthResultDto { IsSuccess = false, ErrorMessage = "Đăng nhập thất bại" };
-            }
-            catch
-            {
-                return new AuthResultDto { IsSuccess = false, ErrorMessage = "Đăng nhập thất bại" };
-            }
-        }
-        catch (Exception ex)
-        {
-            return new AuthResultDto { IsSuccess = false, ErrorMessage = $"Lỗi: {ex.Message}" };
-        }
-    }
-
-    // Kiểm tra trạng thái đăng nhập cookie
-    public async Task<AuthResultDto> CheckCookieAuth()
-    {
-        try
-        {
-            var response = await _httpClient.GetAsync("api/auth/check-auth");
-            var responseContent = await response.Content.ReadAsStringAsync();
-
-            if (response.IsSuccessStatusCode)
-            {
-                try
-                {
-                    var jsonDoc = JsonDocument.Parse(responseContent);
-                    var root = jsonDoc.RootElement;
-                    
-                    if (root.TryGetProperty("isAuthenticated", out var authElement) && authElement.GetBoolean())
-                    {
-                        // Lưu thông tin user nếu chưa có
-                        if (root.TryGetProperty("user", out var userElement))
-                        {
-                            await _jsRuntime.InvokeVoidAsync("localStorage.setItem", CookieAuthKey, userElement.GetRawText());
-                        }
-                        
-                        await _jsRuntime.InvokeVoidAsync("localStorage.setItem", "authType", "cookie");
-                        OnAuthStateChanged?.Invoke();
-                        return new AuthResultDto { IsSuccess = true };
-                    }
-                    
-                    return new AuthResultDto { IsSuccess = false, ErrorMessage = "Chưa đăng nhập" };
-                }
-                catch (JsonException)
-                {
-                    return new AuthResultDto { IsSuccess = false, ErrorMessage = "Phản hồi từ server không hợp lệ." };
-                }
-            }
-
-            return new AuthResultDto { IsSuccess = false, ErrorMessage = "Không thể kiểm tra trạng thái đăng nhập" };
-        }
-        catch (Exception ex)
-        {
-            return new AuthResultDto { IsSuccess = false, ErrorMessage = $"Lỗi: {ex.Message}" };
-        }
-    }
-
-    // Đăng xuất cookie
-    public async Task LogoutCookie()
-    {
-        var response = await _httpClient.PostAsync("api/auth/logout-cookie", null);
-
-        if (response.IsSuccessStatusCode)
-        {
-            await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", CookieAuthKey);
-            await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", "authType");
-            OnAuthStateChanged?.Invoke();
-            _navigationManager.NavigateTo("/login");
-        }
-    }
+    // Cookie-based auth removed
 
     public async Task<AuthResultDto> LoginStudent(string studentCode1, string studentCode2)
     {
@@ -266,17 +154,73 @@ public class AuthService
         }
     }
 
+    // Lecturer JWT login
+    public async Task<LecturerAuthResultDto> LoginLecturer(string lecturerCode1, string lecturerCode2)
+    {
+        try
+        {
+            var loginModel = new LecturerLoginDto
+            {
+                LecturerCode1 = lecturerCode1,
+                LecturerCode2 = lecturerCode2
+            };
+
+            var response = await _httpClient.PostAsJsonAsync("/api/auth/lecturer-login", loginModel);
+            var responseContent = await response.Content.ReadAsStringAsync();
+
+            if (response.IsSuccessStatusCode)
+            {
+                try
+                {
+                    using var jsonDoc = JsonDocument.Parse(responseContent);
+                    var root = jsonDoc.RootElement;
+                    var token = root.TryGetProperty("token", out var tokenElement) && tokenElement.ValueKind == JsonValueKind.String
+                        ? tokenElement.GetString() : null;
+
+                    if (!string.IsNullOrEmpty(token))
+                    {
+                        await _jsRuntime.InvokeVoidAsync("localStorage.setItem", TokenKey, token);
+                        await _jsRuntime.InvokeVoidAsync("localStorage.setItem", "authType", "jwt");
+                        await _jsRuntime.InvokeVoidAsync("localStorage.setItem", "userType", "lecturer");
+                        OnAuthStateChanged?.Invoke();
+                        return new LecturerAuthResultDto { IsSuccess = true, Token = token, Role = "Lecturer" };
+                    }
+
+                    if (root.TryGetProperty("errorMessage", out var errorMsgElement) && errorMsgElement.ValueKind == JsonValueKind.String)
+                    {
+                        var errorMsg = errorMsgElement.GetString();
+                        return new LecturerAuthResultDto { IsSuccess = false, ErrorMessage = errorMsg };
+                    }
+
+                    return new LecturerAuthResultDto { IsSuccess = false, ErrorMessage = "Không thể đọc token từ server" };
+                }
+                catch (JsonException)
+                {
+                    return new LecturerAuthResultDto { IsSuccess = false, ErrorMessage = "Phản hồi từ server không hợp lệ." };
+                }
+            }
+
+            try
+            {
+                var errorResult = JsonSerializer.Deserialize<LecturerAuthResultDto>(responseContent);
+                return errorResult ?? new LecturerAuthResultDto { IsSuccess = false, ErrorMessage = "Đăng nhập thất bại" };
+            }
+            catch
+            {
+                return new LecturerAuthResultDto { IsSuccess = false, ErrorMessage = "Đăng nhập thất bại" };
+            }
+        }
+        catch (Exception ex)
+        {
+            return new LecturerAuthResultDto { IsSuccess = false, ErrorMessage = $"Lỗi: {ex.Message}" };
+        }
+    }
+
     
 
     public async Task Logout()
     {
-        var authType = await _jsRuntime.InvokeAsync<string>("localStorage.getItem", "authType");
-        
-        if (authType == "cookie")
-        {
-            await LogoutCookie();
-            return;
-        }
+        // Cookie-based logout flow removed
 
         var role = await GetUserRoleFromToken();
         
@@ -301,54 +245,14 @@ public class AuthService
 
     public async Task<bool> IsAuthenticated()
     {
-        var authType = await _jsRuntime.InvokeAsync<string>("localStorage.getItem", "authType");
-        
-        if (authType == "cookie")
-        {
-            var cookieAuth = await _jsRuntime.InvokeAsync<string>("localStorage.getItem", CookieAuthKey);
-            return !string.IsNullOrEmpty(cookieAuth);
-        }
-        
+        // Cookie-based auth removed
         var token = await _jsRuntime.InvokeAsync<string>("localStorage.getItem", TokenKey);
         return !string.IsNullOrEmpty(token);
     }
 
     public async Task<string?> GetUserRoleFromToken()
     {
-        var authType = await _jsRuntime.InvokeAsync<string>("localStorage.getItem", "authType");
-        
-        // Debug logging
-        Console.WriteLine($"Auth Type: {authType}");
-        
-        if (authType == "cookie")
-        {
-            var cookieAuthJson = await _jsRuntime.InvokeAsync<string>("localStorage.getItem", CookieAuthKey);
-            Console.WriteLine($"Cookie Auth JSON: {cookieAuthJson}");
-            
-            if (!string.IsNullOrEmpty(cookieAuthJson))
-            {
-                try
-                {
-                    var userInfo = JsonDocument.Parse(cookieAuthJson);
-                    if (userInfo.RootElement.TryGetProperty("roles", out var rolesElement) && rolesElement.ValueKind == JsonValueKind.Array)
-                    {
-                        var roles = rolesElement.EnumerateArray().Select(r => r.GetString()).ToList();
-                        Console.WriteLine($"Roles found: {string.Join(", ", roles)}");
-                        return roles.FirstOrDefault();
-                    }
-                    else
-                    {
-                        Console.WriteLine("No roles property found or not an array");
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Error parsing cookie auth JSON: {ex.Message}");
-                    return null;
-                }
-            }
-            return null;
-        }
+        // Cookie-based role parsing removed
 
         var token = await _jsRuntime.InvokeAsync<string>("localStorage.getItem", TokenKey);
         if (string.IsNullOrEmpty(token))
@@ -377,17 +281,8 @@ public class AuthService
 
     public async Task InitializeAuthState()
     {
-        // Kiểm tra cookie auth trước
-        var authType = await _jsRuntime.InvokeAsync<string>("localStorage.getItem", "authType");
-        if (authType == "cookie")
-        {
-            await CheckCookieAuth();
-        }
-        else
-        {
-            // Không cần thêm token vào header nữa vì đã có AuthHeaderHandler
-            OnAuthStateChanged?.Invoke();
-        }
+        // Cookie-based initialization removed; rely on JWT/localStorage only
+        OnAuthStateChanged?.Invoke();
     }
 
     public async Task<bool> IsAdmin()

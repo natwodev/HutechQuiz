@@ -424,71 +424,14 @@ namespace frontend_manage.Pages.Exam
 
                    if (submitResponse?.Success == true)
                    {
-                       // Lưu dữ liệu exam result vào localStorage để trang Result có thể đọc
-                       if (submitResponse.Data != null)
-                       {
-                           var examResultData = new
-                           {
-                               StudentCode = submitResponse.Data.StudentCode,
-                               ShuffledExamPaperId = submitResponse.Data.ShuffledExamPaperId,
-                               Score = submitResponse.Data.Score,
-                               CorrectAnswers = submitResponse.Data.CorrectAnswers,
-                               TotalQuestions = submitResponse.Data.TotalQuestions,
-                               StartTime = submitResponse.Data.StartTime,
-                               EndTime = submitResponse.Data.EndTime,
-                               StudentAnswersString = submitResponse.Data.StudentAnswersString,
-                               AnswerKey = submitResponse.Data.AnswerKey
-                           };
-                           
-                           var resultJson = JsonSerializer.Serialize(examResultData);
-                           await JSRuntime.InvokeVoidAsync("localStorage.setItem", $"examResult_{studentExamSessionId.Value}", resultJson);
-                           
-                           // Lưu studentExamSessionId để trang Result có thể đọc
-                           await JSRuntime.InvokeVoidAsync("localStorage.setItem", "currentStudentExamSessionId", studentExamSessionId.Value.ToString());
-                       }
-                       
                        Snackbar.Add("Nộp bài thành công!", Severity.Success);
                        Navigation.NavigateTo("/Exam/Result");
                    }
-                   else if (submitResponse != null)
-                   {
-                       // Xử lý các trường hợp lỗi cụ thể
-                       if (submitResponse.IsRateLimited)
-                       {
-                           // ⚠️ QUAN TRỌNG: HTTP 429 - KHÔNG được chuyển trang kết quả!
-                           // Giữ nguyên trang làm bài để sinh viên có thể nộp lại
-                           Snackbar.Add($"🚫 {submitResponse.Message} (Thử lại sau {submitResponse.RetryAfterSeconds} giây)", Severity.Warning, config =>
-                           {
-                               config.VisibleStateDuration = 8000;
-                           });
-                           
-                           // Timer đã được quản lý bởi ExamTimer component
-                           
-                           // Tự động retry sau khi hết rate limit
-                           _ = Task.Run(async () =>
-                           {
-                               await Task.Delay(submitResponse.RetryAfterSeconds * 1000);
-                               await InvokeAsync(async () =>
-                               {
-                                   Snackbar.Add("🔄 Đang tự động thử nộp bài lại...", Severity.Info);
-                                   await OnSubmitExamAsync();
-                               });
-                           });
-                           
-                           return; // Không chuyển trang, giữ nguyên trang làm bài
-                       }
-                       else if (submitResponse.IsUnauthorized)
-                       {
-                           Snackbar.Add("🔐 Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.", Severity.Error);
-                           // Có thể redirect về trang login
-                           return;
-                       }
-                       else
-                       {
-                           // Các lỗi khác
-                           Snackbar.Add($"❌ {submitResponse.Message}", Severity.Error);
-                       }
-                   }
+                  else if (submitResponse != null)
+                  {
+                      // Chỉ hiển thị thông báo lỗi từ backend
+                      Snackbar.Add($"❌ {submitResponse.Message}", Severity.Error);
+                  }
                    else
                    {
                        Snackbar.Add("❌ Có lỗi xảy ra khi nộp bài. Vui lòng thử lại!", Severity.Error);
