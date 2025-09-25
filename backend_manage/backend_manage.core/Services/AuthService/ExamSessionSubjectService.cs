@@ -20,6 +20,7 @@ namespace backend_manage.core.Services.AuthService
         private readonly IRepository<ExamSessionSubject> _examSessionSubjectRepository;
         private readonly IRepository<ShuffledExamPaper> _shuffledExamPaperRepository;
         private readonly ExamPaperHelper _examPaperHelper;
+        private readonly ExamSessionSubjectCacheHelper _examSessionSubjectCacheHelper;
         public ExamSessionSubjectService(
             IRepository<ExamSessionSubject> repository,
             IRepository<Lecturer> lecturerRepository,
@@ -27,7 +28,8 @@ namespace backend_manage.core.Services.AuthService
             IHttpContextAccessor httpContextAccessor, 
             IRepository<ExamSessionSubject> examSessionSubjectRepository,
             IRepository<ShuffledExamPaper> shuffledExamPaperRepository,
-            ExamPaperHelper examPaperHelper
+            ExamPaperHelper examPaperHelper,
+            ExamSessionSubjectCacheHelper examSessionSubjectCacheHelper
             )
         {
             _repository = repository;
@@ -37,6 +39,12 @@ namespace backend_manage.core.Services.AuthService
             _examSessionSubjectRepository = examSessionSubjectRepository;
             _shuffledExamPaperRepository = shuffledExamPaperRepository;
             _examPaperHelper = examPaperHelper;
+            _examSessionSubjectCacheHelper = examSessionSubjectCacheHelper;
+        }
+
+        public async Task<bool> IsOpenAsync(int examSessionSubjectId)
+        {
+            return await _examSessionSubjectCacheHelper.GetOrComputeIsOpenAsync(examSessionSubjectId);
         }
 
         public async Task<IEnumerable<ExamSessionSubjectDto>> GetAllAsync()
@@ -198,6 +206,18 @@ namespace backend_manage.core.Services.AuthService
             entity.UpdatedAt = DateTimeHelper.GetVietnamTime();
             entity.Version++;
             await _repository.UpdateAsync(entity);
+
+            // Cập nhật Redis cache cho trạng thái is-open để phản ánh ngay lập tức
+            try
+            {
+                // Tính lại isOpen theo trạng thái mới, bỏ qua ràng buộc khung giờ
+                var isOpen = !entity.IsCompleted && entity.IsActive;
+                await _examSessionSubjectCacheHelper.SetIsOpenCacheAsync(examSessionSubjectId, isOpen);
+            }
+            catch
+            {
+                // Bỏ qua lỗi redis để không ảnh hưởng luồng chính
+            }
         }
 
         public async Task<IEnumerable<ExamSessionSubjectDto>> GetByExamRoomIdAsync(int examRoomId)

@@ -132,6 +132,20 @@ namespace backend_manage.Controllers
                 return StatusCode(500, $"Lỗi nội bộ: {ex.Message}");
             }
         }
+
+        [HttpGet("{examSessionSubjectId}/is-open")]
+        public async Task<ActionResult<bool>> IsOpen(int examSessionSubjectId)
+        {
+            try
+            {
+                var isOpen = await _examSessionSubjectService.IsOpenAsync(examSessionSubjectId);
+                return Ok(isOpen);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Lỗi nội bộ: {ex.Message}");
+            }
+        }
         
         [HttpPost("assign-lecturer")]
         public async Task<ActionResult> AssignLecturer(AssignLecturerDto dto)

@@ -40,6 +40,7 @@ namespace backend_manage.core.Configurations
             // Register Helper Classes
             services.AddScoped<StudentCacheHelper>();
             services.AddScoped<StudentExamSessionCacheHelper>();
+            services.AddScoped<ExamSessionSubjectCacheHelper>();
             services.AddScoped<ExamPaperHelper>();
             services.AddScoped<StudentAnswerHelper>();
             services.AddScoped<StudentImportHelper>();

@@ -130,7 +130,19 @@ namespace frontend_manage.Pages.StudentLogin
 
             if (timeStatus.isInValidTime)
             {
-                // Chuyển hướng sang trang làm bài thi
+                // Kiểm tra ca thi đã mở (is-open) từ backend trước khi vào thi
+                var isOpen = await StudentService.GetExamSessionSubjectIsOpenAsync(session.ExamSessionSubjectId);
+                if (isOpen != true)
+                {
+                    Snackbar.Add("Ca thi chưa được mở. Vui lòng chờ giám thị kích hoạt.", Severity.Warning, config =>
+                    {
+                        config.ShowCloseIcon = true;
+                        config.VisibleStateDuration = 4000;
+                    });
+                    return;
+                }
+
+                // Chuyển hướng sang trang làm bài thi khi ca thi đã mở
                 Navigation.NavigateTo($"/Exam?studentExamSessionId={session.StudentExamSessionId}");
             }
         }

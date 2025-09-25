@@ -379,9 +379,11 @@ public class StudentService : IStudentService
             var cachedSessions = await _sessionCacheHelper.GetListStudentExamSessionsFromRedisAsync(studentCode);
             if (cachedSessions != null && cachedSessions.Any())
             {
-                _logger.LogDebug("Đã lấy {Count} phiên thi chưa hoàn thành và còn thời gian làm bài từ Redis cache cho sinh viên {StudentCode}", 
-                    cachedSessions.Count(), studentCode);
-                return cachedSessions;
+                // Trả nguyên danh sách từ cache, KHÔNG lọc theo ExamSessionSubject.IsActive
+                var cachedList = cachedSessions.ToList();
+                _logger.LogDebug("Đã lấy {Count} phiên thi từ Redis cache cho sinh viên {StudentCode}", 
+                    cachedList.Count, studentCode);
+                return cachedList;
             }
             
             _logger.LogDebug("Không tìm thấy phiên thi chưa hoàn thành và còn thời gian làm bài trong Redis cache cho sinh viên {StudentCode}, kiểm tra database", studentCode);

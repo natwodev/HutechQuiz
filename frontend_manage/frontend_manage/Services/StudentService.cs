@@ -54,6 +54,20 @@ public class StudentService
         return allExamSessions ?? new List<StudentExamSessionDto>();
     }
 
+    public async Task<bool?> GetExamSessionSubjectIsOpenAsync(int examSessionSubjectId)
+    {
+        try
+        {
+            // Backend trả về boolean thuần
+            var result = await _httpClient.GetFromJsonAsync<bool>($"api/ExamSessionSubject/{examSessionSubjectId}/is-open");
+            return result;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
     public async Task<StartExamResponseDto?> StartExamAsync(int studentExamSessionId)
     {
         var form = new MultipartFormDataContent();
