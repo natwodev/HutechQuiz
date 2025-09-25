@@ -20,12 +20,22 @@ public partial class ExamInfoTab : ComponentBase
         if (Subject == null) return "00:00:00";
 
         var now = DateTime.Now;
-        var endTime = Subject.ExamSessionEndTime;
-        var remaining = endTime - now;
+        var startTime = Subject.ExamSessionStartTime;
+
+        var totalDuration = TimeSpan.FromMinutes(Subject.Duration);
+        var elapsed = now - startTime;
+
+        // Nếu chưa tới giờ bắt đầu, hiển thị toàn bộ thời lượng
+        if (elapsed.TotalSeconds <= 0)
+        {
+            return $"{(int)totalDuration.TotalHours:D2}:{totalDuration.Minutes:D2}:{totalDuration.Seconds:D2}";
+        }
+
+        var remaining = totalDuration - elapsed;
 
         if (remaining.TotalSeconds <= 0) return "00:00:00";
 
-        return $"{remaining.Hours:D2}:{remaining.Minutes:D2}:{remaining.Seconds:D2}";
+        return $"{(int)remaining.TotalHours:D2}:{remaining.Minutes:D2}:{remaining.Seconds:D2}";
     }
 
     private double GetProgressValue()
@@ -34,8 +44,7 @@ public partial class ExamInfoTab : ComponentBase
 
         var now = DateTime.Now;
         var startTime = Subject.ExamSessionStartTime;
-        var endTime = Subject.ExamSessionEndTime;
-        var totalDuration = endTime - startTime;
+        var totalDuration = TimeSpan.FromMinutes(Subject.Duration);
         var elapsed = now - startTime;
 
         if (totalDuration.TotalSeconds <= 0) return 0;

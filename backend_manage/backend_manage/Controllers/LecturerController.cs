@@ -19,15 +19,18 @@ namespace backend_manage.Controllers
         private readonly ILecturerService _lecturerService;
         private readonly IStudentService _studentService;
         private readonly IRepository<StudentExamSession> _studentExamSessionRepository;
+        private readonly IRepository<ExamSessionSubject> _examSessionSubjectRepository;
 
         public LecturerController(
             ILecturerService lecturerService,
             IStudentService studentService,
-            IRepository<StudentExamSession> studentExamSessionRepository)
+            IRepository<StudentExamSession> studentExamSessionRepository,
+            IRepository<ExamSessionSubject> examSessionSubjectRepository)
         {
             _lecturerService = lecturerService;
             _studentService = studentService;
             _studentExamSessionRepository = studentExamSessionRepository;
+            _examSessionSubjectRepository = examSessionSubjectRepository;
         }
 
         [HttpPost]
@@ -128,7 +131,21 @@ namespace backend_manage.Controllers
                 await _studentExamSessionRepository.UpdateAsync(session);
             }
 
-            return Ok(new { message = "Đã reset ExamSessionStartTime cho tất cả StudentExamSession", updated = sessions.Count, time = now });
+            // Reset thêm ExamSessionSubject: đặt StartTime = now, EndTime = now + Duration
+            var subjects = await _examSessionSubjectRepository
+                .GetQueryable()
+                .ToListAsync();
+
+            foreach (var subject in subjects)
+            {
+                subject.StartTime = now;
+                subject.EndTime = subject.Duration > 0 ? now.AddMinutes(subject.Duration) : now;
+                subject.UpdatedAt = now;
+                subject.UpdatedBy = userId;
+                await _examSessionSubjectRepository.UpdateAsync(subject);
+            }
+
+            return Ok(new { message = "Đã reset ExamSessionStartTime và ExamSessionSubject thời gian", studentExamSessionsUpdated = sessions.Count, examSessionSubjectsUpdated = subjects.Count, time = now });
         }
     }
 } 
