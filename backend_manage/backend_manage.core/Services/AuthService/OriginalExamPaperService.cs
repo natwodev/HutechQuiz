@@ -475,7 +475,7 @@ namespace backend_manage.core.Services.AuthService
                     Title = $"{originalExamPaper.Title} - Hoán vị {i}",
                     ShuffledExamPaperCore = shuffledPaperCore,
                     OriginalExamPaperId = originalExamPaper.OriginalExamPaperId,
-                    AnswerKey = originalExamPaper.KeyValueList,
+                   // AnswerKey = originalExamPaper.KeyValueList,
                     SubjectId = subjectId,
                     IsApproved = true,
                     CreatedBy = userId,
@@ -509,10 +509,21 @@ namespace backend_manage.core.Services.AuthService
                 
                 // Map vào QuestionStructureDto
                 var questionStructure = MapToQuestionStructure(result, resulta);
-                
+
+         
+
                 // Lưu cấu trúc câu hỏi vào ShuffledExamPaper
                 shuffledExamPaper.QuestionStructure = JsonConvert.SerializeObject(questionStructure);
-                
+
+                // In ra console để kiểm tra
+                var emptyTemplate = BuildEmptyAnswerTemplateFromQuestionStructure(questionStructure);
+                Console.WriteLine($"[CreateShuffledExamPapers] {shuffledPaperCore} -> EmptyAnswerTemplate: {emptyTemplate}");
+
+                // Căn theo template (thứ tự hiển thị) và lấy value từ OriginalExamPaper.KeyValueList (thứ tự có thể khác)
+                var mergedAnswerKey = MergeAnswerKeyFromTemplate(emptyTemplate, originalExamPaper.KeyValueList);
+                Console.WriteLine($"[CreateShuffledExamPapers] {shuffledPaperCore} -> MergedAnswerKey    : {mergedAnswerKey}");
+
+                shuffledExamPaper.AnswerKey = mergedAnswerKey;
                 // Cập nhật ShuffledExamPaper với cấu trúc câu hỏi
                 await _shuffledExamPaperRepository.UpdateAsync(shuffledExamPaper);
                 
@@ -824,7 +835,91 @@ namespace backend_manage.core.Services.AuthService
                 .ToList();
         }
 
+        // Tạo template Answer rỗng theo QuestionStructure: (QuestionDetailId:-);
+        public string BuildEmptyAnswerTemplateFromQuestionStructure(List<QuestionStructureDto> questionStructure)
+        {
+            if (questionStructure == null || questionStructure.Count == 0)
+            {
+                return string.Empty;
+            }
+
+            var orderedLeafQuestionIds = new List<int>();
+
+            void Traverse(IEnumerable<QuestionStructureDto> nodes)
+            {
+                foreach (var node in nodes.OrderBy(n => n.Order))
+                {
+                    if (node.ChildQuestions != null && node.ChildQuestions.Count > 0)
+                    {
+                        Traverse(node.ChildQuestions);
+                    }
+                    else
+                    {
+                        // Leaf question (có Answer trực tiếp)
+                        orderedLeafQuestionIds.Add(node.OriginalExamPaperDetailId);
+                    }
+                }
+            }
+
+            Traverse(questionStructure);
+
+            if (orderedLeafQuestionIds.Count == 0)
+            {
+                return string.Empty;
+            }
+
+            var parts = orderedLeafQuestionIds
+                .Select(qid => $"({qid}:-)")
+                .ToList();
+
+            return string.Join(";", parts) + ";";
+        }
+
+        // Ghép value từ original KeyValueList vào template theo key, bỏ qua thứ tự
+        private string MergeAnswerKeyFromTemplate(string emptyTemplate, string? originalKeyValueList)
+        {
+            if (string.IsNullOrWhiteSpace(emptyTemplate)) return string.Empty;
+
+            // Parse template -> danh sách key theo thứ tự hiển thị
+            var templatePairs = emptyTemplate
+                .Split(';', StringSplitOptions.RemoveEmptyEntries)
+                .Select(s => s.Trim())
+                .Where(s => s.StartsWith("(") && s.EndsWith(")"))
+                .Select(s => s.Trim('(', ')'))
+                .Select(s => s.Split(':'))
+                .Select(parts => new { Key = int.Parse(parts[0]), Value = (string?)null })
+                .ToList();
+
+            if (string.IsNullOrWhiteSpace(originalKeyValueList))
+            {
+                // Không có nguồn value, giữ template dạng (key:-);
+                return emptyTemplate;
+            }
+
+            // Parse original -> map key -> value
+            var originalMap = originalKeyValueList
+                .Split(';', StringSplitOptions.RemoveEmptyEntries)
+                .Select(s => s.Trim())
+                .Where(s => s.StartsWith("(") && s.EndsWith(")"))
+                .Select(s => s.Trim('(', ')'))
+                .Select(s => s.Split(':'))
+                .Where(parts => parts.Length == 2)
+                .ToDictionary(parts => int.Parse(parts[0]), parts => parts[1]);
+
+            // Build theo thứ tự template nhưng lấy value theo key từ original
+            var merged = templatePairs
+                .Select(t =>
+                {
+                    var has = originalMap.TryGetValue(t.Key, out var val);
+                    return has ? $"({t.Key}:{val})" : $"({t.Key}:-)";
+                })
+                .ToList();
+
+            return string.Join(";", merged) + ";";
+        }
+
         
 
+        
     }
 }

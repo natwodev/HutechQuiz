@@ -78,7 +78,7 @@
                                 <div class="info-grid">
                                     <div class="info-row"><div class="k">Mã sinh viên</div><div class="v">@result.StudentCode</div></div>
                                     <div class="info-row"><div class="k">Mã đề thi</div><div class="v">@result.ShuffledExamPaperId</div></div>
-                                    <div class="info-row"><div class="k">Bắt đầu</div><div class="v">@result.StartTime.ToString("dd/MM/yyyy HH:mm:ss")</div></div>
+                                    <div class="info-row"><div class="k">Bắt đầu</div><div class="v">@(result.StartTime?.ToString("dd/MM/yyyy HH:mm:ss") ?? "")</div></div>
                                     <div class="info-row"><div class="k">Kết thúc</div><div class="v">@result.EndTime.ToString("dd/MM/yyyy HH:mm:ss")</div></div>
                                 </div>
 
