@@ -8,6 +8,7 @@ using System.Security.Claims;
 using backend_manage.core.Entities;
 using backend_manage.core.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using backend_manage.core.Hubs;
 
 namespace backend_manage.Controllers
 {
@@ -107,6 +108,27 @@ namespace backend_manage.Controllers
         {
             public int StudentExamSessionId { get; set; }
             public string StudentCode { get; set; } = string.Empty;
+        }
+
+        [HttpPost("reset-exam-session-start-time")]
+        public async Task<IActionResult> ResetExamSessionStartTime()
+        {
+            var now = DateTimeHelper.GetVietnamTime();
+            var userId = User?.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            var sessions = await _studentExamSessionRepository
+                .GetQueryable()
+                .ToListAsync();
+
+            foreach (var session in sessions)
+            {
+                session.ExamSessionStartTime = now;
+                session.UpdatedAt = now;
+                session.UpdatedBy = userId;
+                await _studentExamSessionRepository.UpdateAsync(session);
+            }
+
+            return Ok(new { message = "Đã reset ExamSessionStartTime cho tất cả StudentExamSession", updated = sessions.Count, time = now });
         }
     }
 } 

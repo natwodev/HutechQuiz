@@ -17,7 +17,7 @@ public class MonitorService
     }
 
 
-    public async Task<LecturerAuthResultDto?> LoginLecturerAsync(string lecturerCode1, string lecturerCode2)
+    public async Task<LecturerAuthResultDto?> LoginLecturer(string lecturerCode1, string lecturerCode2)
     {
         try
         {

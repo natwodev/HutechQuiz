@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Components.Web;
 using Microsoft.JSInterop;
 using System.Text.Json;
 using frontend_manage.DTOs;
+using frontend_manage.Services;
 
 namespace frontend_manage.Pages.Exam
 {
@@ -17,9 +18,10 @@ namespace frontend_manage.Pages.Exam
     {
         [Inject] private IJSRuntime JSRuntime { get; set; } = default!;
         [Inject] private NavigationManager Navigation { get; set; } = default!;
+        [Inject] private StudentService StudentService { get; set; } = default!;
 
         // ===================== State =====================
-        private SubmitExamData? result;
+        private ExamSubmissionDto? result;
         private bool isLoading = true;
         private string errorMessage = string.Empty;
         private List<HeatCell> heatCells = new();
@@ -62,35 +64,23 @@ namespace frontend_manage.Pages.Exam
                 isLoading = true;
                 errorMessage = string.Empty;
 
-                // ===== DÙNG DỮ LIỆU THẬT =====
-                if (!await ValidateAccessAsync()) return;
-
-                // Dữ liệu đã được kiểm tra trong ValidateAccessAsync
+                // Lấy sessionId và gọi API lấy kết quả thật từ backend
                 var sessionIdStr = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "currentStudentExamSessionId");
-                var examResultJson = await JSRuntime.InvokeAsync<string>("localStorage.getItem", $"examResult_{sessionIdStr}");
+                if (string.IsNullOrWhiteSpace(sessionIdStr) || !int.TryParse(sessionIdStr, out var sessionId))
+                {
+                    SetErrorAndRedirect("Truy cập không hợp lệ. Vui lòng làm bài thi trước.");
+                    return;
+                }
 
-                result = ParseExamResult(examResultJson);
+                result = await StudentService.GetSubmissionResultAsync(sessionId);
                 if (result == null)
                 {
-                    SetErrorAndRedirect("Không thể đọc dữ liệu kết quả bài thi.");
+                    SetErrorAndRedirect("Không thể lấy kết quả bài thi từ máy chủ.");
                     return;
                 }
 
                 BuildHeatmap();
-
-                // Xóa dữ liệu sau 5 phút để bảo mật
-                _ = Task.Run(async () =>
-                {
-                    await Task.Delay(300000); // 5 phút
-                    await InvokeAsync(async () =>
-                    {
-                        try
-                        {
-                            await JSRuntime.InvokeVoidAsync("eval", "localStorage.clear()");
-                        }
-                        catch { /* Ignore */ }
-                    });
-                });
+                // Không còn phụ thuộc vào localStorage để lưu kết quả
             }
             catch (Exception ex)
             {
@@ -103,73 +93,7 @@ namespace frontend_manage.Pages.Exam
             }
         }
 
-        // ===================== API Integration (DÙNG DỮ LIỆU THẬT) =====================
-        // Khi sử dụng API thật, hệ thống sẽ:
-        // 1. Kiểm tra quyền truy cập từ localStorage (currentStudentExamSessionId)
-        // 2. Lấy dữ liệu kết quả bài thi từ localStorage (examResult_{sessionId})
-        // 3. Parse JSON thành SubmitExamData
-        // 4. Xây dựng heatmap từ StudentAnswersString và AnswerKey để hiển thị trạng thái từng câu
-        // 5. Sử dụng trực tiếp điểm số và số câu đúng từ API
-        // ===================== Access Validation =====================
-        private async Task<bool> ValidateAccessAsync()
-        {
-            try
-            {
-                var sessionIdStr = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "currentStudentExamSessionId");
-
-                if (string.IsNullOrEmpty(sessionIdStr))
-                {
-                    SetErrorAndRedirect("Truy cập không hợp lệ. Vui lòng làm bài thi trước.");
-                    return false;
-                }
-
-                // Kiểm tra xem có dữ liệu kết quả tương ứng không
-                var examResultJson = await JSRuntime.InvokeAsync<string>("localStorage.getItem", $"examResult_{sessionIdStr}");
-                if (string.IsNullOrEmpty(examResultJson))
-                {
-                    SetErrorAndRedirect("Không tìm thấy dữ liệu kết quả bài thi.");
-                    return false;
-                }
-
-                return true;
-            }
-            catch
-            {
-                SetErrorAndRedirect("Lỗi khi kiểm tra quyền truy cập.");
-                return false;
-            }
-        }
-
-
-
-        // ===================== Data Parsing =====================
-        private SubmitExamData? ParseExamResult(string json)
-        {
-            try
-            {
-                var jsonElement = JsonSerializer.Deserialize<JsonElement>(json);
-                if (jsonElement.ValueKind == JsonValueKind.Object)
-                {
-                    return new SubmitExamData
-                    {
-                        StudentCode = jsonElement.GetProperty("StudentCode").GetString() ?? "",
-                        ShuffledExamPaperId = jsonElement.GetProperty("ShuffledExamPaperId").GetInt32(),
-                        Score = jsonElement.GetProperty("Score").GetDouble(),
-                        CorrectAnswers = jsonElement.GetProperty("CorrectAnswers").GetInt32(),
-                        TotalQuestions = jsonElement.GetProperty("TotalQuestions").GetInt32(),
-                        StartTime = jsonElement.GetProperty("StartTime").GetDateTime(),
-                        EndTime = jsonElement.GetProperty("EndTime").GetDateTime(),
-                        StudentAnswersString = jsonElement.GetProperty("StudentAnswersString").GetString() ?? "",
-                        AnswerKey = jsonElement.GetProperty("AnswerKey").GetString() ?? ""
-                    };
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error parsing exam result: {ex.Message}");
-            }
-            return null;
-        }
+        // Không cần validate hay parse localStorage nữa. Chỉ cần sessionId để gọi API.
 
 
 
