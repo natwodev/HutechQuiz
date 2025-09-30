@@ -1,0 +1,236 @@
+/* Exam Batches Tab Styles - Compact */
+.exam-batches-tab {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.tab-header {
+    background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+    color: white;
+    padding: 12px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.title-area h2 {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.info-text {
+    margin-top: 4px;
+    font-size: 0.8rem;
+    opacity: 0.9;
+}
+
+.action-area {
+    display: flex;
+    gap: 8px;
+}
+
+/* Stats Cards - Compact */
+.stats-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px;
+    padding: 16px;
+    background: #f8f9fa;
+}
+
+.stat-card {
+    background: white;
+    border-radius: 8px;
+    padding: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+.stat-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+}
+
+.stat-icon.blue {
+    background: linear-gradient(135deg, #3498db, #2980b9);
+}
+
+.stat-icon.green {
+    background: linear-gradient(135deg, #2ecc71, #27ae60);
+}
+
+.stat-icon.amber {
+    background: linear-gradient(135deg, #f39c12, #e67e22);
+}
+
+.stat-icon.purple {
+    background: linear-gradient(135deg, #9b59b6, #8e44ad);
+}
+
+.stat-content {
+    flex: 1;
+}
+
+.stat-value {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #2c3e50;
+    line-height: 1;
+}
+
+.stat-label {
+    font-size: 0.75rem;
+    color: #7f8c8d;
+    margin-top: 2px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+/* Data Table - Compact */
+.data-table-container {
+    padding: 0 16px 16px;
+}
+
+.no-data {
+    padding: 20px;
+    text-align: center;
+}
+
+/* MudTable Customization */
+.mud-table {
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.mud-table-head {
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+}
+
+.mud-table-head .mud-th {
+    font-weight: 600;
+    color: #495057;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-size: 0.85rem;
+    border-bottom: 2px solid #dee2e6;
+}
+
+.mud-table-body .mud-tr:hover {
+    background: rgba(46, 204, 113, 0.05);
+}
+
+.mud-table-body .mud-td {
+    padding: 1rem 0.75rem;
+    border-bottom: 1px solid #f1f3f4;
+    vertical-align: middle;
+}
+
+/* Action Buttons */
+.mud-icon-button {
+    margin: 0 2px;
+    transition: all 0.2s ease;
+}
+
+.mud-icon-button:hover {
+    transform: scale(1.1);
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+    .stats-cards {
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 1rem;
+        padding: 1.5rem;
+    }
+    
+    .stat-card {
+        padding: 1rem;
+    }
+    
+    .stat-icon {
+        width: 50px;
+        height: 50px;
+    }
+    
+    .stat-value {
+        font-size: 1.5rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .tab-header {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+    }
+    
+    .action-area {
+        justify-content: center;
+    }
+    
+    .stats-cards {
+        grid-template-columns: 1fr;
+        padding: 1rem;
+    }
+    
+    .data-table-container {
+        padding: 0 1rem 1rem;
+        overflow-x: auto;
+    }
+    
+    .mud-table {
+        min-width: 600px;
+    }
+}
+
+@media (max-width: 480px) {
+    .tab-header {
+        padding: 1rem;
+    }
+    
+    .title-area h2 {
+        font-size: 1.2rem;
+    }
+    
+    .action-area {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .action-area .mud-button {
+        width: 100%;
+    }
+    
+    .stat-card {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .stat-icon {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .stat-value {
+        font-size: 1.2rem;
+    }
+}

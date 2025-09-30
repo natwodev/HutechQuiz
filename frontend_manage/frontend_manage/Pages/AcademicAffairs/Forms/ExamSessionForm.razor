@@ -1,0 +1,66 @@
+@page "/academic-affairs/forms/exam-session-form"
+@page "/academic-affairs/forms/exam-session-form/{Id:int}"
+@using MudBlazor
+@using frontend_manage.DTOs.AcademicAffairs
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Components
+
+<MudContainer MaxWidth="MaxWidth.Medium" Class="mt-4">
+    <MudPaper Class="pa-6">
+        <MudStack Spacing="4">
+            <MudText Typo="Typo.h4" Class="mb-4">
+                @(IsEdit ? "Chỉnh sửa ca thi" : "Tạo ca thi mới")
+            </MudText>
+
+            <EditForm Model="ExamSession" OnValidSubmit="Save">
+                <DataAnnotationsValidator />
+                <MudStack Spacing="3">
+                    <MudTextField @bind-Value="ExamSession.Name"
+                                  Label="Tên ca thi"
+                                  Variant="Variant.Outlined"
+                                  Required="true"
+                                  RequiredError="Vui lòng nhập tên ca thi" />
+
+                    <MudDatePicker @bind-Date="StartDate"
+                                   Label="Ngày bắt đầu"
+                                   Variant="Variant.Outlined"
+                                   Required="true" />
+
+                    <MudTimePicker @bind-Time="StartTimeSpan"
+                                   Label="Giờ bắt đầu"
+                                   Variant="Variant.Outlined"
+                                   Required="true" />
+
+                    <MudDatePicker @bind-Date="EndDate"
+                                   Label="Ngày kết thúc"
+                                   Variant="Variant.Outlined"
+                                   Required="true" />
+
+                    <MudTimePicker @bind-Time="EndTimeSpan"
+                                   Label="Giờ kết thúc"
+                                   Variant="Variant.Outlined"
+                                   Required="true" />
+
+                    <MudTextField @bind-Value="ExamSession.ExamBatchDetailName"
+                                  Label="Đợt thi"
+                                  Variant="Variant.Outlined"
+                                  Required="true"
+                                  RequiredError="Vui lòng nhập đợt thi" />
+
+                    <MudSwitch T="bool" @bind-Checked="ExamSession.IsActive"
+                               Label="Kích hoạt ca thi"
+                               Color="Color.Primary" />
+                </MudStack>
+
+                <MudStack Spacing="2" Class="mt-4" Justify="Justify.FlexEnd" Direction="Direction.Row">
+                    <MudButton Variant="Variant.Text" OnClick="Cancel">
+                        Hủy
+                    </MudButton>
+                    <MudButton Color="Color.Primary" Variant="Variant.Filled" ButtonType="ButtonType.Submit" Disabled="isLoading">
+                        @(isLoading ? "Đang xử lý..." : (IsEdit ? "Cập nhật" : "Tạo mới"))
+                    </MudButton>
+                </MudStack>
+            </EditForm>
+        </MudStack>
+    </MudPaper>
+</MudContainer>

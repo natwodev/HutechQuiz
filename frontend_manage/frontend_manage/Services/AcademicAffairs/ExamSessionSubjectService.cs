@@ -4,7 +4,6 @@ using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
 using frontend_manage.DTOs.AcademicAffairs;
-using Microsoft.Extensions.Configuration;
 
 namespace frontend_manage.Services.AcademicAffairs
 {
@@ -13,10 +12,10 @@ namespace frontend_manage.Services.AcademicAffairs
         private readonly HttpClient _httpClient;
         private readonly string _baseUrl;
 
-        public ExamSessionSubjectService(HttpClient httpClient, IConfiguration configuration)
+        public ExamSessionSubjectService(HttpClient httpClient)
         {
             _httpClient = httpClient;
-            _baseUrl = configuration["ApiSettings:BaseUrl"] + "/api/ExamSessionSubject";
+            _baseUrl = "/api/ExamSessionSubject";
         }
 
         public async Task<List<ExamSessionSubjectDto>> GetAllAsync()

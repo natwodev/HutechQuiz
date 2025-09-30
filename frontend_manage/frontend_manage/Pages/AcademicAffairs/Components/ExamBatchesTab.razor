@@ -1,0 +1,199 @@
+@using frontend_manage.DTOs.AcademicAffairs
+@using Microsoft.AspNetCore.Components
+@using Microsoft.AspNetCore.Components.Web
+@using MudBlazor
+@using System.Collections.Generic
+@using System.Linq
+@using System.Threading.Tasks
+
+<link href="css/academic-affairs/ExamBatchesTab.css" rel="stylesheet" />
+
+<div class="exam-batches-tab">
+    <div class="tab-header">
+        <div class="title-area">
+            <h2>QUẢN LÝ ĐỢT THI</h2>
+            @if (ExamBatches != null && ExamBatches.Any())
+            {
+                <div class="info-text">
+                    Tổng số đợt thi: <strong>@ExamBatches.Count</strong> | 
+                    Đang hoạt động: <strong>@ExamBatches.Count(x => x.IsActive)</strong>
+                </div>
+            }
+        </div>
+        <div class="action-area">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" OnClick="CreateNew">
+                <MudIcon Icon="@Icons.Material.Filled.Add" Class="mr-1" />
+                Tạo đợt thi mới
+            </MudButton>
+        </div>
+    </div>
+
+    @if (_showForm)
+    {
+        <MudPaper Class="pa-3 mb-3" Style="max-width: 800px; margin: 0 auto;">
+            <MudStack Spacing="2">
+                <MudText Typo="Typo.h6" Class="mb-2">
+                    @(_isEditMode ? "Chỉnh sửa đợt thi" : "Tạo đợt thi mới")
+                </MudText>
+
+                <EditForm Model="_formData" OnValidSubmit="SaveForm">
+                    <DataAnnotationsValidator />
+                    <MudGrid>
+                        <MudItem xs="12">
+                            <MudTextField @bind-Value="_formData.BatchName"
+                                          Label="Tên đợt thi"
+                                          Variant="Variant.Outlined"
+                                          Required="true"
+                                          Size="Size.Small" />
+                        </MudItem>
+                        
+                        <MudItem xs="12">
+                            <MudTextField @bind-Value="_formData.Description"
+                                          Label="Mô tả"
+                                          Variant="Variant.Outlined"
+                                          Size="Size.Small"
+                                          Lines="3" />
+                        </MudItem>
+                        
+                        <MudItem xs="6">
+                            <MudTextField Label="Ngày bắt đầu"
+                                          @bind-Value="_startDateString"
+                                          @onchange="OnStartDateChanged"
+                                          Variant="Variant.Outlined"
+                                          Size="Size.Small"
+                                          InputType="InputType.Date" />
+                        </MudItem>
+                        
+                        <MudItem xs="6">
+                            <MudTextField Label="Ngày kết thúc"
+                                          @bind-Value="_endDateString"
+                                          @onchange="OnEndDateChanged"
+                                          Variant="Variant.Outlined"
+                                          Size="Size.Small"
+                                          InputType="InputType.Date" />
+                        </MudItem>
+                        
+                        <MudItem xs="12">
+                            <div class="form-check">
+                                <input class="form-check-input" 
+                                       type="checkbox" 
+                                       @bind="_formData.IsActive" 
+                                       id="isActiveCheckbox">
+                                <label class="form-check-label" for="isActiveCheckbox">
+                                    @(_formData.IsActive ? "Hoạt động" : "Không hoạt động")
+                                </label>
+                            </div>
+                        </MudItem>
+                    </MudGrid>
+
+                    <MudStack Spacing="2" Class="mt-3" Justify="Justify.FlexEnd" Direction="Direction.Row">
+                        <MudButton Variant="Variant.Text" OnClick="CancelForm" Size="Size.Small">
+                            Hủy
+                        </MudButton>
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" ButtonType="ButtonType.Submit" Size="Size.Small">
+                            Lưu
+                        </MudButton>
+                    </MudStack>
+                </EditForm>
+            </MudStack>
+        </MudPaper>
+    }
+
+    @if (!_showForm && ExamBatches != null && ExamBatches.Any())
+    {
+        <div class="stats-cards">
+            <div class="stat-card">
+                <div class="stat-icon blue">
+                    <MudIcon Icon="@Icons.Material.Filled.Assignment" Size="Size.Large" />
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value">@ExamBatches.Count</div>
+                    <div class="stat-label">Tổng đợt thi</div>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon green">
+                    <MudIcon Icon="@Icons.Material.Filled.PlayArrow" Size="Size.Large" />
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value">@ExamBatches.Count(x => x.IsActive)</div>
+                    <div class="stat-label">Đang hoạt động</div>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon amber">
+                    <MudIcon Icon="@Icons.Material.Filled.Pause" Size="Size.Large" />
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value">@ExamBatches.Count(x => !x.IsActive)</div>
+                    <div class="stat-label">Chưa kích hoạt</div>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon purple">
+                    <MudIcon Icon="@Icons.Material.Filled.School" Size="Size.Large" />
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value">@ExamBatches.Sum(x => x.ExamBatchDetails.Count)</div>
+                    <div class="stat-label">Chi tiết đợt thi</div>
+                </div>
+            </div>
+        </div>
+
+        @if (!_showForm)
+        {
+        <div class="data-table-container">
+            <MudTable Items="@ExamBatches" Hover="true" Striped="true" Dense="true">
+                <HeaderContent>
+                    <MudTh>STT</MudTh>
+                    <MudTh>Tên đợt thi</MudTh>
+                    <MudTh>Mô tả</MudTh>
+                    <MudTh>Ngày bắt đầu</MudTh>
+                    <MudTh>Ngày kết thúc</MudTh>
+                    <MudTh>Học kỳ</MudTh>
+                    <MudTh>Trạng thái</MudTh>
+                    <MudTh>Thao tác</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    @{
+                        var index = ExamBatches.IndexOf(context) + 1;
+                    }
+                    <MudTd>@index</MudTd>
+                    <MudTd>@context.BatchName</MudTd>
+                    <MudTd>@(context.Description ?? "Không có mô tả")</MudTd>
+                    <MudTd>@context.StartDate.ToString("dd/MM/yyyy")</MudTd>
+                    <MudTd>@context.EndDate.ToString("dd/MM/yyyy")</MudTd>
+                    <MudTd>@context.SemesterName</MudTd>
+                    <MudTd>
+                        @if (context.IsActive)
+                        {
+                            <MudChip T="string" Color="Color.Primary" Size="Size.Small">Đang hoạt động</MudChip>
+                        }
+                        else
+                        {
+                            <MudChip T="string" Color="Color.Default" Size="Size.Small">Chưa kích hoạt</MudChip>
+                        }
+                    </MudTd>
+                    <MudTd>
+                        <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" 
+                                      Color="Color.Primary" OnClick="() => EditExamBatch(context)" />
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" 
+                                      Color="Color.Error" OnClick="() => DeleteExamBatch(context)" />
+                    </MudTd>
+                </RowTemplate>
+            </MudTable>
+        </div>
+        }
+    }
+    else if (!_showForm)
+    {
+        <div class="no-data">
+            <MudAlert Severity="Severity.Info" Variant="Variant.Filled">
+                Không có dữ liệu đợt thi
+            </MudAlert>
+        </div>
+    }
+</div>

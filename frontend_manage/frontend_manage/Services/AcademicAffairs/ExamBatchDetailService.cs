@@ -4,7 +4,6 @@ using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
 using frontend_manage.DTOs.AcademicAffairs;
-using Microsoft.Extensions.Configuration;
 
 namespace frontend_manage.Services.AcademicAffairs
 {
@@ -13,23 +12,30 @@ namespace frontend_manage.Services.AcademicAffairs
         private readonly HttpClient _httpClient;
         private readonly string _baseUrl;
 
-        public ExamBatchDetailService(HttpClient httpClient, IConfiguration configuration)
+        public ExamBatchDetailService(HttpClient httpClient)
         {
             _httpClient = httpClient;
-            _baseUrl = configuration["ApiSettings:BaseUrl"] + "/api/ExamBatchDetail";
+            _baseUrl = "/api/ExamBatchDetail";
         }
 
         public async Task<List<ExamBatchDetailDto>> GetAllAsync()
         {
             try
             {
+                Console.WriteLine($"Calling API: {_baseUrl}");
                 var response = await _httpClient.GetFromJsonAsync<List<ExamBatchDetailDto>>(_baseUrl);
+                Console.WriteLine($"API Response: {response?.Count ?? 0} items");
                 return response ?? new List<ExamBatchDetailDto>();
+            }
+            catch (HttpRequestException ex)
+            {
+                Console.WriteLine($"HTTP Error in GetAllAsync: {ex.Message}");
+                throw;
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error in GetAllAsync: {ex.Message}");
-                return new List<ExamBatchDetailDto>();
+                throw;
             }
         }
 

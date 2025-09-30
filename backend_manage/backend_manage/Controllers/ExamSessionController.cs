@@ -27,7 +27,7 @@ namespace backend_manage.Controllers
 
         [HttpGet("{id}")]
         [Authorize(Policy = "AcademicAffairsOrAdmin")]
-        public async Task<IActionResult> GetById(string id)
+        public async Task<IActionResult> GetById(int id)
         {
             var result = await _service.GetByIdAsync(id);
             if (result == null) return NotFound();
@@ -44,7 +44,7 @@ namespace backend_manage.Controllers
 
         [HttpPut("{id}")]
         [Authorize(Policy = "AcademicAffairsOrAdmin")]
-        public async Task<IActionResult> Update(string id, [FromBody] ExamSessionUpdateDto dto)
+        public async Task<IActionResult> Update(int id, [FromBody] ExamSessionUpdateDto dto)
         {
             var result = await _service.UpdateAsync(id, dto);
             if (result == null) return NotFound();
@@ -53,7 +53,7 @@ namespace backend_manage.Controllers
 
         [HttpDelete("{id}")]
         [Authorize(Policy = "AcademicAffairsOrAdmin")]
-        public async Task<IActionResult> Delete(string id)
+        public async Task<IActionResult> Delete(int id)
         {
             var success = await _service.DeleteAsync(id);
             if (!success) return NotFound();

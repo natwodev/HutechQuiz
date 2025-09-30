@@ -12,9 +12,14 @@ using Microsoft.JSInterop;
 
 using frontend_manage.Services;
 using frontend_manage.Services.AcademicAffairs;
+using System.Globalization;
 
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
+
+// Set default culture to Vietnamese (24-hour clock)
+CultureInfo.DefaultThreadCurrentCulture = new CultureInfo("vi-VN");
+CultureInfo.DefaultThreadCurrentUICulture = new CultureInfo("vi-VN");
 
 builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");

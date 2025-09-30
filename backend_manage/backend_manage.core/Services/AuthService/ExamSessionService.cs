@@ -28,11 +28,14 @@ namespace backend_manage.core.Services.AuthService
 
         public async Task<IEnumerable<ExamSessionDto>> GetAllAsync()
         {
-            var sessions = await _repository.GetAllAsync();
+            var sessions = await _repository.GetQueryable()
+                .Include(x => x.ExamBatchDetail)
+                .AsNoTracking()
+                .ToListAsync();
             return _mapper.Map<IEnumerable<ExamSessionDto>>(sessions);
         }
 
-        public async Task<ExamSessionDto?> GetByIdAsync(string id)
+        public async Task<ExamSessionDto?> GetByIdAsync(int id)
         {
             var session = await _repository.GetByIdAsync(id);
             return session == null ? null : _mapper.Map<ExamSessionDto>(session);
@@ -56,7 +59,7 @@ namespace backend_manage.core.Services.AuthService
             return _mapper.Map<ExamSessionDto>(fullEntity);
         }
 
-        public async Task<ExamSessionDto> UpdateAsync(string id, ExamSessionUpdateDto dto)
+        public async Task<ExamSessionDto> UpdateAsync(int id, ExamSessionUpdateDto dto)
         {
             var entity = await _repository.GetByIdAsync(id);
             if (entity == null) return null;
@@ -67,10 +70,16 @@ namespace backend_manage.core.Services.AuthService
             entity.UpdatedAt = DateTimeHelper.GetVietnamTime();
             _mapper.Map(dto, entity);
             var result = await _repository.UpdateAsync(entity);
-            return _mapper.Map<ExamSessionDto>(result);
+
+            // Truy vấn lại entity kèm navigation ExamBatchDetail
+            var fullEntity = await _repository.GetQueryable()
+                .Include(x => x.ExamBatchDetail)
+                .FirstOrDefaultAsync(x => x.ExamSessionId == entity.ExamSessionId);
+
+            return _mapper.Map<ExamSessionDto>(fullEntity);
         }
 
-        public async Task<bool> DeleteAsync(string id)
+        public async Task<bool> DeleteAsync(int id)
         {
             var entity = await _repository.GetByIdAsync(id);
             if (entity == null) return false;

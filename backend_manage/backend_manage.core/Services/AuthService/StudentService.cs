@@ -151,9 +151,9 @@ public class StudentService : IStudentService
         {
             Subject = new ClaimsIdentity(new[]
             {
-                new Claim("id", student.StudentId.ToString()),
+                new Claim(ClaimTypes.NameIdentifier, student.StudentId.ToString()),
                 new Claim("studentCode", student.StudentCode),
-                new Claim("role", "Student")
+                new Claim(ClaimTypes.Role, "Student")
             }),
             Expires = DateTimeHelper.GetVietnamTime().AddDays(7),
             Issuer = _configuration["JWT:Issuer"],

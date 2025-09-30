@@ -1,428 +1,199 @@
-@page "/academicaffairs/dashboard"
-@using frontend_manage.DTOs.AcademicAffairs
+@page "/academic-affairs/dashboard"
+@page "/academic-affairs/dashboard/{Tab:int}"
+@using Microsoft.AspNetCore.Components
 @using frontend_manage.Services.AcademicAffairs
+@using frontend_manage.DTOs.AcademicAffairs
 @using frontend_manage.Pages.AcademicAffairs.Components
-@using MudBlazor.Charts
-@inject AcademicYearService AcademicYearService
-@inject SemesterService SemesterService
-@inject ExamBatchService ExamBatchService
-@inject ExamBatchDetailService ExamBatchDetailService
-@inject ExamSessionService ExamSessionService
-@inject ExamSessionSubjectService ExamSessionSubjectService
-@inject frontend_manage.Services.AuthService AuthService
-@inject ISnackbar Snackbar
-@inject IJSRuntime JSRuntime
+@using Microsoft.AspNetCore.Components.Web
+@using MudBlazor
+@using System.Collections.Generic
+@using System.Linq
+@using System.Threading.Tasks
+@inherits ComponentBase
+@implements IDisposable
 
-<PageTitle>Quản lý Phòng đào tạo</PageTitle>
+<link href="css/academic-affairs/Dashboard.css" rel="stylesheet" />
 
-<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4">
-    <MudPaper Elevation="0" Class="pa-4">
-        <div class="d-flex justify-space-between align-center mb-4">
-            <MudText Typo="Typo.h4">Quản lý Phòng đào tạo</MudText>
-            <MudButton Color="Color.Error" Variant="Variant.Outlined" OnClick="Logout">Đăng xuất</MudButton>
+<div class="academic-dashboard">
+    <!-- Header -->
+    <div class="dashboard-header">
+        <div class="header-left">
+            <div class="logo-container">
+                <img src="/images/logo-dai-hoc-hutech_012634748.png" alt="HUTECH" class="logo" />
+            </div>
+            <div class="header-titles">
+                <h1>TRƯỜNG ĐẠI HỌC CÔNG NGHỆ THÀNH PHỐ HỒ CHÍ MINH (HUTECH)</h1>
+                <div class="subtitle">
+                    EXAM SUITE - ACADEMIC AFFAIRS <span class="edition-tag">Professional Edition</span>
+                </div>
+                <div class="header-description">Hệ thống quản lý học vụ và ca thi</div>
+            </div>
         </div>
-
-        <!-- Summary Cards -->
-        <MudGrid Class="mb-4">
-            <MudItem xs="12" sm="6" md="3">
-                <MudPaper Elevation="2" Class="pa-4 d-flex flex-column" Style="height: 120px;">
-                    <MudText Typo="Typo.subtitle1" Color="Color.Primary">Tổng số năm học</MudText>
-                    <MudText Typo="Typo.h4" Class="mt-auto">@(_academicYears.Count)</MudText>
-                    <MudText Typo="Typo.caption">Cập nhật: @DateTime.Now.ToString("dd/MM/yyyy HH:mm")</MudText>
-                </MudPaper>
-            </MudItem>
-            <MudItem xs="12" sm="6" md="3">
-                <MudPaper Elevation="2" Class="pa-4 d-flex flex-column" Style="height: 120px;">
-                    <MudText Typo="Typo.subtitle1" Color="Color.Secondary">Tổng số học kỳ</MudText>
-                    <MudText Typo="Typo.h4" Class="mt-auto">@(_semesters.Count)</MudText>
-                    <MudText Typo="Typo.caption">Cập nhật: @DateTime.Now.ToString("dd/MM/yyyy HH:mm")</MudText>
-                </MudPaper>
-            </MudItem>
-            <MudItem xs="12" sm="6" md="3">
-                <MudPaper Elevation="2" Class="pa-4 d-flex flex-column" Style="height: 120px;">
-                    <MudText Typo="Typo.subtitle1" Color="Color.Tertiary">Tổng số đợt thi</MudText>
-                    <MudText Typo="Typo.h4" Class="mt-auto">@(_examBatches.Count)</MudText>
-                    <MudText Typo="Typo.caption">Cập nhật: @DateTime.Now.ToString("dd/MM/yyyy HH:mm")</MudText>
-                </MudPaper>
-            </MudItem>
-            <MudItem xs="12" sm="6" md="3">
-                <MudPaper Elevation="2" Class="pa-4 d-flex flex-column" Style="height: 120px;">
-                    <MudText Typo="Typo.subtitle1" Color="Color.Info">Tổng số ca thi</MudText>
-                    <MudText Typo="Typo.h4" Class="mt-auto">@(_examSessions.Count)</MudText>
-                    <MudText Typo="Typo.caption">Cập nhật: @DateTime.Now.ToString("dd/MM/yyyy HH:mm")</MudText>
-                </MudPaper>
-            </MudItem>
-        </MudGrid>
-        
-        <!-- Thêm thống kê nâng cao -->
-        <MudGrid Class="mb-4">
-            <MudItem xs="12" sm="6" md="3">
-                <MudPaper Elevation="2" Class="pa-4 d-flex flex-column" Style="height: 120px;">
-                    <MudText Typo="Typo.subtitle1" Color="Color.Success">Số môn thi</MudText>
-                    <MudText Typo="Typo.h4" Class="mt-auto">@(_examSessionSubjects.Count)</MudText>
-                    <MudText Typo="Typo.caption">Cập nhật: @DateTime.Now.ToString("dd/MM/yyyy HH:mm")</MudText>
-                </MudPaper>
-            </MudItem>
-            <MudItem xs="12" sm="6" md="3">
-                <MudPaper Elevation="2" Class="pa-4 d-flex flex-column" Style="height: 120px;">
-                    <MudText Typo="Typo.subtitle1" Color="Color.Warning">Số khoa tham gia</MudText>
-                    <MudText Typo="Typo.h4" Class="mt-auto">@(_examSessionDepartments.Count)</MudText>
-                    <MudText Typo="Typo.caption">Cập nhật: @DateTime.Now.ToString("dd/MM/yyyy HH:mm")</MudText>
-                </MudPaper>
-            </MudItem>
-            <MudItem xs="12" sm="6" md="3">
-                <MudPaper Elevation="2" Class="pa-4 d-flex flex-column" Style="height: 120px;">
-                    <MudText Typo="Typo.subtitle1" Color="Color.Error">Môn thi chưa hoàn thành</MudText>
-                    <MudText Typo="Typo.h4" Class="mt-auto">@(_examSessionSubjects.Count(s => !s.IsCompleted))</MudText>
-                    <MudText Typo="Typo.caption">Cập nhật: @DateTime.Now.ToString("dd/MM/yyyy HH:mm")</MudText>
-                </MudPaper>
-            </MudItem>
-            <MudItem xs="12" sm="6" md="3">
-                <MudPaper Elevation="2" Class="pa-4 d-flex flex-column" Style="height: 120px;">
-                    <MudText Typo="Typo.subtitle1" Color="Color.Dark">Ca thi hôm nay</MudText>
-                    <MudText Typo="Typo.h4" Class="mt-auto">@(_examSessions.Count(s => s.StartTime.Date == DateTime.Today))</MudText>
-                    <MudText Typo="Typo.caption">Cập nhật: @DateTime.Now.ToString("dd/MM/yyyy HH:mm")</MudText>
-                </MudPaper>
-            </MudItem>
-        </MudGrid>
-
-        <!-- Main Tabs -->
-        <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-4" Class="mt-4">
-            <MudTabPanel Text="Năm học">
-                <AcademicYearTab AcademicYears="_academicYears" OnAcademicYearUpdated="RefreshData" />
-            </MudTabPanel>
-            <MudTabPanel Text="Học kỳ">
-                <SemesterTab Semesters="_semesters" AcademicYears="_academicYears" OnSemesterUpdated="RefreshData" />
-            </MudTabPanel>
-            <MudTabPanel Text="Đợt thi">
-                <ExamBatchTab ExamBatches="_examBatches" Semesters="_semesters" OnExamBatchUpdated="RefreshData" />
-            </MudTabPanel>
-            <MudTabPanel Text="Chi tiết đợt thi">
-                <MudCard Elevation="0">
-                    <MudCardHeader>
-                        <MudText Typo="Typo.h6">Quản lý Chi tiết đợt thi</MudText>
-                        <MudSpacer />
-                        <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add" 
-                                OnClick="OpenCreateExamBatchDetailDialog">Thêm chi tiết đợt thi</MudButton>
-                    </MudCardHeader>
-                    <MudCardContent>
-                        <MudTable Items="@_examBatchDetails" Hover="true" Dense="false" Striped="true">
-                            <HeaderContent>
-                                <MudTh>ID</MudTh>
-                                <MudTh>Tên chi tiết</MudTh>
-                                <MudTh>Đợt thi</MudTh>
-                                <MudTh>Thao tác</MudTh>
-                            </HeaderContent>
-                            <RowTemplate>
-                                <MudTd DataLabel="ID">@context.ExamBatchDetailId</MudTd>
-                                <MudTd DataLabel="Tên chi tiết">@context.Name</MudTd>
-                                <MudTd DataLabel="Đợt thi">@context.ExamBatchName</MudTd>
-                                <MudTd>
-                                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Size="Size.Small" 
-                                                OnClick="@(() => EditExamBatchDetail(context))" />
-                                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" 
-                                                OnClick="@(() => DeleteExamBatchDetail(context))" />
-                                </MudTd>
-                            </RowTemplate>
-                            <PagerContent>
-                                <MudTablePager PageSizeOptions="new int[] { 5, 10, 25, 50 }" />
-                            </PagerContent>
-                        </MudTable>
-                    </MudCardContent>
-                </MudCard>
-            </MudTabPanel>
-            <MudTabPanel Text="Ca thi">
-                <ExamSessionTab ExamSessions="@_examSessions" ExamBatches="_examBatches" OnExamSessionUpdated="RefreshData" />
-            </MudTabPanel>
-            <MudTabPanel Text="Khoa tham gia ca thi">
-                <MudCard Elevation="0">
-                    <MudCardHeader>
-                        <MudText Typo="Typo.h6">Quản lý Khoa tham gia ca thi</MudText>
-                        <MudSpacer />
-                        <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add" 
-                                OnClick="OpenCreateExamSessionDepartmentDialog">Thêm khoa tham gia ca thi</MudButton>
-                    </MudCardHeader>
-                    <MudCardContent>
-                        <MudTable Items="@_examSessionDepartments" Hover="true" Dense="false" Striped="true">
-                            <HeaderContent>
-                                <MudTh>ID</MudTh>
-                                <MudTh>Ca thi</MudTh>
-                                <MudTh>Khoa</MudTh>
-                                <MudTh>Thao tác</MudTh>
-                            </HeaderContent>
-                            <RowTemplate>
-                                <MudTd DataLabel="ID">@context.ExamSessionDepartmentId</MudTd>
-                                <MudTd DataLabel="Ca thi">@context.ExamSessionName</MudTd>
-                                <MudTd DataLabel="Khoa">@context.DepartmentName</MudTd>
-                                <MudTd>
-                                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Size="Size.Small" 
-                                                OnClick="@(() => EditExamSessionDepartment(context))" />
-                                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" 
-                                                OnClick="@(() => DeleteExamSessionDepartment(context))" />
-                                </MudTd>
-                            </RowTemplate>
-                            <PagerContent>
-                                <MudTablePager PageSizeOptions="new int[] { 5, 10, 25, 50 }" />
-                            </PagerContent>
-                        </MudTable>
-                    </MudCardContent>
-                </MudCard>
-            </MudTabPanel>
-            <MudTabPanel Text="Ca thi môn học">
-                <MudCard Elevation="0">
-                    <MudCardHeader>
-                        <MudText Typo="Typo.h6">Quản lý Ca thi môn học</MudText>
-                        <MudSpacer />
-                        <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add" 
-                                OnClick="OpenCreateExamSessionSubjectDialog">Thêm ca thi môn học</MudButton>
-                    </MudCardHeader>
-                    <MudCardContent>
-                        <MudTable Items="@_examSessionSubjects" Hover="true" Dense="false" Striped="true">
-                            <HeaderContent>
-                                <MudTh>ID</MudTh>
-                                <MudTh>Ca thi - Khoa</MudTh>
-                                <MudTh>Môn học</MudTh>
-                                <MudTh>Thời lượng</MudTh>
-                                <MudTh>Đề gốc</MudTh>
-                                <MudTh>Trạng thái</MudTh>
-                                <MudTh>Mã ca thi</MudTh>
-                                <MudTh>Thao tác</MudTh>
-                            </HeaderContent>
-                            <RowTemplate>
-                                <MudTd DataLabel="ID">@context.ExamSessionSubjectId</MudTd>
-                                <MudTd DataLabel="Ca thi - Khoa">@context.ExamSessionDepartmentId</MudTd>
-                                <MudTd DataLabel="Môn học">@context.SubjectName</MudTd>
-                                <MudTd DataLabel="Thời lượng">@context.Duration phút</MudTd>
-                                <MudTd DataLabel="Đề gốc">@(context.OriginalExamPaperTitle ?? "Chưa có đề")</MudTd>
-                                <MudTd DataLabel="Trạng thái">
-                                    <MudChip T="bool" Color="@(context.IsCompleted ? Color.Success : Color.Warning)" Size="Size.Small">
-                                        @(context.IsCompleted ? "Đã hoàn thành" : "Chưa hoàn thành")
-                                    </MudChip>
-                                </MudTd>
-                                <MudTd DataLabel="Mã ca thi">@context.ExamSessionSubjectCore</MudTd>
-                                <MudTd>
-                                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Size="Size.Small" 
-                                                OnClick="@(() => EditExamSessionSubject(context))" />
-                                    <MudMenu Icon="@Icons.Material.Filled.MoreVert" Size="Size.Small">
-                                        <MudMenuItem OnClick="@(() => UpdateOriginalExamPaper(context))">Cập nhật đề thi</MudMenuItem>
-                                    </MudMenu>
-                                </MudTd>
-                            </RowTemplate>
-                            <PagerContent>
-                                <MudTablePager PageSizeOptions="new int[] { 5, 10, 25, 50 }" />
-                            </PagerContent>
-                        </MudTable>
-                    </MudCardContent>
-                </MudCard>
-            </MudTabPanel>
-        </MudTabs>
-
-        <!-- Charts and Analytics -->
-        <MudGrid Class="mt-6">
-            <MudItem xs="12" md="6">
-                <MudPaper Elevation="2" Class="pa-4" Style="height: 350px;">
-                    <MudText Typo="Typo.h6" Class="mb-4">Phân bố ca thi theo đợt thi</MudText>
-                    @if (_examSessionsPerBatch.Count > 0)
-                    {
-                        <MudChart ChartType="ChartType.Bar" ChartSeries="@_examSessionsPerBatch" XAxisLabels="@_examBatchLabels" 
-                                Width="100%" Height="250px"></MudChart>
-                    }
-                    else
-                    {
-                        <div class="d-flex justify-center align-center" style="height: 250px;">
-                            <MudText Typo="Typo.subtitle1" Color="Color.Secondary">Chưa có dữ liệu</MudText>
-                        </div>
-                    }
-                </MudPaper>
-            </MudItem>
-            <MudItem xs="12" md="6">
-                <MudPaper Elevation="2" Class="pa-4" Style="height: 350px;">
-                    <MudText Typo="Typo.h6" Class="mb-4">Phân bố đợt thi theo học kỳ</MudText>
-                    @if (_examBatchesPerSemesterSeries.Count > 0)
-                    {
-                        <MudChart ChartType="ChartType.Donut" ChartSeries="@_examBatchesPerSemesterSeries" 
-                                Width="100%" Height="250px" LegendPosition="Position.Bottom"></MudChart>
-                    }
-                    else
-                    {
-                        <div class="d-flex justify-center align-center" style="height: 250px;">
-                            <MudText Typo="Typo.subtitle1" Color="Color.Secondary">Chưa có dữ liệu</MudText>
-                        </div>
-                    }
-                </MudPaper>
-            </MudItem>
-        </MudGrid>
-    </MudPaper>
-
-    <!-- Loading Indicator -->
-    @if (_loading)
-    {
-        <div class="d-flex justify-center align-center" style="height: 100vh; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.7); z-index: 9999;">
-            <MudProgressCircular Color="Color.Primary" Size="Size.Large" Indeterminate="true" />
+        <div class="header-right">
+            <span class="mode-tag">Academic Affairs (Management Mode)</span>
+            
+            <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" Color="Color.Inherit" OnClick="GoBackToMain" Title="Quay lại trang chủ" />
+            <MudIconButton Icon="@Icons.Material.Filled.AccountCircle" Color="Color.Inherit" />
+            <MudIconButton Icon="@Icons.Material.Filled.Notifications" Color="Color.Inherit" />
+            <MudIconButton Icon="@Icons.Material.Filled.Logout" Color="Color.Inherit" OnClick="Logout" Title="Đăng xuất" />
         </div>
-    }
-</MudContainer>
+    </div>
 
-@code {
-    private bool _loading = true;
-    private List<AcademicYearDto> _academicYears = new();
-    private List<SemesterDto> _semesters = new();
-    private List<ExamBatchDto> _examBatches = new();
-    private List<ExamBatchDetailDto> _examBatchDetails = new();
-    private List<frontend_manage.DTOs.AcademicAffairs.ExamSessionDto> _examSessions = new();
-    private List<ExamSessionDepartmentDto> _examSessionDepartments = new();
-    private List<ExamSessionSubjectDto> _examSessionSubjects = new();
+    <!-- Navigation Tabs -->
+    <div class="dashboard-nav">
+        <div class="nav-item @(activeTab == 0 ? "active" : "")" @onclick="() => ActivateTab(0)">
+            <MudIcon Icon="@Icons.Material.Filled.Schedule" />
+            <span>CA THI</span>
+        </div>
+        <div class="nav-item @(activeTab == 1 ? "active" : "")" @onclick="() => ActivateTab(1)">
+            <MudIcon Icon="@Icons.Material.Filled.Assignment" />
+            <span>ĐỢT THI</span>
+        </div>
+        <div class="nav-item @(activeTab == 2 ? "active" : "")" @onclick="() => ActivateTab(2)">
+            <MudIcon Icon="@Icons.Material.Filled.School" />
+            <span>MÔN THI</span>
+        </div>
+        <div class="nav-item @(activeTab == 3 ? "active" : "")" @onclick="() => ActivateTab(3)">
+            <MudIcon Icon="@Icons.Material.Filled.CalendarToday" />
+            <span>NĂM HỌC</span>
+        </div>
+    </div>
 
-    // Chart data
-    private List<ChartSeries> _examSessionsPerBatch = new();
-    private string[] _examBatchLabels = Array.Empty<string>();
-    private List<ChartSeries> _examBatchesPerSemesterSeries = new();
-    private string[] _semesterLabels = Array.Empty<string>();
-
-    protected override async Task OnInitializedAsync()
-    {
-        await RefreshData();
-    }
-
-    private async Task RefreshData()
-    {
-        _loading = true;
-        StateHasChanged();
-
-        try
+    <!-- Content Area -->
+    <div class="dashboard-content">
+        @if (isLoading)
         {
-            _academicYears = await AcademicYearService.GetAllAsync();
-            _semesters = await SemesterService.GetAllAsync();
-            _examBatches = await ExamBatchService.GetAllAsync();
-            _examBatchDetails = await ExamBatchDetailService.GetAllAsync();
-            _examSessions = await ExamSessionService.GetAllAsync();
-            _examSessionSubjects = await ExamSessionSubjectService.GetAllAsync();
-
-            // Update chart data
-            UpdateExamSessionsPerBatchChart();
-            UpdateExamBatchesPerSemesterChart();
+            <div class="@(activeTab == 0 ? "tab-content-active" : "tab-content-hidden")">
+                @if (activeTab == 0 || previousTab == 0)
+                {
+                    <div class="loading-container">
+                        <div class="loading-spinner"></div>
+                        <div class="loading-text">Đang tải dữ liệu ca thi...</div>
+                    </div>
+                }
+            </div>
+            <div class="@(activeTab == 1 ? "tab-content-active" : "tab-content-hidden")">
+                @if (activeTab == 1 || previousTab == 1)
+                {
+                    <div class="loading-container">
+                        <div class="loading-spinner"></div>
+                        <div class="loading-text">Đang tải dữ liệu đợt thi...</div>
+                    </div>
+                }
+            </div>
+            <div class="@(activeTab == 2 ? "tab-content-active" : "tab-content-hidden")">
+                @if (activeTab == 2 || previousTab == 2)
+                {
+                    <div class="loading-container">
+                        <div class="loading-spinner"></div>
+                        <div class="loading-text">Đang tải dữ liệu môn thi...</div>
+                    </div>
+                }
+            </div>
+            <div class="@(activeTab == 3 ? "tab-content-active" : "tab-content-hidden")">
+                @if (activeTab == 3 || previousTab == 3)
+                {
+                    <div class="loading-container">
+                        <div class="loading-spinner"></div>
+                        <div class="loading-text">Đang tải dữ liệu năm học...</div>
+                    </div>
+                }
+            </div>
         }
-        catch (Exception ex)
+        else if (!string.IsNullOrEmpty(errorMessage))
         {
-            Snackbar.Add($"Lỗi khi tải dữ liệu: {ex.Message}", Severity.Error);
+            <div class="@(activeTab == 0 ? "tab-content-active" : "tab-content-hidden")">
+                @if (activeTab == 0 || previousTab == 0)
+                {
+                    <div class="error-container">
+                        <MudAlert Severity="Severity.Error" Variant="Variant.Filled">
+                            @errorMessage
+                        </MudAlert>
+                    </div>
+                }
+            </div>
+            <div class="@(activeTab == 1 ? "tab-content-active" : "tab-content-hidden")">
+                @if (activeTab == 1 || previousTab == 1)
+                {
+                    <div class="error-container">
+                        <MudAlert Severity="Severity.Error" Variant="Variant.Filled">
+                            @errorMessage
+                        </MudAlert>
+                    </div>
+                }
+            </div>
+            <div class="@(activeTab == 2 ? "tab-content-active" : "tab-content-hidden")">
+                @if (activeTab == 2 || previousTab == 2)
+                {
+                    <div class="error-container">
+                        <MudAlert Severity="Severity.Error" Variant="Variant.Filled">
+                            @errorMessage
+                        </MudAlert>
+                    </div>
+                }
+            </div>
+            <div class="@(activeTab == 3 ? "tab-content-active" : "tab-content-hidden")">
+                @if (activeTab == 3 || previousTab == 3)
+                {
+                    <div class="error-container">
+                        <MudAlert Severity="Severity.Error" Variant="Variant.Filled">
+                            @errorMessage
+                        </MudAlert>
+                    </div>
+                }
+            </div>
         }
-        finally
+        else
         {
-            _loading = false;
-            StateHasChanged();
+            <div class="@(activeTab == 0 ? "tab-content-active" : "tab-content-hidden")">
+                @if (activeTab == 0 || previousTab == 0)
+                {
+                    <ExamSessionsTab ExamSessions="@examSessions" OnRefresh="LoadExamSessions" />
+                }
+            </div>
+            <div class="@(activeTab == 1 ? "tab-content-active" : "tab-content-hidden")">
+                @if (activeTab == 1 || previousTab == 1)
+                {
+                    <ExamBatchesTab ExamBatches="@examBatches" OnRefresh="LoadExamBatches" />
+                }
+            </div>
+            <div class="@(activeTab == 2 ? "tab-content-active" : "tab-content-hidden")">
+                @if (activeTab == 2 || previousTab == 2)
+                {
+                    <ExamSessionSubjectsTab ExamSessionSubjects="@examSessionSubjects" OnRefresh="LoadExamSessionSubjects" />
+                }
+            </div>
+            <div class="@(activeTab == 3 ? "tab-content-active" : "tab-content-hidden")">
+                @if (activeTab == 3 || previousTab == 3)
+                {
+                    <AcademicYearsTab AcademicYears="@academicYears" OnRefresh="LoadAcademicYears" />
+                }
+            </div>
         }
-    }
+    </div>
 
-    private void UpdateExamSessionsPerBatchChart()
-    {
-        _examSessionsPerBatch.Clear();
+    <!-- Footer -->
+    <div class="dashboard-footer">
+        <div class="footer-left">
+            <MudIcon Icon="@Icons.Material.Filled.AccessTime" Size="Size.Small" Class="footer-icon" />
+            <span class="footer-time">@currentTime</span>
+            <span class="footer-date">@currentDate</span>
+        </div>
+        <div class="footer-center">
+            <div class="footer-logo">
+                <span class="footer-brand">HUTECH</span>
+                <span class="footer-divider">|</span>
+                <span>Academic Affairs Management System</span>
+            </div>
+            <div class="footer-copyright">© 2025 Trường Đại học Công nghệ TP.HCM. All rights reserved.</div>
+        </div>
+        <div class="footer-right">
+            <span class="footer-version">Version 1.0.1</span>
+            <span class="footer-divider">|</span>
+            <span class="footer-developers">Developed by Natwodev & Juo</span>
+            <MudIcon Icon="@Icons.Custom.Brands.GitHub" Size="Size.Small" Class="footer-icon ms-1" />
+        </div>
+    </div>
+</div>
 
-        var examSessionsGrouped = _examSessions
-            .GroupBy(s => s.ExamBatchId)
-            .Take(5)
-            .ToList();
-
-        var labels = new List<string>();
-        var data = new List<double>();
-
-        foreach (var group in examSessionsGrouped)
-        {
-            var examBatch = _examBatches.FirstOrDefault(eb => eb.ExamBatchId == group.Key);
-            if (examBatch != null)
-            {
-                labels.Add(examBatch.BatchName);
-                data.Add(group.Count());
-            }
-        }
-
-        _examBatchLabels = labels.ToArray();
-        _examSessionsPerBatch.Add(new ChartSeries { Name = "Số ca thi", Data = data.ToArray() });
-    }
-
-    private void UpdateExamBatchesPerSemesterChart()
-    {
-        _examBatchesPerSemesterSeries.Clear();
-        
-        var examBatchesGrouped = _examBatches
-            .GroupBy(eb => eb.SemesterId)
-            .Take(5)
-            .ToList();
-
-        var data = new List<double>();
-        var labels = new List<string>();
-
-        foreach (var group in examBatchesGrouped)
-        {
-            var semester = _semesters.FirstOrDefault(s => s.SemesterId == group.Key);
-            if (semester != null)
-            {
-                data.Add(group.Count());
-                labels.Add(semester.SemesterName);
-            }
-        }
-
-        _semesterLabels = labels.ToArray();
-        
-        if (data.Count > 0)
-        {
-            _examBatchesPerSemesterSeries.Add(new ChartSeries 
-            { 
-                Name = "Số đợt thi", 
-                Data = data.ToArray()
-            });
-        }
-    }
-
-    // ExamBatchDetail methods
-    private async Task OpenCreateExamBatchDetailDialog()
-    {
-        // Implementation similar to the other dialogs
-    }
-
-    private async Task EditExamBatchDetail(ExamBatchDetailDto examBatchDetail)
-    {
-        // Implementation similar to the other edit methods
-    }
-
-    private async Task DeleteExamBatchDetail(ExamBatchDetailDto examBatchDetail)
-    {
-        // Implementation similar to the other delete methods
-    }
-
-    // ExamSessionDepartment methods
-    private async Task OpenCreateExamSessionDepartmentDialog()
-    {
-        // Implementation similar to the other dialogs
-    }
-
-    private async Task EditExamSessionDepartment(ExamSessionDepartmentDto examSessionDepartment)
-    {
-        // Implementation similar to the other edit methods
-    }
-
-    private async Task DeleteExamSessionDepartment(ExamSessionDepartmentDto examSessionDepartment)
-    {
-        // Implementation similar to the other delete methods
-    }
-
-    // ExamSessionSubject methods
-    private async Task OpenCreateExamSessionSubjectDialog()
-    {
-        // Implementation similar to the other dialogs
-    }
-
-    private async Task EditExamSessionSubject(ExamSessionSubjectDto examSessionSubject)
-    {
-        // Implementation similar to the other edit methods
-    }
-
-    private async Task UpdateOriginalExamPaper(ExamSessionSubjectDto examSessionSubject)
-    {
-        // Implementation for updating original exam paper
-    }
-
-    private async Task Logout()
-    {
-        await AuthService.Logout();
-    }
-} 
+@* Code is now in Dashboard.razor.cs *@

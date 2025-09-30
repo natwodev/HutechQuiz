@@ -247,7 +247,40 @@ public class AuthService
     {
         // Cookie-based auth removed
         var token = await _jsRuntime.InvokeAsync<string>("localStorage.getItem", TokenKey);
-        return !string.IsNullOrEmpty(token);
+        if (string.IsNullOrEmpty(token))
+        {
+            return false;
+        }
+
+        // Kiểm tra token có hợp lệ và chưa hết hạn
+        try
+        {
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var jwtToken = tokenHandler.ReadToken(token) as JwtSecurityToken;
+
+            if (jwtToken == null)
+            {
+                // Token không hợp lệ, xóa khỏi localStorage
+                await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", TokenKey);
+                return false;
+            }
+
+            // Kiểm tra token có hết hạn không
+            if (jwtToken.ValidTo < DateTime.UtcNow)
+            {
+                // Token đã hết hạn, xóa khỏi localStorage
+                await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", TokenKey);
+                return false;
+            }
+
+            return true;
+        }
+        catch
+        {
+            // Token không hợp lệ, xóa khỏi localStorage
+            await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", TokenKey);
+            return false;
+        }
     }
 
     public async Task<string?> GetUserRoleFromToken()

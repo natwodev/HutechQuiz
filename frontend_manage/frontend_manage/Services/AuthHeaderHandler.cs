@@ -30,16 +30,23 @@ public class AuthHeaderHandler : DelegatingHandler
         {
             // Always use JWT from localStorage; cookie-based auth removed
             var token = await _jsRuntime.InvokeAsync<string>("localStorage.getItem", TokenKey);
+            Console.WriteLine($"[AuthHeaderHandler] JWT Token: {token ?? "null"}");
             Debug.WriteLine($"[AuthHeaderHandler] JWT Token: {token ?? "null"}");
 
             if (!string.IsNullOrEmpty(token))
             {
                 request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                Console.WriteLine($"[AuthHeaderHandler] Added Bearer token from JWT auth");
                 Debug.WriteLine($"[AuthHeaderHandler] Added Bearer token from JWT auth");
+            }
+            else
+            {
+                Console.WriteLine($"[AuthHeaderHandler] No token found in localStorage!");
             }
             
             // Log final authorization header
             var authHeader = request.Headers.Authorization?.ToString();
+            Console.WriteLine($"[AuthHeaderHandler] Final Authorization Header: {authHeader ?? "None"}");
             Debug.WriteLine($"[AuthHeaderHandler] Final Authorization Header: {authHeader ?? "None"}");
         }
         catch (Exception ex)

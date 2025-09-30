@@ -4,7 +4,6 @@ using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
 using frontend_manage.DTOs.AcademicAffairs;
-using Microsoft.Extensions.Configuration;
 
 namespace frontend_manage.Services.AcademicAffairs
 {
@@ -13,10 +12,10 @@ namespace frontend_manage.Services.AcademicAffairs
         private readonly HttpClient _httpClient;
         private readonly string _baseUrl;
 
-        public SemesterService(HttpClient httpClient, IConfiguration configuration)
+        public SemesterService(HttpClient httpClient)
         {
             _httpClient = httpClient;
-            _baseUrl = configuration["ApiSettings:BaseUrl"] + "/api/Semester";
+            _baseUrl = "/api/Semester";
         }
 
         public async Task<List<SemesterDto>> GetAllAsync()

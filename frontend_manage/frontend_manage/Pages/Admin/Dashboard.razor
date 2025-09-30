@@ -14,6 +14,11 @@
         <h2 class="mb-0">Trang quản trị</h2>
         <small>Chào mừng bạn đến với hệ thống quản lý thi</small>
     </div>
+    <div>
+        <button class="btn btn-outline-light btn-sm" @onclick="Logout" title="Đăng xuất">
+            <i class="fas fa-sign-out-alt me-1"></i> Đăng xuất
+        </button>
+    </div>
 </div>
 
 <!-- Nội dung chính -->
@@ -111,5 +116,19 @@
     private async Task GoToExamRoom(int examRoomId, int examSessionSubjectId)
     {
         Navigation.NavigateTo($"/exam-room-students?examRoomId={examRoomId}&examSessionSubjectId={examSessionSubjectId}");
+    }
+
+    private async Task Logout()
+    {
+        try
+        {
+            await AuthService.Logout();
+            Navigation.NavigateTo("/login");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error during logout: {ex.Message}");
+            Navigation.NavigateTo("/login");
+        }
     }
 } 

@@ -8,6 +8,138 @@
 html, body {
     height: 100%;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    overflow-x: hidden;
+}
+
+/* Main Login Container */
+.login-container {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+/* Background Video */
+.login-background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -2;
+}
+
+.video-background {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.video-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, rgba(25, 118, 210, 0.8) 0%, rgba(156, 39, 176, 0.8) 100%);
+    z-index: -1;
+}
+
+/* Login Form Container */
+.login-form-container {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 450px;
+    padding: 20px;
+}
+
+.login-paper {
+    padding: 40px !important;
+    border-radius: 20px !important;
+    background: rgba(255, 255, 255, 0.95) !important;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Header Styles */
+.login-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.logo-container {
+    margin-bottom: 20px;
+}
+
+.login-logo {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+.login-title {
+    font-weight: 700 !important;
+    margin-bottom: 8px !important;
+    letter-spacing: 1px;
+}
+
+.login-subtitle {
+    color: #666 !important;
+    font-weight: 400 !important;
+}
+
+/* Login Form - Always visible */
+
+/* Login Form */
+.login-form {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.form-title {
+    text-align: center;
+    margin-bottom: 25px !important;
+    color: #333 !important;
+    font-weight: 600 !important;
+}
+
+.login-input {
+    margin-bottom: 20px !important;
+}
+
+.login-button {
+    margin-top: 10px !important;
+    height: 50px !important;
+    font-size: 16px !important;
+    font-weight: 600 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 1px !important;
+    border-radius: 25px !important;
+}
+
+/* Footer */
+.login-footer {
+    margin-top: 30px;
+    text-align: center;
+    padding-top: 20px;
+    border-top: 1px solid #e0e0e0;
+}
+
+.footer-text {
+    color: #666 !important;
+    margin-bottom: 5px !important;
+}
+
+.footer-version {
+    color: #999 !important;
+    font-size: 12px !important;
 }
 
 /* Background overlay để tạo hiệu ứng mờ */
@@ -92,26 +224,46 @@ html, body {
     background: #a8a8a8;
 }
 
-/* Responsive design */
+/* Responsive Design */
 @media (max-width: 768px) {
-    .mud-paper {
-        margin: 16px;
-        padding: 24px !important;
+    .login-form-container {
+        max-width: 400px;
+        padding: 15px;
     }
-
-    .mud-text-h4 {
+    
+    .login-paper {
+        padding: 30px !important;
+    }
+    
+    
+    .login-title {
         font-size: 1.5rem !important;
     }
 }
 
 @media (max-width: 480px) {
-    .mud-paper {
-        margin: 8px;
-        padding: 16px !important;
+    .login-form-container {
+        padding: 10px;
     }
-
-    .mud-text-h4 {
+    
+    .login-paper {
+        padding: 20px !important;
+        border-radius: 15px !important;
+    }
+    
+    .login-logo {
+        width: 60px;
+        height: 60px;
+    }
+    
+    .login-title {
         font-size: 1.25rem !important;
+    }
+    
+    
+    .login-button {
+        height: 45px !important;
+        font-size: 14px !important;
     }
 }
 

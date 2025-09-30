@@ -28,11 +28,14 @@ namespace backend_manage.core.Services.AuthService
 
         public async Task<IEnumerable<ExamBatchDetailDto>> GetAllAsync()
         {
-            var details = await _repository.GetAllAsync();
+            var details = await _repository.GetQueryable()
+                .Include(x => x.ExamBatch)
+                .AsNoTracking()
+                .ToListAsync();
             return _mapper.Map<IEnumerable<ExamBatchDetailDto>>(details);
         }
 
-        public async Task<ExamBatchDetailDto?> GetByIdAsync(string id)
+        public async Task<ExamBatchDetailDto?> GetByIdAsync(int id)
         {
             var detail = await _repository.GetByIdAsync(id);
             return detail == null ? null : _mapper.Map<ExamBatchDetailDto>(detail);
@@ -56,7 +59,7 @@ namespace backend_manage.core.Services.AuthService
             return _mapper.Map<ExamBatchDetailDto>(fullEntity);
         }
 
-        public async Task<ExamBatchDetailDto> UpdateAsync(string id, ExamBatchDetailUpdateDto dto)
+        public async Task<ExamBatchDetailDto> UpdateAsync(int id, ExamBatchDetailUpdateDto dto)
         {
             var entity = await _repository.GetByIdAsync(id);
             if (entity == null) return null;
@@ -70,7 +73,7 @@ namespace backend_manage.core.Services.AuthService
             return _mapper.Map<ExamBatchDetailDto>(result);
         }
 
-        public async Task<bool> DeleteAsync(string id)
+        public async Task<bool> DeleteAsync(int id)
         {
             var entity = await _repository.GetByIdAsync(id);
             if (entity == null) return false;
