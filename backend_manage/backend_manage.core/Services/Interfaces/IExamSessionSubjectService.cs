@@ -25,5 +25,8 @@ namespace backend_manage.core.Services.Interfaces
         
         // Phương thức mới trả về danh sách SubjectExamRoomStatusDto theo LecturerId
         Task<IEnumerable<SubjectExamRoomStatusDto>> GetSubjectExamRoomStatusByLecturerIdAsync(int lecturerId);
+
+        // Kiểm tra môn thi trong ca thi đã mở hay chưa
+        Task<bool> IsOpenAsync(int examSessionSubjectId);
     }
 } 

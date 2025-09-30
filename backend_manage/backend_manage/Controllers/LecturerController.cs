@@ -8,6 +8,7 @@ using System.Security.Claims;
 using backend_manage.core.Entities;
 using backend_manage.core.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using backend_manage.core.Hubs;
 
 namespace backend_manage.Controllers
 {
@@ -18,15 +19,18 @@ namespace backend_manage.Controllers
         private readonly ILecturerService _lecturerService;
         private readonly IStudentService _studentService;
         private readonly IRepository<StudentExamSession> _studentExamSessionRepository;
+        private readonly IRepository<ExamSessionSubject> _examSessionSubjectRepository;
 
         public LecturerController(
             ILecturerService lecturerService,
             IStudentService studentService,
-            IRepository<StudentExamSession> studentExamSessionRepository)
+            IRepository<StudentExamSession> studentExamSessionRepository,
+            IRepository<ExamSessionSubject> examSessionSubjectRepository)
         {
             _lecturerService = lecturerService;
             _studentService = studentService;
             _studentExamSessionRepository = studentExamSessionRepository;
+            _examSessionSubjectRepository = examSessionSubjectRepository;
         }
 
         [HttpPost]
@@ -107,6 +111,41 @@ namespace backend_manage.Controllers
         {
             public int StudentExamSessionId { get; set; }
             public string StudentCode { get; set; } = string.Empty;
+        }
+
+        [HttpPost("reset-exam-session-start-time")]
+        public async Task<IActionResult> ResetExamSessionStartTime()
+        {
+            var now = DateTimeHelper.GetVietnamTime();
+            var userId = User?.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            var sessions = await _studentExamSessionRepository
+                .GetQueryable()
+                .ToListAsync();
+
+            foreach (var session in sessions)
+            {
+                session.ExamSessionStartTime = now;
+                session.UpdatedAt = now;
+                session.UpdatedBy = userId;
+                await _studentExamSessionRepository.UpdateAsync(session);
+            }
+
+            // Reset thêm ExamSessionSubject: đặt StartTime = now, EndTime = now + Duration
+            var subjects = await _examSessionSubjectRepository
+                .GetQueryable()
+                .ToListAsync();
+
+            foreach (var subject in subjects)
+            {
+                subject.StartTime = now;
+                subject.EndTime = subject.Duration > 0 ? now.AddMinutes(subject.Duration) : now;
+                subject.UpdatedAt = now;
+                subject.UpdatedBy = userId;
+                await _examSessionSubjectRepository.UpdateAsync(subject);
+            }
+
+            return Ok(new { message = "Đã reset ExamSessionStartTime và ExamSessionSubject thời gian", studentExamSessionsUpdated = sessions.Count, examSessionSubjectsUpdated = subjects.Count, time = now });
         }
     }
 } 

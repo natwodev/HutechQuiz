@@ -131,17 +131,12 @@
         
         try
         {
-            // Sử dụng MonitorApi để đăng nhập giảng viên
-            var result = await MonitorService.LoginLecturerAsync(loginModel.LecturerCode1, loginModel.LecturerCode2);
+            // Đăng nhập giảng viên thông qua AuthService
+            var result = await AuthService.LoginLecturer(loginModel.LecturerCode1, loginModel.LecturerCode2);
             
             if (result?.IsSuccess == true)
             {
-                // Lưu token vào localStorage
-                await JSRuntime.InvokeVoidAsync("localStorage.setItem", "authToken", result.Token);
-                await JSRuntime.InvokeVoidAsync("localStorage.setItem", "authType", "jwt");
-                await JSRuntime.InvokeVoidAsync("localStorage.setItem", "userType", "lecturer");
-                
-                // Sử dụng role từ LecturerAuthResultDto
+                // Role từ LecturerAuthResultDto
                 var role = result.Role;
                 
                 // Chỉ cho phép role Lecturer truy cập monitor

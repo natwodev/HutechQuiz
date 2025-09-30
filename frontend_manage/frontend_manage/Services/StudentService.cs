@@ -12,6 +12,36 @@ public class StudentService
         _httpClient = httpClient;
     }
 
+    public async Task<ExamSubmissionDto?> GetSubmissionResultAsync(int studentExamSessionId)
+    {
+        try
+        {
+            var payload = new { StudentExamSessionId = studentExamSessionId };
+            var response = await _httpClient.PostAsJsonAsync("/api/Student/get-submission-result", payload);
+
+            if (response.IsSuccessStatusCode)
+            {
+                return await response.Content.ReadFromJsonAsync<ExamSubmissionDto>();
+            }
+
+            if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                return null;
+            }
+
+            if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+            {
+                return null;
+            }
+
+            return null;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
     public async Task<StudentInfoDto?> GetStudentProfileAsync()
     {
         return await _httpClient.GetFromJsonAsync<StudentInfoDto>("api/student/profile");
@@ -22,6 +52,20 @@ public class StudentService
         var allExamSessions = await _httpClient.GetFromJsonAsync<List<StudentExamSessionDto>>("api/Student/exam-sessions");
         
         return allExamSessions ?? new List<StudentExamSessionDto>();
+    }
+
+    public async Task<bool?> GetExamSessionSubjectIsOpenAsync(int examSessionSubjectId)
+    {
+        try
+        {
+            // Backend trả về boolean thuần
+            var result = await _httpClient.GetFromJsonAsync<bool>($"api/ExamSessionSubject/{examSessionSubjectId}/is-open");
+            return result;
+        }
+        catch
+        {
+            return null;
+        }
     }
 
     public async Task<StartExamResponseDto?> StartExamAsync(int studentExamSessionId)
@@ -119,8 +163,6 @@ public class StudentService
                     {
                         Success = false,
                         Message = "Quá nhiều yêu cầu nộp bài. Vui lòng thử lại sau vài giây.",
-                        IsRateLimited = true,
-                        RetryAfterSeconds = GetRetryAfterSeconds(response)
                     };
                 }
                 else if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
@@ -129,7 +171,6 @@ public class StudentService
                     {
                         Success = false,
                         Message = "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.",
-                        IsUnauthorized = true
                     };
                 }
                 else
@@ -139,7 +180,6 @@ public class StudentService
                     {
                         Success = false,
                         Message = $"Lỗi server khi nộp bài: {response.StatusCode}. {errorContent}",
-                        StatusCode = (int)response.StatusCode
                     };
                 }
             }
@@ -150,7 +190,6 @@ public class StudentService
             {
                 Success = false,
                 Message = $"Lỗi kết nối khi nộp bài: {ex.Message}",
-                IsConnectionError = true
             };
         }
     }

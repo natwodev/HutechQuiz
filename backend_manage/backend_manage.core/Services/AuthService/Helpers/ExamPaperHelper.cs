@@ -60,6 +60,21 @@ public class ExamPaperHelper
             return (null, null, null);
         }
 
+        // Kiểm tra trạng thái hoạt động của môn thi trong ca thi
+        var examSessionSubject = await _examSessionSubjectRepository.GetQueryable()
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.ExamSessionSubjectId == studentExamSessionDto.ExamSessionSubjectId);
+        if (examSessionSubject == null)
+        {
+            _logger.LogWarning("Không tìm thấy ExamSessionSubject với ID {ExamSessionSubjectId} cho sinh viên {StudentCode}", studentExamSessionDto.ExamSessionSubjectId, studentCode);
+            throw new InvalidOperationException("Không tìm thấy thông tin ca thi môn.");
+        }
+        if (!examSessionSubject.IsActive)
+        {
+            _logger.LogWarning("ExamSessionSubject {ExamSessionSubjectId} chưa được mở (IsActive = false) cho sinh viên {StudentCode}", examSessionSubject.ExamSessionSubjectId, studentCode);
+            throw new InvalidOperationException("Môn thi chưa được mở. Vui lòng liên hệ giám thị.");
+        }
+
         // Kiểm tra thời gian bắt đầu thi
         var currentTime = DateTimeHelper.GetVietnamTime();
         var examStartTime = studentExamSessionDto.ExamSessionStartTime;
