@@ -7,6 +7,7 @@ using MudBlazor;
 using frontend_manage.Pages.AcademicAffairs.Components.Dialogs;
 using frontend_manage.Services.AcademicAffairs;
 using System;
+using System.Threading;
 
 namespace frontend_manage.Pages.AcademicAffairs.Components
 {
@@ -28,6 +29,13 @@ namespace frontend_manage.Pages.AcademicAffairs.Components
         private ExamSessionSubjectDto _formData = new();
         private string _examDateString = "";
         private string _examTimeString = "";
+        private string _searchText = string.Empty;
+        private string _statusFilter = "all";
+        private MudTable<ExamSessionSubjectDto>? _tableRef;
+        private int _totalItems;
+        private int _page;
+        private int _pageSize = 10;
+        private List<ExamSessionSubjectDto> _currentPageItems = new();
 
         private void CreateNew()
         {
@@ -173,6 +181,92 @@ namespace frontend_manage.Pages.AcademicAffairs.Components
             }
         }
 
+        private async Task<TableData<ExamSessionSubjectDto>> LoadExamSessionSubjects(TableState state, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var page = _page + 1;
+                var pageSize = _pageSize;
+                var paged = await ExamSessionSubjectService.GetPagedAsync(page, pageSize);
+                IEnumerable<ExamSessionSubjectDto> items = paged.Items;
+                if (!string.IsNullOrWhiteSpace(_searchText))
+                {
+                    var term = _searchText.Trim().ToLowerInvariant();
+                    items = items.Where(x => (x.SubjectName ?? string.Empty).ToLowerInvariant().Contains(term)
+                                           || (x.MonitorName ?? string.Empty).ToLowerInvariant().Contains(term)
+                                           || (x.RoomName ?? string.Empty).ToLowerInvariant().Contains(term));
+                }
+                items = _statusFilter switch
+                {
+                    "completed" => items.Where(x => x.IsCompleted),
+                    "pending" => items.Where(x => !x.IsCompleted),
+                    _ => items
+                };
+                var filtered = items.ToList();
+                _totalItems = paged.TotalItems;
+                _currentPageItems = filtered;
+                return new TableData<ExamSessionSubjectDto>
+                {
+                    Items = filtered,
+                    TotalItems = string.IsNullOrWhiteSpace(_searchText) && _statusFilter == "all" ? paged.TotalItems : filtered.Count
+                };
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Tải danh sách môn thi thất bại: {ex.Message}", Severity.Error);
+                return new TableData<ExamSessionSubjectDto> { Items = new List<ExamSessionSubjectDto>(), TotalItems = 0 };
+            }
+        }
+
+        private async Task TableReload()
+        {
+            if (_tableRef != null)
+            {
+                await _tableRef.ReloadServerData();
+            }
+        }
+
+        private async Task OnSearchInput(ChangeEventArgs e)
+        {
+            _searchText = e.Value?.ToString() ?? string.Empty;
+            await TableReload();
+        }
+
+        private async Task OnStatusChanged(ChangeEventArgs e)
+        {
+            _statusFilter = e.Value?.ToString() ?? "all";
+            await TableReload();
+        }
+
+        private int LastPageIndex()
+        {
+            if (_pageSize <= 0) return 0;
+            var pages = (int)Math.Ceiling((_totalItems <= 0 ? 1 : _totalItems) / (double)_pageSize);
+            return Math.Max(0, pages - 1);
+        }
+
+        private async Task GoPrev()
+        {
+            _page = Math.Max(0, _page - 1);
+            await TableReload();
+        }
+
+        private async Task GoNext()
+        {
+            _page = Math.Min(LastPageIndex(), _page + 1);
+            await TableReload();
+        }
+
+        private async Task OnPageSizeChanged(ChangeEventArgs e)
+        {
+            if (int.TryParse(e.Value?.ToString(), out var sz) && sz > 0)
+            {
+                _pageSize = sz;
+                _page = 0;
+                await TableReload();
+            }
+        }
+
         private async Task DeleteExamSessionSubject(ExamSessionSubjectDto examSessionSubject)
         {
             _deletingExamSessionSubject = examSessionSubject;
@@ -196,10 +290,18 @@ namespace frontend_manage.Pages.AcademicAffairs.Components
 
             if (!result.Canceled)
             {
-                // TODO: Call API to delete exam session subject
-                if (OnRefresh.HasDelegate)
+                try
                 {
-                    await OnRefresh.InvokeAsync();
+                    await ExamSessionSubjectService.DeleteAsync(examSessionSubject.ExamSessionSubjectId);
+                    Snackbar.Add($"Đã xóa môn thi '{examSessionSubject.SubjectName}'", Severity.Success);
+                    if (OnRefresh.HasDelegate)
+                    {
+                        await OnRefresh.InvokeAsync();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Snackbar.Add($"Xóa thất bại: {ex.Message}", Severity.Error);
                 }
             }
         }

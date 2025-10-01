@@ -19,10 +19,18 @@ namespace backend_manage.Controllers
 
         [HttpGet]
         [Authorize(Policy = "AcademicAffairsOrAdmin")]
-        public async Task<IActionResult> GetAll()
+        public async Task<IActionResult> GetAll([FromQuery]int? page, [FromQuery]int? pageSize)
         {
-            var result = await _service.GetAllAsync();
-            return Ok(result);
+            if (page.HasValue && pageSize.HasValue)
+            {
+                var paged = await _service.GetPagedAsync(page.Value, pageSize.Value);
+                return Ok(paged);
+            }
+            else
+            {
+                var result = await _service.GetAllAsync();
+                return Ok(result);
+            }
         }
 
         [HttpGet("{id}")]

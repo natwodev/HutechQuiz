@@ -5,6 +5,7 @@ namespace backend_manage.core.Services.Interfaces
     public interface IExamSessionSubjectService
     {
         Task<IEnumerable<ExamSessionSubjectDto>> GetAllAsync();
+        Task<PagedResult<ExamSessionSubjectDto>> GetPagedAsync(int page, int pageSize);
         Task<ExamSessionSubjectDto?> GetByIdAsync(int id);
         Task<ExamSessionSubjectDto> AddAsync(ExamSessionSubjectCreateDto dto);
         Task<ExamSessionSubjectDto> UpdateAsync(int id, ExamSessionSubjectUpdateDto dto);

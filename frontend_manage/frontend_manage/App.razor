@@ -5,7 +5,12 @@
         [Inject] private NavigationManager Navigation { get; set; }
         protected override void OnInitialized()
         {
-            Navigation.NavigateTo("/student-login", true);
+            // Only redirect from root, and avoid force reloading the whole app
+            var current = Navigation.Uri;
+            if (!current.EndsWith("/student-login", StringComparison.OrdinalIgnoreCase))
+            {
+                Navigation.NavigateTo("/student-login", replace: true);
+            }
         }
     }
 }
@@ -21,5 +26,5 @@
         </LayoutView>
     </NotFound>
 </Router>
-
 <RedirectToLogin />
+

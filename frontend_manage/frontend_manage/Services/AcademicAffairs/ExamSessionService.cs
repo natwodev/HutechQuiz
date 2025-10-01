@@ -4,6 +4,7 @@ using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
 using frontend_manage.DTOs.AcademicAffairs;
+using frontend_manage.DTOs.Common;
 
 namespace frontend_manage.Services.AcademicAffairs
 {
@@ -29,6 +30,21 @@ namespace frontend_manage.Services.AcademicAffairs
             {
                 Console.WriteLine($"Error in GetAllAsync: {ex.Message}");
                 return new List<ExamSessionDto>();
+            }
+        }
+
+        public async Task<PagedResult<ExamSessionDto>> GetPagedAsync(int page, int pageSize)
+        {
+            try
+            {
+                var url = $"{_baseUrl}?page={page}&pageSize={pageSize}";
+                var response = await _httpClient.GetFromJsonAsync<PagedResult<ExamSessionDto>>(url);
+                return response ?? new PagedResult<ExamSessionDto> { Items = new List<ExamSessionDto>(), TotalItems = 0, Page = page, PageSize = pageSize };
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in GetPagedAsync: {ex.Message}");
+                return new PagedResult<ExamSessionDto> { Items = new List<ExamSessionDto>(), TotalItems = 0, Page = page, PageSize = pageSize };
             }
         }
 

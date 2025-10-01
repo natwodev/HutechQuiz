@@ -105,54 +105,25 @@
         </MudPaper>
     }
 
-    @if (!_showForm && ExamSessionSubjects != null && ExamSessionSubjects.Any())
+    @if (!_showForm)
     {
-        <div class="stats-cards">
-            <div class="stat-card">
-                <div class="stat-icon blue">
-                    <MudIcon Icon="@Icons.Material.Filled.School" Size="Size.Large" />
-                </div>
-                <div class="stat-content">
-                    <div class="stat-value">@ExamSessionSubjects.Count</div>
-                    <div class="stat-label">Tổng môn thi</div>
-                </div>
-            </div>
-            
-            <div class="stat-card">
-                <div class="stat-icon green">
-                    <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Size="Size.Large" />
-                </div>
-                <div class="stat-content">
-                    <div class="stat-value">@ExamSessionSubjects.Count(x => x.IsCompleted)</div>
-                    <div class="stat-label">Đã hoàn thành</div>
-                </div>
-            </div>
-            
-            <div class="stat-card">
-                <div class="stat-icon amber">
-                    <MudIcon Icon="@Icons.Material.Filled.Pending" Size="Size.Large" />
-                </div>
-                <div class="stat-content">
-                    <div class="stat-value">@ExamSessionSubjects.Count(x => !x.IsCompleted)</div>
-                    <div class="stat-label">Chưa hoàn thành</div>
-                </div>
-            </div>
-            
-            <div class="stat-card">
-                <div class="stat-icon purple">
-                    <MudIcon Icon="@Icons.Material.Filled.Timer" Size="Size.Large" />
-                </div>
-                <div class="stat-content">
-                    <div class="stat-value">@ExamSessionSubjects.Average(x => x.Duration).ToString("0")</div>
-                    <div class="stat-label">Thời gian TB (phút)</div>
-                </div>
+        <div class="pa-2 mb-2">
+            <div class="d-flex" style="gap:12px; align-items:center; flex-wrap:wrap;">
+                <input type="text"
+                       class="form-control"
+                       style="max-width: 320px;"
+                       placeholder="Tìm theo tên môn/giám thị/phòng"
+                       value="@_searchText"
+                       @oninput="OnSearchInput" />
+                <select class="form-control" style="max-width: 180px;" value="@_statusFilter" @onchange="OnStatusChanged">
+                    <option value="all">Tất cả</option>
+                    <option value="completed">Hoàn thành</option>
+                    <option value="pending">Chưa hoàn thành</option>
+                </select>
             </div>
         </div>
-
-        @if (!_showForm)
-        {
         <div class="data-table-container">
-            <MudTable Items="@ExamSessionSubjects" Hover="true" Striped="true" Dense="true">
+            <MudTable @ref="_tableRef" ServerData="LoadExamSessionSubjects" Hover="true" Striped="true" Dense="true" RowsPerPage="@_pageSize">
                 <HeaderContent>
                     <MudTh>STT</MudTh>
                     <MudTh>Tên môn thi</MudTh>
@@ -166,7 +137,7 @@
                 </HeaderContent>
                 <RowTemplate>
                     @{
-                        var index = ExamSessionSubjects.IndexOf(context) + 1;
+                        var index = (_page * _pageSize) + _currentPageItems.IndexOf(context) + 1;
                     }
                     <MudTd>@index</MudTd>
                     <MudTd>@context.SubjectName</MudTd>
@@ -189,19 +160,27 @@
                         <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" 
                                       Color="Color.Primary" OnClick="() => EditExamSessionSubject(context)" />
                         <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" 
-                                      Color="Color.Error" OnClick="() => DeleteExamSessionSubject(context)" />
+                                      Color="Color.Error" OnClick="@(() => DeleteExamSessionSubject(context))" />
                     </MudTd>
                 </RowTemplate>
             </MudTable>
-        </div>
-        }
-    }
-    else if (!_showForm)
-    {
-        <div class="no-data">
-            <MudAlert Severity="Severity.Info" Variant="Variant.Filled">
-                Không có dữ liệu môn thi
-            </MudAlert>
+            <div class="d-flex justify-content-between align-items-center mt-2">
+                <div>
+                    <span>Hiển thị</span>
+                    <select class="form-control d-inline-block" style="width:90px" value="@_pageSize" @onchange="OnPageSizeChanged">
+                        <option value="10">10</option>
+                        <option value="20">20</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
+                    <span>bản ghi</span>
+                </div>
+                <div class="d-flex" style="gap:8px">
+                    <button class="btn btn-outline-secondary" @onclick="GoPrev">« Trước</button>
+                    <div class="align-self-center">Trang @(_page + 1)</div>
+                    <button class="btn btn-outline-secondary" @onclick="GoNext">Sau »</button>
+                </div>
+            </div>
         </div>
     }
 </div>

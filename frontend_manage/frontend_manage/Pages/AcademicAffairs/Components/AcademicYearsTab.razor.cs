@@ -26,8 +26,17 @@ namespace frontend_manage.Pages.AcademicAffairs.Components
         private bool _showForm = false;
         private bool _isEditMode = false;
         private AcademicYearDto _formData = new();
-        private string _startDateString = "";
-        private string _endDateString = "";
+        private string _searchText = string.Empty;
+
+        private IEnumerable<AcademicYearDto> FilteredAcademicYears => string.IsNullOrWhiteSpace(_searchText)
+            ? AcademicYears
+            : AcademicYears.Where(x => (x.YearName ?? string.Empty).ToLowerInvariant().Contains(_searchText.Trim().ToLowerInvariant()));
+
+        private int _page;
+        private int _pageSize = 10;
+        private IEnumerable<AcademicYearDto> PagedAcademicYears => FilteredAcademicYears
+            .Skip(_page * _pageSize)
+            .Take(_pageSize);
 
         private void CreateNew()
         {
@@ -120,11 +129,52 @@ namespace frontend_manage.Pages.AcademicAffairs.Components
 
             if (!result.Canceled)
             {
-                // TODO: Call API to delete academic year
-                if (OnRefresh.HasDelegate)
+                try
                 {
-                    await OnRefresh.InvokeAsync();
+                    await AcademicYearService.DeleteAsync(academicYear.AcademicYearId);
+                    Snackbar.Add($"Đã xóa năm học '{academicYear.YearName}'", Severity.Success);
+                    if (OnRefresh.HasDelegate)
+                    {
+                        await OnRefresh.InvokeAsync();
+                    }
                 }
+                catch (Exception ex)
+                {
+                    Snackbar.Add($"Xóa thất bại: {ex.Message}", Severity.Error);
+                }
+            }
+        }
+
+        private void OnSearchInput(ChangeEventArgs e)
+        {
+            _searchText = e.Value?.ToString() ?? string.Empty;
+            StateHasChanged();
+        }
+
+        private int LastPageIndex()
+        {
+            var total = FilteredAcademicYears.Count();
+            if (_pageSize <= 0) return 0;
+            var pages = (int)Math.Ceiling((total <= 0 ? 1 : total) / (double)_pageSize);
+            return Math.Max(0, pages - 1);
+        }
+
+        private void GoPrev()
+        {
+            _page = Math.Max(0, _page - 1);
+        }
+
+        private void GoNext()
+        {
+            _page = Math.Min(LastPageIndex(), _page + 1);
+        }
+
+        private void OnPageSizeChanged(ChangeEventArgs e)
+        {
+            if (int.TryParse(e.Value?.ToString(), out var sz) && sz > 0)
+            {
+                _pageSize = sz;
+                _page = 0;
             }
         }
 

@@ -4,6 +4,7 @@ using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
 using frontend_manage.DTOs.AcademicAffairs;
+using frontend_manage.DTOs.Common;
 
 namespace frontend_manage.Services.AcademicAffairs
 {
@@ -29,6 +30,21 @@ namespace frontend_manage.Services.AcademicAffairs
             {
                 Console.WriteLine($"Error in GetAllAsync: {ex.Message}");
                 return new List<ExamBatchDto>();
+            }
+        }
+
+        public async Task<PagedResult<ExamBatchDto>> GetPagedAsync(int page, int pageSize)
+        {
+            try
+            {
+                var url = $"{_baseUrl}?page={page}&pageSize={pageSize}";
+                var response = await _httpClient.GetFromJsonAsync<PagedResult<ExamBatchDto>>(url);
+                return response ?? new PagedResult<ExamBatchDto> { Items = new List<ExamBatchDto>(), TotalItems = 0, Page = page, PageSize = pageSize };
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in GetPagedAsync: {ex.Message}");
+                return new PagedResult<ExamBatchDto> { Items = new List<ExamBatchDto>(), TotalItems = 0, Page = page, PageSize = pageSize };
             }
         }
 
@@ -89,4 +105,5 @@ namespace frontend_manage.Services.AcademicAffairs
             }
         }
     }
+
 }

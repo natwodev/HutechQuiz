@@ -21,12 +21,20 @@ namespace backend_manage.Controllers
         }
         
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<ExamSessionSubjectDto>>> GetAll()
+        public async Task<ActionResult> GetAll([FromQuery]int? page, [FromQuery]int? pageSize)
         {
             try
             {
-                var result = await _examSessionSubjectService.GetAllAsync();
-                return Ok(result);
+                if (page.HasValue && pageSize.HasValue)
+                {
+                    var paged = await _examSessionSubjectService.GetPagedAsync(page.Value, pageSize.Value);
+                    return Ok(paged);
+                }
+                else
+                {
+                    var result = await _examSessionSubjectService.GetAllAsync();
+                    return Ok(result);
+                }
             }
             catch (Exception ex)
             {

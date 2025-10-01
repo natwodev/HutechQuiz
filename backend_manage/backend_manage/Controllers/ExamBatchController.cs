@@ -17,15 +17,23 @@ namespace backend_manage.Controllers
 
         [HttpGet]
         [Authorize(Policy = "AcademicAffairsOrAdmin")]
-        public async Task<IActionResult> GetAll()
+        public async Task<IActionResult> GetAll([FromQuery]int? page, [FromQuery]int? pageSize)
         {
-            var result = await _examBatchService.GetAllAsync();
-            return Ok(result);
+            if (page.HasValue && pageSize.HasValue)
+            {
+                var paged = await _examBatchService.GetPagedAsync(page.Value, pageSize.Value);
+                return Ok(paged);
+            }
+            else
+            {
+                var result = await _examBatchService.GetAllAsync();
+                return Ok(result);
+            }
         }
 
         [HttpGet("{id}")]
         [Authorize(Policy = "AcademicAffairsOrAdmin")]
-        public async Task<IActionResult> GetById(string id)
+        public async Task<IActionResult> GetById(int id)
         {
             var result = await _examBatchService.GetByIdAsync(id);
             if (result == null) return NotFound();
@@ -42,7 +50,7 @@ namespace backend_manage.Controllers
 
         [HttpPut("{id}")]
         [Authorize(Policy = "AcademicAffairsOrAdmin")]
-        public async Task<IActionResult> Update(string id, [FromBody] ExamBatchUpdateDto dto)
+        public async Task<IActionResult> Update(int id, [FromBody] ExamBatchUpdateDto dto)
         {
             var result = await _examBatchService.UpdateAsync(id, dto);
             if (result == null) return NotFound();
@@ -51,7 +59,7 @@ namespace backend_manage.Controllers
 
         [HttpDelete("{id}")]
         [Authorize(Policy = "AcademicAffairsOrAdmin")]
-        public async Task<IActionResult> Delete(string id)
+        public async Task<IActionResult> Delete(int id)
         {
             var success = await _examBatchService.DeleteAsync(id);
             if (!success) return NotFound();

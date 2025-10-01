@@ -29,10 +29,37 @@ namespace backend_manage.core.Services.AuthService
         public async Task<IEnumerable<ExamSessionDto>> GetAllAsync()
         {
             var sessions = await _repository.GetQueryable()
+                .Where(x => !x.IsDeleted)
                 .Include(x => x.ExamBatchDetail)
                 .AsNoTracking()
                 .ToListAsync();
             return _mapper.Map<IEnumerable<ExamSessionDto>>(sessions);
+        }
+
+        public async Task<PagedResult<ExamSessionDto>> GetPagedAsync(int page, int pageSize)
+        {
+            if (page < 1) page = 1;
+            if (pageSize < 1) pageSize = 10;
+
+            var query = _repository.GetQueryable()
+                .Where(x => !x.IsDeleted)
+                .Include(x => x.ExamBatchDetail)
+                .AsNoTracking();
+
+            var total = await query.CountAsync();
+            var items = await query
+                .OrderByDescending(x => x.StartTime)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return new PagedResult<ExamSessionDto>
+            {
+                Items = _mapper.Map<List<ExamSessionDto>>(items),
+                TotalItems = total,
+                Page = page,
+                PageSize = pageSize
+            };
         }
 
         public async Task<ExamSessionDto?> GetByIdAsync(int id)

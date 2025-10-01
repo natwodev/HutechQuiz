@@ -6,6 +6,7 @@ using backend_manage.core.Repositories.Interfaces;
 using backend_manage.core.Services.Interfaces;
 using backend_manage.shared.DTOs;
 using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 
 namespace backend_manage.core.Services.AuthService
 {
@@ -27,11 +28,15 @@ namespace backend_manage.core.Services.AuthService
 
         public async Task<IEnumerable<AcademicYearDto>> GetAllAsync()
         {
-            var academicYears = await _academicYearRepository.GetAllAsync();
+            var academicYears = await _academicYearRepository
+                .GetQueryable()
+                .Where(x => !x.IsDeleted)
+                .AsNoTracking()
+                .ToListAsync();
             return _mapper.Map<IEnumerable<AcademicYearDto>>(academicYears);
         }
 
-        public async Task<AcademicYearDto?> GetByIdAsync(string id)
+        public async Task<AcademicYearDto?> GetByIdAsync(int id)
         {
             var academicYear = await _academicYearRepository.GetByIdAsync(id);
             return academicYear == null ? null : _mapper.Map<AcademicYearDto>(academicYear);
@@ -69,7 +74,7 @@ namespace backend_manage.core.Services.AuthService
             return _mapper.Map<AcademicYearDto>(result);
         }
 
-        public async Task<bool> DeleteAsync(string id)
+        public async Task<bool> DeleteAsync(int id)
         {
             var entity = await _academicYearRepository.GetByIdAsync(id);
             if (entity == null) return false;

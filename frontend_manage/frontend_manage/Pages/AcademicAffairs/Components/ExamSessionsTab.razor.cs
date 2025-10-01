@@ -6,6 +6,7 @@ using frontend_manage.Services.AcademicAffairs;
 using System;
 using System.Threading.Tasks;
 using System.Globalization;
+using System.Threading;
 
 namespace frontend_manage.Pages.AcademicAffairs.Components
 {
@@ -35,6 +36,13 @@ namespace frontend_manage.Pages.AcademicAffairs.Components
         private int _endHour;
         private int _endMinute;
         private List<ExamBatchDetailDto> _examBatchDetails = new();
+        private int _totalItems;
+        private string _searchText = string.Empty;
+        private string _statusFilter = "all";
+        private MudTable<ExamSessionDto>? _tableRef;
+        private int _page;
+        private int _pageSize = 10;
+        private List<ExamSessionDto> _currentPageItems = new();
 
         protected override async Task OnInitializedAsync()
         {
@@ -175,24 +183,25 @@ namespace frontend_manage.Pages.AcademicAffairs.Components
                     DateTimeStyles.None,
                     out var startDateExact);
 
-                var hasTime = TimeSpan.TryParseExact(
-                    _startTimeString,
-                    "HH\\:mm",
-                    CultureInfo.InvariantCulture,
-                    out var startTimeExact);
-
                 var current = (_formData.StartTime != DateTime.MinValue && _formData.StartTime.Year > 1900)
                     ? _formData.StartTime
                     : DateTimeOffset.UtcNow.ToOffset(TimeSpan.FromHours(7)).DateTime;
 
                 var finalDate = hasDate ? startDateExact.Date : current.Date;
-                var finalTime = hasTime ? startTimeExact : current.TimeOfDay;
+
+                // Prefer numeric hour/minute selections to avoid string parse bugs
+                var hour = Math.Clamp(_startHour, 0, 23);
+                var minute = Math.Clamp(_startMinute, 0, 59);
+                var finalTime = new TimeSpan(hour, minute, 0);
+
+                // Keep the string in sync for any inputs bound to it
+                _startTimeString = $"{hour:00}:{minute:00}";
 
                 _formData.StartTime = finalDate + finalTime;
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error parsing start time: {ex.Message}");
+                Console.WriteLine($"Error computing start time: {ex.Message}");
                 // Preserve current if valid; otherwise set to VN now
                 if (!(_formData.StartTime != DateTime.MinValue && _formData.StartTime.Year > 1900))
                 {
@@ -227,12 +236,6 @@ namespace frontend_manage.Pages.AcademicAffairs.Components
                     DateTimeStyles.None,
                     out var endDateExact);
 
-                var hasTime = TimeSpan.TryParseExact(
-                    _endTimeString,
-                    "HH\\:mm",
-                    CultureInfo.InvariantCulture,
-                    out var endTimeExact);
-
                 var current = (_formData.EndTime != DateTime.MinValue && _formData.EndTime.Year > 1900)
                     ? _formData.EndTime
                     : ((_formData.StartTime != DateTime.MinValue && _formData.StartTime.Year > 1900)
@@ -240,13 +243,20 @@ namespace frontend_manage.Pages.AcademicAffairs.Components
                         : DateTimeOffset.UtcNow.ToOffset(TimeSpan.FromHours(7)).DateTime.AddHours(1));
 
                 var finalDate = hasDate ? endDateExact.Date : current.Date;
-                var finalTime = hasTime ? endTimeExact : current.TimeOfDay;
+
+                // Prefer numeric hour/minute selections to avoid string parse bugs
+                var hour = Math.Clamp(_endHour, 0, 23);
+                var minute = Math.Clamp(_endMinute, 0, 59);
+                var finalTime = new TimeSpan(hour, minute, 0);
+
+                // Keep the string in sync for any inputs bound to it
+                _endTimeString = $"{hour:00}:{minute:00}";
 
                 _formData.EndTime = finalDate + finalTime;
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error parsing end time: {ex.Message}");
+                Console.WriteLine($"Error computing end time: {ex.Message}");
                 // Preserve current if valid; otherwise set to VN now + 1h
                 if (!(_formData.EndTime != DateTime.MinValue && _formData.EndTime.Year > 1900))
                 {
@@ -344,6 +354,91 @@ namespace frontend_manage.Pages.AcademicAffairs.Components
             }
         }
 
+        private async Task<TableData<ExamSessionDto>> LoadExamSessions(TableState state, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var page = _page + 1;
+                var pageSize = _pageSize;
+                var paged = await ExamSessionService.GetPagedAsync(page, pageSize);
+                IEnumerable<ExamSessionDto> items = paged.Items;
+                if (!string.IsNullOrWhiteSpace(_searchText))
+                {
+                    var term = _searchText.Trim().ToLowerInvariant();
+                    items = items.Where(x => (x.Name ?? string.Empty).ToLowerInvariant().Contains(term));
+                }
+                items = _statusFilter switch
+                {
+                    "active" => items.Where(x => x.IsActive && !x.IsCompleted),
+                    "inactive" => items.Where(x => !x.IsActive && !x.IsCompleted),
+                    "completed" => items.Where(x => x.IsCompleted),
+                    _ => items
+                };
+                var filtered = items.ToList();
+                _totalItems = paged.TotalItems;
+                _currentPageItems = filtered;
+                return new TableData<ExamSessionDto>
+                {
+                    Items = filtered,
+                    TotalItems = string.IsNullOrWhiteSpace(_searchText) && _statusFilter == "all" ? paged.TotalItems : filtered.Count
+                };
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Tải danh sách ca thi thất bại: {ex.Message}", Severity.Error);
+                return new TableData<ExamSessionDto> { Items = new List<ExamSessionDto>(), TotalItems = 0 };
+            }
+        }
+
+        private async Task TableReload()
+        {
+            if (_tableRef != null)
+            {
+                await _tableRef.ReloadServerData();
+            }
+        }
+
+        private int LastPageIndex()
+        {
+            if (_pageSize <= 0) return 0;
+            var pages = (int)Math.Ceiling((_totalItems <= 0 ? 1 : _totalItems) / (double)_pageSize);
+            return Math.Max(0, pages - 1);
+        }
+
+        private async Task GoPrev()
+        {
+            _page = Math.Max(0, _page - 1);
+            await TableReload();
+        }
+
+        private async Task GoNext()
+        {
+            _page = Math.Min(LastPageIndex(), _page + 1);
+            await TableReload();
+        }
+
+        private async Task OnPageSizeChanged(ChangeEventArgs e)
+        {
+            if (int.TryParse(e.Value?.ToString(), out var sz) && sz > 0)
+            {
+                _pageSize = sz;
+                _page = 0;
+                await TableReload();
+            }
+        }
+
+        private async Task OnSearchInput(ChangeEventArgs e)
+        {
+            _searchText = e.Value?.ToString() ?? string.Empty;
+            await TableReload();
+        }
+
+        private async Task OnStatusChanged(ChangeEventArgs e)
+        {
+            _statusFilter = e.Value?.ToString() ?? "all";
+            await TableReload();
+        }
+
         private async Task DeleteExamSession(ExamSessionDto examSession)
         {
             _deletingExamSession = examSession;
@@ -367,10 +462,20 @@ namespace frontend_manage.Pages.AcademicAffairs.Components
 
             if (!result.Canceled)
             {
-                // TODO: Call API to delete exam session
-                if (OnRefresh.HasDelegate)
+                try
                 {
-                    await OnRefresh.InvokeAsync();
+                    await ExamSessionService.DeleteAsync(examSession.ExamSessionId);
+                    Snackbar.Add($"Đã xóa ca thi '{examSession.Name}'", Severity.Success);
+                    // Reload bảng ngay để biến mất tức thì
+                    await TableReload();
+                    if (OnRefresh.HasDelegate)
+                    {
+                        await OnRefresh.InvokeAsync();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Snackbar.Add($"Xóa thất bại: {ex.Message}", Severity.Error);
                 }
             }
         }

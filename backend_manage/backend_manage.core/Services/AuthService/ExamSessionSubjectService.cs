@@ -59,6 +59,35 @@ namespace backend_manage.core.Services.AuthService
             return _mapper.Map<IEnumerable<ExamSessionSubjectDto>>(entities);
         }
 
+        public async Task<PagedResult<ExamSessionSubjectDto>> GetPagedAsync(int page, int pageSize)
+        {
+            if (page < 1) page = 1;
+            if (pageSize < 1) pageSize = 10;
+
+            var query = _repository.GetQueryable()
+                .Include(x => x.Subject)
+                .Include(x => x.OriginalExamPaper)
+                .Include(x => x.ExamRoom)
+                .Include(x => x.Monitor)
+                .AsSplitQuery()
+                .AsNoTracking();
+
+            var total = await query.CountAsync();
+            var items = await query
+                .OrderByDescending(x => x.StartTime)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return new PagedResult<ExamSessionSubjectDto>
+            {
+                Items = _mapper.Map<List<ExamSessionSubjectDto>>(items),
+                TotalItems = total,
+                Page = page,
+                PageSize = pageSize
+            };
+        }
+
         public async Task<ExamSessionSubjectDto?> GetByIdAsync(int id)
         {
             var entity = await _repository.GetQueryable()

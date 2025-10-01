@@ -12,13 +12,7 @@
     <div class="tab-header">
         <div class="title-area">
             <h2>QUẢN LÝ NĂM HỌC</h2>
-            @if (AcademicYears != null && AcademicYears.Any())
-            {
-                <div class="info-text">
-                    Tổng số năm học: <strong>@AcademicYears.Count</strong> | 
-                    Tổng học kỳ: <strong>@AcademicYears.Sum(x => x.Semesters.Count)</strong>
-                </div>
-            }
+            
         </div>
         <div class="action-area">
             <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" OnClick="CreateNew">
@@ -61,54 +55,20 @@
         </MudPaper>
     }
 
-    @if (!_showForm && AcademicYears != null && AcademicYears.Any())
+    @if (!_showForm)
     {
-        <div class="stats-cards">
-            <div class="stat-card">
-                <div class="stat-icon blue">
-                    <MudIcon Icon="@Icons.Material.Filled.CalendarToday" Size="Size.Large" />
-                </div>
-                <div class="stat-content">
-                    <div class="stat-value">@AcademicYears.Count</div>
-                    <div class="stat-label">Tổng năm học</div>
-                </div>
-            </div>
-            
-            <div class="stat-card">
-                <div class="stat-icon green">
-                    <MudIcon Icon="@Icons.Material.Filled.School" Size="Size.Large" />
-                </div>
-                <div class="stat-content">
-                    <div class="stat-value">@AcademicYears.Sum(x => x.Semesters.Count)</div>
-                    <div class="stat-label">Tổng học kỳ</div>
-                </div>
-            </div>
-            
-            <div class="stat-card">
-                <div class="stat-icon amber">
-                    <MudIcon Icon="@Icons.Material.Filled.PlayArrow" Size="Size.Large" />
-                </div>
-                <div class="stat-content">
-                    <div class="stat-value">@AcademicYears.Count(x => x.Semesters.Any(s => s.IsActive))</div>
-                    <div class="stat-label">Năm có học kỳ hoạt động</div>
-                </div>
-            </div>
-            
-            <div class="stat-card">
-                <div class="stat-icon purple">
-                    <MudIcon Icon="@Icons.Material.Filled.TrendingUp" Size="Size.Large" />
-                </div>
-                <div class="stat-content">
-                    <div class="stat-value">@AcademicYears.Average(x => x.Semesters.Count).ToString("0.0")</div>
-                    <div class="stat-label">Học kỳ TB/năm</div>
-                </div>
+        <div class="pa-2 mb-2">
+            <div class="d-flex" style="gap:12px; align-items:center; flex-wrap:wrap;">
+                <input type="text"
+                       class="form-control"
+                       style="max-width: 320px;"
+                       placeholder="Tìm theo tên năm học"
+                       value="@_searchText"
+                       @oninput="OnSearchInput" />
             </div>
         </div>
-
-        @if (!_showForm)
-        {
         <div class="data-table-container">
-            <MudTable Items="@AcademicYears" Hover="true" Striped="true" Dense="true">
+            <MudTable Items="@PagedAcademicYears" Hover="true" Striped="true" Dense="true">
                 <HeaderContent>
                     <MudTh>STT</MudTh>
                     <MudTh>Tên năm học</MudTh>
@@ -118,7 +78,7 @@
                 </HeaderContent>
                 <RowTemplate>
                     @{
-                        var index = AcademicYears.IndexOf(context) + 1;
+                        var index = FilteredAcademicYears.ToList().IndexOf(context) + 1;
                     }
                     <MudTd>@index</MudTd>
                     <MudTd>@context.YearName</MudTd>
@@ -149,21 +109,29 @@
                     </MudTd>
                     <MudTd>
                         <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" 
-                                      Color="Color.Primary" OnClick="() => EditAcademicYear(context)" />
+                                      Color="Color.Primary" OnClick="@(() => EditAcademicYear(context))" />
                         <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" 
-                                      Color="Color.Error" OnClick="() => DeleteAcademicYear(context)" />
+                                      Color="Color.Error" OnClick="@(() => DeleteAcademicYear(context))" />
                     </MudTd>
                 </RowTemplate>
             </MudTable>
-        </div>
-        }
-    }
-    else if (!_showForm)
-    {
-        <div class="no-data">
-            <MudAlert Severity="Severity.Info" Variant="Variant.Filled">
-                Không có dữ liệu năm học
-            </MudAlert>
+            <div class="d-flex justify-content-between align-items-center mt-2">
+                <div>
+                    <span>Hiển thị</span>
+                    <select class="form-control d-inline-block" style="width:90px" value="@_pageSize" @onchange="OnPageSizeChanged">
+                        <option value="10">10</option>
+                        <option value="20">20</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
+                    <span>bản ghi</span>
+                </div>
+                <div class="d-flex" style="gap:8px">
+                    <button class="btn btn-outline-secondary" @onclick="GoPrev">« Trước</button>
+                    <div class="align-self-center">Trang @(_page + 1)</div>
+                    <button class="btn btn-outline-secondary" @onclick="GoNext">Sau »</button>
+                </div>
+            </div>
         </div>
     }
 </div>
