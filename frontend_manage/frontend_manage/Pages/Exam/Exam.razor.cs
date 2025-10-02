@@ -425,7 +425,7 @@ namespace frontend_manage.Pages.Exam
                    if (submitResponse?.Success == true)
                    {
                        Snackbar.Add("Nộp bài thành công!", Severity.Success);
-                       Navigation.NavigateTo("/Exam/Result");
+                       Navigation.NavigateTo($"/Exam/Result?studentExamSessionId={studentExamSessionId}");
                    }
                   else if (submitResponse != null)
                   {

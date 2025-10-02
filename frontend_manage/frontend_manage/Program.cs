@@ -1,6 +1,5 @@
 
 using frontend_manage;
-using frontend_manage.Pages.Admin;
 using frontend_manage.Pages.StudentLogin;
 using frontend_manage.Pages.Exam;
 using frontend_manage.Pages.Monitor;
@@ -27,7 +26,6 @@ builder.Services.AddScoped<StudentService>();
 
 builder.Services.AddScoped<MonitorService>();
 builder.Services.AddSingleton<NotificationService>();
-builder.Services.AddScoped<Api>();
 
 // Academic Affairs Services
 builder.Services.AddScoped<AcademicYearService>();

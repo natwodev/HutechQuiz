@@ -1,351 +1,109 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Web;
-using Microsoft.JSInterop;
-using System.Text.Json;
+using MudBlazor;
 using frontend_manage.DTOs;
 using frontend_manage.Services;
+using System.Text.Json;
 
-namespace frontend_manage.Pages.Exam
+namespace frontend_manage.Pages.Exam;
+
+public partial class Result : IDisposable
 {
-    public partial class Result : ComponentBase
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public int? studentExamSessionId { get; set; }
+
+    [Inject] private StudentService StudentService { get; set; } = default!;
+    [Inject] private ISnackbar Snackbar { get; set; } = default!;
+    [Inject] private NavigationManager Navigation { get; set; } = default!;
+    [Inject] private NotificationService NotificationService { get; set; } = default!;
+
+    private ExamSubmissionDto? submission;
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
     {
-        [Inject] private IJSRuntime JSRuntime { get; set; } = default!;
-        [Inject] private NavigationManager Navigation { get; set; } = default!;
-        [Inject] private StudentService StudentService { get; set; } = default!;
-
-        // ===================== State =====================
-        private ExamSubmissionDto? result;
-        private bool isLoading = true;
-        private string errorMessage = string.Empty;
-        private List<HeatCell> heatCells = new();
-        private int rows = 7;
-        private int cols = 1;
-
-        // ===================== Lifecycle =====================
-        protected override async Task OnInitializedAsync()
+        if (studentExamSessionId == null)
         {
-            await LoadExamResultAsync();
+            Snackbar.Add("Thiếu thông tin ca thi.", Severity.Error);
+            Navigation.NavigateTo("/student-dashboard");
+            return;
         }
 
-        protected override async Task OnAfterRenderAsync(bool firstRender)
+        try
         {
-            if (firstRender)
+            submission = await StudentService.GetSubmissionResultAsync(studentExamSessionId.Value);
+            if (submission == null)
             {
-                try
-                {
-                    // Cần gọi 1 hàm JS có thật; dùng eval cho nhanh (khuyến nghị sau này đưa vào file .js riêng)
-                    await JSRuntime.InvokeVoidAsync("eval", @"
-                        window.addEventListener('popstate', function() {
-                            localStorage.clear();
-                            window.location.assign('/student-login');
-                        });
-                        history.pushState(null, '', window.location.href);
-                    ");
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Error in OnAfterRenderAsync: {ex.Message}");
-                }
+                Snackbar.Add("Không tìm thấy kết quả bài thi.", Severity.Warning);
+            }
+
+            // Đăng ký nhận điểm cập nhật qua SignalR (nếu có)
+            NotificationService.OnExamScoreReceived += HandleExamScoreReceived;
+
+            // Đảm bảo đã kết nối SignalR để có thể nhận sự kiện
+            if (!NotificationService.IsConnected)
+            {
+                _ = NotificationService.StartAsync();
             }
         }
-
-        // ===================== Main Logic =====================
-        private async Task LoadExamResultAsync()
+        catch (Exception ex)
         {
-            try
-            {
-                isLoading = true;
-                errorMessage = string.Empty;
+            Snackbar.Add($"Lỗi khi tải kết quả: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
 
-                // Lấy sessionId và gọi API lấy kết quả thật từ backend
-                var sessionIdStr = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "currentStudentExamSessionId");
-                if (string.IsNullOrWhiteSpace(sessionIdStr) || !int.TryParse(sessionIdStr, out var sessionId))
-                {
-                    SetErrorAndRedirect("Truy cập không hợp lệ. Vui lòng làm bài thi trước.");
-                    return;
-                }
-
-                result = await StudentService.GetSubmissionResultAsync(sessionId);
-                if (result == null)
-                {
-                    SetErrorAndRedirect("Không thể lấy kết quả bài thi từ máy chủ.");
-                    return;
-                }
-
-                BuildHeatmap();
-                // Không còn phụ thuộc vào localStorage để lưu kết quả
-            }
-            catch (Exception ex)
+    private void HandleExamScoreReceived(object data)
+    {
+        try
+        {
+            if (data is JsonElement json)
             {
-                errorMessage = $"Lỗi: {ex.Message}";
-            }
-            finally
-            {
-                isLoading = false;
-                StateHasChanged();
+                // Cập nhật các trường cần thiết từ payload
+                submission ??= new ExamSubmissionDto();
+                if (json.TryGetProperty("studentCode", out var pStudentCode))
+                    submission.StudentCode = pStudentCode.GetString() ?? submission.StudentCode;
+                if (json.TryGetProperty("shuffledExamPaperId", out var pPaperId))
+                    submission.ShuffledExamPaperId = pPaperId.GetInt32();
+                if (json.TryGetProperty("score", out var pScore))
+                    submission.Score = pScore.GetDouble();
+                if (json.TryGetProperty("correctAnswers", out var pCorrect))
+                    submission.CorrectAnswers = pCorrect.GetInt32();
+                if (json.TryGetProperty("totalQuestions", out var pTotal))
+                    submission.TotalQuestions = pTotal.GetInt32();
+                if (json.TryGetProperty("endTime", out var pEnd))
+                    submission.EndTime = pEnd.GetDateTime();
+                if (json.TryGetProperty("studentAnswersString", out var pAns))
+                    submission.StudentAnswersString = pAns.GetString() ?? submission.StudentAnswersString;
+                if (json.TryGetProperty("answerKey", out var pKey))
+                    submission.AnswerKey = pKey.GetString() ?? submission.AnswerKey;
+
+                InvokeAsync(StateHasChanged);
             }
         }
-
-        // Không cần validate hay parse localStorage nữa. Chỉ cần sessionId để gọi API.
-
-
-
-        // ===================== Heatmap Building (API THẬT) =====================
-        // Logic xây dựng heatmap với dữ liệu thật:
-        // - Ưu tiên sử dụng StudentAnswersString và AnswerKey từ API để hiển thị trạng thái chi tiết từng câu
-        // - Fallback về CreateHeatmapFromApiData nếu không có dữ liệu chi tiết
-        // - Heatmap chỉ dùng để hiển thị trạng thái, không dùng để tính toán điểm số
-        private void BuildHeatmap()
+        catch
         {
-            if (result == null) return;
-
-            heatCells.Clear();
-
-            if (!string.IsNullOrWhiteSpace(result.StudentAnswersString) &&
-                !string.IsNullOrWhiteSpace(result.AnswerKey))
-            {
-                CreateHeatmapFromRealData();
-            }
-            else
-            {
-                CreateHeatmapFromApiData();
-            }
+            // bỏ qua lỗi parse, không làm gián đoạn UI
         }
+    }
 
-        private void CreateHeatmapFromRealData()
-        {
-            // Tạo heatmap chi tiết từ dữ liệu thực tế của sinh viên và đáp án
-            var studentAnswers = ParseAnswerString(result!.StudentAnswersString);
-            var correctAnswers = ParseAnswerString(result!.AnswerKey);
+    public void Dispose()
+    {
+        NotificationService.OnExamScoreReceived -= HandleExamScoreReceived;
+    }
+    
+    
+    
+    private string BuildScoreSvgDataUri(double score, int correct, int total, int width = 560, int height = 220)
+    {
+        var scoreText = score.ToString("0.00");
+        var midY = (int)Math.Round(height * 0.62);
+        var bigFont = (int)Math.Round(height * 0.60);
 
-            Console.WriteLine($"CreateHeatmapFromRealData - StudentAnswersString: '{result.StudentAnswersString}'");
-            Console.WriteLine($"CreateHeatmapFromRealData - AnswerKey: '{result.AnswerKey}'");
-            Console.WriteLine($"CreateHeatmapFromRealData - studentAnswers.Count: {studentAnswers.Count}");
-            Console.WriteLine($"CreateHeatmapFromRealData - correctAnswers.Count: {correctAnswers.Count}");
-
-            // Nếu cả hai không parse được gì -> fallback API
-            if (studentAnswers.Count == 0 && correctAnswers.Count == 0)
-            {
-                Console.WriteLine("Fallback to CreateHeatmapFromApiData because parsing returned 0.");
-                CreateHeatmapFromApiData();
-                return;
-            }
-
-            // Lấy union các QuestionId thực tế
-            var qids = studentAnswers.Keys.Union(correctAnswers.Keys).OrderBy(x => x).ToList();
-            Console.WriteLine($"CreateHeatmapFromRealData - All QIDs: {string.Join(", ", qids)}");
-
-            // Map thứ tự hiển thị 1..TotalQuestions sang QID (nếu thiếu QID, ô sẽ là empty)
-            var questionMapping = new Dictionary<int, int>();
-            for (int i = 0; i < qids.Count; i++)
-            {
-                questionMapping[i + 1] = qids[i];
-            }
-
-            var totalQuestions = result.TotalQuestions ?? 0;
-            for (int displayOrder = 1; displayOrder <= totalQuestions; displayOrder++)
-            {
-                if (questionMapping.TryGetValue(displayOrder, out var qid))
-                {
-                    var studentRaw = studentAnswers.GetValueOrDefault(qid, "");
-                    var correctRaw = correctAnswers.GetValueOrDefault(qid, "");
-
-                    var statusCss = GetStatusCss(studentRaw, correctRaw);
-                    var statusText = GetStatusText(studentRaw, correctRaw);
-
-                    Console.WriteLine($"Display {displayOrder} -> Q{qid}: Student='{studentRaw}', Correct='{correctRaw}' -> {statusText} ({statusCss})");
-
-                    heatCells.Add(new HeatCell
-                    {
-                        QuestionNo = displayOrder,
-                        StatusCss = statusCss,
-                        StatusText = statusText
-                    });
-                }
-                else
-                {
-                    // Không có QID tương ứng cho vị trí này
-                    heatCells.Add(new HeatCell
-                    {
-                        QuestionNo = displayOrder,
-                        StatusCss = "empty",
-                        StatusText = "Chưa trả lời"
-                    });
-                }
-            }
-
-            cols = (int)Math.Ceiling(heatCells.Count / (double)rows);
-
-            Console.WriteLine($"CreateHeatmapFromRealData - Final heatCells.Count: {heatCells.Count}");
-            var okCount = heatCells.Count(c => c.StatusCss == "ok");
-            var badCount = heatCells.Count(c => c.StatusCss == "bad");
-            var emptyCount = heatCells.Count(c => c.StatusCss == "empty");
-            Console.WriteLine($"CreateHeatmapFromRealData - Final counts: OK={okCount}, BAD={badCount}, EMPTY={emptyCount}");
-
-            StateHasChanged();
-        }
-
-        private void CreateHeatmapFromApiData()
-        {
-            // Fallback: Tạo heatmap đơn giản dựa trên số câu đúng từ API
-            var correctCount = result!.CorrectAnswers ?? 0;
-            var totalQuestions = result!.TotalQuestions ?? 0;
-
-            for (int i = 1; i <= totalQuestions; i++)
-            {
-                heatCells.Add(new HeatCell
-                {
-                    QuestionNo = i,
-                    StatusCss = i <= correctCount ? "ok" : "bad",
-                    StatusText = i <= correctCount ? "Đúng" : "Sai"
-                });
-            }
-
-            cols = (int)Math.Ceiling(totalQuestions / (double)rows);
-            StateHasChanged();
-        }
-
-        private Dictionary<int, string> ParseAnswerString(string answerString)
-        {
-            // Parse chuỗi đáp án từ API thành Dictionary để xây dựng heatmap
-            var dict = new Dictionary<int, string>();
-            if (string.IsNullOrWhiteSpace(answerString))
-            {
-                Console.WriteLine($"ParseAnswerString - Empty or null string: '{answerString}'");
-                return dict;
-            }
-
-            Console.WriteLine($"ParseAnswerString - Input: '{answerString}'");
-            var parts = answerString.Split(';', StringSplitOptions.RemoveEmptyEntries);
-            Console.WriteLine($"ParseAnswerString - Parts count: {parts.Length}");
-
-            foreach (var part in parts)
-            {
-                Console.WriteLine($"ParseAnswerString - Processing part: '{part}'");
-                var match = Regex.Match(part, @"\((\d+):([^)]+)\)");
-                if (match.Success && int.TryParse(match.Groups[1].Value, out int qid))
-                {
-                    var ans = match.Groups[2].Value.Trim();
-                    // GIỮ nguyên "-" tại đây, sẽ normalize sau khi chấm/so sánh
-                    dict[qid] = ans;
-                    Console.WriteLine($"ParseAnswerString - Parsed: Q{qid} = '{dict[qid]}'");
-                }
-                else
-                {
-                    Console.WriteLine($"ParseAnswerString - Failed to parse part: '{part}'");
-                }
-            }
-
-            Console.WriteLine($"ParseAnswerString - Final result: {string.Join(", ", dict.Select(kv => $"Q{kv.Key}:{kv.Value}"))}");
-            return dict;
-        }
-
-        // ============= So sánh / Hiển thị trạng thái =============
-        // Quy tắc xác định trạng thái câu hỏi cho heatmap:
-        // - Chỉ 'ok' khi CẢ HAI đều không rỗng và bằng nhau sau Normalize
-        // - Nếu student là "-" (bỏ trống), coi là chưa trả lời -> "empty"
-        // - Nếu correct là "-" (không có đáp án), coi là "bad" (sai)
-        // - Các trường hợp còn lại -> "bad" (sai)
-        // 
-        // Ví dụ với backend trả về: (28:-);(29:-)
-        // - Câu 28: student="-", correct="A" -> "empty" (chưa trả lời)
-        // - Câu 29: student="-", correct="B" -> "empty" (chưa trả lời)
-        private string GetStatusCss(string studentAnswer, string correctAnswer)
-        {
-            // Kiểm tra trực tiếp "-" trước khi normalize
-            // Backend trả về: (28:-);(29:-) -> sinh viên bỏ trống câu 28, 29
-            if (studentAnswer?.Trim() == "-") return "empty"; // SV bỏ trống
-
-            var s = NormalizeAnswer(studentAnswer);
-            var c = NormalizeAnswer(correctAnswer);
-
-            if (string.IsNullOrEmpty(s)) return "empty"; // SV bỏ trống
-            if (string.IsNullOrEmpty(c)) return "bad";   // key trống -> không thể coi là đúng
-
-            return s == c ? "ok" : "bad";
-        }
-
-        private string GetStatusText(string studentAnswer, string correctAnswer)
-        {
-            // Kiểm tra trực tiếp "-" trước khi normalize
-            if (studentAnswer?.Trim() == "-") return "Chưa trả lời";
-
-            var s = NormalizeAnswer(studentAnswer);
-            var c = NormalizeAnswer(correctAnswer);
-
-            if (string.IsNullOrEmpty(s)) return "Chưa trả lời";
-            if (string.IsNullOrEmpty(c)) return "Sai";
-            return s == c ? "Đúng" : "Sai";
-        }
-
-        // Chuẩn hoá đáp án để so sánh công bằng khi xây dựng heatmap
-        // Hỗ trợ cả OptionId số & A/B/C/D, multi-select
-        // Lưu ý: "-" được giữ nguyên để xử lý đặc biệt trong GetStatusCss/GetStatusText
-        private static string NormalizeAnswer(string a)
-        {
-            if (string.IsNullOrWhiteSpace(a)) return "";
-            var x = a.Trim();
-
-            // Quy ước "-" là bỏ trống - giữ nguyên để xử lý đặc biệt
-            if (x == "-") return "-";
-
-            // Nếu có phân tách (multi-select): "A,C", "A|C", "A C", "A/C"
-            var tokens = Regex.Split(x, @"[,\|/\s]+")
-                              .Where(t => !string.IsNullOrWhiteSpace(t))
-                              .Select(t => t.Trim().ToUpperInvariant())
-                              .ToArray();
-
-            if (tokens.Length == 0) return "";
-            if (tokens.Length == 1) return tokens[0];
-
-            Array.Sort(tokens, StringComparer.Ordinal);
-            return string.Concat(tokens);
-        }
-
-        // ===================== Helper Methods =====================
-        private void SetErrorAndRedirect(string message)
-        {
-            errorMessage = message;
-            _ = Task.Run(async () =>
-            {
-                await Task.Delay(2000);
-                await InvokeAsync(async () =>
-                {
-                    try
-                    {
-                        await JSRuntime.InvokeVoidAsync("window.location.assign", "/student-login");
-                    }
-                    catch
-                    {
-                        Navigation.NavigateTo("/student-login");
-                    }
-                });
-            });
-        }
-
-        // ===================== Computed Properties =====================
-        // Sử dụng trực tiếp dữ liệu từ API, không tính toán lại
-
-        private string ScoreSvgDataUri => BuildScoreSvgDataUri(
-            result?.Score ?? 0,
-            result?.CorrectAnswers ?? 0,
-            result?.TotalQuestions ?? 0);
-
-        // ===================== SVG Generation =====================
-        private string BuildScoreSvgDataUri(double score, int correct, int total, int width = 560, int height = 220)
-        {
-            var scoreText = score.ToString("0.00");
-            var midY = (int)Math.Round(height * 0.62);
-            var bigFont = (int)Math.Round(height * 0.60);
-
-            var svg = $@"
+        var svg = $@"
 <svg xmlns='http://www.w3.org/2000/svg' width='{width}' height='{height}' viewBox='0 0 {width} {height}'>
   <defs>
     <linearGradient id='g' x1='0' y1='0' x2='1' y2='1'>
@@ -365,19 +123,10 @@ namespace frontend_manage.Pages.Exam
   </text>
 </svg>";
 
-            var bytes = System.Text.Encoding.UTF8.GetBytes(svg);
-            return "data:image/svg+xml;base64," + Convert.ToBase64String(bytes);
-        }
-
-        // ===================== Public Methods =====================
-        public void Reload() => _ = LoadExamResultAsync();
+        var bytes = System.Text.Encoding.UTF8.GetBytes(svg);
+        return "data:image/svg+xml;base64," + Convert.ToBase64String(bytes);
     }
 
-    // ===================== Models =====================
-    public class HeatCell
-    {
-        public int QuestionNo { get; set; }
-        public string StatusCss { get; set; } = "empty";
-        public string StatusText { get; set; } = "Chưa trả lời";
-    }
+
+
 }

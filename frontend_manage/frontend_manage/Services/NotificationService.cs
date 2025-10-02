@@ -12,6 +12,7 @@ public class NotificationService
     public event Action<StudentListResponse>? OnRoomStatusUpdated;
     public event Action<object>? OnConnectedReceived;
     public event Action<object>? OnUserDisconnected;
+    public event Action<object>? OnExamScoreReceived;
     public event Action<bool>? OnConnectionStateChanged;
 
     private readonly HashSet<int> _joinedGroups = new(); // để rejoin khi reconnect
@@ -45,10 +46,9 @@ public class NotificationService
         });
 
         
-        //chưa cấu hình 
         _hubConnection.On<object>("ReceiveExamScore", (data) =>
         {
-            OnUserDisconnected?.Invoke(data);
+            OnExamScoreReceived?.Invoke(data);
         });
         
         
