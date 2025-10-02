@@ -1,0 +1,118 @@
+@page "/exammanager/preview/shuffled"
+@using frontend_manage.DTOs
+@using frontend_manage.Services.ExamManager
+@using frontend_manage.Services
+@inject ExamManagerService ExamManagerService
+@inject IMathJaxService MathJaxService
+
+<link href="css/monitor/MonitorPage.css" rel="stylesheet" />
+
+<div class="shuffled-preview-page">
+    <div class="exam-paper">
+        <div class="preview-header">
+            <div class="logo-title">
+                <img src="/images/logo-dai-hoc-hutech_012634748.png" class="logo" alt="HUTECH" />
+                <div class="titles">
+                    <div class="university">TRƯỜNG ĐẠI HỌC CÔNG NGHỆ TP.HCM (HUTECH)</div>
+                    <div class="suite">EXAM SUITE - SHUFFLED PREVIEW</div>
+                </div>
+            </div>
+            <div class="exam-meta">
+                <div><strong>Môn:</strong> @SubjectName (@SubjectCode)</div>
+                <div><strong>Mã đề:</strong> @Exam?.ShuffledExamPaperCore</div>
+                <div><strong>Tiêu đề:</strong> @Exam?.Title</div>
+            </div>
+        </div>
+
+        <div class="preview-body">
+            @if (Exam?.QuestionStructures != null && Exam.QuestionStructures.Count > 0)
+            {
+                var idx = 1;
+                foreach (var q in Exam.QuestionStructures)
+                {
+                    <div class="question-item">
+                        <div class="q-number"><span class="q-chip">@idx</span> Câu hỏi</div>
+                        <div class="q-content">@((MarkupString)RenderHtml(q.QuestionContent))</div>
+                        <ul class="q-answers">
+                            @if (q.Answers != null)
+                            {
+                                foreach (var ans in q.Answers)
+                                {
+                                    <li class="answer-item">
+                                        <span class="ans-label">@GetLetter(ans.Order).</span>
+                                        <span class="ans-content">@((MarkupString)RenderHtml(ans.AnswerContent))</span>
+                                    </li>
+                                }
+                            }
+                        </ul>
+                    </div>
+                    idx++;
+                }
+            }
+            else
+            {
+                <div class="no-data">
+                    Không có dữ liệu câu hỏi cho đề này.
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public string? core { get; set; }
+
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public string? subjectName { get; set; }
+
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public string? subjectCode { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var items = await ExamManagerService.GetShuffledExamsMockAsync();
+        Exam = !string.IsNullOrWhiteSpace(core)
+            ? items.FirstOrDefault(i => i.ShuffledExamPaperCore == core)
+            : items.FirstOrDefault();
+        SubjectName = subjectName ?? Exam?.SubjectName ?? "Lập trình C#";
+        SubjectCode = subjectCode ?? Exam?.SubjectCode ?? "CS101";
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await MathJaxService.TypesetAsync();
+    }
+
+    private string RenderHtml(string? content) => content ?? string.Empty;
+    private char GetLetter(int order) => (char)('A' + Math.Max(1, order) - 1);
+
+    private ShuffledExamPaperDto? Exam;
+    private string? SubjectName;
+    private string? SubjectCode;
+}
+
+<style>
+.shuffled-preview-page { padding: 16px; }
+.preview-header { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 12px; }
+.logo-title { display: flex; align-items: center; gap: 12px; }
+.logo { height: 64px; width: auto; object-fit: contain; display: block; }
+.titles { font-weight: 700; }
+.suite { color: #1976d2; font-weight: 700; font-size: 0.9rem; }
+.exam-meta { text-align: right; font-size: 0.9rem; }
+.exam-paper { background: #fff; border: 1px solid #e0e0e0; border-radius: 10px; padding: 16px 18px; box-shadow: 0 2px 10px rgba(0,0,0,0.04); }
+.question-item { margin-bottom: 16px; padding: 12px; border: 1px solid #f0f0f0; border-radius: 8px; }
+.q-number { font-weight: 700; color: #1976d2; margin-bottom: 4px; }
+.q-chip { display: inline-flex; width: 28px; height: 28px; align-items: center; justify-content: center; border-radius: 50%; background: #e3f2fd; color: #1976d2; font-weight: 700; margin-right: 8px; }
+.q-answers { margin: 6px 0 0 18px; }
+.answer-item { display: flex; gap: 8px; padding: 6px 8px; border: 1px solid #f3f3f3; border-radius: 6px; margin-bottom: 6px; }
+.ans-label { min-width: 20px; font-weight: 700; color: #555; }
+.q-content img { max-width: 100%; height: auto; display: inline-block; }
+.q-content audio { width: 100%; margin-top: 6px; }
+.ans-content img { max-width: 100%; height: auto; display: inline-block; }
+.ans-content audio { width: 100%; margin-top: 4px; }
+</style>
+

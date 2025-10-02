@@ -1,0 +1,377 @@
+{
+  "subjectName": "Lập trình C#",
+  "subjectCode": "CS101",
+  "originalExamPaperCore": "CS101-MID-2025",
+  "shuffled": [
+    {
+      "shuffledExamPaperId": 1,
+      "shuffledExamPaperCore": "CS101-MID-2025-A",
+      "title": "Đề A",
+      "originalExamPaperId": 1,
+      "subjectId": 1001,
+      "isApproved": true,
+      "answerKey": "1:A,2:B,3:C,4:D,5:A",
+      "subjectName": "Lập trình C#",
+      "subjectCode": "CS101",
+      "questionStructures": [
+        {
+          "originalExamPaperDetailId": 2001,
+          "parentQuestionId": null,
+          "order": 1,
+          "questionContent": "Câu hỏi LaTeX: \\(a^2 + b^2 = c^2\\). Hình ảnh minh họa: <img src=\"/images/sample-exam.png\" alt=\"minh họa\" />. Audio: <audio src=\"/audio/sample.mp3\" controls></audio>",
+          "answers": [
+            { "answerId": 21001, "order": 1, "answerContent": ".NET", "originalExamPaperDetailId": 2001 },
+            { "answerId": 21002, "order": 2, "answerContent": "\\(\\int_0^1 x\\,dx = 1/2\\)", "originalExamPaperDetailId": 2001 },
+            { "answerId": 21003, "order": 3, "answerContent": "Node.js", "originalExamPaperDetailId": 2001 },
+            { "answerId": 21004, "order": 4, "answerContent": "Python VM", "originalExamPaperDetailId": 2001 }
+          ],
+          "childQuestions": []
+        },
+        {
+          "originalExamPaperDetailId": 2002,
+          "parentQuestionId": null,
+          "order": 2,
+          "questionContent": "Từ khóa tạo lớp trong C# là?",
+          "answers": [
+            { "answerId": 22001, "order": 1, "answerContent": "class", "originalExamPaperDetailId": 2002 },
+            { "answerId": 22002, "order": 2, "answerContent": "type", "originalExamPaperDetailId": 2002 },
+            { "answerId": 22003, "order": 3, "answerContent": "object", "originalExamPaperDetailId": 2002 },
+            { "answerId": 22004, "order": 4, "answerContent": "struct", "originalExamPaperDetailId": 2002 }
+          ],
+          "childQuestions": []
+        },
+        {
+          "originalExamPaperDetailId": 2003,
+          "parentQuestionId": null,
+          "order": 3,
+          "questionContent": "Từ khóa ngăn kế thừa?",
+          "answers": [
+            { "answerId": 23001, "order": 1, "answerContent": "sealed", "originalExamPaperDetailId": 2003 },
+            { "answerId": 23002, "order": 2, "answerContent": "final", "originalExamPaperDetailId": 2003 },
+            { "answerId": 23003, "order": 3, "answerContent": "const", "originalExamPaperDetailId": 2003 },
+            { "answerId": 23004, "order": 4, "answerContent": "override", "originalExamPaperDetailId": 2003 }
+          ],
+          "childQuestions": []
+        },
+        {
+          "originalExamPaperDetailId": 2004,
+          "parentQuestionId": null,
+          "order": 4,
+          "questionContent": "LINQ viết tắt là?",
+          "answers": [
+            { "answerId": 24001, "order": 1, "answerContent": "Language Integrated Query", "originalExamPaperDetailId": 2004 },
+            { "answerId": 24002, "order": 2, "answerContent": "Local Index Query", "originalExamPaperDetailId": 2004 },
+            { "answerId": 24003, "order": 3, "answerContent": "Linked Query", "originalExamPaperDetailId": 2004 }
+          ],
+          "childQuestions": []
+        },
+        {
+          "originalExamPaperDetailId": 2005,
+          "parentQuestionId": null,
+          "order": 5,
+          "questionContent": "Từ khóa khai báo hằng số?",
+          "answers": [
+            { "answerId": 25001, "order": 1, "answerContent": "const", "originalExamPaperDetailId": 2005 },
+            { "answerId": 25002, "order": 2, "answerContent": "static", "originalExamPaperDetailId": 2005 },
+            { "answerId": 25003, "order": 3, "answerContent": "readonly", "originalExamPaperDetailId": 2005 }
+          ],
+          "childQuestions": []
+        }
+      ]
+    },
+    {
+      "shuffledExamPaperId": 2,
+      "shuffledExamPaperCore": "CS101-MID-2025-B",
+      "title": "Đề B",
+      "originalExamPaperId": 1,
+      "subjectId": 1001,
+      "isApproved": true,
+      "answerKey": "1:B,2:C,3:D,4:A,5:B",
+      "subjectName": "Lập trình C#",
+      "subjectCode": "CS101",
+      "questionStructures": [
+        {
+          "originalExamPaperDetailId": 2101,
+          "parentQuestionId": null,
+          "order": 1,
+          "questionContent": "Interface chứa gì?",
+          "answers": [
+            { "answerId": 21101, "order": 1, "answerContent": "Signatures", "originalExamPaperDetailId": 2101 },
+            { "answerId": 21102, "order": 2, "answerContent": "Fields", "originalExamPaperDetailId": 2101 },
+            { "answerId": 21103, "order": 3, "answerContent": "Implementations", "originalExamPaperDetailId": 2101 }
+          ],
+          "childQuestions": []
+        },
+        {
+          "originalExamPaperDetailId": 2102,
+          "parentQuestionId": null,
+          "order": 2,
+          "questionContent": "Từ khóa override dùng khi?",
+          "answers": [
+            { "answerId": 21201, "order": 1, "answerContent": "Ghi đè virtual", "originalExamPaperDetailId": 2102 },
+            { "answerId": 21202, "order": 2, "answerContent": "Ẩn phương thức", "originalExamPaperDetailId": 2102 },
+            { "answerId": 21203, "order": 3, "answerContent": "Tạo mới", "originalExamPaperDetailId": 2102 }
+          ],
+          "childQuestions": []
+        },
+        {
+          "originalExamPaperDetailId": 2103,
+          "parentQuestionId": null,
+          "order": 3,
+          "questionContent": "Từ khóa async/await dùng để?",
+          "answers": [
+            { "answerId": 21301, "order": 1, "answerContent": "Bất đồng bộ", "originalExamPaperDetailId": 2103 },
+            { "answerId": 21302, "order": 2, "answerContent": "Đa luồng nặng", "originalExamPaperDetailId": 2103 },
+            { "answerId": 21303, "order": 3, "answerContent": "Song song CPU", "originalExamPaperDetailId": 2103 }
+          ],
+          "childQuestions": []
+        },
+        {
+          "originalExamPaperDetailId": 2104,
+          "parentQuestionId": null,
+          "order": 4,
+          "questionContent": "Record phù hợp cho?",
+          "answers": [
+            { "answerId": 21401, "order": 1, "answerContent": "Dữ liệu bất biến", "originalExamPaperDetailId": 2104 },
+            { "answerId": 21402, "order": 2, "answerContent": "Class động", "originalExamPaperDetailId": 2104 },
+            { "answerId": 21403, "order": 3, "answerContent": "Kiểu con trỏ", "originalExamPaperDetailId": 2104 }
+          ],
+          "childQuestions": []
+        },
+        {
+          "originalExamPaperDetailId": 2105,
+          "parentQuestionId": null,
+          "order": 5,
+          "questionContent": "Span<T> giúp?",
+          "answers": [
+            { "answerId": 21501, "order": 1, "answerContent": "Hiệu quả bộ nhớ", "originalExamPaperDetailId": 2105 },
+            { "answerId": 21502, "order": 2, "answerContent": "Tăng heap", "originalExamPaperDetailId": 2105 },
+            { "answerId": 21503, "order": 3, "answerContent": "Tạo thread", "originalExamPaperDetailId": 2105 }
+          ],
+          "childQuestions": []
+        }
+      ]
+    },
+    {
+      "shuffledExamPaperId": 3,
+      "shuffledExamPaperCore": "CS101-MID-2025-C",
+      "title": "Đề C",
+      "originalExamPaperId": 1,
+      "subjectId": 1001,
+      "isApproved": true,
+      "answerKey": "1:C,2:D,3:A,4:B,5:D",
+      "subjectName": "Lập trình C#",
+      "subjectCode": "CS101",
+      "questionStructures": [
+        {
+          "originalExamPaperDetailId": 2201,
+          "parentQuestionId": null,
+          "order": 1,
+          "questionContent": "Keyword cho hằng?",
+          "answers": [
+            { "answerId": 22101, "order": 3, "answerContent": "readonly", "originalExamPaperDetailId": 2201 },
+            { "answerId": 22102, "order": 1, "answerContent": "const", "originalExamPaperDetailId": 2201 },
+            { "answerId": 22103, "order": 2, "answerContent": "static", "originalExamPaperDetailId": 2201 }
+          ],
+          "childQuestions": []
+        },
+        {
+          "originalExamPaperDetailId": 2202,
+          "parentQuestionId": null,
+          "order": 2,
+          "questionContent": "Nullable reference bật bằng?",
+          "answers": [
+            { "answerId": 22201, "order": 1, "answerContent": "#nullable enable", "originalExamPaperDetailId": 2202 },
+            { "answerId": 22202, "order": 2, "answerContent": "nullable on", "originalExamPaperDetailId": 2202 },
+            { "answerId": 22203, "order": 3, "answerContent": "enable#nullable", "originalExamPaperDetailId": 2202 }
+          ],
+          "childQuestions": []
+        },
+        {
+          "originalExamPaperDetailId": 2203,
+          "parentQuestionId": null,
+          "order": 3,
+          "questionContent": "Tính đa hình đạt được qua?",
+          "answers": [
+            { "answerId": 22301, "order": 1, "answerContent": "virtual/override", "originalExamPaperDetailId": 2203 },
+            { "answerId": 22302, "order": 2, "answerContent": "sealed", "originalExamPaperDetailId": 2203 },
+            { "answerId": 22303, "order": 3, "answerContent": "static", "originalExamPaperDetailId": 2203 }
+          ],
+          "childQuestions": []
+        },
+        {
+          "originalExamPaperDetailId": 2204,
+          "parentQuestionId": null,
+          "order": 4,
+          "questionContent": "Keyword để kế thừa class?",
+          "answers": [
+            { "answerId": 22401, "order": 1, "answerContent": ":", "originalExamPaperDetailId": 2204 },
+            { "answerId": 22402, "order": 2, "answerContent": "extends", "originalExamPaperDetailId": 2204 },
+            { "answerId": 22403, "order": 3, "answerContent": "implements", "originalExamPaperDetailId": 2204 }
+          ],
+          "childQuestions": []
+        },
+        {
+          "originalExamPaperDetailId": 2205,
+          "parentQuestionId": null,
+          "order": 5,
+          "questionContent": "Auto-implemented property cần?",
+          "answers": [
+            { "answerId": 22501, "order": 1, "answerContent": "get; set;", "originalExamPaperDetailId": 2205 },
+            { "answerId": 22502, "order": 2, "answerContent": "field backing", "originalExamPaperDetailId": 2205 },
+            { "answerId": 22503, "order": 3, "answerContent": "init; only", "originalExamPaperDetailId": 2205 }
+          ],
+          "childQuestions": []
+        }
+      ]
+    },
+    {
+      "shuffledExamPaperId": 4,
+      "shuffledExamPaperCore": "CS101-MID-2025-D",
+      "title": "Đề D",
+      "originalExamPaperId": 1,
+      "subjectId": 1001,
+      "isApproved": true,
+      "answerKey": "1:D,2:A,3:B,4:C,5:D",
+      "subjectName": "Lập trình C#",
+      "subjectCode": "CS101",
+      "questionStructures": [
+        {
+          "originalExamPaperDetailId": 2301,
+          "parentQuestionId": null,
+          "order": 1,
+          "questionContent": "Từ khóa dừng foreach?",
+          "answers": [
+            { "answerId": 23101, "order": 1, "answerContent": "break", "originalExamPaperDetailId": 2301 },
+            { "answerId": 23102, "order": 2, "answerContent": "stop", "originalExamPaperDetailId": 2301 },
+            { "answerId": 23103, "order": 3, "answerContent": "halt", "originalExamPaperDetailId": 2301 }
+          ],
+          "childQuestions": []
+        },
+        {
+          "originalExamPaperDetailId": 2302,
+          "parentQuestionId": null,
+          "order": 2,
+          "questionContent": "IEnumerable vs IQueryable khác?",
+          "answers": [
+            { "answerId": 23201, "order": 1, "answerContent": "Client vs Server", "originalExamPaperDetailId": 2302 },
+            { "answerId": 23202, "order": 2, "answerContent": "Số phần tử", "originalExamPaperDetailId": 2302 },
+            { "answerId": 23203, "order": 3, "answerContent": "Không khác", "originalExamPaperDetailId": 2302 }
+          ],
+          "childQuestions": []
+        },
+        {
+          "originalExamPaperDetailId": 2303,
+          "parentQuestionId": null,
+          "order": 3,
+          "questionContent": "Từ khóa khai báo sự kiện?",
+          "answers": [
+            { "answerId": 23301, "order": 1, "answerContent": "event", "originalExamPaperDetailId": 2303 },
+            { "answerId": 23302, "order": 2, "answerContent": "delegate", "originalExamPaperDetailId": 2303 },
+            { "answerId": 23303, "order": 3, "answerContent": "signal", "originalExamPaperDetailId": 2303 }
+          ],
+          "childQuestions": []
+        },
+        {
+          "originalExamPaperDetailId": 2304,
+          "parentQuestionId": null,
+          "order": 4,
+          "questionContent": "CancellationToken dùng để?",
+          "answers": [
+            { "answerId": 23401, "order": 1, "answerContent": "Hủy tác vụ", "originalExamPaperDetailId": 2304 },
+            { "answerId": 23402, "order": 2, "answerContent": "Tạo tiến trình", "originalExamPaperDetailId": 2304 },
+            { "answerId": 23403, "order": 3, "answerContent": "Khóa tài nguyên", "originalExamPaperDetailId": 2304 }
+          ],
+          "childQuestions": []
+        },
+        {
+          "originalExamPaperDetailId": 2305,
+          "parentQuestionId": null,
+          "order": 5,
+          "questionContent": "Dependency Injection là?",
+          "answers": [
+            { "answerId": 23501, "order": 1, "answerContent": "Cấp phụ thuộc từ ngoài", "originalExamPaperDetailId": 2305 },
+            { "answerId": 23502, "order": 2, "answerContent": "ORM cho DB", "originalExamPaperDetailId": 2305 },
+            { "answerId": 23503, "order": 3, "answerContent": "Thay OOP", "originalExamPaperDetailId": 2305 }
+          ],
+          "childQuestions": []
+        }
+      ]
+    },
+    {
+      "shuffledExamPaperId": 5,
+      "shuffledExamPaperCore": "CS101-MID-2025-E",
+      "title": "Đề E",
+      "originalExamPaperId": 1,
+      "subjectId": 1001,
+      "isApproved": true,
+      "answerKey": "1:A,2:C,3:B,4:D,5:C",
+      "subjectName": "Lập trình C#",
+      "subjectCode": "CS101",
+      "questionStructures": [
+        {
+          "originalExamPaperDetailId": 2401,
+          "parentQuestionId": null,
+          "order": 1,
+          "questionContent": "Keyword abstract dùng cho?",
+          "answers": [
+            { "answerId": 24101, "order": 1, "answerContent": "PT trừu tượng", "originalExamPaperDetailId": 2401 },
+            { "answerId": 24102, "order": 2, "answerContent": "PT tĩnh", "originalExamPaperDetailId": 2401 },
+            { "answerId": 24103, "order": 3, "answerContent": "PT niêm phong", "originalExamPaperDetailId": 2401 }
+          ],
+          "childQuestions": []
+        },
+        {
+          "originalExamPaperDetailId": 2402,
+          "parentQuestionId": null,
+          "order": 2,
+          "questionContent": "Từ khóa implements trong C#?",
+          "answers": [
+            { "answerId": 24201, "order": 1, "answerContent": ": Interface", "originalExamPaperDetailId": 2402 },
+            { "answerId": 24202, "order": 2, "answerContent": "implements", "originalExamPaperDetailId": 2402 },
+            { "answerId": 24203, "order": 3, "answerContent": "extends", "originalExamPaperDetailId": 2402 }
+          ],
+          "childQuestions": []
+        },
+        {
+          "originalExamPaperDetailId": 2403,
+          "parentQuestionId": null,
+          "order": 3,
+          "questionContent": "Enum là kiểu?",
+          "answers": [
+            { "answerId": 24301, "order": 1, "answerContent": "Kiểu giá trị", "originalExamPaperDetailId": 2403 },
+            { "answerId": 24302, "order": 2, "answerContent": "Kiểu tham chiếu", "originalExamPaperDetailId": 2403 },
+            { "answerId": 24303, "order": 3, "answerContent": "Kiểu con trỏ", "originalExamPaperDetailId": 2403 }
+          ],
+          "childQuestions": []
+        },
+        {
+          "originalExamPaperDetailId": 2404,
+          "parentQuestionId": null,
+          "order": 4,
+          "questionContent": "Struct là?",
+          "answers": [
+            { "answerId": 24401, "order": 1, "answerContent": "Kiểu giá trị", "originalExamPaperDetailId": 2404 },
+            { "answerId": 24402, "order": 2, "answerContent": "Kiểu tham chiếu", "originalExamPaperDetailId": 2404 },
+            { "answerId": 24403, "order": 3, "answerContent": "Record", "originalExamPaperDetailId": 2404 }
+          ],
+          "childQuestions": []
+        },
+        {
+          "originalExamPaperDetailId": 2405,
+          "parentQuestionId": null,
+          "order": 5,
+          "questionContent": "var trong C# là?",
+          "answers": [
+            { "answerId": 24501, "order": 1, "answerContent": "Suy luận kiểu cục bộ", "originalExamPaperDetailId": 2405 },
+            { "answerId": 24502, "order": 2, "answerContent": "Kiểu dynamic", "originalExamPaperDetailId": 2405 },
+            { "answerId": 24503, "order": 3, "answerContent": "Kiểu tĩnh", "originalExamPaperDetailId": 2405 }
+          ],
+          "childQuestions": []
+        }
+      ]
+    }
+  ]
+}
+
+

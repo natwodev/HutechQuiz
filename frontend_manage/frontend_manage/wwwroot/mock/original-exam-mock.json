@@ -1,0 +1,99 @@
+{
+  "originalExamPaperId": 1,
+  "originalExamPaperCore": "CS101-MID-2025",
+  "title": "Lập trình C# - Giữa kỳ 2025",
+  "description": "Đề thi mẫu (mock)",
+  "subjectId": 1001,
+  "durationMinutes": 60,
+  "totalQuestions": 5,
+  "keyValueList": null,
+  "details": [
+    {
+      "originalExamPaperDetailId": 11,
+      "order": 1,
+      "questionContent": "C# là ngôn ngữ thuộc nền tảng nào?",
+      "correctAnswerIndex": 1,
+      "parentQuestionId": null,
+      "chapterId": 1,
+      "canShuffleQuestion": true,
+      "answerShuffleInfo": null,
+      "parentQuestion": null,
+      "childQuestions": [],
+      "answers": [
+        { "answerId": 101, "order": 1, "answerContent": ".NET", "isCorrect": true, "canShuffleAnswer": true, "originalExamPaperDetailId": 11 },
+        { "answerId": 102, "order": 2, "answerContent": "JVM", "isCorrect": false, "canShuffleAnswer": true, "originalExamPaperDetailId": 11 },
+        { "answerId": 103, "order": 3, "answerContent": "Node.js", "isCorrect": false, "canShuffleAnswer": true, "originalExamPaperDetailId": 11 }
+      ]
+    },
+    {
+      "originalExamPaperDetailId": 12,
+      "order": 2,
+      "questionContent": "Từ khóa tạo lớp trong C# là gì?",
+      "correctAnswerIndex": 1,
+      "parentQuestionId": null,
+      "chapterId": 1,
+      "canShuffleQuestion": true,
+      "answerShuffleInfo": null,
+      "parentQuestion": null,
+      "childQuestions": [],
+      "answers": [
+        { "answerId": 201, "order": 1, "answerContent": "class", "isCorrect": true, "canShuffleAnswer": true, "originalExamPaperDetailId": 12 },
+        { "answerId": 202, "order": 2, "answerContent": "struct", "isCorrect": false, "canShuffleAnswer": true, "originalExamPaperDetailId": 12 },
+        { "answerId": 203, "order": 3, "answerContent": "type", "isCorrect": false, "canShuffleAnswer": true, "originalExamPaperDetailId": 12 }
+      ]
+    },
+    {
+      "originalExamPaperDetailId": 13,
+      "order": 3,
+      "questionContent": "Chọn câu đúng về interface trong C#",
+      "correctAnswerIndex": 2,
+      "parentQuestionId": null,
+      "chapterId": 2,
+      "canShuffleQuestion": true,
+      "answerShuffleInfo": null,
+      "parentQuestion": null,
+      "childQuestions": [],
+      "answers": [
+        { "answerId": 301, "order": 1, "answerContent": "Interface có thể chứa fields", "isCorrect": false, "canShuffleAnswer": true, "originalExamPaperDetailId": 13 },
+        { "answerId": 302, "order": 2, "answerContent": "Interface chỉ chứa signatures", "isCorrect": true, "canShuffleAnswer": true, "originalExamPaperDetailId": 13 },
+        { "answerId": 303, "order": 3, "answerContent": "Interface không thể kế thừa", "isCorrect": false, "canShuffleAnswer": true, "originalExamPaperDetailId": 13 }
+      ]
+    },
+    {
+      "originalExamPaperDetailId": 14,
+      "order": 4,
+      "questionContent": "Keyword để ngăn class bị kế thừa?",
+      "correctAnswerIndex": 1,
+      "parentQuestionId": null,
+      "chapterId": 2,
+      "canShuffleQuestion": true,
+      "answerShuffleInfo": null,
+      "parentQuestion": null,
+      "childQuestions": [],
+      "answers": [
+        { "answerId": 401, "order": 1, "answerContent": "sealed", "isCorrect": true, "canShuffleAnswer": true, "originalExamPaperDetailId": 14 },
+        { "answerId": 402, "order": 2, "answerContent": "final", "isCorrect": false, "canShuffleAnswer": true, "originalExamPaperDetailId": 14 },
+        { "answerId": 403, "order": 3, "answerContent": "const", "isCorrect": false, "canShuffleAnswer": true, "originalExamPaperDetailId": 14 }
+      ]
+    },
+    {
+      "originalExamPaperDetailId": 15,
+      "order": 5,
+      "questionContent": "LINQ viết tắt của?",
+      "correctAnswerIndex": 1,
+      "parentQuestionId": null,
+      "chapterId": 3,
+      "canShuffleQuestion": true,
+      "answerShuffleInfo": null,
+      "parentQuestion": null,
+      "childQuestions": [],
+      "answers": [
+        { "answerId": 501, "order": 1, "answerContent": "Language Integrated Query", "isCorrect": true, "canShuffleAnswer": true, "originalExamPaperDetailId": 15 },
+        { "answerId": 502, "order": 2, "answerContent": "Local Indexed Query", "isCorrect": false, "canShuffleAnswer": true, "originalExamPaperDetailId": 15 },
+        { "answerId": 503, "order": 3, "answerContent": "Linked Query", "isCorrect": false, "canShuffleAnswer": true, "originalExamPaperDetailId": 15 }
+      ]
+    }
+  ]
+}
+
+

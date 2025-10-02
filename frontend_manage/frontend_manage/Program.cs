@@ -11,6 +11,7 @@ using Microsoft.JSInterop;
 
 using frontend_manage.Services;
 using frontend_manage.Services.AcademicAffairs;
+using frontend_manage.Services.ExamManager;
 using System.Globalization;
 
 
@@ -36,6 +37,7 @@ builder.Services.AddScoped<ExamBatchService>();
 builder.Services.AddScoped<ExamBatchDetailService>();
 builder.Services.AddScoped<ExamSessionService>();
 builder.Services.AddScoped<ExamSessionSubjectService>();
+builder.Services.AddScoped<ExamManagerService>();
 
 // Đăng ký MathJax service
 builder.Services.AddScoped<IMathJaxService, MathJaxService>();

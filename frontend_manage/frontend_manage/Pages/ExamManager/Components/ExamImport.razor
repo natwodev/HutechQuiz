@@ -1,0 +1,90 @@
+@using MudBlazor
+@using frontend_manage.Services.ExamManager
+@using Microsoft.AspNetCore.Components.Forms
+@using frontend_manage.DTOs
+
+<MudPaper Class="pa-4" Elevation="4">
+    <MudText Typo="Typo.h6" Class="mb-2">Nhập đề (XML)</MudText>
+    <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center">
+        <MudTextField @bind-Value="originalExamPaperCore" Label="Mã đề gốc (OriginalExamPaperCore)" Variant="Variant.Outlined" />
+        <InputFile OnChange="OnInputFileChange" accept=".xml" />
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.CloudUpload" OnClick="UploadAsync" Disabled="isUploading || selectedFileStream == null || string.IsNullOrWhiteSpace(originalExamPaperCore)">Upload</MudButton>
+        @if (isUploading)
+        {
+            <MudProgressCircular Indeterminate="true" Size="Size.Small" />
+        }
+    </MudStack>
+
+    @if (!string.IsNullOrEmpty(importMessage))
+    {
+        <MudAlert Severity="Severity.Success" Class="mt-2">@importMessage</MudAlert>
+    }
+
+    <div class="mt-4">
+        <MudText Typo="Typo.subtitle1">Chi tiết đề gốc</MudText>
+        <div class="table-container">
+            @if (originalExam != null)
+            {
+                <div class="table-toolbar">
+                    <span>Tổng: @originalExam.TotalQuestions câu</span>
+                </div>
+                <div class="custom-table">
+                    <div class="table-header">
+                        <div class="col order">#</div>
+                        <div class="col content">Nội dung câu hỏi</div>
+                        <div class="col answers">Số đáp án</div>
+                        <div class="col actions">Thao tác</div>
+                    </div>
+                    @foreach (var item in PagedItems)
+                    {
+                        <div class="table-row">
+                            <div class="col order">@item.Order</div>
+                            <div class="col content">@item.QuestionContent</div>
+                            <div class="col answers">@item.Answers?.Count</div>
+                            <div class="col actions">
+                                <MudButton Size="Size.Small" Variant="Variant.Text" StartIcon="@Icons.Material.Filled.Visibility" OnClick="() => Preview(item)">Xem trước</MudButton>
+                            </div>
+                        </div>
+                    }
+                </div>
+                <div class="pagination">
+                    <button @onclick="PrevPage" disabled="@(_pageIndex == 1)">Prev</button>
+                    <span>Trang @_pageIndex / @TotalPages</span>
+                    <button @onclick="NextPage" disabled="@(_pageIndex >= TotalPages)">Next</button>
+                    <button @onclick="LoadMock" class="load-mock">Load Mock</button>
+                </div>
+            }
+            else if (isLoadingDetails)
+            {
+                <div class="loading-container">
+                    <div class="loading-spinner"></div>
+                    <div class="loading-text">Đang tải chi tiết đề...</div>
+                </div>
+            }
+            else
+            {
+                <MudAlert Severity="Severity.Info">Chưa có dữ liệu</MudAlert>
+            }
+        </div>
+    </div>
+</MudPaper>
+
+@code { }
+
+<style>
+    .table-container { margin-top: 8px; }
+    .custom-table { border: 1px solid #e0e0e0; border-radius: 6px; overflow: hidden; }
+    .table-header, .table-row { display: grid; grid-template-columns: 80px 1fr 140px 140px; align-items: center; }
+    .table-header { background: #f7f7f7; font-weight: 600; border-bottom: 1px solid #e0e0e0; }
+    .table-row { border-bottom: 1px solid #f0f0f0; }
+    .col { padding: 10px 12px; }
+    .pagination { display: flex; gap: 12px; align-items: center; justify-content: flex-end; padding: 10px 0; }
+    .pagination button { padding: 6px 12px; border: 1px solid #ccc; background: white; border-radius: 4px; cursor: pointer; }
+    .pagination button[disabled] { opacity: 0.5; cursor: not-allowed; }
+    .loading-container { display: flex; gap: 8px; align-items: center; padding: 12px; }
+    .loading-spinner { width: 16px; height: 16px; border: 2px solid #ccc; border-top-color: #1976d2; border-radius: 50%; animation: spin 1s linear infinite; }
+    @@keyframes spin { to { transform: rotate(360deg); } }
+    .load-mock { margin-left: auto; }
+</style>
+
+

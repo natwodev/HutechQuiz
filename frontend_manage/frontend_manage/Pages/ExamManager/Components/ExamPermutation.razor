@@ -1,0 +1,36 @@
+@using MudBlazor
+@using frontend_manage.Services.ExamManager
+@using MudBlazor
+
+<MudPaper Class="pa-4" Elevation="4">
+    <MudText Typo="Typo.h6" Class="mb-2">Tạo đề hoán vị</MudText>
+    <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center">
+        <MudTextField @bind-Value="originalExamPaperCore" Label="Mã đề gốc (OriginalExamPaperCore)" Variant="Variant.Outlined" />
+        <MudNumericField @bind-Value="count" Label="Số lượng hoán vị" Variant="Variant.Outlined" Min="1" />
+        <MudButton Color="Color.Secondary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.AutoAwesome" OnClick="CreateShuffledAsync" Disabled="isCreating || string.IsNullOrWhiteSpace(originalExamPaperCore) || count < 1">Tạo</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Visibility" OnClick="PreviewShuffledMock">Xem trước đề mẫu</MudButton>
+        <select @onchange="OnSelectChanged" value="@selectedShuffledCore" style="min-width: 240px; height: 36px; padding: 6px 8px; border: 1px solid #ccc; border-radius: 4px;">
+            <option value="">-- Chọn mã đề hoán vị --</option>
+            @if (shuffledItems != null)
+            {
+                @foreach (var x in shuffledItems)
+                {
+                    <option value="@x.ShuffledExamPaperCore">@x.ShuffledExamPaperCore (@x.Title)</option>
+                }
+            }
+        </select>
+        @if (isCreating)
+        {
+            <MudProgressCircular Indeterminate="true" Size="Size.Small" />
+        }
+    </MudStack>
+
+    @if (!string.IsNullOrEmpty(message))
+    {
+        <MudAlert Severity="Severity.Success" Class="mt-2">@message</MudAlert>
+    }
+</MudPaper>
+
+@code { }
+
+

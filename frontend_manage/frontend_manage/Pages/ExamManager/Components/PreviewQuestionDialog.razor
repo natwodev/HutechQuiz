@@ -1,0 +1,42 @@
+@using MudBlazor
+@using frontend_manage.DTOs
+@using Microsoft.AspNetCore.Components
+
+<MudDialog>
+    <DialogContent>
+        <MudText Typo="Typo.h6" Class="mb-2">Xem trước câu hỏi</MudText>
+        @if (Question != null)
+        {
+            <div class="q-content">@Question.QuestionContent</div>
+            <ul class="answers">
+                @foreach (var ans in Question.Answers)
+                {
+                    <li class="@(ans.IsCorrect ? "correct" : "")">@ans.AnswerContent</li>
+                }
+            </ul>
+        }
+        else
+        {
+            <MudAlert Severity="Severity.Info">Không có dữ liệu câu hỏi</MudAlert>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="() => MudDialog?.Cancel()" Color="Color.Default">Đóng</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    public IMudDialogInstance? MudDialog { get; set; }
+
+    [Parameter]
+    public OriginalExamPaperDetailDto? Question { get; set; }
+}
+
+<style>
+    .q-content { margin: 8px 0 12px 0; }
+    .answers { margin: 0; padding-left: 18px; }
+    .answers li.correct { color: #2e7d32; font-weight: 600; }
+</style>
+
+
