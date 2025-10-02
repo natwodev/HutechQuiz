@@ -422,16 +422,14 @@ namespace frontend_manage.Pages.Exam
                                           
                    var submitResponse = await StudentService.SubmitExamAsync(submitRequest);
 
-                   if (submitResponse?.Success == true)
+                   if (submitResponse != null)
                    {
-                       Snackbar.Add("Nộp bài thành công!", Severity.Success);
+                       // Hiện thông báo từ backend (dù success hay error)
+                       Snackbar.Add(submitResponse.Message, Severity.Info);
+
+                       // Luôn chuyển sang trang kết quả
                        Navigation.NavigateTo($"/Exam/Result?studentExamSessionId={studentExamSessionId}");
                    }
-                  else if (submitResponse != null)
-                  {
-                      // Chỉ hiển thị thông báo lỗi từ backend
-                      Snackbar.Add($"❌ {submitResponse.Message}", Severity.Error);
-                  }
                    else
                    {
                        Snackbar.Add("❌ Có lỗi xảy ra khi nộp bài. Vui lòng thử lại!", Severity.Error);
