@@ -60,7 +60,7 @@
                                 <div class="info-grid">
                                     <div class="info-row"><div class="k">Mã sinh viên</div><div class="v">@submission.StudentCode</div></div>
                                     <div class="info-row"><div class="k">Mã đề thi</div><div class="v">@submission.ShuffledExamPaperId</div></div>
-                                    <div class="info-row"><div class="k">Điểm số</div><div class="v">@((submission.Score ?? 0).ToString("0.00"))</div></div>
+                                    <div class="info-row"><div class="k">Điểm số</div><div class="v">@submission.Score</div></div>
                                     <div class="info-row"><div class="k">Bắt đầu</div><div class="v">@(submission.StartTime?.ToString("dd/MM/yyyy HH:mm:ss") ?? "")</div></div>
                                     <div class="info-row"><div class="k">Kết thúc</div><div class="v">@submission.EndTime.ToString("dd/MM/yyyy HH:mm:ss")</div></div>
                                 </div>
@@ -75,7 +75,7 @@
                     <MudItem xs="12" md="5">
                         <MudCard Elevation="8" Class="er-card stat-card stat-card--score">
                             <MudCardContent Class="stat-card__content er-score-svg-wrap">
-                                <img src="" alt="Điểm thi" class="er-score-svg" />
+                                <img src="@ScoreSvgDataUri" alt="Điểm thi" class="er-score-svg" />
                             </MudCardContent>
                         </MudCard>
                     </MudItem>

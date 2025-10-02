@@ -111,6 +111,28 @@ public class NotificationService
         }
     }
 
+    // Tham gia group riêng của sinh viên để nhận điểm
+    public async Task JoinStudentGroup(string studentCode)
+    {
+        if (_hubConnection?.State == HubConnectionState.Connected)
+        {
+            await _hubConnection.InvokeAsync("JoinStudentGroup", studentCode);
+        }
+        else
+        {
+            throw new InvalidOperationException("SignalR connection is not established");
+        }
+    }
+
+    // Rời group riêng của sinh viên
+    public async Task LeaveStudentGroup(string studentCode)
+    {
+        if (_hubConnection?.State == HubConnectionState.Connected)
+        {
+            await _hubConnection.InvokeAsync("LeaveStudentGroup", studentCode);
+        }
+    }
+
     // Gửi message test
     public async Task SendMessage(string message, DateTime examTime)
     {

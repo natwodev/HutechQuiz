@@ -45,6 +45,18 @@ public partial class Result : IDisposable
             {
                 _ = NotificationService.StartAsync();
             }
+
+            // Tham gia group theo mã sinh viên để nhận điểm đẩy về
+            // Ưu tiên dùng StudentCode từ submission nếu có; nếu chưa có thì lấy từ query service khác nếu cần
+            var studentCode = submission?.StudentCode;
+            if (!string.IsNullOrWhiteSpace(studentCode))
+            {
+                try
+                {
+                    await NotificationService.JoinStudentGroup(studentCode);
+                }
+                catch { }
+            }
         }
         catch (Exception ex)
         {
@@ -93,11 +105,14 @@ public partial class Result : IDisposable
     public void Dispose()
     {
         NotificationService.OnExamScoreReceived -= HandleExamScoreReceived;
+        // Không có studentCode chắc chắn ở đây để Leave, bỏ qua an toàn
     }
     
     
+    private string ScoreSvgDataUri => BuildScoreSvgDataUri(
+        submission?.Score ?? 0);
     
-    private string BuildScoreSvgDataUri(double score, int correct, int total, int width = 560, int height = 220)
+    private string BuildScoreSvgDataUri(double score, int width = 560, int height = 220)
     {
         var scoreText = score.ToString("0.00");
         var midY = (int)Math.Round(height * 0.62);
@@ -117,10 +132,6 @@ public partial class Result : IDisposable
   <text x='{width / 2}' y='{midY}' text-anchor='middle'
         font-family='Segoe UI,Roboto,Arial' font-weight='900' font-size='{bigFont}'
         fill='#ffffff'>{scoreText}</text>
-  <text x='{width / 2}' y='{height - 18}' text-anchor='middle'
-        font-family='Segoe UI,Roboto,Arial' font-size='18' fill='rgba(255,255,255,.9)'>
-    {correct}/{total} câu đúng
-  </text>
 </svg>";
 
         var bytes = System.Text.Encoding.UTF8.GetBytes(svg);

@@ -247,10 +247,5 @@ public class MessageProcessingService : IMessageProcessingService
             throw;
         }
     }
-
-    // Thêm các method xử lý message khác ở đây
-    // private async Task ProcessStudentImportMessageAsync<T>(T message)
-    // {
-    //     // Logic xử lý student import message
-    // }
+    
 } 

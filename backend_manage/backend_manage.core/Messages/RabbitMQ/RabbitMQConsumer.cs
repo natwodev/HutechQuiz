@@ -149,6 +149,8 @@ namespace backend_manage.core.Messages.RabbitMQ
                         try
                         {
                             _logger.LogInformation("🕒 ExamSubmission Consumer {ConsumerId} bắt đầu xử lý: {Time}", consumerId, DateTime.UtcNow);
+                            // Delay 10 giây theo yêu cầu trước khi xử lý nộp bài
+                            await Task.Delay(TimeSpan.FromSeconds(10));
                             await ProcessExamSubmission(message);
                             _logger.LogInformation("✅ ExamSubmission Consumer {ConsumerId} hoàn tất xử lý: {Time}", consumerId, DateTime.UtcNow);
                         }
@@ -245,6 +247,8 @@ namespace backend_manage.core.Messages.RabbitMQ
         {
             try
             {
+                await Task.Delay(10000);
+                
                 using var scope = _serviceScopeFactory.CreateScope();
                 var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
@@ -284,6 +288,44 @@ namespace backend_manage.core.Messages.RabbitMQ
                     message.EndTime
                 );
 
+                // Gửi điểm qua SignalR tới sinh viên và cập nhật monitor
+                try
+                {
+                    var studentService = scope.ServiceProvider.GetRequiredService<IStudentService>();
+
+                    var groupNameStudent = $"student_{message.StudentCode}";
+                    var groupNameLecturer = $"lecturer_subject_{studentExamSession.ExamSessionSubjectId}";
+
+                    var scoreData = new
+                    {
+                        studentCode = message.StudentCode,
+                        shuffledExamPaperId = message.ShuffledExamPaperId,
+                        score = message.Score,
+                        correctAnswers = message.CorrectAnswers,
+                        totalQuestions = message.TotalQuestions,
+                        startTime = studentExamSession.StartTime,
+                        endTime = message.EndTime,
+                        studentAnswersString = message.StudentAnswersString,
+                        answerKey = studentExamSession.ShuffledExamPaper?.AnswerKey ?? string.Empty,
+                        isCompleted = message.IsCompleted,
+                        message = $"Bài thi đã được chấm điểm: {message.Score:F2}/10"
+                    };
+
+                    await _hubContext.Clients.Group(groupNameStudent).SendAsync("ReceiveExamScore", scoreData);
+
+                    var (statusList, subjectInfo) = await studentService.GetStudentsByExamSessionSubjectAsync(studentExamSession.ExamSessionSubjectId);
+                    await _hubContext.Clients.Group(groupNameLecturer).SendAsync("RoomStatusUpdated", new StudentListResponse
+                    {
+                        Students = statusList.ToList(),
+                        Subject = subjectInfo
+                    });
+
+                    _logger.LogInformation("📤 Đã gửi điểm qua SignalR: Student={StudentCode}, Score={Score}", message.StudentCode, message.Score);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "❌ Lỗi khi gửi điểm qua SignalR cho StudentCode={StudentCode}", message.StudentCode);
+                }
             }
             catch (Exception ex)
             {
