@@ -24,6 +24,7 @@ public class ExamPaperHelper
     private readonly AutoMapper.IMapper _mapper;
     private readonly StudentExamSessionCacheHelper _sessionCacheHelper;
     private readonly IRabbitMqService _rabbitMqService;
+    private readonly IMessageProcessingService _messageProcessingService;
 
     public ExamPaperHelper(
         IRedisService redisService,
@@ -33,7 +34,8 @@ public class ExamPaperHelper
         IRepository<OriginalExamPaper> originalExamPaperRepository,
         AutoMapper.IMapper mapper,
         StudentExamSessionCacheHelper sessionCacheHelper,
-        IRabbitMqService rabbitMqService
+        IRabbitMqService rabbitMqService,
+        IMessageProcessingService messageProcessingService
         )
     {
         _redisService = redisService;
@@ -44,6 +46,7 @@ public class ExamPaperHelper
         _mapper = mapper;
         _sessionCacheHelper = sessionCacheHelper;
         _rabbitMqService = rabbitMqService;
+        _messageProcessingService = messageProcessingService;
     }
 
     //dùng để bắt đầu thi()
@@ -163,8 +166,16 @@ public class ExamPaperHelper
                 RemainingMinutes = studentExamSessionDto.RemainingMinutes
             };
             
-            _rabbitMqService.Publish("start_exam_queue",startExamMessage);
-            _logger.LogInformation("Đã gửi đến message để lưu thông tin vào db cho sinh viên {studentCode}",studentCode);
+            try
+            {
+                _rabbitMqService.Publish("start_exam_queue",startExamMessage);
+                _logger.LogInformation("Đã gửi đến message để lưu thông tin vào db cho sinh viên {studentCode}",studentCode);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "RabbitMQ publish thất bại, fallback xử lý trực tiếp start_exam_queue cho {studentCode}", studentCode);
+                await _messageProcessingService.ProcessMessageAsync("start_exam_queue", startExamMessage);
+            }
             
             
             return (studentExamSessionDto, newExamPaper, originalExamPaper);
@@ -609,7 +620,7 @@ public class ExamPaperHelper
             // Cập nhật thông tin phiên thi
             var endTime = DateTimeHelper.GetVietnamTime();
             studentExamSessionDto.EndTime = endTime;
-            studentExamSessionDto.Score = score;
+            //studentExamSessionDto.Score = score;
             studentExamSessionDto.CorrectAnswers = correctAnswers;
             studentExamSessionDto.TotalQuestions = totalQuestions;
             studentExamSessionDto.IsCompleted = true;
@@ -630,9 +641,17 @@ public class ExamPaperHelper
                 StudentAnswersString = studentExamSessionDto.StudentAnswersString
             };
 
-            // Gửi message qua RabbitMQ
-            _rabbitMqService.Publish("exam_submission_queue", examSubmissionMessage);
-            _logger.LogInformation("📤 Đã gửi message nộp bài thi qua RabbitMQ cho sinh viên {StudentCode}", studentCode);
+            // Gửi message qua RabbitMQ với fallback
+            try
+            {
+                _rabbitMqService.Publish("exam_submission_queue", examSubmissionMessage);
+                _logger.LogInformation("📤 Đã gửi message nộp bài thi qua RabbitMQ cho sinh viên {StudentCode}", studentCode);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "RabbitMQ publish thất bại, fallback xử lý trực tiếp exam_submission_queue cho {StudentCode}", studentCode);
+                await _messageProcessingService.ProcessMessageAsync("exam_submission_queue", examSubmissionMessage);
+            }
 
             _logger.LogInformation("✅ Hoàn thành nộp bài thi cho sinh viên {StudentCode}. Điểm: {Score}, Đúng: {CorrectAnswers}/{TotalQuestions}", 
                 studentCode, score, correctAnswers, totalQuestions);

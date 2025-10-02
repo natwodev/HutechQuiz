@@ -156,9 +156,6 @@ public class MessageProcessingService : IMessageProcessingService
         {
             if (message is ExamSubmissionMessage examSubmissionMessage)
             {
-                // Delay 10s theo yêu cầu
-                System.Threading.Thread.Sleep(10000);
-
                 using var scope = _serviceScopeFactory.CreateScope();
                 var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
@@ -247,10 +244,5 @@ public class MessageProcessingService : IMessageProcessingService
             throw;
         }
     }
-
-    // Thêm các method xử lý message khác ở đây
-    // private async Task ProcessStudentImportMessageAsync<T>(T message)
-    // {
-    //     // Logic xử lý student import message
-    // }
+    
 } 
