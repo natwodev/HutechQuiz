@@ -12,6 +12,7 @@ public class NotificationService
     public event Action<StudentListResponse>? OnRoomStatusUpdated;
     public event Action<object>? OnConnectedReceived;
     public event Action<object>? OnUserDisconnected;
+    public event Action<object>? OnExamScoreReceived;
     public event Action<bool>? OnConnectionStateChanged;
 
     private readonly HashSet<int> _joinedGroups = new(); // để rejoin khi reconnect
@@ -45,10 +46,9 @@ public class NotificationService
         });
 
         
-        //chưa cấu hình 
         _hubConnection.On<object>("ReceiveExamScore", (data) =>
         {
-            OnUserDisconnected?.Invoke(data);
+            OnExamScoreReceived?.Invoke(data);
         });
         
         
@@ -108,6 +108,28 @@ public class NotificationService
         {
             await _hubConnection.InvokeAsync("LeaveLecturerView", examSessionSubjectId);
             _joinedGroups.Remove(examSessionSubjectId);
+        }
+    }
+
+    // Tham gia group riêng của sinh viên để nhận điểm
+    public async Task JoinStudentGroup(string studentCode)
+    {
+        if (_hubConnection?.State == HubConnectionState.Connected)
+        {
+            await _hubConnection.InvokeAsync("JoinStudentGroup", studentCode);
+        }
+        else
+        {
+            throw new InvalidOperationException("SignalR connection is not established");
+        }
+    }
+
+    // Rời group riêng của sinh viên
+    public async Task LeaveStudentGroup(string studentCode)
+    {
+        if (_hubConnection?.State == HubConnectionState.Connected)
+        {
+            await _hubConnection.InvokeAsync("LeaveStudentGroup", studentCode);
         }
     }
 

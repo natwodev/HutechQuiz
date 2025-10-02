@@ -211,54 +211,53 @@ public async Task<IActionResult> UpdateAnswer([FromBody] SaveAnswerDto request)
     }
 }
 
-    [HttpPost("submit-exam")]
-    public async Task<IActionResult> SubmitExam([FromBody] SubmitExamRequest request)
+[HttpPost("submit-exam")]
+public async Task<IActionResult> SubmitExam([FromBody] SubmitExamRequest request)
+{
+    try
     {
-        try
+        var studentCode = User.FindFirst("studentCode")?.Value;
+        if (string.IsNullOrEmpty(studentCode))
         {
-            var studentCode = User.FindFirst("studentCode")?.Value;
-            if (string.IsNullOrEmpty(studentCode))
-            {
-                return Unauthorized(new { success = false, message = "Không tìm thấy thông tin sinh viên" });
-            }
-
-            if (request.StudentExamSessionId <= 0)
-            {
-                return BadRequest(new { success = false, message = "ID phiên thi không hợp lệ" });
-            }
-
-            _logger.LogInformation("🔄 Sinh viên {StudentCode} yêu cầu nộp bài thi cho phiên {SessionId}", 
-                studentCode, request.StudentExamSessionId);
-
-            var (success, message) = await _studentService.SubmitExamAsync(studentCode, request.StudentExamSessionId);
-
-            if (success)
-            {
-                _logger.LogInformation("✅ Sinh viên {StudentCode} đã nộp bài thi thành công", studentCode);
-
-                return Ok(new
-                {
-                    success = true,
-                    message = "Nộp bài thi thành công"
-                });
-            }
-            else
-            {
-                _logger.LogWarning("⚠️ Sinh viên {StudentCode} không thể nộp bài thi: {Message}", 
-                    studentCode, message);
-
-                return BadRequest(new { success = false, message });
-            }
+            return Unauthorized(new { message = "Không tìm thấy thông tin sinh viên" });
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "❌ Lỗi khi nộp bài thi cho sinh viên {StudentCode}", 
-                User.FindFirst("studentCode")?.Value);
 
-            return StatusCode(500, new { success = false, message = "Lỗi server khi nộp bài thi" });
+        if (request.StudentExamSessionId <= 0)
+        {
+            return BadRequest(new { message = "ID phiên thi không hợp lệ" });
+        }
+
+        _logger.LogInformation("🔄 Sinh viên {StudentCode} yêu cầu nộp bài thi cho phiên {SessionId}", 
+            studentCode, request.StudentExamSessionId);
+
+        var (success, message) = await _studentService.SubmitExamAsync(studentCode, request.StudentExamSessionId);
+
+        if (success)
+        {
+            _logger.LogInformation("✅ Sinh viên {StudentCode} đã nộp bài thi thành công", studentCode);
+
+            return Ok(new
+            {
+                message = "Nộp bài thi thành công"
+            });
+        }
+        else
+        {
+            _logger.LogWarning("⚠️ Sinh viên {StudentCode} không thể nộp bài thi: {Message}", 
+                studentCode, message);
+
+            return BadRequest(new { message });
         }
     }
-    
+    catch (Exception ex)
+    {
+        _logger.LogError(ex, "❌ Lỗi khi nộp bài thi cho sinh viên {StudentCode}", 
+            User.FindFirst("studentCode")?.Value);
+
+        return StatusCode(500, new { message = "Lỗi server khi nộp bài thi" });
+    }
+}
+
 
     [HttpPost("active-login")]
     public async Task<IActionResult> ActiveLogin([FromBody] ActiveLoginRequest request)

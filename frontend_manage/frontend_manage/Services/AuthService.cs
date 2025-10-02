@@ -239,7 +239,7 @@ public class AuthService
         }
         else
         {
-            _navigationManager.NavigateTo("/login");
+            _navigationManager.NavigateTo("/");
         }
     }
 

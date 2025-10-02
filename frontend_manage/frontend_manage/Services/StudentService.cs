@@ -145,54 +145,25 @@ public class StudentService
         try
         {
             var response = await _httpClient.PostAsJsonAsync("/api/Student/submit-exam", request);
-            
-            if (response.IsSuccessStatusCode)
+        
+            var resultMessage = await response.Content.ReadFromJsonAsync<Dictionary<string, string>>();
+        
+            if (resultMessage != null && resultMessage.TryGetValue("message", out var msg))
             {
-                var result = await response.Content.ReadFromJsonAsync<SubmitExamResponse>();
-                return result;
+                return new SubmitExamResponse { Message = msg };
             }
-            else
-            {
-                // Xử lý các status codes cụ thể
-                var errorContent = await response.Content.ReadAsStringAsync();
-                
-                if (response.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
-                {
-                    // HTTP 429 - Rate limit exceeded - KHÔNG được chuyển trang kết quả
-                    return new SubmitExamResponse
-                    {
-                        Success = false,
-                        Message = "Quá nhiều yêu cầu nộp bài. Vui lòng thử lại sau vài giây.",
-                    };
-                }
-                else if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
-                {
-                    return new SubmitExamResponse
-                    {
-                        Success = false,
-                        Message = "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.",
-                    };
-                }
-                else
-                {
-                    // Các lỗi khác
-                    return new SubmitExamResponse
-                    {
-                        Success = false,
-                        Message = $"Lỗi server khi nộp bài: {response.StatusCode}. {errorContent}",
-                    };
-                }
-            }
+
+            return new SubmitExamResponse { Message = "Không nhận được phản hồi từ server" };
         }
         catch (Exception ex)
         {
             return new SubmitExamResponse
             {
-                Success = false,
-                Message = $"Lỗi kết nối khi nộp bài: {ex.Message}",
+                Message = $"Lỗi kết nối khi nộp bài: {ex.Message}"
             };
         }
     }
+
 
     private int GetRetryAfterSeconds(HttpResponseMessage response)
     {

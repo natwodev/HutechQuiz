@@ -19,6 +19,7 @@
 
   <ItemGroup>
     <Folder Include="DTOs\Mapp\" />
+    <Folder Include="Pages\Admin\" />
   </ItemGroup>
 
 </Project>

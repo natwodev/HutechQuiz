@@ -14,19 +14,22 @@ public class StudentAnswerHelper
     private readonly IMapper _mapper;
     private readonly StudentExamSessionCacheHelper _sessionCacheHelper;
     private readonly IRabbitMqService _rabbitMqService;
+    private readonly IMessageProcessingService _messageProcessingService;
 
     public StudentAnswerHelper(
         IConnectionMultiplexer redis,
         ILogger<StudentAnswerHelper> logger,
         IMapper mapper,
         StudentExamSessionCacheHelper sessionCacheHelper,
-        IRabbitMqService rabbitMqService)
+        IRabbitMqService rabbitMqService,
+        IMessageProcessingService messageProcessingService)
     {
         _redis = redis;
         _logger = logger;
         _mapper = mapper;
         _sessionCacheHelper = sessionCacheHelper;
         _rabbitMqService = rabbitMqService;
+        _messageProcessingService = messageProcessingService;
     }
 
     public async Task<(bool Success, string Message, string? NewAnswersString)> UpdateSingleAnswerAsync(SaveAnswerDto saveAnswerDto, string studentCode)
@@ -66,9 +69,18 @@ public class StudentAnswerHelper
                NewAnswersString = newAnswersString
            };
 
-           _rabbitMqService.Publish("save_answer_queue", saveAnswerMessage);
-           _logger.LogInformation("✅ Đã gửi message lưu đáp án qua RabbitMQ cho sinh viên {StudentCode} tại vị trí {Key}:{Value}", 
-               studentCode, saveAnswerDto.key, saveAnswerDto.value);
+           try
+           {
+               _rabbitMqService.Publish("save_answer_queue", saveAnswerMessage);
+               _logger.LogInformation("✅ Đã gửi message lưu đáp án qua RabbitMQ cho sinh viên {StudentCode} tại vị trí {Key}:{Value}", 
+                   studentCode, saveAnswerDto.key, saveAnswerDto.value);
+           }
+           catch (Exception ex)
+           {
+               _logger.LogWarning(ex, "RabbitMQ publish thất bại, fallback xử lý trực tiếp save_answer_queue cho {StudentCode} tại {Key}:{Value}", 
+                   studentCode, saveAnswerDto.key, saveAnswerDto.value);
+               await _messageProcessingService.ProcessMessageAsync("save_answer_queue", saveAnswerMessage);
+           }
            
             return (true, "Cập nhật đáp án thành công", newAnswersString);
         }
