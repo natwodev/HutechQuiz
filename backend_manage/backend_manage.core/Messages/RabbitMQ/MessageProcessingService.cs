@@ -156,6 +156,9 @@ public class MessageProcessingService : IMessageProcessingService
         {
             if (message is ExamSubmissionMessage examSubmissionMessage)
             {
+                // Delay 10s theo yêu cầu
+                System.Threading.Thread.Sleep(10000);
+
                 using var scope = _serviceScopeFactory.CreateScope();
                 var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 

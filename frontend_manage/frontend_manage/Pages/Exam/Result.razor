@@ -1,5 +1,10 @@
 ﻿@page "/Exam/Result"
 @using MudBlazor
+@using Microsoft.JSInterop
+@using frontend_manage.DTOs
+@using frontend_manage.Services
+@using System.Text.RegularExpressions
+@using System.Linq
 
 <div class="result-page-wrapper">
     <!-- Header với logo -->
@@ -7,7 +12,6 @@
         <MudContainer MaxWidth="MaxWidth.Large" Class="d-flex align-center justify-space-between py-2">
             <MudButton 
                 Variant="Variant.Text" 
-                OnClick="@(() => Navigation.NavigateTo("/student-login"))"
                 Class="logo-button"
                 DisableRipple="true">
                 <img src="/images/logo-dai-hoc-hutech_012634748.png" alt="Hutech Logo" class="hutech-logo" />
@@ -33,40 +37,18 @@
                     </MudItem>
                 </MudGrid>
             </MudPaper>
-
             @if (isLoading)
             {
-                <MudSkeleton Animation="Animation.Wave" Width="60%" Height="36px" Class="mb-4"/>
-                <MudSkeleton Animation="Animation.Wave" Height="280px"/>
+                <MudPaper Class="pa-6 mt-6 d-flex align-center justify-center">
+                    <MudProgressCircular Color="Color.Primary" Size="Size.Large"/>
+                    <MudText Class="ml-3">Đang tải kết quả...</MudText>
+                </MudPaper>
             }
-            else if (!string.IsNullOrEmpty(errorMessage))
+            else if (submission != null)
             {
-                <MudAlert Severity="Severity.Error" Variant="Variant.Filled" Dense="true" Class="mb-4">
-                    @errorMessage
-                    <MudSpacer />
-                    <MudButton Variant="Variant.Text" OnClick="@Reload">Thử lại</MudButton>
-                </MudAlert>
-            }
-            else if (result is not null)
-            {
-       
-                    var total = result.TotalQuestions;
-                    var correct = result.CorrectAnswers;
-                    
-                    // Tính toán chính xác dựa trên heatmap đã được xây dựng
-                    var empty = heatCells?.Count(c => c.StatusCss == "empty") ?? 0;
-                    var wrong = heatCells?.Count(c => c.StatusCss == "bad") ?? 0;
-                    var actualCorrect = heatCells?.Count(c => c.StatusCss == "ok") ?? 0;
-                    
-                    // Sử dụng số liệu từ heatmap nếu có, fallback về API
-                    var finalCorrect = heatCells?.Count > 0 ? actualCorrect : correct;
-                    var finalWrong = heatCells?.Count > 0 ? wrong : (total - correct);
-                    var finalEmpty = heatCells?.Count > 0 ? empty : 0;
-                    
-                    var accuracy = total > 0 ? (double)finalCorrect / total * 100d : 0d;
+               
                 
-
-                <!-- HÀNG 1: Thông tin bài thi (trái) + Điểm SVG (phải) -->
+                
                 <MudGrid GutterSize="24px" Class="mb-4">
                     <!-- Thông tin -->
                     <MudItem xs="12" md="7">
@@ -76,30 +58,29 @@
                             </MudCardHeader>
                             <MudCardContent>
                                 <div class="info-grid">
-                                    <div class="info-row"><div class="k">Mã sinh viên</div><div class="v">@result.StudentCode</div></div>
-                                    <div class="info-row"><div class="k">Mã đề thi</div><div class="v">@result.ShuffledExamPaperId</div></div>
-                                    <div class="info-row"><div class="k">Bắt đầu</div><div class="v">@(result.StartTime?.ToString("dd/MM/yyyy HH:mm:ss") ?? "")</div></div>
-                                    <div class="info-row"><div class="k">Kết thúc</div><div class="v">@result.EndTime.ToString("dd/MM/yyyy HH:mm:ss")</div></div>
-                                </div>
-
-                                <div class="info-stats">
-                                    <MudChip T="string" Color="Color.Success" Variant="Variant.Filled" Dense="true">@finalCorrect</MudChip>
-                                    <MudChip T="string" Color="Color.Error" Variant="Variant.Filled" Dense="true" Class="ml-2">@finalWrong</MudChip>
-                                    <MudChip T="string" Color="Color.Default" Variant="Variant.Outlined" Dense="true" Class="ml-2">@finalEmpty</MudChip>
-                                    <span class="info-note">/ @total câu • Tỉ lệ đúng: @($"{accuracy:0.#}%")</span>
+                                    <div class="info-row"><div class="k">Mã sinh viên</div><div class="v">@submission.StudentCode</div></div>
+                                    <div class="info-row"><div class="k">Mã đề thi</div><div class="v">@submission.ShuffledExamPaperId</div></div>
+                                    <div class="info-row"><div class="k">Điểm số</div><div class="v">@((submission.Score ?? 0).ToString("0.00"))</div></div>
+                                    <div class="info-row"><div class="k">Bắt đầu</div><div class="v">@(submission.StartTime?.ToString("dd/MM/yyyy HH:mm:ss") ?? "")</div></div>
+                                    <div class="info-row"><div class="k">Kết thúc</div><div class="v">@submission.EndTime.ToString("dd/MM/yyyy HH:mm:ss")</div></div>
                                 </div>
                             </MudCardContent>
                         </MudCard>
                     </MudItem>
-
+                    
+                    
+                    
+                    
                     <!-- Điểm (SVG lớn) -->
                     <MudItem xs="12" md="5">
                         <MudCard Elevation="8" Class="er-card stat-card stat-card--score">
                             <MudCardContent Class="stat-card__content er-score-svg-wrap">
-                                <img src="@ScoreSvgDataUri" alt="Điểm thi" class="er-score-svg" />
+                                <img src="" alt="Điểm thi" class="er-score-svg" />
                             </MudCardContent>
                         </MudCard>
                     </MudItem>
+                    
+                    
                 </MudGrid>
 
                 <!-- HÀNG 2: Heatmap (ô to hơn) -->
@@ -115,50 +96,20 @@
                     </MudCardHeader>
 
                     <MudCardContent>
-                        @if ((heatCells?.Count ?? 0) == 0)
-                        {
-                            <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined">
-                                Chưa có dữ liệu để vẽ heatmap.
-                            </MudAlert>
-                        }
-                        else
-                        {
-
-                                const int cell = 24;
-                                const int gap  = 8;
-                                const int cols = 14; 
-                                var wrapWidth = cols * (cell + gap) - gap;
-                                var containerStyle = $"display:flex;flex-wrap:wrap;align-items:flex-start;max-width:{wrapWidth}px";
-                            
-
-                            <div class="heatmap-wrap">
-                                <div style="@containerStyle">
-                                    @foreach (var c in heatCells!)
-                                    {
-                                        var bg = c.StatusCss == "ok"  ? "#43a047"
-                                               : c.StatusCss == "bad" ? "#e53935"
-                                                                      : "#b0bec5";
-                                        var bd = c.StatusCss == "ok"  ? "#2e7d32"
-                                               : c.StatusCss == "bad" ? "#b71c1c"
-                                                                      : "#78909c";
-                                        var tip = $"Câu {c.QuestionNo}: {c.StatusText}";
-                                        var cellStyle = $"display:inline-block;width:{cell}px;height:{cell}px;margin:{gap/2}px;" +
-                                                        $"background:{bg};border:1px solid {bd};border-radius:5px;box-sizing:border-box";
-
-                                        <span title="@tip" aria-label="@tip" style="@cellStyle"></span>
-                                    }
-                                </div>
-                            </div>
-                        }
+                        
                     </MudCardContent>
                 </MudCard>
+                
             }
             else
             {
-                <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Class="mt-4">
-                    Không tìm thấy kết quả.
-                </MudAlert>
+                <MudPaper Class="pa-6 mt-6">
+                    <MudText>Không có dữ liệu kết quả để hiển thị.</MudText>
+                </MudPaper>
             }
         </MudContainer>
     </div>
 </div>
+
+@code {
+}
