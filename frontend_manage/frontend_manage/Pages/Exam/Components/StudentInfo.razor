@@ -1,17 +1,20 @@
-@using MudBlazor
+<div class="student-info">
+    <MudStack Spacing="1">
+        <MudText Typo="Typo.overline" Color="Color.Primary">THÔNG TIN THÍ SINH</MudText>
+        <MudStack Direction="Row" AlignItems="AlignItems.Center" Spacing="2">
+            <MudAvatar Size="Size.Medium" Color="Color.Primary">@GetInitials(StudentName)</MudAvatar>
+            <MudStack Spacing="1">
+                <MudText Typo="Typo.h6">@StudentName</MudText>
+                <MudText Typo="Typo.caption" Color="Color.Secondary">MSSV: @StudentCode</MudText>
+            </MudStack>
+        </MudStack>
+        <MudDivider Class="my-2" />
+        <MudStack Spacing="1">
+            <MudText Typo="Typo.caption" Color="Color.Secondary">Trạng thái</MudText>
+            <MudChip T="string" Variant="Variant.Outlined" Color="Color.Success">Đang làm bài</MudChip>
+        </MudStack>
+    </MudStack>
+</div>
 
-<!-- Student Info -->
-<MudPaper Class="pa-3" Style="text-align: center; border: 1px solid #ccc; margin-bottom: 0;">
-    <MudImage Src="images/exam/Ellipse 1.svg" Width="100" Height="100" Class="mb-2" Style="object-fit: contain;" />
-    <MudDivider Class="mb-2" />
-    <MudText Typo="Typo.subtitle2"><b>Mã sinh viên:</b> @StudentCode</MudText>
-    <MudText Typo="Typo.subtitle2"><b>Mã đề:</b> @ExamPaperCode</MudText>
-    <MudText Typo="Typo.subtitle2"><b>Môn học:</b> @SubjectName (@SubjectCode)</MudText>
-    <MudText Typo="Typo.subtitle2"><b>Phòng thi:</b> @RoomName</MudText>
-    <MudText Typo="Typo.subtitle2"><b>Thời gian:</b> @Duration phút</MudText>
-    @if (ExtraMinutes > 0)
-    {
-        <MudText Typo="Typo.subtitle2"><b>Thêm:</b> +@ExtraMinutes phút</MudText>
-    }
-</MudPaper>
+
 

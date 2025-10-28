@@ -1,0 +1,96 @@
+.question-item {
+    margin-bottom: 16px;
+}
+
+.question-item .question-content {
+    font-size: 18px;
+    line-height: 1.8;
+}
+
+.katex-content {
+    line-height: 1.6;
+}
+
+.katex-content img {
+    max-width: 100%;
+    height: auto;
+}
+
+.katex-display {
+    margin: 16px 0;
+}
+
+.mud-radio .katex-content,
+.mud-select .katex-content {
+    display: inline-block;
+}
+
+.exam-sidebar {
+    position: sticky;
+    top: 12px;
+}
+
+.question-anchor {
+    scroll-margin-top: 12px;
+}
+
+.student-info .mud-avatar {
+    box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+}
+
+.student-info .mud-chip {
+    width: fit-content;
+}
+
+.question-nav .mud-button-root {
+    border-radius: 8px;
+}
+
+/* Trắc nghiệm chuẩn quy chế */
+.option-card {
+.options-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 12px;
+    align-items: center;
+}
+.option-card {
+    padding: 8px 10px;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+}
+.option-card:hover {
+    background: #f4f6fa;
+    cursor: pointer;
+}
+.option-letter {
+    width: 28px;
+    min-width: 28px;
+    height: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+}
+.option-text {
+    font-size: 16px;
+    display: inline-block;
+}
+
+/* Force radio + letter + text to stay on one row */
+.option-card .mud-radio,
+.option-card .mud-radio-root {
+    margin: 0;
+    display: inline-flex !important;
+    align-items: center;
+    width: auto;
+}
+
+.options-row .option-card {
+    white-space: nowrap;
+}
+
+

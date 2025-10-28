@@ -1,248 +1,40 @@
-@page "/Exam"
-@inject NavigationManager Navigation
-@inject StudentService StudentService
-@inject ISnackbar Snackbar
-@inject IDialogService Dialog
-@inject HttpClient Http
-@using frontend_manage.Services
+@page "/exam/mock"
 @using frontend_manage.DTOs
-@using Microsoft.AspNetCore.Components
-@using MudBlazor
 @using frontend_manage.Pages.Exam.Components
-@implements IDisposable
+@using frontend_manage.Services
+@inject IKaTeXService KaTeX
+@inject NavigationManager Nav
 
-<PageTitle>Làm bài thi</PageTitle>
-
-@if (!string.IsNullOrEmpty(errorMessage))
-{
-    <MudAlert Severity="Severity.Error" Class="mb-4">@errorMessage</MudAlert>
-}
-else if (shuffledExam == null)
-{
-    <div style="display: flex; justify-content: center; align-items: center; height: 100vh; flex-direction: column; position: fixed; top: 0; left: 0; width: 100%; z-index: 1000; background-color: white;">
-        <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Large" />
-        <MudText Class="mt-3" Typo="Typo.h6">Đang tải đề thi...</MudText>
-    </div>
-}
-else
-{
- 
-    
-    <MudPaper Elevation="4" Class="pa-4">
-        <MudGrid Class="noselect">
-            <!-- Main Content -->
-            <MudItem xs="12" md="9">
-                <MudPaper Class="pa-4" Style="border: 1px solid #ccc;">
-                    <MudText Typo="Typo.h5" Class="mb-3" Style="font-weight: bold; color: #1976d2; text-align: center;">
-                        @(shuffledExam?.Title ?? "Đề thi")
-                    </MudText>
-                    
-                    <!-- Test LaTeX component - có thể xóa sau khi test xong -->
-                    <!--<LaTeXTest /> -->
-                    @{
-                        int questionNumber = 1; // Số thứ tự câu hỏi
-                    }
-                    @if (mappedQuestions != null)
+<MudContainer MaxWidth="MaxWidth.False" Class="pa-2" Style="min-height:100vh; background:#f7f9fc;">
+    <MudGrid>
+        <MudItem xs="12" md="9">
+            <MudPaper Elevation="1" Class="pa-4" Style="border-radius:12px; min-height:70vh;">
+                @if (FlatQuestions.Count > 0)
+                {
+                    var idx = 1;
+                    foreach (var q in FlatQuestions)
                     {
-                        @foreach (var question in mappedQuestions)
-                        {
-                            int startChildQuestionNumber = questionNumber;
-                            
-                            // Tính toán số thứ tự câu hỏi
-                            if (question.ChildQuestions?.Any() == true)
-                            {
-                                // Câu có con: startChildQuestionNumber để truyền vào component
-                                questionNumber += question.ChildQuestions.Count;
-                            }
-                            else
-                            {
-                                // Câu đơn: tăng questionNumber sau khi hiển thị
-                                questionNumber++;
-                            }
-                            
-                            <QuestionItem Question="@question"
-                                        QuestionNumber="@(question.ChildQuestions?.Any() == true ? 0 : questionNumber - 1)"
-                                        StartChildQuestionNumber="@startChildQuestionNumber"
-                                        SelectedAnswers="@selectedAnswers"
-                                        SelectedChildAnswers="@selectedChildAnswers"
-                                        OnAnswerSelected="@HandleAnswerSelected"
-                                        OnChildAnswerSelected="@HandleChildAnswerSelected"
-                                        OnAnswersChanged="@(() => StateHasChanged())"
-                                        ShuffledExamPaperCore="@(shuffledExam?.ShuffledExamPaperCore ?? string.Empty)"
-                                        BaseAddress="@(Http.BaseAddress?.ToString() ?? "http://localhost:5163/")" />
-                        }
+                        <div id="@($"q-{q.OriginalExamPaperDetailId}")" class="mb-6">
+                            <QuestionItem Question="@q" DisplayNumber="@idx" OnAnswered="@OnAnswered" />
+                            @{ idx++; }
+                            <MudDivider Class="my-4" />
+                        </div>
                     }
-                </MudPaper>
-            </MudItem>
-
-            <!-- Sidebar Info -->
-            <MudItem xs="12" md="3" Style="position: sticky; top: 0; overflow-y: auto; height: 100%">
-                <div style="display: flex; flex-direction: column; gap: 0;">
-                <!-- Timer and Submit Button -->
-                <ExamTimer StudentExamSessionId="@(studentExamSessionId ?? 0)"
-                          TotalDuration="@(studentSession?.Duration ?? 0)"
-                          ExtraMinutes="@(studentSession?.ExtraMinutes ?? 0)"
-                          IsSubmitDisabled="false"
-                          OnSubmitExam="@OnSubmitExamAsync"
-                          OnTimerInitialized="@OnTimerInitialized"
-                          OnTimeUp="@OnTimeUp" />
-                
-                <!-- Student Info -->
-                <StudentInfo StudentCode="@(studentSession?.StudentCode ?? string.Empty)"
-                           ExamPaperCode="@(shuffledExam?.ShuffledExamPaperCore ?? string.Empty)"
-                           SubjectName="@(shuffledExam?.SubjectName ?? string.Empty)"
-                           SubjectCode="@(shuffledExam?.SubjectCode ?? string.Empty)"
-                           RoomName="@(studentSession?.RoomName ?? string.Empty)"
-                           Duration="@(studentSession?.Duration ?? 0)"
-                           ExtraMinutes="@(studentSession?.ExtraMinutes ?? 0)" />
-                </div>
-                <!-- Question Navigation -->
-                <QuestionNavigation Questions="@mappedQuestions"
-                                  SelectedAnswers="@selectedAnswers"
-                                  SelectedChildAnswers="@selectedChildAnswers" />
-                
-                    @if (lastSaveTime.HasValue)
-                    {
-                    <MudPaper Class="pa-2 mt-2" Style="text-align: center; border: 1px solid #ccc;">
-                        <MudText Typo="Typo.caption" Color="Color.Success">
-                            <MudIcon Icon="Icons.Material.Filled.Save" Size="Size.Small" Class="mr-1" />
-                            Lưu lần cuối: @lastSaveTime.Value.ToString("HH:mm:ss")
-                        </MudText>
-                    </MudPaper>
-                    }
-                    
-
-                
-                
-                
-            </MudItem>
-        </MudGrid>
-    </MudPaper>
-}
+                }
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" md="3">
+            <MudPaper Elevation="1" Class="pa-3" Style="border-radius:12px; position:sticky; top:12px;">
+                <StudentInfo StudentName="@StudentName" StudentCode="@StudentCode" />
+                <MudDivider Class="my-2" />
+                <ExamTimer DurationMinutes="@DurationMinutes" StartTime="@StartTime" OnTimeUp="@SubmitExam" />
+                <MudDivider Class="my-2" />
+                <QuestionNavigation TotalQuestions="@FlatQuestions.Count" OnNavigate="@ScrollTo" AnsweredMap="@AnsweredMapDerived" QuestionIds="@QuestionIds" />
+                <MudDivider Class="my-2" />
+                <MudButton Color="Color.Primary" Variant="Variant.Filled" FullWidth="true" OnClick="@SubmitExam">Nộp bài</MudButton>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+</MudContainer>
 
 
-<style>
-   
-    .mud-main-content {
-        padding: 0;
-    }
-       /*Chống bôi đen văn bản copy*/
-    .noselect {
-        -webkit-user-select: none; /* Safari */
-        -moz-user-select: none; /* Firefox */
-        -ms-user-select: none; /* IE10+/Edge */
-        user-select: none; /* Standard */
-    }
-
-    /* Audio player styling */
-    .audio-player {
-        margin: 10px 0;
-    }
-
-        .audio-player audio {
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-
-    /* Question styling */
-    .question-content {
-        font-size: 1.1rem !important;
-        font-weight: 500 !important;
-        line-height: 1.5 !important;
-        color: #333 !important;
-        margin-bottom: 12px !important;
-    }
-
-        .question-content h3,
-        .question-content h4,
-        .question-content h5 {
-            font-size: 1.15rem !important;
-            font-weight: 600 !important;
-            margin-bottom: 8px !important;
-        }
-
-    /* Answer options styling */
-    .mud-button-root.answer-option {
-        min-height: 48px;
-        padding: 8px 12px;
-        border-radius: 6px;
-        border: 1px solid #e0e0e0;
-        margin: 4px 0;
-        transition: all 0.2s ease-in-out;
-        width: calc(100% - 8px);
-        max-width: 100%;
-        box-sizing: border-box;
-        overflow-wrap: break-word;
-        word-wrap: break-word;
-        text-align: left;
-        justify-content: flex-start;
-        color: #000000 !important;
-        font-size: 0.95rem !important;
-        background-color: transparent !important;
-    }
-
-        .mud-button-root.answer-option span {
-            color: #000000 !important;
-            font-weight: 400 !important;
-        }
-
-        .mud-button-root.answer-option .mud-icon-root {
-            color: #999999 !important;
-        }
-
-        .mud-button-root.answer-option:hover {
-            border-color: #cccccc;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-            color: #000000 !important;
-            background-color: #f8f9fa !important;
-        }
-
-            .mud-button-root.answer-option:hover span {
-                color: #000000 !important;
-            }
-
-            .mud-button-root.answer-option:hover .mud-icon-root {
-                color: #666666 !important;
-            }
-
-        .mud-button-root.answer-option.selected {
-            border-color: #e0e0e0;
-            background-color: transparent !important;
-            color: #000000 !important;
-        }
-
-            .mud-button-root.answer-option.selected span {
-                color: #000000 !important;
-                font-weight: 500 !important;
-            }
-
-            .mud-button-root.answer-option.selected .mud-icon-root {
-                color: #dc3545 !important;
-            }
-
-    /* Container cho các đáp án */
-    .mud-grid {
-        box-sizing: border-box;
-        margin: 0;
-        width: 100%;
-    }
-
-        .mud-grid .mud-grid-item {
-            padding: 2px 4px !important;
-            box-sizing: border-box;
-            max-width: 100%;
-        }
-       
-</style>
-
-<script src="js/exam-audio.js"></script>
-<script src="js/anti-copy.js"></script>
-<script src="js/answer-debouncer.js"></script>
-<script>
-    // scrollToElement moved to wwwroot/js/scroll.js
-    // Debouncing moved to wwwroot/js/answer-debouncer.js
-
-    // Anti-copy moved to wwwroot/js/anti-copy.js
-
-    // Audio control moved to wwwroot/js/exam-audio.js
-</script>

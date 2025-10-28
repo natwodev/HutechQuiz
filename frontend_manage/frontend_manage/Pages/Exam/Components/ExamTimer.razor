@@ -1,29 +1,7 @@
-@using MudBlazor
+<MudStack>
+    <MudText Typo="Typo.subtitle2">Thời gian còn lại</MudText>
+    <MudProgressLinear Value="@Progress" Color="Color.Primary" Class="mb-1" />
+    <MudText Typo="Typo.h5" Color="Color.Primary">@RemainingString</MudText>
+</MudStack>
 
-<!-- Timer and Submit Button -->
-<MudPaper Style="text-align: center; border: 1px solid #ccc; margin-bottom: 0;">
-    <MudGrid>
-        <MudItem xs="6" Style="align-content: center">
-            <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
-                <MudText Typo="Typo.h4" 
-                         Color="@(isTimeUp ? Color.Error: remainingMinutes <= 5 ? Color.Warning : Color.Primary)" 
-                         id="time-clock">
-                    @GetFormattedTime()
-                </MudText>
-                @if (ExtraMinutes > 0)
-                {
-                    <MudText Typo="Typo.h6" Color="Color.Primary">
-                        +@ExtraMinutes
-                    </MudText>
-                }
-            </div>
-        </MudItem>
-        <MudItem xs="6">
-            <MudButton Style="margin: 5px" Variant="Variant.Outlined" Color="Color.Success"
-                       Size="Size.Large" OnClick="@OnSubmitExam" Disabled="@IsSubmitDisabled">
-                Nộp Bài
-            </MudButton>
-        </MudItem>
-    </MudGrid>
-</MudPaper>
 
