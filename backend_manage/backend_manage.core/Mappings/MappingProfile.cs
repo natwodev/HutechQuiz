@@ -218,16 +218,14 @@ public class MappingProfile : Profile
 
         try
         {
-            var options = new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true
-            };
-            
-            var questionStructures = JsonSerializer.Deserialize<List<QuestionStructureDto>>(questionStructureJson, options);
+            // Dùng Newtonsoft.Json để deserialize vì khi lưu cũng dùng JsonConvert (Newtonsoft.Json)
+            var questionStructures = Newtonsoft.Json.JsonConvert.DeserializeObject<List<QuestionStructureDto>>(questionStructureJson);
             return questionStructures ?? new List<QuestionStructureDto>();
         }
-        catch
+        catch (Exception ex)
         {
+            // Log lỗi để debug
+            System.Diagnostics.Debug.WriteLine($"Lỗi khi parse QuestionStructure: {ex.Message}");
             return new List<QuestionStructureDto>();
         }
     }

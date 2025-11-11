@@ -1,0 +1,176 @@
+
+@page "/login"
+@using frontend_manage.DTOs
+@using frontend_manage.Services
+@using MudBlazor
+@inject AuthService AuthService
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Đăng nhập Admin - HUTECH Exam Suite</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.False" Style="margin: 0; padding: 0; position: relative; overflow: hidden;">
+    
+    <!-- Background Image phủ full trang -->
+    <div style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-image: url('/images/Home_Page2.jpg'); background-size: cover; background-position: center; background-repeat: no-repeat; z-index: 1;"></div>
+    
+    <!-- Overlay -->
+    <div style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.4); z-index: 2;"></div>
+    
+    <!-- Error Message ở góc màn hình -->
+    @if (!string.IsNullOrEmpty(ErrorMessage))
+    {
+        <div style="position: fixed; top: 20px; right: 20px; z-index: 1000; max-width: 400px;">
+            <MudAlert Severity="Severity.Error" Variant="Variant.Filled" Style="border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
+                <MudText Style="font-size: 0.9rem;">@ErrorMessage</MudText>
+            </MudAlert>
+        </div>
+    }
+    
+    <!-- Main Content căn giữa -->
+    <MudGrid Justify="Justify.Center" AlignItems="AlignItems.Center" Style="position: relative; z-index: 3; margin: 0; padding: 20px 20px; min-height: 100vh; display: flex; align-items: center; justify-content: center;">
+        <MudItem xs="12" sm="10" md="8" lg="7" xl="6" Style="display: flex; justify-content: center;">
+            <MudPaper Elevation="25" Style="border-radius: 32px; max-width: 500px; width: 100%; background: rgba(255, 255, 255, 0.98); backdrop-filter: blur(20px); overflow: hidden;">
+                
+                <!-- Login Form - Centered -->
+                <MudContainer Style="padding: 40px 30px; display: flex; flex-direction: column; justify-content: center; max-width: 500px; margin: 0 auto;">
+                    
+                    <!-- Header -->
+                    <MudStack Spacing="4" AlignItems="AlignItems.Center" Style="margin-bottom: 15px;">
+                        <MudImage Src="/images/logo-dai-hoc-hutech_012634748.png" Width="185" Alt="HUTECH Logo" />
+                        <MudText Typo="Typo.h6" Color="Color.Primary" Style="font-weight: 800; text-align: center; letter-spacing: 2px; text-transform: uppercase;">
+                            HUTECH EXAM SUITE
+                        </MudText>
+                        <MudText Typo="Typo.subtitle1" Style="text-align: center; color: #666; font-weight: 500;">
+                            Hệ thống quản lý thi trực tuyến
+                        </MudText>
+                    </MudStack>
+                    
+                    <!-- Login Form -->
+                    <MudStack Spacing="4">
+                        <EditForm Model="loginModel" OnValidSubmit="HandleLogin">
+                            <DataAnnotationsValidator />
+                            
+                            <MudStack Spacing="3">
+                                <!-- Username Field -->
+                                <MudTextField @bind-Value="loginModel.UserName"
+                                             Label="Tên đăng nhập"
+                                             Variant="Variant.Outlined"
+                                             Adornment="Adornment.Start"
+                                             AdornmentIcon="@Icons.Material.Filled.Person"
+                                             Required="true"
+                                             RequiredError="Vui lòng nhập tên đăng nhập"
+                                             Style="border-radius: 16px;" />
+                                
+                                <!-- Password Field -->
+                                <MudTextField @bind-Value="loginModel.Password"
+                                             Label="Mật khẩu"
+                                             Variant="Variant.Outlined"
+                                             Adornment="Adornment.Start"
+                                             AdornmentIcon="@Icons.Material.Filled.Lock"
+                                             InputType="InputType.Password"
+                                             Required="true"
+                                             RequiredError="Vui lòng nhập mật khẩu"
+                                             Style="border-radius: 16px;" />
+                                
+                                <!-- Login Button -->
+                                <MudButton ButtonType="ButtonType.Submit"
+                                           Variant="Variant.Filled"
+                                           Color="Color.Primary"
+                                           StartIcon="@(isLoading ? Icons.Material.Filled.HourglassEmpty : Icons.Material.Filled.Login)"
+                                           Disabled="@isLoading"
+                                           FullWidth="true"
+                                           Size="Size.Medium"
+                                           Style="border-radius: 20px; font-weight: 700; height: 50px; font-size: 1rem; text-transform: uppercase; letter-spacing: 2px; margin-top: 15px;">
+                                    @(isLoading ? "Đang xử lý..." : "Đăng nhập")
+                                </MudButton>
+
+                            </MudStack>
+                        </EditForm>
+                    </MudStack>
+                    
+                    <!-- Footer -->
+                    <MudStack Spacing="2" AlignItems="AlignItems.Center" Style="margin-top: 25px;">
+                        <MudText Typo="Typo.caption" Color="Color.Default" Style="text-align: center; opacity: 0.7;">
+                            © 2025 Trường Đại học Công nghệ TP.HCM
+                        </MudText>
+                        <MudText Typo="Typo.caption" Color="Color.Default" Style="text-align: center; opacity: 0.6; font-size: 0.7rem;">
+                            Version 1.0.1 - Professional Edition
+                        </MudText>
+                    </MudStack>
+                </MudContainer>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+</MudContainer>
+
+@code {
+    private LoginModelDto loginModel = new();
+    private string? ErrorMessage;
+    private bool isLoading = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var isAuthenticated = await AuthService.IsAuthenticated();
+        if (isAuthenticated)
+        {
+            await NavigateBasedOnRole();
+        }
+    }
+
+    private async Task HandleLogin()
+    {
+        ErrorMessage = null;
+        isLoading = true;
+        StateHasChanged();
+        
+        try
+        {
+            var result = await AuthService.Login(loginModel.UserName, loginModel.Password);
+            if (result.IsSuccess)
+            {
+                await NavigateBasedOnRole();
+            }
+            else
+            {
+                ErrorMessage = result.ErrorMessage;
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Lỗi đăng nhập: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task NavigateBasedOnRole()
+    {
+        var role = await AuthService.GetUserRoleFromToken();
+        switch (role)
+        {
+            case "Admin":
+                Navigation.NavigateTo("/dashboard");
+                break;
+            case "Lecturer":
+                Navigation.NavigateTo("/lecturer/dashboard");
+                break;
+            case "AcademicAffairs":
+                Navigation.NavigateTo("/academic-affairs/dashboard");
+                break;
+            case "ExamManager":
+                Navigation.NavigateTo("/exammanager/dashboard");
+                break;
+            case "ITManager":
+                Navigation.NavigateTo("/itmanager/dashboard");
+                break;
+            default:
+                Navigation.NavigateTo("/");
+                break;
+        }
+    }
+
+} 

@@ -1,0 +1,108 @@
+@using MudBlazor
+@using frontend_manage.DTOs
+@using frontend_manage.Services.ExamManager
+@using Microsoft.JSInterop
+@inject ExamManagerService ExamManagerService
+@inject IJSRuntime JSRuntime
+@inject AuthService AuthService
+
+<MudPaper Class="pa-4" Elevation="4">
+    <MudText Typo="Typo.h6" Class="mb-3">Danh sách đề thi gốc</MudText>
+    
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <MudAlert Severity="Severity.Error" Class="mb-3">@errorMessage</MudAlert>
+    }
+    
+    @if (isLoading)
+    {
+        <MudProgressLinear Indeterminate="true" Class="mb-3" />
+        <MudText>Đang tải danh sách đề thi...</MudText>
+    }
+    else if (examPapers == null || examPapers.Count == 0)
+    {
+        <MudAlert Severity="Severity.Info">Chưa có đề thi nào trong hệ thống.</MudAlert>
+    }
+    else
+    {
+        <MudTable Items="@examPapers" Hover="true" Dense="true" Striped="true" Bordered="true">
+            <HeaderContent>
+                <MudTh>Mã đề</MudTh>
+                <MudTh>Tiêu đề</MudTh>
+                <MudTh>Môn học</MudTh>
+                <MudTh>Số câu</MudTh>
+                <MudTh>Thời gian (phút)</MudTh>
+                <MudTh>Đề hoán vị</MudTh>
+                <MudTh>Thao tác</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Mã đề">@context.OriginalExamPaperCore</MudTd>
+                <MudTd DataLabel="Tiêu đề">@context.Title</MudTd>
+                <MudTd DataLabel="Môn học">@(context.SubjectName ?? "N/A")</MudTd>
+                <MudTd DataLabel="Số câu">@context.TotalQuestions</MudTd>
+                <MudTd DataLabel="Thời gian">@context.DurationMinutes</MudTd>
+                <MudTd DataLabel="Đề hoán vị">@context.TotalShuffledPapers</MudTd>
+                <MudTd DataLabel="Thao tác">
+                    <MudButton 
+                        Size="Size.Small" 
+                        Variant="Variant.Text" 
+                        Color="Color.Primary"
+                        StartIcon="@Icons.Material.Filled.Visibility"
+                        OnClick="() => ViewDetails(context.OriginalExamPaperCore)">
+                        Xem chi tiết
+                    </MudButton>
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
+    }
+</MudPaper>
+
+@code {
+    private List<OriginalExamPaperListItemDto>? examPapers;
+    private bool isLoading = true;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Cho phép cả Admin và ExamManager xem danh sách
+        var role = await AuthService.GetUserRoleFromToken();
+        var canView = role == "Admin" || role == "ExamManager";
+        
+        if (!canView)
+        {
+            examPapers = new List<OriginalExamPaperListItemDto>();
+            isLoading = false;
+            errorMessage = "Bạn không có quyền xem danh sách đề thi gốc.";
+            return;
+        }
+
+        await LoadExamPapers();
+    }
+
+    private async Task LoadExamPapers()
+    {
+        isLoading = true;
+        errorMessage = null;
+        try
+        {
+            examPapers = await ExamManagerService.GetAllOriginalExamPapersAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Lỗi khi tải danh sách đề thi: {ex.Message}";
+            examPapers = new List<OriginalExamPaperListItemDto>();
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task ViewDetails(string core)
+    {
+        var uri = $"/exammanager/preview/original?core={Uri.EscapeDataString(core)}";
+        await JSRuntime.InvokeVoidAsync("open", uri, "_blank");
+    }
+}
+

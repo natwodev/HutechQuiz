@@ -27,12 +27,12 @@ namespace frontend_manage.Pages.Exam
             DurationMinutes = mock.OriginalExamPaper.DurationMinutes;
             // Duyệt theo thứ tự Order và tạo dãy hiển thị: cha, rồi đến từng con
             FlatQuestions = new List<QuestionStructureDto>();
-            foreach (var q in mock.ExamPaper.QuestionStructures.OrderBy(x=>x.Order))
+            foreach (var q in mock.ExamPaper.QuestionStructures.OrderBy(x => x.Order))
             {
                 FlatQuestions.Add(q);
                 if (q.ChildQuestions != null && q.ChildQuestions.Count > 0)
                 {
-                    FlatQuestions.AddRange(q.ChildQuestions.OrderBy(c=>c.Order));
+                    FlatQuestions.AddRange(q.ChildQuestions.OrderBy(c => c.Order));
                 }
             }
             // Build id list for navigation
@@ -93,5 +93,3 @@ namespace frontend_manage.Pages.Exam
         }
     }
 }
-
-

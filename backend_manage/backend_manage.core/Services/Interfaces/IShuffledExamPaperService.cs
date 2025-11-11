@@ -6,5 +6,6 @@ namespace backend_manage.core.Services.Interfaces
     {
         Task<ShuffledExamPaperDto> GetWithDetailsAsync(string shuffledExamPaperCore);
         Task<bool> DeleteSoftAsync(int shuffledExamPaperId);
+        Task<List<ShuffledExamPaperDto>> GetByOriginalExamPaperCoreAsync(string originalExamPaperCore);
     }
 } 

@@ -38,6 +38,7 @@ namespace backend_manage.shared.DTOs
         public bool? IsApproved { get; set; }
         public int DurationMinutes { get; set; }
         public int TotalQuestions { get; set; }
+        public int TotalShuffledPapers { get; set; }
         public string? KeyValueList { get; set; }
     }
 
