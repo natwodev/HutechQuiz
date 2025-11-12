@@ -1,19 +1,14 @@
 @using frontend_manage.DTOs.AcademicAffairs
-@using frontend_manage.Services.AcademicAffairs
-@inject SemesterService SemesterService
-@inject ISnackbar Snackbar
-@inject IDialogService DialogService
 
 <MudCard Elevation="0">
     <MudCardHeader>
-        <MudText Typo="Typo.h6">Quản lý Học kỳ</MudText>
+        <MudText Typo="Typo.h6" Style="font-size: 1.1rem; font-weight: 600;">Quản lý Học kỳ</MudText>
         <MudSpacer />
         <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add" 
-                  OnClick="OpenCreateDialog">Thêm học kỳ</MudButton>
+                  OnClick="OpenCreateDialog" Size="Size.Small">Thêm học kỳ</MudButton>
     </MudCardHeader>
     <MudCardContent>
-        <MudTable Items="@Semesters" Hover="true" Dense="false" Striped="true" Filter="new Func<SemesterDto, bool>(FilterFunc)" 
-                 @bind-SelectedItem="selectedItem">
+        <MudTable Items="@Semesters" Hover="true" Dense="true" Striped="true" Filter="new Func<SemesterDto, bool>(FilterFunc)">
             <ToolBarContent>
                 <MudTextField @bind-Value="searchString" Placeholder="Tìm kiếm" Adornment="Adornment.Start" 
                              AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
@@ -27,7 +22,7 @@
             <RowTemplate>
                 <MudTd DataLabel="ID">@context.SemesterId</MudTd>
                 <MudTd DataLabel="Tên học kỳ">@context.SemesterName</MudTd>
-                <MudTd DataLabel="Năm học">@context.AcademicYearName</MudTd>
+                <MudTd DataLabel="Năm học">@GetAcademicYearName(context.AcademicYearId)</MudTd>
                 <MudTd>
                     <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Size="Size.Small" 
                                   OnClick="@(() => OpenEditDialog(context))" />
@@ -42,111 +37,7 @@
     </MudCardContent>
 </MudCard>
 
-@code {
-    [Parameter]
-    public List<SemesterDto> Semesters { get; set; } = new();
-    
-    [Parameter]
-    public List<AcademicYearDto> AcademicYears { get; set; } = new();
-    
-    [Parameter]
-    public EventCallback OnSemesterUpdated { get; set; }
-    
-    private SemesterDto selectedItem = null;
-    private string searchString = "";
-    
-    private bool FilterFunc(SemesterDto semester) => 
-        string.IsNullOrWhiteSpace(searchString) || 
-        semester.SemesterName.Contains(searchString, StringComparison.OrdinalIgnoreCase) ||
-        semester.AcademicYearName.Contains(searchString, StringComparison.OrdinalIgnoreCase);
-    
-    private async Task OpenCreateDialog()
-    {
-        var parameters = new DialogParameters
-        {
-            { "Title", "Thêm học kỳ mới" },
-            { "ButtonText", "Thêm" },
-            { "Color", Color.Primary },
-            { "AcademicYears", AcademicYears }
-        };
-        
-        var dialog = await DialogService.ShowAsync<SemesterDialog>("Thêm học kỳ", parameters);
-        var result = await dialog.Result;
-        
-        if (!result.Canceled)
-        {
-            var newSemester = (SemesterCreateDto)result.Data;
-            try
-            {
-                await SemesterService.CreateAsync(newSemester);
-                await OnSemesterUpdated.InvokeAsync();
-                Snackbar.Add("Thêm học kỳ thành công", Severity.Success);
-            }
-            catch (Exception ex)
-            {
-                Snackbar.Add($"Lỗi: {ex.Message}", Severity.Error);
-            }
-        }
-    }
-    
-    private async Task OpenEditDialog(SemesterDto semester)
-    {
-        var parameters = new DialogParameters
-        {
-            { "Title", "Cập nhật học kỳ" },
-            { "ButtonText", "Cập nhật" },
-            { "Color", Color.Primary },
-            { "AcademicYears", AcademicYears },
-            { "Semester", new SemesterUpdateDto { 
-                SemesterName = semester.SemesterName, 
-                AcademicYearId = semester.AcademicYearId 
-            } }
-        };
-        
-        var dialog = await DialogService.ShowAsync<SemesterDialog>("Cập nhật học kỳ", parameters);
-        var result = await dialog.Result;
-        
-        if (!result.Canceled)
-        {
-            var updatedSemester = (SemesterUpdateDto)result.Data;
-            try
-            {
-                await SemesterService.UpdateAsync(semester.SemesterId, updatedSemester);
-                await OnSemesterUpdated.InvokeAsync();
-                Snackbar.Add("Cập nhật học kỳ thành công", Severity.Success);
-            }
-            catch (Exception ex)
-            {
-                Snackbar.Add($"Lỗi: {ex.Message}", Severity.Error);
-            }
-        }
-    }
-    
-    private async Task OpenDeleteDialog(SemesterDto semester)
-    {
-        var parameters = new DialogParameters
-        {
-            { "ContentText", $"Bạn có chắc chắn muốn xóa học kỳ '{semester.SemesterName}'?" },
-            { "ButtonText", "Xóa" },
-            { "Color", Color.Error }
-        };
-        
-        var options = new DialogOptions { CloseOnEscapeKey = true, CloseButton = true };
-        var dialog = await DialogService.ShowAsync<ConfirmDialog>("Xác nhận xóa", parameters, options);
-        var result = await dialog.Result;
-        
-        if (!result.Canceled)
-        {
-            try
-            {
-                await SemesterService.DeleteAsync(semester.SemesterId);
-                await OnSemesterUpdated.InvokeAsync();
-                Snackbar.Add("Xóa học kỳ thành công", Severity.Success);
-            }
-            catch (Exception ex)
-            {
-                Snackbar.Add($"Lỗi: {ex.Message}", Severity.Error);
-            }
-        }
-    }
-}
+
+
+
+

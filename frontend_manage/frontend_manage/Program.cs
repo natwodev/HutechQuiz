@@ -11,7 +11,8 @@ using Microsoft.JSInterop;
 
 using frontend_manage.Services;
 using frontend_manage.Services.AcademicAffairs;
-using frontend_manage.Services.ExamManager; 
+using frontend_manage.Services.ExamManager;
+using frontend_manage.Services.Admin; 
 
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
@@ -38,6 +39,11 @@ builder.Services.AddScoped<ExamSessionSubjectService>();
 
 // Exam Manager Services
 builder.Services.AddScoped<ExamManagerService>();
+
+// Admin Services
+builder.Services.AddScoped<LecturerService>();
+builder.Services.AddScoped<AdminStudentService>();
+builder.Services.AddScoped<SystemService>();
 
 // Removed MathJax service (migrated to KaTeX)
 // Đăng ký KaTeX service

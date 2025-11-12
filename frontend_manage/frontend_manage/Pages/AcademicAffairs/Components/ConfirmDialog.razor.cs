@@ -1,30 +1,18 @@
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
 
-namespace frontend_manage.Pages.AcademicAffairs.Components
+namespace frontend_manage.Pages.AcademicAffairs.Components;
+
+public partial class ConfirmDialog : ComponentBase
 {
-    public partial class ConfirmDialog : ComponentBase
-    {
-        [CascadingParameter] 
-        public dynamic MudDialog { get; set; } = default!;
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = default!;
+    
+    [Parameter] public string ContentText { get; set; } = "Bạn có chắc chắn muốn thực hiện hành động này?";
+    [Parameter] public string ButtonText { get; set; } = "Xác nhận";
+    [Parameter] public Color Color { get; set; } = Color.Error;
 
-        [Parameter] 
-        public string ContentText { get; set; } = string.Empty;
-
-        [Parameter] 
-        public string ButtonText { get; set; } = "Xác nhận";
-
-        [Parameter] 
-        public Color Color { get; set; } = Color.Primary;
-
-        private void Cancel()
-        {
-            MudDialog.Cancel();
-        }
-
-        private void Submit()
-        {
-            MudDialog.Close(DialogResult.Ok(true));
-        }
-    }
+    void Submit() => MudDialog.Close(DialogResult.Ok(true));
+    void Cancel() => MudDialog.Cancel();
 }
+
+

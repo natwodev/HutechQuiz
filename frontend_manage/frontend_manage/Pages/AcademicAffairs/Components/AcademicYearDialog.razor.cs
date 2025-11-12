@@ -1,44 +1,56 @@
+using frontend_manage.DTOs.AcademicAffairs;
+using frontend_manage.Services.AcademicAffairs;
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
-using frontend_manage.DTOs.AcademicAffairs;
 
-namespace frontend_manage.Pages.AcademicAffairs.Components
+namespace frontend_manage.Pages.AcademicAffairs.Components;
+
+public partial class AcademicYearDialog : ComponentBase
 {
-    public partial class AcademicYearDialog : ComponentBase
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = default!;
+    [Parameter] public AcademicYearDto? AcademicYear { get; set; }
+    
+    [Inject] private AcademicYearService AcademicYearService { get; set; } = default!;
+    [Inject] private ISnackbar Snackbar { get; set; } = default!;
+    
+    private AcademicYearCreateDto academicYear = new();
+    private bool isEdit = false;
+
+    protected override void OnInitialized()
     {
-        [CascadingParameter] 
-        public dynamic MudDialog { get; set; } = default!;
-
-        [Parameter] 
-        public string Title { get; set; } = string.Empty;
-
-        [Parameter] 
-        public string ButtonText { get; set; } = "Lưu";
-
-        [Parameter] 
-        public Color Color { get; set; } = Color.Primary;
-
-        [Parameter] 
-        public AcademicYearUpdateDto? AcademicYear { get; set; }
-
-        private AcademicYearUpdateDto academicYear = new();
-
-        protected override void OnInitialized()
+        if (AcademicYear != null)
         {
-            if (AcademicYear != null)
-            {
-                academicYear = AcademicYear;
-            }
-        }
-
-        private void Cancel()
-        {
-            MudDialog.Cancel();
-        }
-
-        private void Submit()
-        {
-            MudDialog.Close(DialogResult.Ok(academicYear));
+            isEdit = true;
+            academicYear.YearName = AcademicYear.YearName;
         }
     }
+
+    private async Task HandleSubmit()
+    {
+        try
+        {
+            if (isEdit && AcademicYear != null)
+            {
+                var updateDto = new AcademicYearUpdateDto 
+                { 
+                    YearName = academicYear.YearName
+                };
+                await AcademicYearService.UpdateAsync(AcademicYear.AcademicYearId, updateDto);
+                Snackbar.Add("Cập nhật năm học thành công", Severity.Success);
+                MudDialog.Close(DialogResult.Ok(true));
+            }
+            else
+            {
+                await AcademicYearService.CreateAsync(academicYear);
+                Snackbar.Add("Thêm năm học thành công", Severity.Success);
+                MudDialog.Close(DialogResult.Ok(true));
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Lỗi: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private void Cancel() => MudDialog.Cancel();
 }

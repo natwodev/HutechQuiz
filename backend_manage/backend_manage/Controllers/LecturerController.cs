@@ -147,5 +147,56 @@ namespace backend_manage.Controllers
 
             return Ok(new { message = "Đã reset ExamSessionStartTime và ExamSessionSubject thời gian", studentExamSessionsUpdated = sessions.Count, examSessionSubjectsUpdated = subjects.Count, time = now });
         }
+
+        [HttpPost("import-excel")]
+        [Authorize(Policy = "AdminOnly")]
+        public async Task<IActionResult> ImportExcel([FromForm] IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+            {
+                return BadRequest(new { message = "File không hợp lệ" });
+            }
+
+            try
+            {
+                var result = await _lecturerService.ImportFromExcelAsync(file);
+                return Ok(new 
+                { 
+                    lecturersAdded = result.LecturersAdded, 
+                    message = result.Message ?? "Import giảng viên thành công."
+                });
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                // Log chi tiết lỗi để debug
+                var errorMessage = $"Lỗi khi import: {ex.Message}";
+                if (ex.InnerException != null)
+                {
+                    errorMessage += $" | InnerException: {ex.InnerException.Message}";
+                }
+                errorMessage += $" | StackTrace: {ex.StackTrace}";
+                return StatusCode(500, new { message = errorMessage });
+            }
+        }
+
+        [HttpGet("download-template")]
+        [Authorize(Policy = "AdminOnly")]
+        public async Task<IActionResult> DownloadTemplate()
+        {
+            try
+            {
+                var excelBytes = await _lecturerService.DownloadExcelTemplateAsync();
+                string fileName = $"Mau_Giang_Vien_{DateTime.Now:yyyyMMdd}.xlsx";
+                return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = $"Lỗi khi tạo file mẫu: {ex.Message}" });
+            }
+        }
     }
 } 

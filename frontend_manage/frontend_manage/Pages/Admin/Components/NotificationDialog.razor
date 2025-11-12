@@ -1,0 +1,29 @@
+@using frontend_manage.Services.Admin
+
+<MudDialog MaxWidth="MaxWidth.Medium" FullWidth="true">
+    <DialogContent>
+        <EditForm Model="notificationModel" OnValidSubmit="HandleSend">
+            <DataAnnotationsValidator />
+            <MudStack Spacing="3">
+                <MudTextField @bind-Value="notificationModel.Message" 
+                             Label="Nội dung thông báo" 
+                             Variant="Variant.Outlined" 
+                             Lines="3"
+                             Required="true"
+                             RequiredError="Nội dung thông báo không được để trống" />
+                
+                <MudDatePicker @bind-Date="notificationModel.ExamTime" 
+                             Label="Thời gian thi" 
+                             Variant="Variant.Outlined" 
+                             Required="true" />
+            </MudStack>
+        </EditForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Hủy</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="HandleSend" Disabled="@isSending">
+            @(isSending ? "Đang gửi..." : "Gửi thông báo")
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+

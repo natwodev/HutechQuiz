@@ -1,0 +1,36 @@
+@using frontend_manage.DTOs
+
+<MudDialog MaxWidth="MaxWidth.Medium" FullWidth="true">
+    <DialogContent>
+        @if (Student != null)
+        {
+            <MudStack Spacing="3">
+                <MudText Typo="Typo.h6">Thông tin sinh viên</MudText>
+                
+                <MudGrid>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField Value="@Student.StudentCode" Label="Mã sinh viên" Variant="Variant.Outlined" Disabled="true" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField Value="@($"{Student.FirstName} {Student.LastName}")" Label="Họ tên" Variant="Variant.Outlined" Disabled="true" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField Value="@Student.Gender" Label="Giới tính" Variant="Variant.Outlined" Disabled="true" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField Value="@Student.DateOfBirth" Label="Ngày sinh" Variant="Variant.Outlined" Disabled="true" />
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudChip T="string" Color="@(Student.IsLogin == true ? Color.Success : Color.Error)" Size="Size.Medium">
+                            Trạng thái đăng nhập: @(Student.IsLogin == true ? "Đã kích hoạt" : "Chưa kích hoạt")
+                        </MudChip>
+                    </MudItem>
+                </MudGrid>
+            </MudStack>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Close">Đóng</MudButton>
+    </DialogActions>
+</MudDialog>
+

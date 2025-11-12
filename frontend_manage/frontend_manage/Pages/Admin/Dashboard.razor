@@ -1,0 +1,137 @@
+@page "/dashboard"
+@page "/admin/dashboard"
+@using frontend_manage.DTOs.AcademicAffairs
+@using frontend_manage.DTOs
+@using frontend_manage.Pages.Admin.Components
+@using MudBlazor
+
+<PageTitle>Admin Dashboard - HUTECH Exam Suite</PageTitle>
+
+<link href="css/monitor/MonitorPage.css" rel="stylesheet" />
+<link href="css/admin/admin-dashboard.css" rel="stylesheet" />
+
+<div class="monitor-page">
+    <!-- Header -->
+    <div class="monitor-header">
+        <div class="header-left">
+            <div class="logo-container">
+                <img src="/images/logo-dai-hoc-hutech_012634748.png" alt="HUTECH" class="logo" />
+            </div>
+            <div class="header-titles">
+                <h1>TRƯỜNG ĐẠI HỌC CÔNG NGHỆ THÀNH PHỐ HỒ CHÍ MINH (HUTECH)</h1>
+                <div class="subtitle">
+                    EXAM SUITE - ADMIN <span class="edition-tag">Professional Edition</span>
+                </div>
+                <div class="header-description">Quản lý hệ thống</div>
+            </div>
+        </div>
+        <div class="header-right">
+            <span class="mode-tag">Admin</span>
+            <MudButton Color="Color.Error" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Logout" OnClick="Logout" Style="margin-left: 16px;">
+                Đăng xuất
+            </MudButton>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <div class="monitor-nav">
+        <div class="nav-item active">
+            <span>QUẢN LÝ HỆ THỐNG</span>
+        </div>
+    </div>
+
+    <!-- Content Area -->
+    <div class="monitor-content">
+        <div class="tab-content-active">
+            <!-- Main Tabs -->
+        <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-4" Class="mt-4">
+            <!-- Quản lý cấu trúc học vụ -->
+            <MudTabPanel Text="Cấu trúc học vụ">
+                <MudTabs Elevation="1" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-3">
+                    <MudTabPanel Text="Năm học">
+                        <AcademicYearTab AcademicYears="_academicYears" OnAcademicYearUpdated="RefreshData" />
+                    </MudTabPanel>
+                    <MudTabPanel Text="Học kỳ">
+                        <SemesterTab Semesters="_semesters" AcademicYears="_academicYears" OnSemesterUpdated="RefreshData" />
+                    </MudTabPanel>
+                    <MudTabPanel Text="Khoa/Phòng ban">
+                        <DepartmentTab Departments="_departments" OnDepartmentUpdated="RefreshData" />
+                    </MudTabPanel>
+                </MudTabs>
+            </MudTabPanel>
+
+            <!-- Quản lý tổ chức thi -->
+            <MudTabPanel Text="Tổ chức thi">
+                <MudTabs Elevation="1" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-3">
+                    <MudTabPanel Text="Đợt thi">
+                        <ExamBatchTab ExamBatches="_examBatches" Semesters="_semesters" OnExamBatchUpdated="RefreshData" />
+                    </MudTabPanel>
+                    <MudTabPanel Text="Ca thi">
+                        <ExamSessionTab ExamSessions="@_examSessions" ExamBatches="_examBatches" OnExamSessionUpdated="RefreshData" />
+                    </MudTabPanel>
+                    <MudTabPanel Text="Ca thi môn học">
+                        <ExamSessionSubjectTab ExamSessionSubjects="_examSessionSubjects" OnExamSessionSubjectUpdated="RefreshData" />
+                    </MudTabPanel>
+                </MudTabs>
+            </MudTabPanel>
+
+            <!-- Quản lý đề thi -->
+            <MudTabPanel Text="Quản lý đề thi">
+                <ExamManagementTab OnExamUpdated="RefreshData" />
+            </MudTabPanel>
+
+            <!-- Quản lý sinh viên -->
+            <MudTabPanel Text="Quản lý sinh viên">
+                <StudentManagementTab 
+                    Students="_students"
+                    OnStudentUpdated="RefreshData" />
+            </MudTabPanel>
+
+            <!-- Quản lý giảng viên -->
+            <MudTabPanel Text="Quản lý giảng viên">
+                <LecturerManagementTab 
+                    Lecturers="_lecturers"
+                    Departments="_departments"
+                    OnLecturerUpdated="RefreshData" />
+            </MudTabPanel>
+
+            <!-- Quản lý hệ thống -->
+            <MudTabPanel Text="Quản lý hệ thống">
+                <SystemManagementTab 
+                    QueueStatus="_queueStatus"
+                    OnSystemUpdated="RefreshData" />
+            </MudTabPanel>
+            </MudTabs>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="monitor-footer">
+        <div class="footer-left">
+            <span class="footer-time">--:--</span>
+            <span class="footer-date">--/--/----</span>
+        </div>
+        <div class="footer-center">
+            <div class="footer-logo">
+                <span class="footer-brand">HUTECH</span>
+                <span class="footer-divider">|</span>
+                <span>Admin</span>
+            </div>
+            <div class="footer-copyright">© 2025 Trường Đại học Công nghệ TP.HCM. All rights reserved.</div>
+        </div>
+        <div class="footer-right">
+            <span class="footer-version">Version 1.0.1</span>
+            <span class="footer-divider">|</span>
+            <span class="footer-developers">Developed by Natwodev & Juo</span>
+        </div>
+    </div>
+
+    <!-- Loading Indicator -->
+    @if (_loading)
+    {
+        <div class="d-flex justify-center align-center" style="height: 100vh; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.7); z-index: 9999;">
+            <MudProgressCircular Color="Color.Primary" Size="Size.Large" Indeterminate="true" />
+        </div>
+    }
+</div>
+

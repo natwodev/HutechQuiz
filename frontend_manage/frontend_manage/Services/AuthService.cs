@@ -250,6 +250,11 @@ public class AuthService
         return !string.IsNullOrEmpty(token);
     }
 
+    public async Task<string?> GetTokenAsync()
+    {
+        return await _jsRuntime.InvokeAsync<string>("localStorage.getItem", TokenKey);
+    }
+
     public async Task<string?> GetUserRoleFromToken()
     {
         // Cookie-based role parsing removed

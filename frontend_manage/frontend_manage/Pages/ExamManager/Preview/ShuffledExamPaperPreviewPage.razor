@@ -1,0 +1,206 @@
+@page "/exammanager/preview/shuffled"
+@using frontend_manage.DTOs
+@using frontend_manage.Services.ExamManager
+@using frontend_manage.Services
+@using System.Linq
+@inject ExamManagerService ExamManagerService
+@inject IKaTeXService KaTeX
+
+<link href="css/monitor/MonitorPage.css" rel="stylesheet" />
+
+<div class="shuffled-preview-page">
+    <div class="exam-paper">
+        <div class="preview-header">
+            <div class="logo-title">
+                <img src="/images/logo-dai-hoc-hutech_012634748.png" class="logo" alt="HUTECH" />
+                <div class="titles">
+                    <div class="university">TRƯỜNG ĐẠI HỌC CÔNG NGHỆ TP.HCM (HUTECH)</div>
+                    <div class="suite">EXAM SUITE - SHUFFLED EXAM PREVIEW</div>
+                </div>
+            </div>
+            <div class="exam-meta">
+                <div><strong>Mã đề hoán vị:</strong> @Exam?.ShuffledExamPaperCore</div>
+                <div><strong>Tiêu đề:</strong> @Exam?.Title</div>
+                <div><strong>Tổng số câu:</strong> @(GetTotalQuestionsCount())</div>
+            </div>
+        </div>
+
+        <div class="preview-body">
+            @if (Exam?.QuestionStructures != null && Exam.QuestionStructures.Count > 0)
+            {
+                var idx = 1;
+                @foreach (var q in GetFlatQuestions())
+                {
+                    <div class="question-item @(q.ParentQuestionId != null ? "child-question" : "")">
+                        <div class="q-number">
+                            <span class="q-chip">@idx</span> 
+                            Câu hỏi
+                            @if (q.ParentQuestionId != null)
+                            {
+                                <span class="child-badge">(Câu hỏi con)</span>
+                            }
+                        </div>
+                        <div class="q-content katex-content">@((MarkupString)RenderHtml(q.QuestionContent))</div>
+                        @if (q.Answers != null && q.Answers.Count > 0)
+                        {
+                            <ul class="q-answers">
+                                @foreach (var ans in q.Answers.OrderBy(a => a.Order))
+                                {
+                                    <li class="answer-item">
+                                        <span class="ans-label">@GetLetter(ans.Order).</span>
+                                        <span class="ans-content katex-content">@((MarkupString)RenderHtml(ans.AnswerContent))</span>
+                                    </li>
+                                }
+                            </ul>
+                        }
+                    </div>
+                    idx++;
+                }
+            }
+            else if (isLoading)
+            {
+                <div class="loading-container">
+                    <div class="loading-spinner"></div>
+                    <div class="loading-text">Đang tải chi tiết đề...</div>
+                </div>
+            }
+            else
+            {
+                <div class="no-data">
+                    Không có dữ liệu câu hỏi cho đề này.
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public string? core { get; set; }
+
+    private ShuffledExamPaperDto? Exam;
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!string.IsNullOrWhiteSpace(core))
+        {
+            isLoading = true;
+            try
+            {
+                Exam = await ExamManagerService.GetShuffledExamWithDetailsAsync(core);
+            }
+            catch (Exception ex)
+            {
+                // Handle error
+            }
+            finally
+            {
+                isLoading = false;
+            }
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await KaTeX.RenderAsync(".shuffled-preview-page");
+        }
+    }
+
+    private string RenderHtml(string? content)
+    {
+        if (string.IsNullOrEmpty(content))
+            return string.Empty;
+        
+        // Loại bỏ các ký tự {<number>} khỏi nội dung
+        return System.Text.RegularExpressions.Regex.Replace(
+            content, 
+            @"\{<\d+>\}", 
+            string.Empty
+        );
+    }
+    
+    private char GetLetter(int order) => (char)('A' + Math.Max(0, order - 1));
+
+    private List<QuestionStructureDto> GetFlatQuestions()
+    {
+        if (Exam?.QuestionStructures == null || Exam.QuestionStructures.Count == 0)
+            return new List<QuestionStructureDto>();
+
+        var flatQuestions = new List<QuestionStructureDto>();
+        var parentQuestions = Exam.QuestionStructures.Where(d => d.ParentQuestionId == null).OrderBy(d => d.Order).ToList();
+        
+        foreach (var parentQ in parentQuestions)
+        {
+            // Nếu là câu hỏi cha (có child questions)
+            if (parentQ.ChildQuestions != null && parentQ.ChildQuestions.Count > 0)
+            {
+                flatQuestions.Add(parentQ); // Thêm câu hỏi cha
+                // Thêm các câu hỏi con
+                foreach (var child in parentQ.ChildQuestions.OrderBy(c => c.Order))
+                {
+                    flatQuestions.Add(child);
+                }
+            }
+            // Nếu là câu hỏi độc lập (không có child)
+            else
+            {
+                flatQuestions.Add(parentQ);
+            }
+        }
+
+        return flatQuestions;
+    }
+
+    private int GetTotalQuestionsCount()
+    {
+        if (Exam?.QuestionStructures == null || Exam.QuestionStructures.Count == 0)
+            return 0;
+
+        int count = 0;
+        foreach (var q in Exam.QuestionStructures)
+        {
+            count++; // Đếm câu hỏi cha
+            if (q.ChildQuestions != null && q.ChildQuestions.Count > 0)
+            {
+                count += q.ChildQuestions.Count; // Đếm các câu hỏi con
+            }
+        }
+        return count;
+    }
+}
+
+<style>
+.shuffled-preview-page { padding: 16px; background: #f5f5f5; min-height: 100vh; }
+.preview-header { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 20px; padding: 16px; background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+.logo-title { display: flex; align-items: center; gap: 12px; }
+.logo { height: 64px; width: auto; object-fit: contain; display: block; }
+.titles { font-weight: 700; }
+.university { font-size: 1rem; }
+.suite { color: #1976d2; font-weight: 700; font-size: 0.9rem; }
+.exam-meta { text-align: right; font-size: 0.9rem; }
+.exam-paper { background: #fff; border: 1px solid #e0e0e0; border-radius: 10px; padding: 24px; box-shadow: 0 2px 10px rgba(0,0,0,0.04); }
+.question-item { margin-bottom: 24px; padding: 16px; border: 1px solid #f0f0f0; border-radius: 8px; background: #fafafa; }
+.question-item.child-question { margin-left: 32px; background: #f5f5f5; border-left: 3px solid #1976d2; }
+.q-number { font-weight: 700; color: #1976d2; margin-bottom: 8px; }
+.q-chip { display: inline-flex; width: 32px; height: 32px; align-items: center; justify-content: center; border-radius: 50%; background: #e3f2fd; color: #1976d2; font-weight: 700; margin-right: 8px; }
+.child-badge { font-size: 0.85rem; color: #666; font-weight: normal; margin-left: 8px; }
+.q-content { margin: 8px 0; font-size: 1rem; line-height: 1.6; }
+.q-answers { margin: 12px 0 0 24px; padding: 0; list-style: none; }
+.answer-item { display: flex; gap: 8px; align-items: flex-start; padding: 10px 12px; border: 1px solid #e0e0e0; border-radius: 6px; margin-bottom: 8px; background: white; }
+.answer-item.correct-answer { border-color: #4caf50; background: #f1f8f4; }
+.ans-label { min-width: 24px; font-weight: 700; color: #555; }
+.ans-content { flex: 1; }
+.correct-badge { color: #4caf50; font-weight: 600; font-size: 0.85rem; margin-left: auto; }
+.q-content img, .ans-content img { max-width: 100%; height: auto; display: inline-block; margin: 4px 0; }
+.q-content audio, .ans-content audio { width: 100%; margin-top: 8px; }
+.loading-container { display: flex; gap: 12px; align-items: center; justify-content: center; padding: 40px; }
+.loading-spinner { width: 24px; height: 24px; border: 3px solid #e0e0e0; border-top-color: #1976d2; border-radius: 50%; animation: spin 1s linear infinite; }
+@@keyframes spin { to { transform: rotate(360deg); } }
+.loading-text { color: #666; }
+.no-data { text-align: center; padding: 40px; color: #999; }
+</style>
+

@@ -1,4 +1,5 @@
 using backend_manage.shared.DTOs;
+using Microsoft.AspNetCore.Http;
 
 namespace backend_manage.core.Services.Interfaces
 {
@@ -14,6 +15,12 @@ namespace backend_manage.core.Services.Interfaces
         Task<(bool Success, string Message)> ForceSubmitAsync(
             int studentExamSessionId,
             string studentCode);
+
+        // Import from Excel
+        Task<LecturerImportResultDto> ImportFromExcelAsync(IFormFile file);
+
+        // Download Excel template
+        Task<byte[]> DownloadExcelTemplateAsync();
 
         // ForceSubmitRoomAsync: not used
     }

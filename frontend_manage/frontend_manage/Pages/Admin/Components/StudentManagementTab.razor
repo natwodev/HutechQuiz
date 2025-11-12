@@ -1,0 +1,50 @@
+@using frontend_manage.DTOs
+
+<MudCard Elevation="0">
+    <MudCardHeader>
+        <MudText Typo="Typo.h6" Style="font-size: 1.1rem; font-weight: 600;">Quản lý Sinh viên</MudText>
+        <MudSpacer />
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Upload" 
+                  OnClick="OpenImportDialog" Size="Size.Small">Import từ Excel</MudButton>
+    </MudCardHeader>
+    <MudCardContent>
+        <MudTable Items="@Students" Hover="true" Dense="true" Striped="true" Filter="new Func<StudentInfoDto, bool>(FilterFunc)">
+            <ToolBarContent>
+                <MudTextField @bind-Value="searchString" Placeholder="Tìm kiếm" Adornment="Adornment.Start" 
+                             AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+            </ToolBarContent>
+            <HeaderContent>
+                <MudTh>Mã SV</MudTh>
+                <MudTh>Họ tên</MudTh>
+                <MudTh>Giới tính</MudTh>
+                <MudTh>Ngày sinh</MudTh>
+                <MudTh>Trạng thái đăng nhập</MudTh>
+                <MudTh>Thao tác</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Mã SV">@context.StudentCode</MudTd>
+                <MudTd DataLabel="Họ tên">@context.FirstName @context.LastName</MudTd>
+                <MudTd DataLabel="Giới tính">@context.Gender</MudTd>
+                <MudTd DataLabel="Ngày sinh">@(context.DateOfBirth ?? "N/A")</MudTd>
+                <MudTd DataLabel="Trạng thái đăng nhập">
+                    <div style="display: inline-block; padding: 4px 10px; background-color: @(context.IsLogin == true ? "#4caf50" : "#f44336"); color: white; border-radius: 12px; font-size: 0.75rem; font-weight: 500;">
+                        @(context.IsLogin == true ? "Đã kích hoạt" : "Chưa kích hoạt")
+                    </div>
+                </MudTd>
+                <MudTd>
+                    <MudIconButton Icon="@(context.IsLogin == true ? Icons.Material.Filled.Block : Icons.Material.Filled.CheckCircle)" 
+                                  Color="@(context.IsLogin == true ? Color.Error : Color.Success)" 
+                                  Size="Size.Small" 
+                                  OnClick="@(() => ToggleLoginStatus(context))" 
+                                  Title="@(context.IsLogin == true ? "Vô hiệu hóa đăng nhập" : "Kích hoạt đăng nhập")" />
+                    <MudIconButton Icon="@Icons.Material.Filled.Visibility" Color="Color.Info" Size="Size.Small" 
+                                  OnClick="@(() => ViewStudentDetails(context))" />
+                </MudTd>
+            </RowTemplate>
+            <PagerContent>
+                <MudTablePager PageSizeOptions="new int[] { 5, 10, 25, 50 }" />
+            </PagerContent>
+        </MudTable>
+    </MudCardContent>
+</MudCard>
+

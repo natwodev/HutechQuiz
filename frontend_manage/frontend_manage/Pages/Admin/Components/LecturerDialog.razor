@@ -1,0 +1,72 @@
+@using frontend_manage.DTOs
+@using frontend_manage.DTOs.AcademicAffairs
+
+<MudDialog MaxWidth="MaxWidth.Medium" FullWidth="true">
+    <DialogContent>
+        <EditForm Model="lecturer" OnValidSubmit="HandleSubmit">
+            <DataAnnotationsValidator />
+            <MudStack Spacing="3">
+                @if (Lecturer == null)
+                {
+                    <MudTextField @bind-Value="lecturer.LecturerCode" 
+                                 Label="Mã giảng viên" 
+                                 Variant="Variant.Outlined" 
+                                 Required="true"
+                                 RequiredError="Mã giảng viên không được để trống" />
+                }
+                else
+                {
+                    <MudTextField Value="@Lecturer.LecturerCode" 
+                                 Label="Mã giảng viên" 
+                                 Variant="Variant.Outlined" 
+                                 Disabled="true" />
+                }
+                
+                <MudGrid>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField @bind-Value="lecturer.FirstName" 
+                                     Label="Họ" 
+                                     Variant="Variant.Outlined" 
+                                     Required="true"
+                                     RequiredError="Họ không được để trống" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField @bind-Value="lecturer.LastName" 
+                                     Label="Tên" 
+                                     Variant="Variant.Outlined" 
+                                     Required="true"
+                                     RequiredError="Tên không được để trống" />
+                    </MudItem>
+                </MudGrid>
+                
+                <MudSelect @bind-Value="lecturer.DepartmentId" Label="Khoa" Variant="Variant.Outlined" Required="true">
+                    @foreach (var dept in Departments)
+                    {
+                        <MudSelectItem Value="@dept.DepartmentId">@dept.DepartmentName</MudSelectItem>
+                    }
+                </MudSelect>
+                
+                <MudTextField @bind-Value="lecturer.Email" 
+                             Label="Email" 
+                             Variant="Variant.Outlined" 
+                             InputType="InputType.Email" />
+                
+                <MudTextField @bind-Value="lecturer.PhoneNumber" 
+                             Label="Số điện thoại" 
+                             Variant="Variant.Outlined" />
+                
+                <MudDatePicker @bind-Date="lecturer.DateOfBirth" Label="Ngày sinh" Variant="Variant.Outlined" />
+                
+                <MudSelect @bind-Value="lecturer.Gender" Label="Giới tính" Variant="Variant.Outlined">
+                    <MudSelectItem Value="@((bool?)true)">Nam</MudSelectItem>
+                    <MudSelectItem Value="@((bool?)false)">Nữ</MudSelectItem>
+                </MudSelect>
+            </MudStack>
+        </EditForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Hủy</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="HandleSubmit">Lưu</MudButton>
+    </DialogActions>
+</MudDialog>
+

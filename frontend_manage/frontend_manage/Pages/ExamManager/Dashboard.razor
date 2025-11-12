@@ -1,5 +1,6 @@
 @page "/exammanager/dashboard"
 @using frontend_manage.Pages.ExamManager.Components
+@using MudBlazor
 
 <PageTitle>Exam Manager Dashboard</PageTitle>
 
@@ -22,6 +23,9 @@
         </div>
         <div class="header-right">
             <span class="mode-tag">Exam Manager</span>
+            <MudButton Color="Color.Error" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Logout" OnClick="Logout" Style="margin-left: 16px;">
+                Đăng xuất
+            </MudButton>
         </div>
     </div>
 

@@ -1,0 +1,276 @@
+@page "/academic-affairs/exam-session-subject/edit/{Id:int}"
+@using frontend_manage.DTOs.AcademicAffairs
+@using frontend_manage.Services.AcademicAffairs
+@using frontend_manage.Services.ExamManager
+@using MudBlazor
+
+<PageTitle>Chỉnh sửa Ca thi môn học - HUTECH Exam Suite</PageTitle>
+
+<link href="css/monitor/MonitorPage.css" rel="stylesheet" />
+<link href="css/admin/admin-dashboard.css" rel="stylesheet" />
+
+<div class="monitor-page">
+    <!-- Header -->
+    <div class="monitor-header">
+        <div class="header-left">
+            <div class="logo-container">
+                <img src="/images/logo-dai-hoc-hutech_012634748.png" alt="HUTECH" class="logo" />
+            </div>
+            <div class="header-titles">
+                <h1>TRƯỜNG ĐẠI HỌC CÔNG NGHỆ THÀNH PHỐ HỒ CHÍ MINH (HUTECH)</h1>
+                <div class="subtitle">
+                    EXAM SUITE - ACADEMIC AFFAIRS <span class="edition-tag">Professional Edition</span>
+                </div>
+                <div class="header-description">Chỉnh sửa Ca thi môn học</div>
+            </div>
+        </div>
+        <div class="header-right">
+            <span class="mode-tag">Academic Affairs</span>
+            <MudButton Color="Color.Secondary" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.ArrowBack" 
+                      OnClick="GoBack" Style="margin-left: 16px;">
+                Quay lại
+            </MudButton>
+        </div>
+    </div>
+
+    <!-- Content Area -->
+    <div class="monitor-content">
+        <div class="tab-content-active">
+            @if (_loading)
+            {
+                <div class="d-flex justify-center align-center" style="height: 400px;">
+                    <MudProgressCircular Color="Color.Primary" Size="Size.Large" Indeterminate="true" />
+                </div>
+            }
+            else if (_examSessionSubject == null)
+            {
+                <MudAlert Severity="Severity.Error">Không tìm thấy ca thi môn học</MudAlert>
+            }
+            else
+            {
+                <MudContainer MaxWidth="MaxWidth.Large" Class="mt-4">
+                    <MudPaper Elevation="3" Class="pa-6">
+                        <MudText Typo="Typo.h4" Class="mb-4">
+                            <MudIcon Icon="@Icons.Material.Filled.Edit" Class="mr-2" />
+                            Chỉnh sửa Ca thi môn học
+                        </MudText>
+
+                        <EditForm Model="_updateDto" OnValidSubmit="HandleSubmit">
+                            <DataAnnotationsValidator />
+                            <MudGrid>
+                                <!-- Thông tin cơ bản -->
+                                <MudItem xs="12">
+                                    <MudText Typo="Typo.h6" Class="mb-3" Style="color: #1976d2; font-weight: 600;">
+                                        <MudIcon Icon="@Icons.Material.Filled.Info" Class="mr-2" />
+                                        Thông tin cơ bản
+                                    </MudText>
+                                </MudItem>
+
+                                <MudItem xs="12" md="6">
+                                    <MudSelect T="int?" @bind-Value="_selectedExamSessionId" 
+                                           Label="Ca thi" 
+                                           Variant="Variant.Outlined"
+                                           Required="true"
+                                           RequiredError="Ca thi không được để trống"
+                                           HelperText="Chọn ca thi"
+                                           Disabled="@_loadingExamSessions">
+                                        <MudSelectItem T="int?" Value="@((int?)null)">-- Chọn ca thi --</MudSelectItem>
+                                        @if (_loadingExamSessions)
+                                        {
+                                            <MudSelectItem T="int?" Disabled="true">Đang tải...</MudSelectItem>
+                                        }
+                                        else
+                                        {
+                                            @foreach (var examSession in _examSessions)
+                                            {
+                                                <MudSelectItem T="int?" Value="@examSession.ExamSessionId">
+                                                    @examSession.Name
+                                                </MudSelectItem>
+                                            }
+                                        }
+                                    </MudSelect>
+                                </MudItem>
+
+                                <MudItem xs="12" md="6">
+                                    <MudSelect T="string" @bind-Value="_selectedDepartmentId" 
+                                           Label="Khoa" 
+                                           Variant="Variant.Outlined"
+                                           Required="true"
+                                           RequiredError="Khoa không được để trống"
+                                           HelperText="Chọn khoa"
+                                           Disabled="@_loadingDepartments">
+                                        <MudSelectItem T="string" Value="@((string?)null)">-- Chọn khoa --</MudSelectItem>
+                                        @if (_loadingDepartments)
+                                        {
+                                            <MudSelectItem T="string" Disabled="true">Đang tải...</MudSelectItem>
+                                        }
+                                        else
+                                        {
+                                            @foreach (var department in _departments)
+                                            {
+                                                <MudSelectItem T="string" Value="@department.DepartmentId">
+                                                    @department.DepartmentName
+                                                </MudSelectItem>
+                                            }
+                                        }
+                                    </MudSelect>
+                                </MudItem>
+
+                                <MudItem xs="12" md="6">
+                                    <MudSelect T="int" @bind-Value="_updateDto.SubjectId" 
+                                           Label="Môn học" 
+                                           Variant="Variant.Outlined"
+                                           Required="true"
+                                           RequiredError="Môn học không được để trống"
+                                           HelperText="Chọn môn học"
+                                           Disabled="@_loadingSubjects">
+                                        <MudSelectItem T="int" Value="0">-- Chọn môn học --</MudSelectItem>
+                                        @if (_loadingSubjects)
+                                        {
+                                            <MudSelectItem T="int" Disabled="true">Đang tải...</MudSelectItem>
+                                        }
+                                        else
+                                        {
+                                            @foreach (var subject in _subjects)
+                                            {
+                                                <MudSelectItem T="int" Value="@subject.SubjectId">
+                                                    @subject.SubjectName
+                                                </MudSelectItem>
+                                            }
+                                        }
+                                    </MudSelect>
+                                </MudItem>
+
+                                <MudItem xs="12" md="6">
+                                    <MudNumericField @bind-Value="_updateDto.Duration" 
+                                                  Label="Thời lượng (phút)" 
+                                                  Variant="Variant.Outlined" 
+                                                  Required="true"
+                                                  RequiredError="Thời lượng không được để trống"
+                                                  Min="1" />
+                                </MudItem>
+
+                                <MudItem xs="12" md="6">
+                                    <MudTextField @bind-Value="_updateDto.ExamSessionSubjectCore" 
+                                               Label="Mã ca thi môn học" 
+                                               Variant="Variant.Outlined" />
+                                </MudItem>
+
+                                <!-- Đề gốc -->
+                                <MudItem xs="12" Class="mt-4">
+                                    <MudText Typo="Typo.h6" Class="mb-3" Style="color: #1976d2; font-weight: 600;">
+                                        <MudIcon Icon="@Icons.Material.Filled.Book" Class="mr-2" />
+                                        Đề gốc
+                                    </MudText>
+                                </MudItem>
+
+                                <MudItem xs="12">
+                                    <MudSelect T="int?" @bind-Value="_updateDto.OriginalExamPaperId" 
+                                           Label="Chọn đề gốc" 
+                                           Variant="Variant.Outlined"
+                                           HelperText="Chọn đề gốc từ danh sách"
+                                           Disabled="@_loadingOriginalExams">
+                                        <MudSelectItem T="int?" Value="@((int?)null)">-- Không chọn --</MudSelectItem>
+                                        @if (_loadingOriginalExams)
+                                        {
+                                            <MudSelectItem T="int?" Disabled="true">Đang tải...</MudSelectItem>
+                                        }
+                                        else
+                                        {
+                                            @foreach (var exam in _originalExamPapers)
+                                            {
+                                                <MudSelectItem T="int?" Value="@exam.OriginalExamPaperId">
+                                                    @exam.OriginalExamPaperCore - @exam.Title
+                                                </MudSelectItem>
+                                            }
+                                        }
+                                    </MudSelect>
+                                </MudItem>
+
+                                <!-- Thời gian -->
+                                <MudItem xs="12" Class="mt-4">
+                                    <MudText Typo="Typo.h6" Class="mb-3" Style="color: #1976d2; font-weight: 600;">
+                                        <MudIcon Icon="@Icons.Material.Filled.Schedule" Class="mr-2" />
+                                        Thời gian
+                                    </MudText>
+                                </MudItem>
+
+                                <MudItem xs="12" md="6">
+                                    <MudTextField @bind-Value="startTimeString" 
+                                               Label="Thời gian bắt đầu" 
+                                               Variant="Variant.Outlined"
+                                               InputType="InputType.DateTimeLocal"
+                                               Required="true"
+                                               RequiredError="Thời gian bắt đầu không được để trống" />
+                                </MudItem>
+
+                                <MudItem xs="12" md="6">
+                                    <MudTextField @bind-Value="endTimeString" 
+                                               Label="Thời gian kết thúc (tùy chọn)" 
+                                               Variant="Variant.Outlined"
+                                               InputType="InputType.DateTimeLocal" />
+                                </MudItem>
+
+                                <!-- Trạng thái -->
+                                <MudItem xs="12" Class="mt-4">
+                                    <MudText Typo="Typo.h6" Class="mb-3" Style="color: #1976d2; font-weight: 600;">
+                                        <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Class="mr-2" />
+                                        Trạng thái
+                                    </MudText>
+                                </MudItem>
+
+                                <MudItem xs="12">
+                                    <MudSwitch @bind-Value="_updateDto.IsCompleted" 
+                                              Label="Đã hoàn thành" 
+                                              Color="Color.Success"
+                                              HelperText="Bật nếu ca thi môn học đã hoàn thành" />
+                                </MudItem>
+
+                                <!-- Action Buttons -->
+                                <MudItem xs="12" Class="mt-6">
+                                    <MudStack Row="true" Justify="Justify.FlexEnd" Spacing="2">
+                                        <MudButton Variant="Variant.Outlined" Color="Color.Default" OnClick="GoBack">
+                                            Hủy
+                                        </MudButton>
+                                        <MudButton Variant="Variant.Filled" Color="Color.Primary" 
+                                                  ButtonType="ButtonType.Submit"
+                                                  StartIcon="@Icons.Material.Filled.Save"
+                                                  Disabled="@_isSaving">
+                                            @if (_isSaving)
+                                            {
+                                                <MudProgressCircular Indeterminate="true" Size="Size.Small" Class="mr-2" />
+                                            }
+                                            Lưu thay đổi
+                                        </MudButton>
+                                    </MudStack>
+                                </MudItem>
+                            </MudGrid>
+                        </EditForm>
+                    </MudPaper>
+                </MudContainer>
+            }
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="monitor-footer">
+        <div class="footer-left">
+            <span class="footer-time">--:--</span>
+            <span class="footer-date">--/--/----</span>
+        </div>
+        <div class="footer-center">
+            <div class="footer-logo">
+                <span class="footer-brand">HUTECH</span>
+                <span class="footer-divider">|</span>
+                <span>Academic Affairs</span>
+            </div>
+            <div class="footer-copyright">© 2025 Trường Đại học Công nghệ TP.HCM. All rights reserved.</div>
+        </div>
+        <div class="footer-right">
+            <span class="footer-version">Version 1.0.1</span>
+            <span class="footer-divider">|</span>
+            <span class="footer-developers">Developed by Natwodev & Juo</span>
+        </div>
+    </div>
+</div>
+

@@ -1,0 +1,37 @@
+@using frontend_manage.DTOs.AcademicAffairs
+
+<MudDialog>
+    <DialogContent>
+        <EditForm Model="department" OnValidSubmit="HandleSubmit">
+            <DataAnnotationsValidator />
+            <MudStack Spacing="3">
+                @if (string.IsNullOrEmpty(department.DepartmentId))
+                {
+                    <MudTextField @bind-Value="department.DepartmentId" 
+                                 Label="Mã khoa" 
+                                 Variant="Variant.Outlined" 
+                                 Required="true"
+                                 RequiredError="Mã khoa không được để trống" />
+                }
+                else
+                {
+                    <MudTextField Value="@department.DepartmentId" 
+                                 Label="Mã khoa" 
+                                 Variant="Variant.Outlined" 
+                                 Disabled="true" />
+                }
+                
+                <MudTextField @bind-Value="department.DepartmentName" 
+                           Label="Tên khoa" 
+                           Variant="Variant.Outlined" 
+                           Required="true"
+                           RequiredError="Tên khoa không được để trống" />
+            </MudStack>
+        </EditForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Hủy</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="HandleSubmit">Lưu</MudButton>
+    </DialogActions>
+</MudDialog>
+

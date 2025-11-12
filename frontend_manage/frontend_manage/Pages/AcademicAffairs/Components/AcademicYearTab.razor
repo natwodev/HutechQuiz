@@ -1,19 +1,14 @@
 @using frontend_manage.DTOs.AcademicAffairs
-@using frontend_manage.Services.AcademicAffairs
-@inject AcademicYearService AcademicYearService
-@inject ISnackbar Snackbar
-@inject IDialogService DialogService
 
 <MudCard Elevation="0">
     <MudCardHeader>
-        <MudText Typo="Typo.h6">Quản lý Năm học</MudText>
+        <MudText Typo="Typo.h6" Style="font-size: 1.1rem; font-weight: 600;">Quản lý Năm học</MudText>
         <MudSpacer />
         <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add" 
-                  OnClick="OpenCreateDialog">Thêm năm học</MudButton>
+                  OnClick="OpenCreateDialog" Size="Size.Small">Thêm năm học</MudButton>
     </MudCardHeader>
     <MudCardContent>
-        <MudTable Items="@AcademicYears" Hover="true" Dense="false" Striped="true" Filter="new Func<AcademicYearDto, bool>(FilterFunc)" 
-                 @bind-SelectedItem="selectedItem">
+        <MudTable Items="@AcademicYears" Hover="true" Dense="true" Striped="true" Filter="new Func<AcademicYearDto, bool>(FilterFunc)">
             <ToolBarContent>
                 <MudTextField @bind-Value="searchString" Placeholder="Tìm kiếm" Adornment="Adornment.Start" 
                              AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
@@ -39,103 +34,3 @@
         </MudTable>
     </MudCardContent>
 </MudCard>
-
-@code {
-    [Parameter]
-    public List<AcademicYearDto> AcademicYears { get; set; } = new();
-    
-    [Parameter]
-    public EventCallback OnAcademicYearUpdated { get; set; }
-    
-    private AcademicYearDto selectedItem = null;
-    private string searchString = "";
-    
-    private bool FilterFunc(AcademicYearDto academicYear) => 
-        string.IsNullOrWhiteSpace(searchString) || 
-        academicYear.YearName.Contains(searchString, StringComparison.OrdinalIgnoreCase);
-    
-    private async Task OpenCreateDialog()
-    {
-        var parameters = new DialogParameters
-        {
-            { "Title", "Thêm năm học mới" },
-            { "ButtonText", "Thêm" },
-            { "Color", Color.Primary }
-        };
-        
-        var dialog = await DialogService.ShowAsync<AcademicYearDialog>("Thêm năm học", parameters);
-        var result = await dialog.Result;
-        
-        if (!result.Canceled)
-        {
-            var newAcademicYear = (AcademicYearCreateDto)result.Data;
-            try
-            {
-                await AcademicYearService.CreateAsync(newAcademicYear);
-                await OnAcademicYearUpdated.InvokeAsync();
-                Snackbar.Add("Thêm năm học thành công", Severity.Success);
-            }
-            catch (Exception ex)
-            {
-                Snackbar.Add($"Lỗi: {ex.Message}", Severity.Error);
-            }
-        }
-    }
-    
-    private async Task OpenEditDialog(AcademicYearDto academicYear)
-    {
-        var parameters = new DialogParameters
-        {
-            { "Title", "Cập nhật năm học" },
-            { "ButtonText", "Cập nhật" },
-            { "Color", Color.Primary },
-            { "AcademicYear", new AcademicYearUpdateDto { YearName = academicYear.YearName } }
-        };
-        
-        var dialog = await DialogService.ShowAsync<AcademicYearDialog>("Cập nhật năm học", parameters);
-        var result = await dialog.Result;
-        
-        if (!result.Canceled)
-        {
-            var updatedAcademicYear = (AcademicYearUpdateDto)result.Data;
-            try
-            {
-                await AcademicYearService.UpdateAsync(academicYear.AcademicYearId, updatedAcademicYear);
-                await OnAcademicYearUpdated.InvokeAsync();
-                Snackbar.Add("Cập nhật năm học thành công", Severity.Success);
-            }
-            catch (Exception ex)
-            {
-                Snackbar.Add($"Lỗi: {ex.Message}", Severity.Error);
-            }
-        }
-    }
-    
-    private async Task OpenDeleteDialog(AcademicYearDto academicYear)
-    {
-        var parameters = new DialogParameters
-        {
-            { "ContentText", $"Bạn có chắc chắn muốn xóa năm học '{academicYear.YearName}'?" },
-            { "ButtonText", "Xóa" },
-            { "Color", Color.Error }
-        };
-        
-        var options = new DialogOptions { CloseOnEscapeKey = true, CloseButton = true };
-        var dialog = await DialogService.ShowAsync<ConfirmDialog>("Xác nhận xóa", parameters, options);
-        var result = await dialog.Result;
-        
-        if (!result.Canceled)
-        {
-            try
-            {
-                await AcademicYearService.DeleteAsync(academicYear.AcademicYearId);
-                await OnAcademicYearUpdated.InvokeAsync();
-                Snackbar.Add("Xóa năm học thành công", Severity.Success);
-            }
-            catch (Exception ex)
-            {
-                Snackbar.Add($"Lỗi: {ex.Message}", Severity.Error);
-            }
-        }
-    }
-}
