@@ -1,7 +1,9 @@
 @page "/academic-affairs/dashboard"
 @using frontend_manage.DTOs.AcademicAffairs
 @using frontend_manage.DTOs
+@using frontend_manage.Pages.Admin.Components
 @using frontend_manage.Pages.AcademicAffairs.Components
+@using frontend_manage.Components.MonitorLayout
 @using MudBlazor
 
 <PageTitle>Academic Affairs Dashboard - HUTECH Exam Suite</PageTitle>
@@ -11,26 +13,17 @@
 
 <div class="monitor-page">
     <!-- Header -->
-    <div class="monitor-header">
-        <div class="header-left">
-            <div class="logo-container">
-                <img src="/images/logo-dai-hoc-hutech_012634748.png" alt="HUTECH" class="logo" />
-            </div>
-            <div class="header-titles">
-                <h1>TRƯỜNG ĐẠI HỌC CÔNG NGHỆ THÀNH PHỐ HỒ CHÍ MINH (HUTECH)</h1>
-                <div class="subtitle">
-                    EXAM SUITE - ACADEMIC AFFAIRS <span class="edition-tag">Professional Edition</span>
-                </div>
-                <div class="header-description">Quản lý học vụ</div>
-            </div>
-        </div>
-        <div class="header-right">
-            <span class="mode-tag">Academic Affairs</span>
+    <Header
+        Subtitle="EXAM SUITE - ACADEMIC AFFAIRS"
+        EditionTag="Professional Edition"
+        Description="Quản lý học vụ"
+        ModeTag="Academic Affairs">
+        <RightContent>
             <MudButton Color="Color.Error" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Logout" OnClick="Logout" Style="margin-left: 16px;">
                 Đăng xuất
             </MudButton>
-        </div>
-        </div>
+        </RightContent>
+    </Header>
 
     <!-- Navigation -->
     <div class="monitor-nav">
@@ -78,25 +71,7 @@
     </div>
 
     <!-- Footer -->
-    <div class="monitor-footer">
-        <div class="footer-left">
-            <span class="footer-time">--:--</span>
-            <span class="footer-date">--/--/----</span>
-        </div>
-        <div class="footer-center">
-            <div class="footer-logo">
-                <span class="footer-brand">HUTECH</span>
-                <span class="footer-divider">|</span>
-                <span>Academic Affairs</span>
-            </div>
-            <div class="footer-copyright">© 2025 Trường Đại học Công nghệ TP.HCM. All rights reserved.</div>
-        </div>
-        <div class="footer-right">
-            <span class="footer-version">Version 1.0.1</span>
-            <span class="footer-divider">|</span>
-            <span class="footer-developers">Developed by Natwodev & Juo</span>
-                        </div>
-                        </div>
+    <Footer ModeLabel="Academic Affairs" Version="1.0.1" DevelopedBy="Developed by Natwodev & Juo" CopyrightYear="2025" />
 
     <!-- Loading Indicator -->
     @if (_loading)

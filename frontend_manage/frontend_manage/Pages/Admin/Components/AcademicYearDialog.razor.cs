@@ -1,16 +1,16 @@
 using frontend_manage.DTOs.AcademicAffairs;
-using frontend_manage.Services.AcademicAffairs;
+using frontend_manage.Services.Admin;
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
 
-namespace frontend_manage.Pages.AcademicAffairs.Components;
+namespace frontend_manage.Pages.Admin.Components;
 
 public partial class AcademicYearDialog : ComponentBase
 {
     [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = default!;
     [Parameter] public AcademicYearDto? AcademicYear { get; set; }
     
-    [Inject] private AcademicYearService AcademicYearService { get; set; } = default!;
+    [Inject] private AdminAcademicYearService AcademicYearService { get; set; } = default!;
     [Inject] private ISnackbar Snackbar { get; set; } = default!;
     
     private AcademicYearCreateDto academicYear = new();
@@ -54,3 +54,4 @@ public partial class AcademicYearDialog : ComponentBase
 
     private void Cancel() => MudDialog.Cancel();
 }
+

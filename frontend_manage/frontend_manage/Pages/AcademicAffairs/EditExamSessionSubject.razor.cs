@@ -1,11 +1,14 @@
 using frontend_manage.DTOs.AcademicAffairs;
 using frontend_manage.DTOs;
-using frontend_manage.Services.AcademicAffairs;
+using frontend_manage.Services.Admin;
 using frontend_manage.Services.ExamManager;
 using frontend_manage.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.Configuration;
 using MudBlazor;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Json;
 
@@ -14,9 +17,13 @@ namespace frontend_manage.Pages.AcademicAffairs;
 public partial class EditExamSessionSubject : ComponentBase
 {
     [Parameter] public int Id { get; set; }
+    private string _currentRoleTag = "Academic Affairs";
+    private IReadOnlyCollection<string> _userRoles = Array.Empty<string>();
     
-    [Inject] private ExamSessionSubjectService ExamSessionSubjectService { get; set; } = default!;
-    [Inject] private ExamSessionService ExamSessionService { get; set; } = default!;
+    [Inject] private AdminExamSessionSubjectService ExamSessionSubjectService { get; set; } = default!;
+    [Inject] private AdminExamSessionService ExamSessionService { get; set; } = default!;
+    [Inject] private ExamRoomService ExamRoomService { get; set; } = default!;
+    [Inject] private LecturerService LecturerService { get; set; } = default!;
     [Inject] private ExamManagerService ExamManagerService { get; set; } = default!;
     [Inject] private AuthService AuthService { get; set; } = default!;
     [Inject] private ISnackbar Snackbar { get; set; } = default!;
@@ -27,19 +34,22 @@ public partial class EditExamSessionSubject : ComponentBase
     private ExamSessionSubjectUpdateDto _updateDto = new();
     private List<OriginalExamPaperListItemDto> _originalExamPapers = new();
     private List<ExamSessionDto> _examSessions = new();
-    private List<DepartmentDto> _departments = new();
-    private List<ExamSessionDepartmentDto> _examSessionDepartments = new();
+    private List<LecturerDto> _lecturers = new();
     private List<SubjectDto> _subjects = new();
+    private List<ExamRoomDto> _examRooms = new();
     
     private int? _selectedExamSessionId;
-    private string? _selectedDepartmentId;
+    private int? _selectedMonitorId;
+    private int? _selectedExamRoomId;
     
     private bool _loading = true;
     private bool _loadingOriginalExams = false;
     private bool _loadingExamSessions = false;
-    private bool _loadingDepartments = false;
+    private bool _loadingLecturers = false;
     private bool _loadingSubjects = false;
+    private bool _loadingExamRooms = false;
     private bool _isSaving = false;
+    private bool _isUpdatingMonitor = false;
     private string startTimeString = "";
     private string endTimeString = "";
     
@@ -50,10 +60,71 @@ public partial class EditExamSessionSubject : ComponentBase
         public string SubjectCode { get; set; } = string.Empty;
     }
 
+    private bool CanManageMonitor =>
+        _userRoles.Any(r =>
+            string.Equals(r, "Admin", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(r, "AcademicAffairs", StringComparison.OrdinalIgnoreCase));
+
     protected override async Task OnInitializedAsync()
     {
+        await ResolveRoleTagAsync();
         await LoadData();
     }
+
+    private async Task ResolveRoleTagAsync()
+    {
+        try
+        {
+            var roles = await AuthService.GetUserRolesFromToken();
+            _userRoles = roles;
+            _currentRoleTag = MapRolesToDisplay(roles);
+        }
+        catch
+        {
+            _userRoles = Array.Empty<string>();
+            _currentRoleTag = "Academic Affairs";
+        }
+    }
+
+    private string HeaderSubtitle
+    {
+        get
+        {
+            if (_userRoles.Any(r => string.Equals(r, "AcademicAffairs", StringComparison.OrdinalIgnoreCase)))
+                return "EXAM SUITE - ACADEMIC AFFAIRS";
+            if (_userRoles.Any(r => string.Equals(r, "Admin", StringComparison.OrdinalIgnoreCase)))
+                return "EXAM SUITE - ADMIN";
+            if (_userRoles.Any(r => string.Equals(r, "Lecturer", StringComparison.OrdinalIgnoreCase)))
+                return "EXAM SUITE - LECTURER";
+            return "EXAM SUITE";
+        }
+    }
+
+    private static string MapRolesToDisplay(IReadOnlyCollection<string> roles)
+    {
+        if (roles.Count == 0)
+        {
+            return "Người dùng";
+        }
+
+        var displayNames = roles
+            .Select(MapSingleRoleToDisplay)
+            .Where(name => !string.IsNullOrWhiteSpace(name))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        return displayNames.Count == 0
+            ? "Người dùng"
+            : string.Join(" & ", displayNames);
+    }
+
+    private static string MapSingleRoleToDisplay(string role) => role switch
+    {
+        "Admin" => "Admin",
+        "AcademicAffairs" => "Academic Affairs",
+        "Lecturer" => "Lecturer",
+        _ => role
+    };
 
     private async Task LoadData()
     {
@@ -64,10 +135,14 @@ public partial class EditExamSessionSubject : ComponentBase
             var loadTasks = new List<Task>
             {
                 LoadExamSessions(),
-                LoadDepartments(),
-                LoadExamSessionDepartments(),
-                LoadSubjects()
+                LoadSubjects(),
+                LoadExamRooms()
             };
+
+            if (CanManageMonitor)
+            {
+                loadTasks.Add(LoadLecturers());
+            }
             
             await Task.WhenAll(loadTasks);
             
@@ -76,7 +151,9 @@ public partial class EditExamSessionSubject : ComponentBase
             
             if (_examSessionSubject != null)
             {
-                _updateDto.ExamSessionDepartmentId = _examSessionSubject.ExamSessionDepartmentId;
+                // Backend returns ExamSessionId
+                _selectedExamSessionId = _examSessionSubject.ExamSessionId;
+                _updateDto.ExamSessionId = _examSessionSubject.ExamSessionId;
                 _updateDto.SubjectId = _examSessionSubject.SubjectId;
                 _updateDto.Duration = _examSessionSubject.Duration;
                 _updateDto.OriginalExamPaperId = _examSessionSubject.OriginalExamPaperId;
@@ -84,13 +161,21 @@ public partial class EditExamSessionSubject : ComponentBase
                 _updateDto.StartTime = _examSessionSubject.StartTime;
                 _updateDto.EndTime = _examSessionSubject.EndTime;
                 _updateDto.ExamSessionSubjectCore = _examSessionSubject.ExamSessionSubjectCore;
+                _selectedMonitorId = _examSessionSubject.MonitorId;
+                _updateDto.MonitorId = _examSessionSubject.MonitorId;
+                _selectedExamRoomId = _examSessionSubject.ExamRoomId;
+                _updateDto.ExamRoomId = _examSessionSubject.ExamRoomId;
                 
-                // Find the ExamSessionDepartment to set selected values
-                var examSessionDept = _examSessionDepartments.FirstOrDefault(esd => esd.ExamSessionDepartmentId == _examSessionSubject.ExamSessionDepartmentId);
-                if (examSessionDept != null)
+                // Nếu có MonitorId nhưng không có MonitorName, tìm trong danh sách giảng viên
+                if (_examSessionSubject.MonitorId.HasValue && 
+                    string.IsNullOrWhiteSpace(_examSessionSubject.MonitorName) &&
+                    _lecturers.Count > 0)
                 {
-                    _selectedExamSessionId = examSessionDept.ExamSessionId;
-                    _selectedDepartmentId = examSessionDept.DepartmentId;
+                    var lecturer = _lecturers.FirstOrDefault(l => l.LecturerId == _examSessionSubject.MonitorId.Value);
+                    if (lecturer != null)
+                    {
+                        _examSessionSubject.MonitorName = $"{lecturer.LastName} {lecturer.FirstName}".Trim();
+                    }
                 }
                 
                 startTimeString = _examSessionSubject.StartTime.ToString("yyyy-MM-ddTHH:mm");
@@ -98,6 +183,9 @@ public partial class EditExamSessionSubject : ComponentBase
                 {
                     endTimeString = _examSessionSubject.EndTime.Value.ToString("yyyy-MM-ddTHH:mm");
                 }
+                
+                // Đảm bảo MudSelect cập nhật sau khi set _selectedMonitorId
+                StateHasChanged();
             }
             
             // Load Original Exam Papers
@@ -131,49 +219,6 @@ public partial class EditExamSessionSubject : ComponentBase
         }
     }
     
-    private async Task LoadDepartments()
-    {
-        _loadingDepartments = true;
-        try
-        {
-            var httpClient = new HttpClient { BaseAddress = new Uri(Configuration["ApiSettings:BaseUrl"] ?? "http://localhost:5163/") };
-            var token = await AuthService.GetTokenAsync();
-            if (!string.IsNullOrEmpty(token))
-            {
-                httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
-            }
-            _departments = await httpClient.GetFromJsonAsync<List<DepartmentDto>>("/api/Department") ?? new();
-        }
-        catch (Exception ex)
-        {
-            Snackbar.Add($"Lỗi khi tải danh sách khoa: {ex.Message}", Severity.Warning);
-            _departments = new();
-        }
-        finally
-        {
-            _loadingDepartments = false;
-        }
-    }
-    
-    private async Task LoadExamSessionDepartments()
-    {
-        try
-        {
-            var httpClient = new HttpClient { BaseAddress = new Uri(Configuration["ApiSettings:BaseUrl"] ?? "http://localhost:5163/") };
-            var token = await AuthService.GetTokenAsync();
-            if (!string.IsNullOrEmpty(token))
-            {
-                httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
-            }
-            _examSessionDepartments = await httpClient.GetFromJsonAsync<List<ExamSessionDepartmentDto>>("/api/ExamSessionDepartment") ?? new();
-        }
-        catch (Exception ex)
-        {
-            // ExamSessionDepartment endpoint might not exist, try to get from ExamSessionSubjects
-            Snackbar.Add($"Lỗi khi tải danh sách ca thi - khoa: {ex.Message}", Severity.Warning);
-            _examSessionDepartments = new();
-        }
-    }
     
     private async Task LoadSubjects()
     {
@@ -205,6 +250,47 @@ public partial class EditExamSessionSubject : ComponentBase
         }
     }
 
+    private async Task LoadLecturers()
+    {
+        _loadingLecturers = true;
+        try
+        {
+            _lecturers = await LecturerService.GetAllLecturersAsync();
+            _lecturers = _lecturers
+                .OrderBy(l => l.LastName)
+                .ThenBy(l => l.FirstName)
+                .ThenBy(l => l.LecturerCode)
+                .ToList();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Lỗi khi tải danh sách giảng viên: {ex.Message}", Severity.Warning);
+            _lecturers = new();
+        }
+        finally
+        {
+            _loadingLecturers = false;
+        }
+    }
+
+    private async Task LoadExamRooms()
+    {
+        _loadingExamRooms = true;
+        try
+        {
+            _examRooms = await ExamRoomService.GetAllAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Lỗi khi tải danh sách phòng thi: {ex.Message}", Severity.Warning);
+            _examRooms = new();
+        }
+        finally
+        {
+            _loadingExamRooms = false;
+        }
+    }
+
     private async Task LoadOriginalExamPapers()
     {
         _loadingOriginalExams = true;
@@ -227,10 +313,10 @@ public partial class EditExamSessionSubject : ComponentBase
     {
         if (_examSessionSubject == null) return;
         
-        // Validate selected ExamSession and Department
-        if (!_selectedExamSessionId.HasValue || string.IsNullOrEmpty(_selectedDepartmentId))
+        // Validate selected ExamSession
+        if (!_selectedExamSessionId.HasValue)
         {
-            Snackbar.Add("Vui lòng chọn ca thi và khoa", Severity.Error);
+            Snackbar.Add("Vui lòng chọn ca thi", Severity.Error);
             return;
         }
         
@@ -241,18 +327,10 @@ public partial class EditExamSessionSubject : ComponentBase
             return;
         }
         
-        // Find ExamSessionDepartmentId from selected ExamSession and Department
-        var examSessionDept = _examSessionDepartments.FirstOrDefault(esd => 
-            esd.ExamSessionId == _selectedExamSessionId.Value && 
-            esd.DepartmentId == _selectedDepartmentId);
-        
-        if (examSessionDept == null)
-        {
-            Snackbar.Add("Không tìm thấy ca thi - khoa tương ứng. Vui lòng kiểm tra lại.", Severity.Error);
-            return;
-        }
-        
-        _updateDto.ExamSessionDepartmentId = examSessionDept.ExamSessionDepartmentId;
+        // Set ExamSessionId, ExamRoomId and MonitorId in update DTO
+        _updateDto.ExamSessionId = _selectedExamSessionId.Value;
+        _updateDto.ExamRoomId = _selectedExamRoomId;
+        _updateDto.MonitorId = _selectedMonitorId;
         
         _isSaving = true;
         try
@@ -283,7 +361,7 @@ public partial class EditExamSessionSubject : ComponentBase
             
             // Navigate back after a short delay
             await Task.Delay(500);
-            NavigationManager.NavigateTo("/academic-affairs/dashboard");
+            await GoBack();
         }
         catch (Exception ex)
         {
@@ -296,9 +374,132 @@ public partial class EditExamSessionSubject : ComponentBase
         }
     }
 
-    private void GoBack()
+    private string GetLecturerDisplayName(LecturerDto lecturer)
     {
-        NavigationManager.NavigateTo("/academic-affairs/dashboard");
+        if (lecturer == null) return string.Empty;
+        var fullName = $"{lecturer.LastName} {lecturer.FirstName}".Trim();
+        return string.IsNullOrWhiteSpace(fullName)
+            ? lecturer.LecturerCode
+            : $"{fullName} ({lecturer.LecturerCode})";
+    }
+
+    private string GetMonitorDisplayText(int? monitorId)
+    {
+        if (!monitorId.HasValue)
+        {
+            return "-- Chưa phân công --";
+        }
+
+        var lecturer = _lecturers.FirstOrDefault(l => l.LecturerId == monitorId.Value);
+        if (lecturer != null)
+        {
+            return GetLecturerDisplayName(lecturer);
+        }
+
+        // Fallback: nếu không tìm thấy trong danh sách, thử lấy từ MonitorName
+        if (_examSessionSubject?.MonitorId == monitorId && !string.IsNullOrWhiteSpace(_examSessionSubject.MonitorName))
+        {
+            return _examSessionSubject.MonitorName;
+        }
+
+        return $"ID: {monitorId}";
+    }
+
+    private string GetCurrentMonitorLabel()
+    {
+        if (_examSessionSubject?.MonitorId == null)
+        {
+            return "Chưa phân công";
+        }
+
+        // Cập nhật MonitorName từ danh sách giảng viên nếu có
+        var lecturer = _lecturers.FirstOrDefault(l => l.LecturerId == _examSessionSubject.MonitorId);
+        if (lecturer != null)
+        {
+            // Cập nhật MonitorName để đồng bộ (theo thứ tự Họ Tên)
+            var fullName = $"{lecturer.LastName} {lecturer.FirstName}".Trim();
+            _examSessionSubject.MonitorName = fullName;
+        }
+
+        // Trạng thái chỉ hiển thị "Đã phân công" hoặc "Chưa phân công"
+        return "Đã phân công";
+    }
+
+    private async Task AssignMonitorAsync()
+    {
+        if (!CanManageMonitor || !_selectedMonitorId.HasValue || _examSessionSubject == null)
+        {
+            return;
+        }
+
+        _isUpdatingMonitor = true;
+        try
+        {
+            await ExamSessionSubjectService.AssignMonitorAsync(_examSessionSubject.ExamSessionSubjectId, _selectedMonitorId.Value);
+
+            var lecturer = _lecturers.FirstOrDefault(l => l.LecturerId == _selectedMonitorId.Value);
+            _examSessionSubject.MonitorId = _selectedMonitorId;
+            _examSessionSubject.MonitorName = lecturer != null ? $"{lecturer.LastName} {lecturer.FirstName}" : null;
+            _updateDto.MonitorId = _selectedMonitorId;
+
+            Snackbar.Add("Phân công giảng viên giám sát thành công", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Lỗi khi phân công giảng viên: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isUpdatingMonitor = false;
+        }
+    }
+
+    private async Task UnassignMonitorAsync()
+    {
+        if (!CanManageMonitor || _examSessionSubject == null || _examSessionSubject.MonitorId == null)
+        {
+            return;
+        }
+
+        _isUpdatingMonitor = true;
+        try
+        {
+            await ExamSessionSubjectService.UnassignMonitorAsync(_examSessionSubject.ExamSessionSubjectId);
+
+            _examSessionSubject.MonitorId = null;
+            _examSessionSubject.MonitorName = null;
+            _selectedMonitorId = null;
+            _updateDto.MonitorId = null;
+
+            Snackbar.Add("Đã hủy phân công giảng viên giám sát", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Lỗi khi hủy phân công giảng viên: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isUpdatingMonitor = false;
+        }
+    }
+
+    private async Task GoBack()
+    {
+        // Kiểm tra role để điều hướng đến dashboard đúng
+        var roles = await AuthService.GetUserRolesFromToken();
+        if (roles.Contains("Admin"))
+        {
+            NavigationManager.NavigateTo("/admin/dashboard");
+        }
+        else if (roles.Contains("AcademicAffairs"))
+        {
+            NavigationManager.NavigateTo("/academic-affairs/dashboard");
+        }
+        else
+        {
+            // Fallback về login nếu không có quyền
+            NavigationManager.NavigateTo("/login");
+        }
     }
 }
 

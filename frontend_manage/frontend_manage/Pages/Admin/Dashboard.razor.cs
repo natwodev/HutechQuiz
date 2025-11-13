@@ -1,7 +1,6 @@
 using frontend_manage.DTOs;
 using frontend_manage.DTOs.AcademicAffairs;
 using frontend_manage.Services;
-using frontend_manage.Services.AcademicAffairs;
 using frontend_manage.Services.Admin;
 using frontend_manage.Services.ExamManager;
 using Microsoft.AspNetCore.Components;
@@ -13,11 +12,11 @@ namespace frontend_manage.Pages.Admin;
 
 public partial class Dashboard : ComponentBase
 {
-    [Inject] private AcademicYearService AcademicYearService { get; set; } = default!;
-    [Inject] private SemesterService SemesterService { get; set; } = default!;
-    [Inject] private ExamBatchService ExamBatchService { get; set; } = default!;
-    [Inject] private ExamSessionService ExamSessionService { get; set; } = default!;
-    [Inject] private ExamSessionSubjectService ExamSessionSubjectService { get; set; } = default!;
+    [Inject] private AdminAcademicYearService AcademicYearService { get; set; } = default!;
+    [Inject] private AdminSemesterService SemesterService { get; set; } = default!;
+    [Inject] private AdminExamBatchService ExamBatchService { get; set; } = default!;
+    [Inject] private AdminExamSessionService ExamSessionService { get; set; } = default!;
+    [Inject] private AdminExamSessionSubjectService ExamSessionSubjectService { get; set; } = default!;
     [Inject] private LecturerService LecturerService { get; set; } = default!;
     [Inject] private AdminStudentService AdminStudentService { get; set; } = default!;
     [Inject] private SystemService SystemService { get; set; } = default!;

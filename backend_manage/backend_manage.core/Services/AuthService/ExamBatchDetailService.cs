@@ -28,13 +28,17 @@ namespace backend_manage.core.Services.AuthService
 
         public async Task<IEnumerable<ExamBatchDetailDto>> GetAllAsync()
         {
-            var details = await _repository.GetAllAsync();
+            var details = await _repository.GetQueryable()
+                .Include(x => x.ExamBatch)
+                .ToListAsync();
             return _mapper.Map<IEnumerable<ExamBatchDetailDto>>(details);
         }
 
         public async Task<ExamBatchDetailDto?> GetByIdAsync(string id)
         {
-            var detail = await _repository.GetByIdAsync(id);
+            var detail = await _repository.GetQueryable()
+                .Include(x => x.ExamBatch)
+                .FirstOrDefaultAsync(x => x.ExamBatchDetailId.ToString() == id);
             return detail == null ? null : _mapper.Map<ExamBatchDetailDto>(detail);
         }
 
@@ -58,7 +62,9 @@ namespace backend_manage.core.Services.AuthService
 
         public async Task<ExamBatchDetailDto> UpdateAsync(string id, ExamBatchDetailUpdateDto dto)
         {
-            var entity = await _repository.GetByIdAsync(id);
+            var entity = await _repository.GetQueryable()
+                .Include(x => x.ExamBatch)
+                .FirstOrDefaultAsync(x => x.ExamBatchDetailId.ToString() == id);
             if (entity == null) return null;
             var userId = _httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(userId))
@@ -67,7 +73,13 @@ namespace backend_manage.core.Services.AuthService
             entity.UpdatedAt = DateTimeHelper.GetVietnamTime();
             _mapper.Map(dto, entity);
             var result = await _repository.UpdateAsync(entity);
-            return _mapper.Map<ExamBatchDetailDto>(result);
+            
+            // Truy vấn lại entity kèm navigation ExamBatch
+            var fullEntity = await _repository.GetQueryable()
+                .Include(x => x.ExamBatch)
+                .FirstOrDefaultAsync(x => x.ExamBatchDetailId == result.ExamBatchDetailId);
+            
+            return _mapper.Map<ExamBatchDetailDto>(fullEntity);
         }
 
         public async Task<bool> DeleteAsync(string id)

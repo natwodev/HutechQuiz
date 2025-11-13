@@ -19,6 +19,7 @@
                            Variant="Variant.Outlined"
                            Required="true"
                            RequiredError="Học kỳ không được để trống">
+                    <MudSelectItem Value="0">-- Chọn học kỳ --</MudSelectItem>
                     @foreach (var s in Semesters)
                     {
                         <MudSelectItem Value="@s.SemesterId">@s.SemesterName</MudSelectItem>
@@ -32,3 +33,4 @@
         <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="HandleSubmit">Lưu</MudButton>
     </DialogActions>
 </MudDialog>
+

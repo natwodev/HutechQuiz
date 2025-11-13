@@ -1,5 +1,5 @@
 using frontend_manage.DTOs.AcademicAffairs;
-using frontend_manage.Services.AcademicAffairs;
+using frontend_manage.Services.Admin;
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
 
@@ -11,7 +11,7 @@ public partial class ExamBatchDetailDialog : ComponentBase
     [Parameter] public ExamBatchDetailDto? ExamBatchDetail { get; set; }
     [Parameter] public List<ExamBatchDto> ExamBatches { get; set; } = new();
     
-    [Inject] private ExamBatchDetailService ExamBatchDetailService { get; set; } = default!;
+    [Inject] private AdminExamBatchDetailService ExamBatchDetailService { get; set; } = default!;
     [Inject] private ISnackbar Snackbar { get; set; } = default!;
     
     private ExamBatchDetailCreateDto examBatchDetail = new();

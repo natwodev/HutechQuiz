@@ -6,17 +6,23 @@ using System.Threading.Tasks;
 using frontend_manage.DTOs.AcademicAffairs;
 using Microsoft.Extensions.Configuration;
 
-namespace frontend_manage.Services.AcademicAffairs
+namespace frontend_manage.Services.Admin
 {
-    public class ExamBatchDetailService
+    public class AdminExamBatchDetailService
     {
         private readonly HttpClient _httpClient;
         private readonly string _baseUrl;
 
-        public ExamBatchDetailService(HttpClient httpClient, IConfiguration configuration)
+        public AdminExamBatchDetailService(HttpClient httpClient, IConfiguration configuration)
         {
             _httpClient = httpClient;
-            _baseUrl = configuration["ApiSettings:BaseUrl"] + "/api/ExamBatchDetail";
+            var baseUrl = configuration["ApiSettings:BaseUrl"];
+            if (string.IsNullOrWhiteSpace(baseUrl))
+            {
+                baseUrl = "http://localhost:5163";
+            }
+
+            _baseUrl = $"{baseUrl.TrimEnd('/')}/api/ExamBatchDetail";
         }
 
         public async Task<List<ExamBatchDetailDto>> GetAllAsync()
@@ -28,7 +34,7 @@ namespace frontend_manage.Services.AcademicAffairs
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error in GetAllAsync: {ex.Message}");
+                Console.WriteLine($"[Admin][ExamBatchDetailService] GetAllAsync error: {ex.Message}");
                 return new List<ExamBatchDetailDto>();
             }
         }
@@ -41,7 +47,7 @@ namespace frontend_manage.Services.AcademicAffairs
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error in GetByIdAsync: {ex.Message}");
+                Console.WriteLine($"[Admin][ExamBatchDetailService] GetByIdAsync error: {ex.Message}");
                 throw;
             }
         }
@@ -56,7 +62,7 @@ namespace frontend_manage.Services.AcademicAffairs
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error in CreateAsync: {ex.Message}");
+                Console.WriteLine($"[Admin][ExamBatchDetailService] CreateAsync error: {ex.Message}");
                 throw;
             }
         }
@@ -71,7 +77,7 @@ namespace frontend_manage.Services.AcademicAffairs
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error in UpdateAsync: {ex.Message}");
+                Console.WriteLine($"[Admin][ExamBatchDetailService] UpdateAsync error: {ex.Message}");
                 throw;
             }
         }
@@ -85,9 +91,10 @@ namespace frontend_manage.Services.AcademicAffairs
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error in DeleteAsync: {ex.Message}");
+                Console.WriteLine($"[Admin][ExamBatchDetailService] DeleteAsync error: {ex.Message}");
                 throw;
             }
         }
     }
 }
+

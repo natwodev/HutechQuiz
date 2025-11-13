@@ -1,4 +1,6 @@
+using System;
 using System.IdentityModel.Tokens.Jwt;
+using System.Linq;
 using System.Net.Http.Json;
 using System.Text.Json;
 using frontend_manage.DTOs;
@@ -239,7 +241,7 @@ public class AuthService
         }
         else
         {
-            _navigationManager.NavigateTo("/");
+            _navigationManager.NavigateTo("/login");
         }
     }
 
@@ -255,33 +257,38 @@ public class AuthService
         return await _jsRuntime.InvokeAsync<string>("localStorage.getItem", TokenKey);
     }
 
-    public async Task<string?> GetUserRoleFromToken()
+    public async Task<IReadOnlyCollection<string>> GetUserRolesFromToken()
     {
-        // Cookie-based role parsing removed
-
         var token = await _jsRuntime.InvokeAsync<string>("localStorage.getItem", TokenKey);
         if (string.IsNullOrEmpty(token))
         {
-            return null;
+            return Array.Empty<string>();
         }
 
         try
         {
             var tokenHandler = new JwtSecurityTokenHandler();
-            var jwtToken = tokenHandler.ReadToken(token) as JwtSecurityToken;
-
-            if (jwtToken == null)
+            if (tokenHandler.ReadToken(token) is not JwtSecurityToken jwtToken)
             {
-                return null;
+                return Array.Empty<string>();
             }
 
-            var roleClaim = jwtToken.Claims.FirstOrDefault(c => c.Type == "role");
-            return roleClaim?.Value;
+            return jwtToken.Claims
+                .Where(c => c.Type == "role" && !string.IsNullOrWhiteSpace(c.Value))
+                .Select(c => c.Value)
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToArray();
         }
         catch
         {
-            return null;
+            return Array.Empty<string>();
         }
+    }
+
+    public async Task<string?> GetUserRoleFromToken()
+    {
+        var roles = await GetUserRolesFromToken();
+        return roles.FirstOrDefault();
     }
 
     public async Task InitializeAuthState()
@@ -292,25 +299,27 @@ public class AuthService
 
     public async Task<bool> IsAdmin()
     {
-        var role = await GetUserRoleFromToken();
-        return role == "Admin";
+        var roles = await GetUserRolesFromToken();
+        return roles.Any(r => string.Equals(r, "Admin", StringComparison.OrdinalIgnoreCase));
     }
 
     public async Task<bool> IsLecturer()
     {
-        var role = await GetUserRoleFromToken();
-        return role == "Lecturer";
+        var roles = await GetUserRolesFromToken();
+        return roles.Any(r => string.Equals(r, "Lecturer", StringComparison.OrdinalIgnoreCase));
     }
 
     public async Task<bool> IsAcademicAffairs()
     {
-        var role = await GetUserRoleFromToken();
-        return role == "AcademicAffairs";
+        var roles = await GetUserRolesFromToken();
+        return roles.Any(r => string.Equals(r, "AcademicAffairs", StringComparison.OrdinalIgnoreCase));
     }
 
     public async Task<bool> HasRequiredRole()
     {
-        var role = await GetUserRoleFromToken();
-        return role == "Admin" || role == "AcademicAffairs";
+        var roles = await GetUserRolesFromToken();
+        return roles.Any(r =>
+            string.Equals(r, "Admin", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(r, "AcademicAffairs", StringComparison.OrdinalIgnoreCase));
     }
 }

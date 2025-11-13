@@ -44,6 +44,13 @@ namespace frontend_manage.DTOs
         public List<StudentExamRoomStatusDto> Students { get; set; }
     }
 
+    // Response từ API /api/Student/by-exam-session-subject
+    public class StudentsByExamSessionSubjectApiResponse
+    {
+        public SubjectExamRoomStatusDto subject { get; set; }
+        public List<StudentExamRoomStatusDto> students { get; set; }
+    }
+
     
     public class StudentExamSessionDto
     {

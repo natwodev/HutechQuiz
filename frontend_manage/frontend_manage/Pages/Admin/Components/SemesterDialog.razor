@@ -14,12 +14,17 @@
                              Required="true"
                              RequiredError="Tên học kỳ không được để trống" />
                 
-                <MudNumericField @bind-Value="semester.AcademicYearId" 
-                                  Label="ID Năm học" 
-                                  Variant="Variant.Outlined" 
-                                  Required="true"
-                                  RequiredError="ID Năm học không được để trống"
-                                  HelperText="Nhập ID của năm học" />
+                <MudSelect @bind-Value="semester.AcademicYearId"
+                           Label="Năm học"
+                           Variant="Variant.Outlined"
+                           Required="true"
+                           RequiredError="Năm học không được để trống">
+                    <MudSelectItem Value="0">-- Chọn năm học --</MudSelectItem>
+                    @foreach (var academicYear in AcademicYears)
+                    {
+                        <MudSelectItem Value="@academicYear.AcademicYearId">@academicYear.YearName</MudSelectItem>
+                    }
+                </MudSelect>
             </MudStack>
         </EditForm>
     </DialogContent>
@@ -28,3 +33,4 @@
         <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="HandleSubmit">Lưu</MudButton>
     </DialogActions>
 </MudDialog>
+

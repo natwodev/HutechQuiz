@@ -184,6 +184,9 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.DepartmentName, opt => opt.MapFrom(src => src.Department != null ? src.Department.DepartmentName : null));
         CreateMap<StudentExamSessionCacheDto, StudentExamSessionDto>();
 
+        // ExamRoom
+        CreateMap<ExamRoom, ExamRoomDto>();
+
         // Mapping cho ExamSubmissionMessage
         CreateMap<ExamSubmissionDto, ExamSubmissionMessage>()
             .ForMember(dest => dest.StudentCode, opt => opt.MapFrom(src => src.StudentCode))

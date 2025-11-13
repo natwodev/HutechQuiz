@@ -6,17 +6,23 @@ using System.Threading.Tasks;
 using frontend_manage.DTOs.AcademicAffairs;
 using Microsoft.Extensions.Configuration;
 
-namespace frontend_manage.Services.AcademicAffairs
+namespace frontend_manage.Services.Admin
 {
-    public class SemesterService
+    public class AdminSemesterService
     {
         private readonly HttpClient _httpClient;
         private readonly string _baseUrl;
 
-        public SemesterService(HttpClient httpClient, IConfiguration configuration)
+        public AdminSemesterService(HttpClient httpClient, IConfiguration configuration)
         {
             _httpClient = httpClient;
-            _baseUrl = configuration["ApiSettings:BaseUrl"] + "/api/Semester";
+            var baseUrl = configuration["ApiSettings:BaseUrl"];
+            if (string.IsNullOrWhiteSpace(baseUrl))
+            {
+                baseUrl = "http://localhost:5163";
+            }
+
+            _baseUrl = $"{baseUrl.TrimEnd('/')}/api/Semester";
         }
 
         public async Task<List<SemesterDto>> GetAllAsync()
@@ -28,7 +34,7 @@ namespace frontend_manage.Services.AcademicAffairs
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error in GetAllAsync: {ex.Message}");
+                Console.WriteLine($"[Admin][SemesterService] GetAllAsync error: {ex.Message}");
                 return new List<SemesterDto>();
             }
         }
@@ -41,7 +47,7 @@ namespace frontend_manage.Services.AcademicAffairs
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error in GetByIdAsync: {ex.Message}");
+                Console.WriteLine($"[Admin][SemesterService] GetByIdAsync error: {ex.Message}");
                 throw;
             }
         }
@@ -56,7 +62,7 @@ namespace frontend_manage.Services.AcademicAffairs
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error in CreateAsync: {ex.Message}");
+                Console.WriteLine($"[Admin][SemesterService] CreateAsync error: {ex.Message}");
                 throw;
             }
         }
@@ -71,7 +77,7 @@ namespace frontend_manage.Services.AcademicAffairs
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error in UpdateAsync: {ex.Message}");
+                Console.WriteLine($"[Admin][SemesterService] UpdateAsync error: {ex.Message}");
                 throw;
             }
         }
@@ -85,9 +91,10 @@ namespace frontend_manage.Services.AcademicAffairs
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error in DeleteAsync: {ex.Message}");
+                Console.WriteLine($"[Admin][SemesterService] DeleteAsync error: {ex.Message}");
                 throw;
             }
         }
     }
 }
+

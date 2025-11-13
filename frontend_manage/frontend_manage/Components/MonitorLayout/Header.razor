@@ -1,0 +1,48 @@
+@using Microsoft.AspNetCore.Components
+
+<div class="monitor-header">
+    <div class="header-left">
+        <div class="logo-container">
+            <img src="@LogoSrc" alt="@LogoAlt" class="logo" />
+        </div>
+        <div class="header-titles">
+            <h1>@(string.IsNullOrWhiteSpace(Title) ? DefaultTitle : Title)</h1>
+            <div class="subtitle">
+                @(string.IsNullOrWhiteSpace(Subtitle) ? DefaultSubtitle : Subtitle)
+                @if (!string.IsNullOrWhiteSpace(EditionTag))
+                {
+                    <span class="edition-tag">@EditionTag</span>
+                }
+            </div>
+            @if (!string.IsNullOrWhiteSpace(Description))
+            {
+                <div class="header-description">@Description</div>
+            }
+        </div>
+    </div>
+    <div class="header-right">
+        @if (!string.IsNullOrWhiteSpace(ModeTag))
+        {
+            <span class="mode-tag">@ModeTag</span>
+        }
+        @if (RightContent is not null)
+        {
+            @RightContent
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] public string? Title { get; set; }
+    [Parameter] public string? Subtitle { get; set; }
+    [Parameter] public string? EditionTag { get; set; }
+    [Parameter] public string? Description { get; set; }
+    [Parameter] public string? ModeTag { get; set; }
+    [Parameter] public string LogoSrc { get; set; } = "/images/logo-dai-hoc-hutech_012634748.png";
+    [Parameter] public string LogoAlt { get; set; } = "HUTECH";
+    [Parameter] public RenderFragment? RightContent { get; set; }
+
+    private const string DefaultTitle = "TRƯỜNG ĐẠI HỌC CÔNG NGHỆ THÀNH PHỐ HỒ CHÍ MINH (HUTECH)";
+    private const string DefaultSubtitle = "EXAM SUITE";
+}
+

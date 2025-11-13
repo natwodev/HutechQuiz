@@ -126,4 +126,130 @@
     margin-left: 4px;
 }
 
+/* Student Filter Section */
+.student-filter-section {
+    margin-bottom: 20px;
+}
+
+.student-filter-section .filter-paper {
+    padding: 20px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    border: 1px solid #e3e8ef;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.student-filter-section .filter-title {
+    color: #1976d2;
+    font-weight: 600;
+    font-size: 0.95rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+}
+
+.student-filter-section ::deep .professional-select {
+    background-color: #ffffff;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.student-filter-section ::deep .professional-select .mud-input-control {
+    font-size: 0.9rem;
+}
+
+.student-filter-section ::deep .professional-select .mud-input-outlined {
+    border-radius: 8px;
+    border-color: #d0d7de;
+    transition: all 0.3s ease;
+}
+
+.student-filter-section ::deep .professional-select .mud-input-outlined:hover {
+    border-color: #1976d2;
+    box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.1);
+}
+
+.student-filter-section ::deep .professional-select .mud-input-outlined.mud-input-outlined-focused {
+    border-color: #1976d2;
+    border-width: 2px;
+    box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.15);
+}
+
+.student-filter-section ::deep .professional-select .mud-input-label {
+    font-weight: 500;
+    color: #495057;
+    font-size: 0.875rem;
+}
+
+.student-filter-section ::deep .professional-select .mud-select-item {
+    padding: 12px 16px;
+    border-radius: 6px;
+    margin: 2px 0;
+    transition: all 0.2s ease;
+}
+
+.student-filter-section ::deep .professional-select .mud-select-item:hover {
+    background-color: #f0f7ff;
+    transform: translateX(4px);
+}
+
+.student-filter-section ::deep .professional-select .mud-select-item.mud-selected-item {
+    background-color: #e3f2fd;
+    color: #1976d2;
+    font-weight: 500;
+}
+
+.student-filter-section ::deep .professional-search {
+    background-color: #ffffff;
+    border-radius: 8px;
+}
+
+.student-filter-section ::deep .professional-search .mud-input-outlined {
+    border-radius: 8px;
+    border-color: #d0d7de;
+    transition: all 0.3s ease;
+}
+
+.student-filter-section ::deep .professional-search .mud-input-outlined:hover {
+    border-color: #1976d2;
+    box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.1);
+}
+
+.student-filter-section ::deep .professional-search .mud-input-outlined.mud-input-outlined-focused {
+    border-color: #1976d2;
+    border-width: 2px;
+    box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.15);
+}
+
+/* Select Dropdown Menu Styling */
+.student-filter-section ::deep .mud-popover-paper {
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    border: 1px solid #e3e8ef;
+    margin-top: 8px;
+    overflow: hidden;
+}
+
+.student-filter-section ::deep .mud-popover-paper .mud-list {
+    padding: 8px;
+}
+
+.student-filter-section ::deep .mud-popover-paper .mud-list-item {
+    border-radius: 8px;
+    margin: 2px 0;
+    padding: 10px 14px;
+}
+
+.student-filter-section ::deep .mud-popover-paper .mud-list-item:hover {
+    background-color: #f0f7ff;
+}
+
+.student-filter-section ::deep .mud-popover-paper .mud-list-item.mud-selected {
+    background-color: #e3f2fd;
+    color: #1976d2;
+    font-weight: 500;
+}
+
 

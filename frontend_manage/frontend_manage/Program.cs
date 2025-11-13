@@ -10,7 +10,6 @@ using Microsoft.Extensions.Http;
 using Microsoft.JSInterop;
 
 using frontend_manage.Services;
-using frontend_manage.Services.AcademicAffairs;
 using frontend_manage.Services.ExamManager;
 using frontend_manage.Services.Admin; 
 
@@ -29,18 +28,17 @@ builder.Services.AddScoped<StudentService>();
 builder.Services.AddScoped<MonitorService>();
 builder.Services.AddSingleton<NotificationService>();
 
-// Academic Affairs Services
-builder.Services.AddScoped<AcademicYearService>();
-builder.Services.AddScoped<SemesterService>();
-builder.Services.AddScoped<ExamBatchService>();
-builder.Services.AddScoped<ExamBatchDetailService>();
-builder.Services.AddScoped<ExamSessionService>();
-builder.Services.AddScoped<ExamSessionSubjectService>();
-
 // Exam Manager Services
 builder.Services.AddScoped<ExamManagerService>();
 
 // Admin Services
+builder.Services.AddScoped<AdminAcademicYearService>();
+builder.Services.AddScoped<AdminSemesterService>();
+builder.Services.AddScoped<AdminExamBatchService>();
+builder.Services.AddScoped<AdminExamBatchDetailService>();
+builder.Services.AddScoped<AdminExamSessionService>();
+builder.Services.AddScoped<AdminExamSessionSubjectService>();
+builder.Services.AddScoped<ExamRoomService>();
 builder.Services.AddScoped<LecturerService>();
 builder.Services.AddScoped<AdminStudentService>();
 builder.Services.AddScoped<SystemService>();

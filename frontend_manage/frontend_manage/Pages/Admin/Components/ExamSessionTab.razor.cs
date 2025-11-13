@@ -1,14 +1,14 @@
 using frontend_manage.DTOs.AcademicAffairs;
-using frontend_manage.Services.AcademicAffairs;
+using frontend_manage.Services.Admin;
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
 
-namespace frontend_manage.Pages.AcademicAffairs.Components;
+namespace frontend_manage.Pages.Admin.Components;
 
 public partial class ExamSessionTab : ComponentBase
 {
-    [Inject] private ExamSessionService ExamSessionService { get; set; } = default!;
-    [Inject] private ExamBatchDetailService ExamBatchDetailService { get; set; } = default!;
+    [Inject] private AdminExamSessionService ExamSessionService { get; set; } = default!;
+    [Inject] private AdminExamBatchDetailService ExamBatchDetailService { get; set; } = default!;
     [Inject] private ISnackbar Snackbar { get; set; } = default!;
     [Inject] private IDialogService DialogService { get; set; } = default!;
 
@@ -91,3 +91,4 @@ public partial class ExamSessionTab : ComponentBase
         }
     }
 }
+

@@ -19,7 +19,13 @@ namespace frontend_manage.Services.Admin
         public LecturerService(HttpClient httpClient, IConfiguration configuration, AuthService authService)
         {
             _httpClient = httpClient;
-            _baseUrl = configuration["ApiSettings:BaseUrl"] + "/api/Lecturer";
+            var baseUrl = configuration["ApiSettings:BaseUrl"];
+            if (string.IsNullOrWhiteSpace(baseUrl))
+            {
+                baseUrl = "http://localhost:5163";
+            }
+
+            _baseUrl = $"{baseUrl.TrimEnd('/')}/api/Lecturer";
             _authService = authService;
         }
 

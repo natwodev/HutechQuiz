@@ -16,7 +16,7 @@ namespace backend_manage.Controllers
         }
 
         [HttpGet]
-        [Authorize(Policy = "AdminOnly")]
+        [Authorize(Policy = "AcademicAffairsOrAdmin")]
         public async Task<ActionResult<IEnumerable<DepartmentDto>>> GetAll()
         {
             var result = await _departmentService.GetAllAsync();

@@ -1,13 +1,13 @@
 using frontend_manage.DTOs.AcademicAffairs;
-using frontend_manage.Services.AcademicAffairs;
+using frontend_manage.Services.Admin;
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
 
-namespace frontend_manage.Pages.AcademicAffairs.Components;
+namespace frontend_manage.Pages.Admin.Components;
 
 public partial class SemesterTab : ComponentBase
 {
-    [Inject] private SemesterService SemesterService { get; set; } = default!;
+    [Inject] private AdminSemesterService SemesterService { get; set; } = default!;
     [Inject] private ISnackbar Snackbar { get; set; } = default!;
     [Inject] private IDialogService DialogService { get; set; } = default!;
 

@@ -64,7 +64,7 @@ namespace backend_manage.Controllers
         }
 
         [HttpGet("list")]
-        [Authorize(Policy = "ExamManagement")]
+        [Authorize(Policy = "AcademicManagement")]
         public async Task<IActionResult> GetAll()
         {
             try

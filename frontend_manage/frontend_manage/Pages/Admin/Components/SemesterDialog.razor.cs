@@ -1,9 +1,9 @@
 using frontend_manage.DTOs.AcademicAffairs;
-using frontend_manage.Services.AcademicAffairs;
+using frontend_manage.Services.Admin;
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
 
-namespace frontend_manage.Pages.AcademicAffairs.Components;
+namespace frontend_manage.Pages.Admin.Components;
 
 public partial class SemesterDialog : ComponentBase
 {
@@ -11,7 +11,7 @@ public partial class SemesterDialog : ComponentBase
     [Parameter] public SemesterDto? Semester { get; set; }
     [Parameter] public List<AcademicYearDto> AcademicYears { get; set; } = new();
     
-    [Inject] private SemesterService SemesterService { get; set; } = default!;
+    [Inject] private AdminSemesterService SemesterService { get; set; } = default!;
     [Inject] private ISnackbar Snackbar { get; set; } = default!;
     
     private SemesterCreateDto semester = new();
@@ -19,6 +19,11 @@ public partial class SemesterDialog : ComponentBase
 
     protected override void OnInitialized()
     {
+        if (AcademicYears.Count > 0 && semester.AcademicYearId == 0)
+        {
+            semester.AcademicYearId = AcademicYears.First().AcademicYearId;
+        }
+
         if (Semester != null)
         {
             isEdit = true;
@@ -31,6 +36,12 @@ public partial class SemesterDialog : ComponentBase
     {
         try
         {
+            if (semester.AcademicYearId == 0)
+            {
+                Snackbar.Add("Vui lòng chọn năm học", Severity.Error);
+                return;
+            }
+
             if (isEdit && Semester != null)
             {
                 var updateDto = new SemesterUpdateDto 
@@ -57,3 +68,4 @@ public partial class SemesterDialog : ComponentBase
 
     private void Cancel() => MudDialog.Cancel();
 }
+

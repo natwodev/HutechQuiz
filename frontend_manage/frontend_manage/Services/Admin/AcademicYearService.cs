@@ -6,17 +6,23 @@ using System.Threading.Tasks;
 using frontend_manage.DTOs.AcademicAffairs;
 using Microsoft.Extensions.Configuration;
 
-namespace frontend_manage.Services.AcademicAffairs
+namespace frontend_manage.Services.Admin
 {
-    public class AcademicYearService
+    public class AdminAcademicYearService
     {
         private readonly HttpClient _httpClient;
         private readonly string _baseUrl;
 
-        public AcademicYearService(HttpClient httpClient, IConfiguration configuration)
+        public AdminAcademicYearService(HttpClient httpClient, IConfiguration configuration)
         {
             _httpClient = httpClient;
-            _baseUrl = configuration["ApiSettings:BaseUrl"] + "/api/AcademicYear";
+            var baseUrl = configuration["ApiSettings:BaseUrl"];
+            if (string.IsNullOrWhiteSpace(baseUrl))
+            {
+                baseUrl = "http://localhost:5163";
+            }
+
+            _baseUrl = $"{baseUrl.TrimEnd('/')}/api/AcademicYear";
         }
 
         public async Task<List<AcademicYearDto>> GetAllAsync()
@@ -28,7 +34,7 @@ namespace frontend_manage.Services.AcademicAffairs
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error in GetAllAsync: {ex.Message}");
+                Console.WriteLine($"[Admin][AcademicYearService] GetAllAsync error: {ex.Message}");
                 return new List<AcademicYearDto>();
             }
         }
@@ -41,7 +47,7 @@ namespace frontend_manage.Services.AcademicAffairs
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error in GetByIdAsync: {ex.Message}");
+                Console.WriteLine($"[Admin][AcademicYearService] GetByIdAsync error: {ex.Message}");
                 throw;
             }
         }
@@ -56,7 +62,7 @@ namespace frontend_manage.Services.AcademicAffairs
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error in CreateAsync: {ex.Message}");
+                Console.WriteLine($"[Admin][AcademicYearService] CreateAsync error: {ex.Message}");
                 throw;
             }
         }
@@ -71,7 +77,7 @@ namespace frontend_manage.Services.AcademicAffairs
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error in UpdateAsync: {ex.Message}");
+                Console.WriteLine($"[Admin][AcademicYearService] UpdateAsync error: {ex.Message}");
                 throw;
             }
         }
@@ -85,9 +91,10 @@ namespace frontend_manage.Services.AcademicAffairs
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error in DeleteAsync: {ex.Message}");
+                Console.WriteLine($"[Admin][AcademicYearService] DeleteAsync error: {ex.Message}");
                 throw;
             }
         }
     }
 }
+

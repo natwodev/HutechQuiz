@@ -1,9 +1,9 @@
 using frontend_manage.DTOs.AcademicAffairs;
-using frontend_manage.Services.AcademicAffairs;
+using frontend_manage.Services.Admin;
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
 
-namespace frontend_manage.Pages.AcademicAffairs.Components;
+namespace frontend_manage.Pages.Admin.Components;
 
 public partial class ExamSessionDialog : ComponentBase
 {
@@ -11,7 +11,7 @@ public partial class ExamSessionDialog : ComponentBase
     [Parameter] public ExamSessionDto? ExamSession { get; set; }
     [Parameter] public List<ExamBatchDetailDto> ExamBatchDetails { get; set; } = new();
     
-    [Inject] private ExamSessionService ExamSessionService { get; set; } = default!;
+    [Inject] private AdminExamSessionService ExamSessionService { get; set; } = default!;
     [Inject] private ISnackbar Snackbar { get; set; } = default!;
     
     private ExamSessionCreateDto examSession = new();
@@ -37,6 +37,11 @@ public partial class ExamSessionDialog : ComponentBase
             var now = DateTime.Now;
             startTimeString = now.ToString("yyyy-MM-ddTHH:mm");
             endTimeString = now.AddHours(2).ToString("yyyy-MM-ddTHH:mm");
+
+            if (ExamBatchDetails.Count > 0)
+            {
+                examSession.ExamBatchDetailId = ExamBatchDetails.First().ExamBatchDetailId;
+            }
         }
     }
 
@@ -44,14 +49,26 @@ public partial class ExamSessionDialog : ComponentBase
     {
         try
         {
-            // Parse datetime strings
+            if (examSession.ExamBatchDetailId == 0)
+            {
+                Snackbar.Add("Vui lòng chọn chi tiết đợt thi", Severity.Error);
+                return;
+            }
+
             if (DateTime.TryParse(startTimeString, out var startTime))
             {
                 examSession.StartTime = startTime;
             }
+
             if (DateTime.TryParse(endTimeString, out var endTime))
             {
                 examSession.EndTime = endTime;
+            }
+
+            if (examSession.EndTime <= examSession.StartTime)
+            {
+                Snackbar.Add("Thời gian kết thúc phải lớn hơn thời gian bắt đầu", Severity.Error);
+                return;
             }
             
             if (isEdit && ExamSession != null)
@@ -82,3 +99,4 @@ public partial class ExamSessionDialog : ComponentBase
 
     private void Cancel() => MudDialog.Cancel();
 }
+

@@ -3,6 +3,7 @@
 @using frontend_manage.DTOs.AcademicAffairs
 @using frontend_manage.DTOs
 @using frontend_manage.Pages.Admin.Components
+@using frontend_manage.Components.MonitorLayout
 @using MudBlazor
 
 <PageTitle>Admin Dashboard - HUTECH Exam Suite</PageTitle>
@@ -12,26 +13,17 @@
 
 <div class="monitor-page">
     <!-- Header -->
-    <div class="monitor-header">
-        <div class="header-left">
-            <div class="logo-container">
-                <img src="/images/logo-dai-hoc-hutech_012634748.png" alt="HUTECH" class="logo" />
-            </div>
-            <div class="header-titles">
-                <h1>TRƯỜNG ĐẠI HỌC CÔNG NGHỆ THÀNH PHỐ HỒ CHÍ MINH (HUTECH)</h1>
-                <div class="subtitle">
-                    EXAM SUITE - ADMIN <span class="edition-tag">Professional Edition</span>
-                </div>
-                <div class="header-description">Quản lý hệ thống</div>
-            </div>
-        </div>
-        <div class="header-right">
-            <span class="mode-tag">Admin</span>
+    <Header
+        Subtitle="EXAM SUITE - ADMIN"
+        EditionTag="Professional Edition"
+        Description="Quản lý hệ thống"
+        ModeTag="Admin">
+        <RightContent>
             <MudButton Color="Color.Error" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Logout" OnClick="Logout" Style="margin-left: 16px;">
                 Đăng xuất
             </MudButton>
-        </div>
-    </div>
+        </RightContent>
+    </Header>
 
     <!-- Navigation -->
     <div class="monitor-nav">
@@ -84,6 +76,7 @@
             <MudTabPanel Text="Quản lý sinh viên">
                 <StudentManagementTab 
                     Students="_students"
+                    ExamSessionSubjects="_examSessionSubjects"
                     OnStudentUpdated="RefreshData" />
             </MudTabPanel>
 
@@ -101,30 +94,12 @@
                     QueueStatus="_queueStatus"
                     OnSystemUpdated="RefreshData" />
             </MudTabPanel>
-            </MudTabs>
+        </MudTabs>
         </div>
     </div>
 
     <!-- Footer -->
-    <div class="monitor-footer">
-        <div class="footer-left">
-            <span class="footer-time">--:--</span>
-            <span class="footer-date">--/--/----</span>
-        </div>
-        <div class="footer-center">
-            <div class="footer-logo">
-                <span class="footer-brand">HUTECH</span>
-                <span class="footer-divider">|</span>
-                <span>Admin</span>
-            </div>
-            <div class="footer-copyright">© 2025 Trường Đại học Công nghệ TP.HCM. All rights reserved.</div>
-        </div>
-        <div class="footer-right">
-            <span class="footer-version">Version 1.0.1</span>
-            <span class="footer-divider">|</span>
-            <span class="footer-developers">Developed by Natwodev & Juo</span>
-        </div>
-    </div>
+    <Footer ModeLabel="Admin" Version="1.0.1" DevelopedBy="Developed by Natwodev & Juo" CopyrightYear="2025" />
 
     <!-- Loading Indicator -->
     @if (_loading)

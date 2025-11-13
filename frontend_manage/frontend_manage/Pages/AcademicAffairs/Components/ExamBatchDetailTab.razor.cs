@@ -1,5 +1,5 @@
 using frontend_manage.DTOs.AcademicAffairs;
-using frontend_manage.Services.AcademicAffairs;
+using frontend_manage.Services.Admin;
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
 
@@ -7,7 +7,7 @@ namespace frontend_manage.Pages.AcademicAffairs.Components;
 
 public partial class ExamBatchDetailTab : ComponentBase
 {
-    [Inject] private ExamBatchDetailService ExamBatchDetailService { get; set; } = default!;
+    [Inject] private AdminExamBatchDetailService ExamBatchDetailService { get; set; } = default!;
     [Inject] private ISnackbar Snackbar { get; set; } = default!;
     [Inject] private IDialogService DialogService { get; set; } = default!;
 

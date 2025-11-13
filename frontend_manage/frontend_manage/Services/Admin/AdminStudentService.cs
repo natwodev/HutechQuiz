@@ -127,6 +127,23 @@ public class AdminStudentService
             return null;
         }
     }
+
+    public async Task<(SubjectExamRoomStatusDto Subject, List<StudentExamRoomStatusDto> Students)> GetStudentsByExamSessionSubjectAsync(int examSessionSubjectId)
+    {
+        try
+        {
+            var response = await _httpClient.GetFromJsonAsync<StudentsByExamSessionSubjectApiResponse>($"/api/Student/by-exam-session-subject?examSessionSubjectId={examSessionSubjectId}");
+            if (response != null)
+            {
+                return (response.subject, response.students);
+            }
+            return (new SubjectExamRoomStatusDto(), new List<StudentExamRoomStatusDto>());
+        }
+        catch
+        {
+            return (new SubjectExamRoomStatusDto(), new List<StudentExamRoomStatusDto>());
+        }
+    }
 }
 
 public class StudentImportResultDto

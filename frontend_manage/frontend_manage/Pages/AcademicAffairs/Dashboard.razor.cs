@@ -1,20 +1,22 @@
 using frontend_manage.DTOs.AcademicAffairs;
-using frontend_manage.Services.AcademicAffairs;
+using frontend_manage.Services.Admin;
 using frontend_manage.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using MudBlazor;
+using System;
+using System.Linq;
 
 namespace frontend_manage.Pages.AcademicAffairs;
 
 public partial class Dashboard : ComponentBase
 {
-    [Inject] private AcademicYearService AcademicYearService { get; set; } = default!;
-    [Inject] private SemesterService SemesterService { get; set; } = default!;
-    [Inject] private ExamBatchService ExamBatchService { get; set; } = default!;
-    [Inject] private ExamBatchDetailService ExamBatchDetailService { get; set; } = default!;
-    [Inject] private ExamSessionService ExamSessionService { get; set; } = default!;
-    [Inject] private ExamSessionSubjectService ExamSessionSubjectService { get; set; } = default!;
+    [Inject] private AdminAcademicYearService AcademicYearService { get; set; } = default!;
+    [Inject] private AdminSemesterService SemesterService { get; set; } = default!;
+    [Inject] private AdminExamBatchService ExamBatchService { get; set; } = default!;
+    [Inject] private AdminExamBatchDetailService ExamBatchDetailService { get; set; } = default!;
+    [Inject] private AdminExamSessionService ExamSessionService { get; set; } = default!;
+    [Inject] private AdminExamSessionSubjectService ExamSessionSubjectService { get; set; } = default!;
     [Inject] private AuthService AuthService { get; set; } = default!;
     [Inject] private ISnackbar Snackbar { get; set; } = default!;
     [Inject] private IJSRuntime JSRuntime { get; set; } = default!;
@@ -39,8 +41,12 @@ public partial class Dashboard : ComponentBase
             return;
         }
 
-        var isAcademicAffairs = await AuthService.IsAcademicAffairs();
-        if (!isAcademicAffairs)
+        var roles = await AuthService.GetUserRolesFromToken();
+        var hasAccess = roles.Any(r =>
+            string.Equals(r, "AcademicAffairs", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(r, "Admin", StringComparison.OrdinalIgnoreCase));
+
+        if (!hasAccess)
         {
             Snackbar.Add("Bạn không có quyền truy cập trang này", Severity.Error);
             NavigationManager.NavigateTo("/login");

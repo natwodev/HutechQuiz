@@ -7,7 +7,10 @@ namespace frontend_manage.DTOs.AcademicAffairs
     {
         public int ExamSessionSubjectId { get; set; }
         
-        [Required(ErrorMessage = "Khoa - Ca thi không được để trống")]
+        // Backend returns ExamSessionId, not ExamSessionDepartmentId
+        public int ExamSessionId { get; set; }
+        
+        // Keep ExamSessionDepartmentId for backward compatibility (deprecated)
         public int ExamSessionDepartmentId { get; set; }
         
         [Required(ErrorMessage = "Môn học không được để trống")]
@@ -30,6 +33,12 @@ namespace frontend_manage.DTOs.AcademicAffairs
         public DateTime? EndTime { get; set; }
         
         public string ExamSessionSubjectCore { get; set; }
+        
+        public int? ExamRoomId { get; set; }
+        public string RoomName { get; set; }
+        
+        public int? MonitorId { get; set; }
+        public string MonitorName { get; set; }
     }
 
     public class ExamSessionSubjectCreateDto
@@ -53,11 +62,17 @@ namespace frontend_manage.DTOs.AcademicAffairs
         public DateTime? EndTime { get; set; }
         
         public string ExamSessionSubjectCore { get; set; }
+        
+        public int? MonitorId { get; set; }
     }
 
     public class ExamSessionSubjectUpdateDto
     {
-        [Required(ErrorMessage = "Khoa - Ca thi không được để trống")]
+        // Backend expects ExamSessionId, not ExamSessionDepartmentId
+        [Required(ErrorMessage = "Ca thi không được để trống")]
+        public int ExamSessionId { get; set; }
+        
+        // Keep ExamSessionDepartmentId for backward compatibility (deprecated)
         public int ExamSessionDepartmentId { get; set; }
         
         [Required(ErrorMessage = "Môn học không được để trống")]
@@ -76,6 +91,9 @@ namespace frontend_manage.DTOs.AcademicAffairs
         public DateTime? EndTime { get; set; }
         
         public string ExamSessionSubjectCore { get; set; }
+        
+        public int? ExamRoomId { get; set; }
+        public int? MonitorId { get; set; }
     }
 
     public class ExamSessionSubjectWithRoomsDto : ExamSessionSubjectDto

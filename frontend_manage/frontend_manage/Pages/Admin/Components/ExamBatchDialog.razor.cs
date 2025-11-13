@@ -1,9 +1,9 @@
 using frontend_manage.DTOs.AcademicAffairs;
-using frontend_manage.Services.AcademicAffairs;
+using frontend_manage.Services.Admin;
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
 
-namespace frontend_manage.Pages.AcademicAffairs.Components;
+namespace frontend_manage.Pages.Admin.Components;
 
 public partial class ExamBatchDialog : ComponentBase
 {
@@ -11,7 +11,7 @@ public partial class ExamBatchDialog : ComponentBase
     [Parameter] public ExamBatchDto? ExamBatch { get; set; }
     [Parameter] public List<SemesterDto> Semesters { get; set; } = new();
     
-    [Inject] private ExamBatchService ExamBatchService { get; set; } = default!;
+    [Inject] private AdminExamBatchService ExamBatchService { get; set; } = default!;
     [Inject] private ISnackbar Snackbar { get; set; } = default!;
     
     private ExamBatchCreateDto examBatch = new();
@@ -19,6 +19,11 @@ public partial class ExamBatchDialog : ComponentBase
 
     protected override void OnInitialized()
     {
+        if (Semesters.Count > 0 && examBatch.SemesterId == 0)
+        {
+            examBatch.SemesterId = Semesters.First().SemesterId;
+        }
+
         if (ExamBatch != null)
         {
             isEdit = true;
@@ -31,6 +36,12 @@ public partial class ExamBatchDialog : ComponentBase
     {
         try
         {
+            if (examBatch.SemesterId == 0)
+            {
+                Snackbar.Add("Vui lòng chọn học kỳ", Severity.Error);
+                return;
+            }
+
             if (isEdit && ExamBatch != null)
             {
                 var updateDto = new ExamBatchUpdateDto 
@@ -57,3 +68,4 @@ public partial class ExamBatchDialog : ComponentBase
 
     private void Cancel() => MudDialog.Cancel();
 }
+
