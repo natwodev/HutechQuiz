@@ -40,7 +40,16 @@
                                 <span class="child-badge">(Câu hỏi con)</span>
                             }
                         </div>
-                        <div class="q-content katex-content">@((MarkupString)RenderHtml(q.QuestionContent))</div>
+                        <div class="q-content katex-content">
+                            @if (string.IsNullOrEmpty(q.QuestionContent))
+                            {
+                                <span style="color: #999; font-style: italic;">Đang tải nội dung câu hỏi...</span>
+                            }
+                            else
+                            {
+                                @((MarkupString)RenderHtml(q.QuestionContent))
+                            }
+                        </div>
                         @if (q.Answers != null && q.Answers.Count > 0)
                         {
                             <ul class="q-answers">
@@ -48,7 +57,16 @@
                                 {
                                     <li class="answer-item">
                                         <span class="ans-label">@GetLetter(ans.Order).</span>
-                                        <span class="ans-content katex-content">@((MarkupString)RenderHtml(ans.AnswerContent))</span>
+                                        <span class="ans-content katex-content">
+                                            @if (string.IsNullOrEmpty(ans.AnswerContent))
+                                            {
+                                                <span style="color: #999; font-style: italic;">Đang tải nội dung đáp án...</span>
+                                            }
+                                            else
+                                            {
+                                                @((MarkupString)RenderHtml(ans.AnswerContent))
+                                            }
+                                        </span>
                                     </li>
                                 }
                             </ul>
@@ -80,6 +98,7 @@
     public string? core { get; set; }
 
     private ShuffledExamPaperDto? Exam;
+    private OriginalExamPaperDto? OriginalExam;
     private bool isLoading = true;
 
     protected override async Task OnInitializedAsync()
@@ -90,6 +109,15 @@
             try
             {
                 Exam = await ExamManagerService.GetShuffledExamWithDetailsAsync(core);
+                
+                // Lấy OriginalExamPaper để có đầy đủ QuestionContent và AnswerContent
+                if (Exam != null && Exam.OriginalExamPaperId > 0)
+                {
+                    // Lấy OriginalExamPaperCore từ ShuffledExamPaper để gọi API
+                    // Cần lấy từ OriginalExamPaper navigation property hoặc gọi API khác
+                    // Tạm thời, ta sẽ merge dữ liệu từ Exam nếu có
+                    await PopulateQuestionContentAndAnswers();
+                }
             }
             catch (Exception ex)
             {
@@ -99,6 +127,95 @@
             {
                 isLoading = false;
             }
+        }
+    }
+
+    private async Task PopulateQuestionContentAndAnswers()
+    {
+        if (Exam == null) return;
+
+        // Lấy OriginalExamPaper thông qua API
+        // Cần tìm OriginalExamPaperCore từ ShuffledExamPaper
+        // Vì ShuffledExamPaper có OriginalExamPaperId, ta cần API mới hoặc thông tin từ Exam
+        
+        // Tạm thời, ta sẽ tìm OriginalExamPaperCore từ danh sách
+        // Hoặc backend cần trả về OriginalExamPaperCore trong ShuffledExamPaperDto
+        try
+        {
+            // Thử lấy từ danh sách OriginalExamPapers
+            var originalExams = await ExamManagerService.GetAllOriginalExamPapersAsync();
+            var originalExam = originalExams.FirstOrDefault(x => x.OriginalExamPaperId == Exam.OriginalExamPaperId);
+            
+            if (originalExam != null)
+            {
+                OriginalExam = await ExamManagerService.GetOriginalExamWithDetailsAsync(originalExam.OriginalExamPaperCore);
+                
+                if (OriginalExam != null && OriginalExam.Details != null)
+                {
+                    // Merge QuestionContent và AnswerContent vào QuestionStructures
+                    MergeQuestionContentAndAnswers();
+                    StateHasChanged(); // Cập nhật UI sau khi merge
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            // Log error nhưng không throw để không làm gián đoạn hiển thị
+            System.Diagnostics.Debug.WriteLine($"Lỗi khi lấy OriginalExamPaper: {ex.Message}");
+        }
+    }
+
+    private void MergeQuestionContentAndAnswers()
+    {
+        if (Exam?.QuestionStructures == null || OriginalExam?.Details == null) return;
+
+        // Tạo dictionary để tra cứu nhanh
+        var questionDict = OriginalExam.Details.ToDictionary(d => d.OriginalExamPaperDetailId);
+        var answerDict = OriginalExam.Details
+            .Where(d => d.Answers != null)
+            .SelectMany(d => d.Answers!)
+            .ToDictionary(a => a.AnswerId);
+
+        // Hàm đệ quy để merge
+        void MergeQuestion(QuestionStructureDto q)
+        {
+            // Merge QuestionContent
+            if (questionDict.TryGetValue(q.OriginalExamPaperDetailId, out var originalDetail))
+            {
+                q.QuestionContent = originalDetail.QuestionContent ?? q.QuestionContent;
+            }
+
+            // Merge AnswerContent
+            if (q.Answers != null && q.Answers.Count > 0)
+            {
+                foreach (var answer in q.Answers)
+                {
+                    if (answerDict.TryGetValue(answer.AnswerId, out var originalAnswer))
+                    {
+                        answer.AnswerContent = originalAnswer.AnswerContent ?? answer.AnswerContent ?? string.Empty;
+                    }
+                    else if (string.IsNullOrEmpty(answer.AnswerContent))
+                    {
+                        // Nếu không tìm thấy và AnswerContent rỗng, đặt giá trị mặc định
+                        answer.AnswerContent = string.Empty;
+                    }
+                }
+            }
+
+            // Merge cho ChildQuestions
+            if (q.ChildQuestions != null && q.ChildQuestions.Count > 0)
+            {
+                foreach (var child in q.ChildQuestions)
+                {
+                    MergeQuestion(child);
+                }
+            }
+        }
+
+        // Merge tất cả questions
+        foreach (var question in Exam.QuestionStructures)
+        {
+            MergeQuestion(question);
         }
     }
 

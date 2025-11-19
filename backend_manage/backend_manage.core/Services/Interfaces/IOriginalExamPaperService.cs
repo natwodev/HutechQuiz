@@ -21,7 +21,7 @@ namespace backend_manage.core.Services.Interfaces
         // Các phương thức mới để kiểm tra câu hỏi cha có câu hỏi con
 
 
-        Task<List<OriginalExamPaperDetailShufferDto>> ShuffleParentQuestionsAsync(int originalExamPaperId, System.Random random);
+        Task<List<OriginalExamPaperDetailShufferDto>> ShuffleParentQuestionsAsync(int originalExamPaperId);
         // Phương thức lấy danh sách OriginalExamDto theo SubjectId
         Task<IEnumerable<OriginalExamDto>> GetOriginalExamDtosBySubjectIdAsync(int subjectId);
 
@@ -43,6 +43,6 @@ namespace backend_manage.core.Services.Interfaces
           Task<(IEnumerable<Answers> ShufflableAnswers, IEnumerable<Answers> NonShufflableAnswers)> GetAnswersByOriginalExamPaperDetailIdAsync(int originalExamPaperDetailId);
           
           // Phương thức hoán vị câu trả lời
-          Task<IEnumerable<AnswerShufferDto>> ShuffleAnswersAsync(int originalExamPaperDetailId, System.Random random);
+          Task<IEnumerable<AnswerShufferDto>> ShuffleAnswersAsync(int originalExamPaperDetailId);
       }
 } 

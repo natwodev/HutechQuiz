@@ -441,6 +441,25 @@ namespace backend_manage.core.Services.AuthService
             if (examPaper == null) return null;
             return _mapper.Map<OriginalExamPaperDto>(examPaper);
         }
+
+        public async Task<List<OriginalExamDto>> GetAllAsync()
+        {
+            var examPapers = await _originalExamPaperRepository.GetQueryable()
+                .Include(x => x.Subject)
+                .Include(x => x.ShuffledExamPapers.Where(s => !s.IsDeleted))
+                .Where(x => !x.IsDeleted)
+                .ToListAsync();
+            
+            var result = examPapers.Select(x =>
+            {
+                var dto = _mapper.Map<OriginalExamDto>(x);
+                // Đếm số lượng đề hoán vị không bị xóa
+                dto.TotalShuffledPapers = x.ShuffledExamPapers?.Count(s => !s.IsDeleted) ?? 0;
+                return dto;
+            }).ToList();
+            
+            return result;
+        }
         
         
         
