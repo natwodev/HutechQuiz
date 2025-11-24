@@ -107,7 +107,7 @@
                                                            Color="Color.Info"
                                                            DisableElevation="true"
                                                            Style="display:block; width:100%; margin-bottom:8px; justify-content:flex-start; text-transform:none; text-align:left;">
-                                                    <span class="answer-label">Đáp án @answer.Order:</span>
+                                                    <span class="answer-label">@GetAnswerLetter(answer.Order).</span>
                                                     <span class="answer-content">@((MarkupString)(answer.AnswerContent ?? string.Empty))</span>
                                                 </MudButton>
                                             }

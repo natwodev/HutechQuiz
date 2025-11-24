@@ -2,8 +2,10 @@
 @using System.Text.Json
 @using frontend_manage.DTOs
 @using Microsoft.AspNetCore.Components
+@using frontend_manage.Services
 @using System.Linq
 @inject StudentService StudentService
+@inject IKaTeXService KaTeX
 
 <MudContainer Class="py-6">
     <MudPaper Class="pa-6" Elevation="4">
@@ -27,6 +29,44 @@
                 <MudProgressCircular Color="Color.Primary" Class="mr-3" />
                 <MudText>Đang gọi /api/Student/start-exam/test ...</MudText>
             </div>
+        }
+
+        @if (_sampleLatexQuestions.Count > 0)
+        {
+            <MudPaper Class="mt-4 pa-4" Elevation="1">
+                <div class="d-flex justify-space-between align-center mb-2">
+                    <MudText Typo="Typo.subtitle1">Ví dụ câu hỏi chứa LaTeX</MudText>
+                    <MudChip T="object" Color="Color.Info" Variant="Variant.Outlined" Size="Size.Small">Demo</MudChip>
+                </div>
+
+                <MudList T="QuestionDisplayItem" Dense="true">
+                    @foreach (var item in _sampleLatexQuestions)
+                    {
+                        <MudListItem T="QuestionDisplayItem" Class="question-item" Style="@GetIndentStyle(item.Depth)">
+                            <div>
+                                <div class="question-title">Câu @item.Question.Order</div>
+                                <div class="question-content katex-content">@((MarkupString)(item.Question.QuestionContent ?? string.Empty))</div>
+
+                                @if (item.Question.Answers?.Any() == true)
+                                {
+                                    <div class="answer-button-list mt-2">
+                                        @foreach (var answer in item.Question.Answers.OrderBy(a => a.Order))
+                                        {
+                                            <MudButton Variant="Variant.Outlined"
+                                                       Color="Color.Info"
+                                                       DisableElevation="true"
+                                                       Style="display:block; width:100%; margin-bottom:8px; justify-content:flex-start; text-transform:none; text-align:left;">
+                                                <span class="answer-label">@GetAnswerLetter(answer.Order).</span>
+                                                <span class="answer-content katex-content">@((MarkupString)(answer.AnswerContent ?? string.Empty))</span>
+                                            </MudButton>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        </MudListItem>
+                    }
+                </MudList>
+            </MudPaper>
         }
 
         @if (_response != null)
@@ -68,7 +108,7 @@
                         <MudListItem T="QuestionDisplayItem" Class="question-item" Style="@GetIndentStyle(item.Depth)">
                             <div>
                                 <div class="question-title">Câu @item.Question.Order</div>
-                                <div class="question-content">@((MarkupString)(item.Question.QuestionContent ?? string.Empty))</div>
+                                    <div class="question-content katex-content">@((MarkupString)(item.Question.QuestionContent ?? string.Empty))</div>
 
                                 @if (item.Question.Answers?.Any() == true)
                                 {
@@ -79,8 +119,8 @@
                                                            Color="Color.Info"
                                                            DisableElevation="true"
                                                            Style="display:block; width:100%; margin-bottom:8px; justify-content:flex-start; text-transform:none; text-align:left;">
-                                                <span class="answer-label">Đáp án @answer.Order:</span>
-                                                <span class="answer-content">@((MarkupString)(answer.AnswerContent ?? string.Empty))</span>
+                                                <span class="answer-label">@GetAnswerLetter(answer.Order).</span>
+                                                <span class="answer-content katex-content">@((MarkupString)(answer.AnswerContent ?? string.Empty))</span>
                                             </MudButton>
                                         }
                                     </div>
@@ -104,12 +144,29 @@
     private bool _isLoading;
     private string? _errorMessage;
     private StartExamResponseDto? _response;
+    private readonly List<QuestionDisplayItem> _sampleLatexQuestions = new();
     private List<QuestionDisplayItem> _questionDisplayItems = new();
+    private bool _shouldRenderKatex;
     private bool _showPayload = true;
     private bool _showQuestionPreview = true;
 
     private string _buttonLabel => _isLoading ? "Đang gửi..." : "Gọi API";
     private string _responseJson => _response == null ? string.Empty : JsonSerializer.Serialize(_response, _jsonOptions);
+
+    protected override void OnInitialized()
+    {
+        LoadSampleLatexQuestions();
+        _shouldRenderKatex = true;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_shouldRenderKatex)
+        {
+            _shouldRenderKatex = false;
+            await KaTeX.RenderAsync(".katex-content");
+        }
+    }
 
     private async Task CallStartExamTestApiAsync()
     {
@@ -133,6 +190,7 @@
                 _showPayload = true;
                 _questionDisplayItems = BuildQuestionDisplayItems(result.ExamPaper?.QuestionStructures);
                 _showQuestionPreview = _questionDisplayItems.Count > 0;
+                _shouldRenderKatex = true;
             }
         }
         catch (Exception ex)
@@ -174,9 +232,56 @@
     private void TogglePayloadVisibility() => _showPayload = !_showPayload;
     private void ToggleQuestionPreviewVisibility() => _showQuestionPreview = !_showQuestionPreview;
 
+    private void LoadSampleLatexQuestions()
+    {
+        var sample = new List<QuestionStructureDto>
+        {
+            new()
+            {
+                OriginalExamPaperDetailId = 101,
+                Order = 1,
+                QuestionContent = @"<p>Tính tích phân \( \int_{0}^{\pi} \sin x \, dx \).</p>",
+                Answers = new List<AnswerStructureDto>
+                {
+                    new() { AnswerId = 1011, Order = 1, AnswerContent = @"\(0\)" },
+                    new() { AnswerId = 1012, Order = 2, AnswerContent = @"\(2\)" },
+                    new() { AnswerId = 1013, Order = 3, AnswerContent = @"\(\frac{\pi}{2}\)" },
+                    new() { AnswerId = 1014, Order = 4, AnswerContent = @"\( -2 \)" }
+                }
+            },
+            new()
+            {
+                OriginalExamPaperDetailId = 102,
+                Order = 2,
+                QuestionContent = @"<p>Cho phương trình \( ax^2 + bx + c = 0 \) với \(\Delta = b^2 - 4ac\). <br/> Điều kiện để phương trình có nghiệm kép là gì?</p>",
+                Answers = new List<AnswerStructureDto>
+                {
+                    new() { AnswerId = 1021, Order = 1, AnswerContent = @"\(\Delta &gt; 0\)" },
+                    new() { AnswerId = 1022, Order = 2, AnswerContent = @"\(\Delta = 0\)" },
+                    new() { AnswerId = 1023, Order = 3, AnswerContent = @"\(\Delta &lt; 0\)" },
+                    new() { AnswerId = 1024, Order = 4, AnswerContent = @"\(\Delta \neq 0\)" }
+                }
+            }
+        };
+
+        _sampleLatexQuestions.Clear();
+        _sampleLatexQuestions.AddRange(BuildQuestionDisplayItems(sample));
+    }
+
     private class QuestionDisplayItem
     {
         public QuestionStructureDto Question { get; set; } = new();
         public int Depth { get; set; }
+    }
+
+    private static string GetAnswerLetter(int order)
+    {
+        if (order <= 0)
+        {
+            return string.Empty;
+        }
+
+        var index = (order - 1) % 26;
+        return ((char)('A' + index)).ToString();
     }
 }

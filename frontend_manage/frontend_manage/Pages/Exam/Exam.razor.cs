@@ -124,6 +124,16 @@ public partial class Exam : ComponentBase
 
     private static string GetIndentStyle(int depth) => $"margin-left: {depth * 16}px";
     private void ToggleQuestionPreviewVisibility() => _showQuestionPreview = !_showQuestionPreview;
+    protected static string GetAnswerLetter(int order)
+    {
+        if (order <= 0)
+        {
+            return string.Empty;
+        }
+
+        var index = (order - 1) % 26;
+        return ((char)('A' + index)).ToString();
+    }
 
     private class QuestionDisplayItem
     {
