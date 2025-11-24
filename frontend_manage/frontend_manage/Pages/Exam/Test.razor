@@ -72,15 +72,18 @@
 
                                 @if (item.Question.Answers?.Any() == true)
                                 {
-                                    <ul class="answer-list mt-2">
+                                    <div class="answer-button-list mt-2">
                                         @foreach (var answer in item.Question.Answers.OrderBy(a => a.Order))
-                                        {
-                                            <li>
+                                            {
+                                                <MudButton Variant="Variant.Outlined"
+                                                           Color="Color.Info"
+                                                           DisableElevation="true"
+                                                           Style="display:block; width:100%; margin-bottom:8px; justify-content:flex-start; text-transform:none; text-align:left;">
                                                 <span class="answer-label">Đáp án @answer.Order:</span>
-                                                @((MarkupString)(answer.AnswerContent ?? string.Empty))
-                                            </li>
+                                                <span class="answer-content">@((MarkupString)(answer.AnswerContent ?? string.Empty))</span>
+                                            </MudButton>
                                         }
-                                    </ul>
+                                    </div>
                                 }
                             </div>
                         </MudListItem>
