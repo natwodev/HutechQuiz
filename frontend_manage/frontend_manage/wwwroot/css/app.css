@@ -97,3 +97,137 @@ h1:focus {
         border-radius: 0;
     }
 }
+
+.exam-fullscreen-container {
+    min-height: 100vh;
+    background: #f5f7fb;
+    padding-left: clamp(16px, 4vw, 64px);
+    padding-right: clamp(16px, 4vw, 64px);
+}
+
+.exam-fullscreen-shell {
+    width: 100%;
+    background: #ffffff;
+    border-radius: 18px;
+    border: 1px solid #dfe4ec;
+    display: flex;
+    flex-direction: column;
+    min-height: calc(100vh - 80px);
+    overflow: visible;
+}
+
+@media (max-width: 900px) {
+    .exam-fullscreen-shell {
+        padding: 1.5rem !important;
+        border-radius: 12px;
+        box-shadow: 0 12px 24px rgba(15, 23, 42, 0.12);
+    }
+}
+
+.exam-fullscreen-shell:fullscreen,
+.exam-fullscreen-shell:-webkit-full-screen {
+    width: 100vw;
+    height: 100vh;
+    border-radius: 0;
+    border: none;
+    padding: clamp(16px, 4vw, 48px);
+    background: #ffffff;
+    display: flex;
+    flex-direction: column;
+    overflow: visible;
+}
+
+.fullscreen-toggle {
+    border: 1px solid rgba(15, 23, 42, 0.12);
+    background: #fff;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    transition: background 0.2s ease, box-shadow 0.2s ease;
+}
+
+.fullscreen-toggle:hover {
+    background: #f5f7fb;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
+}
+
+.fullscreen-icon {
+    width: 20px;
+    height: 20px;
+}
+
+.exam-panel {
+    border: 1px solid #dfe4ec !important;
+    border-radius: 16px !important;
+    box-shadow: none !important;
+    background: #ffffff;
+}
+
+.exam-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.exam-logo {
+    max-width: 150px;
+    height: auto;
+}
+
+.exam-subtitle {
+    font-size: 12px;
+    font-weight: 600;
+    color: #0f172a;
+    text-transform: uppercase;
+}
+
+.sidebar-actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.exam-main-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 320px;
+    gap: 24px;
+    flex: 1;
+    min-height: 0;
+    overflow: visible;
+}
+
+.exam-questions-pane {
+    overflow-y: auto;
+    height: 100%;
+    padding-right: 12px;
+}
+
+.exam-sidebar {
+    overflow: hidden;
+}
+
+.exam-sidebar-inner {
+    position: sticky;
+    top: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+@media (max-width: 900px) {
+    .exam-main-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .exam-questions-pane {
+        padding-right: 0;
+    }
+
+    .exam-sidebar,
+    .exam-sidebar-inner {
+        position: static;
+    }
+}

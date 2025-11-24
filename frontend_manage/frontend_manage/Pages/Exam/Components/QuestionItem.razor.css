@@ -1,16 +1,16 @@
 .question-item .question-content {
-    font-size: 18px;
-    line-height: 1.8;
+    font-size: 19px;
+    line-height: 1.75;
 }
 
-.question-title { font-size:18px; font-weight:600; display:flex; align-items:baseline; gap:6px; }
+.question-title { font-size:19px; font-weight:600; display:flex; align-items:baseline; gap:6px; }
 .title-prefix { white-space:nowrap; font-weight:700; }
 .question-inline { display:inline; font-weight:600; }
 /* Không làm đậm công thức để KaTeX hiển thị đẹp */
 .question-inline .katex, .question-inline .katex * { font-weight:400; }
 
 .group-parent { border:none; background:transparent; padding:0; border-radius:0; }
-.group-child { margin-left:24px; padding-left:16px; border-left:3px solid #d1d5db; border-radius:6px; }
+.group-child { margin-left:0; padding-left:0; border-left:none; border-radius:0; }
 
 .katex-content {
     line-height: 1.6;
@@ -75,7 +75,7 @@
 }
 
 .option-text {
-    font-size: 16px;
+    font-size: 15.5px;
     display: inline-block;
     white-space: nowrap;
 }

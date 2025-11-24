@@ -4,7 +4,10 @@
 <div class="question-item @(IsGroupParent(Question) ? "group-parent" : (Question.ParentQuestionId != null ? "group-child" : string.Empty))" @ref="_root">
     <MudStack Spacing="2">
         <div class="question-title" @onclick:preventDefault="true">
-            <span class="title-prefix">Câu @DisplayNumber: </span>
+            @if (!string.IsNullOrWhiteSpace(DisplayNumber))
+            {
+                <span class="title-prefix">Câu @DisplayNumber: </span>
+            }
             <span class="katex-content question-inline">@((MarkupString)NormalizeLatex(Question.QuestionContent))</span>
         </div>
 
@@ -31,5 +34,20 @@
         }
     </MudStack>
 </div>
+
+@if (Question.ChildQuestions?.Any() == true)
+{
+    <div class="child-questions mt-3">
+        @foreach (var child in Question.ChildQuestions.OrderBy(c => c.Order))
+        {
+            var childLabel = LabelProvider?.Invoke(child.OriginalExamPaperDetailId) ?? string.Empty;
+            <QuestionItem Question="@child"
+                          DisplayNumber="@childLabel"
+                          LabelProvider="LabelProvider"
+                          SelectedAnswerProvider="SelectedAnswerProvider"
+                          OnAnswered="OnAnswered" />
+        }
+    </div>
+}
 
 @code { }

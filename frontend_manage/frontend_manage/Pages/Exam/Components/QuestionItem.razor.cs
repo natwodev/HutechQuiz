@@ -1,3 +1,4 @@
+using System;
 using frontend_manage.DTOs;
 using frontend_manage.Services;
 using Microsoft.AspNetCore.Components;
@@ -9,7 +10,10 @@ namespace frontend_manage.Pages.Exam.Components
     {
         [Parameter] public QuestionStructureDto Question { get; set; } = new();
         [Parameter] public EventCallback<(int questionId, object? value)> OnAnswered { get; set; }
-        [Parameter] public int DisplayNumber { get; set; }
+        [Parameter] public string DisplayNumber { get; set; } = string.Empty;
+        [Parameter] public int? SelectedAnswerId { get; set; }
+        [Parameter] public Func<int, int?>? SelectedAnswerProvider { get; set; }
+        [Parameter] public Func<int, string?>? LabelProvider { get; set; }
 
         [Inject] private IKaTeXService KaTeX { get; set; } = default!;
 
@@ -18,6 +22,15 @@ namespace frontend_manage.Pages.Exam.Components
         protected override async Task OnAfterRenderAsync(bool firstRender)
         {
             await KaTeX.RenderAsync(".katex-content");
+        }
+
+        protected override void OnParametersSet()
+        {
+            var resolved = SelectedAnswerId ?? SelectedAnswerProvider?.Invoke(Question.OriginalExamPaperDetailId);
+            if (resolved != _selectedSingle)
+            {
+                _selectedSingle = resolved;
+            }
         }
 
         protected bool IsMatching(QuestionStructureDto q)

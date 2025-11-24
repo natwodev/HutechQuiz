@@ -1,6 +1,8 @@
 @page "/testexam"
 @using System.Text.Json
 @using frontend_manage.DTOs
+@using frontend_manage.Pages.Exam.Components
+@using MudBlazor
 @using Microsoft.AspNetCore.Components
 @using frontend_manage.Services
 @using System.Linq
@@ -52,13 +54,12 @@
                                     <div class="answer-button-list mt-2">
                                         @foreach (var answer in item.Question.Answers.OrderBy(a => a.Order))
                                         {
-                                            <MudButton Variant="Variant.Outlined"
-                                                       Color="Color.Info"
-                                                       DisableElevation="true"
-                                                       Style="display:block; width:100%; margin-bottom:8px; justify-content:flex-start; text-transform:none; text-align:left;">
-                                                <span class="answer-label">@GetAnswerLetter(answer.Order).</span>
-                                                <span class="answer-content katex-content">@((MarkupString)(answer.AnswerContent ?? string.Empty))</span>
-                                            </MudButton>
+                                            var letter = (char)('A' + (answer.Order - 1));
+                                            <AnswerOption Answer="@answer"
+                                                          Letter="@letter"
+                                                          GroupName="@($"sample-{item.Question.OriginalExamPaperDetailId}")"
+                                                          SelectedAnswerId="@GetSampleSelectedAnswer(item.Question.OriginalExamPaperDetailId)"
+                                                          OnSelect="@(id => SelectSampleAnswer(item.Question.OriginalExamPaperDetailId, id))" />
                                         }
                                     </div>
                                 }
@@ -114,14 +115,13 @@
                                 {
                                     <div class="answer-button-list mt-2">
                                         @foreach (var answer in item.Question.Answers.OrderBy(a => a.Order))
-                                            {
-                                                <MudButton Variant="Variant.Outlined"
-                                                           Color="Color.Info"
-                                                           DisableElevation="true"
-                                                           Style="display:block; width:100%; margin-bottom:8px; justify-content:flex-start; text-transform:none; text-align:left;">
-                                                <span class="answer-label">@GetAnswerLetter(answer.Order).</span>
-                                                <span class="answer-content katex-content">@((MarkupString)(answer.AnswerContent ?? string.Empty))</span>
-                                            </MudButton>
+                                        {
+                                            var letter = (char)('A' + (answer.Order - 1));
+                                            <AnswerOption Answer="@answer"
+                                                          Letter="@letter"
+                                                          GroupName="@($"preview-{item.Question.OriginalExamPaperDetailId}")"
+                                                          SelectedAnswerId="@GetPreviewSelectedAnswer(item.Question.OriginalExamPaperDetailId)"
+                                                          OnSelect="@(id => SelectPreviewAnswer(item.Question.OriginalExamPaperDetailId, id))" />
                                         }
                                     </div>
                                 }
@@ -149,6 +149,8 @@
     private bool _shouldRenderKatex;
     private bool _showPayload = true;
     private bool _showQuestionPreview = true;
+    private readonly Dictionary<int, int> _sampleAnswerSelections = new();
+    private readonly Dictionary<int, int> _previewAnswerSelections = new();
 
     private string _buttonLabel => _isLoading ? "Đang gửi..." : "Gọi API";
     private string _responseJson => _response == null ? string.Empty : JsonSerializer.Serialize(_response, _jsonOptions);
@@ -190,6 +192,7 @@
                 _showPayload = true;
                 _questionDisplayItems = BuildQuestionDisplayItems(result.ExamPaper?.QuestionStructures);
                 _showQuestionPreview = _questionDisplayItems.Count > 0;
+                _previewAnswerSelections.Clear();
                 _shouldRenderKatex = true;
             }
         }
@@ -266,6 +269,7 @@
 
         _sampleLatexQuestions.Clear();
         _sampleLatexQuestions.AddRange(BuildQuestionDisplayItems(sample));
+        _sampleAnswerSelections.Clear();
     }
 
     private class QuestionDisplayItem
@@ -284,4 +288,16 @@
         var index = (order - 1) % 26;
         return ((char)('A' + index)).ToString();
     }
+
+    private int GetSampleSelectedAnswer(int questionId) =>
+        _sampleAnswerSelections.TryGetValue(questionId, out var answerId) ? answerId : -1;
+
+    private void SelectSampleAnswer(int questionId, int answerId) =>
+        _sampleAnswerSelections[questionId] = answerId;
+
+    private int GetPreviewSelectedAnswer(int questionId) =>
+        _previewAnswerSelections.TryGetValue(questionId, out var answerId) ? answerId : -1;
+
+    private void SelectPreviewAnswer(int questionId, int answerId) =>
+        _previewAnswerSelections[questionId] = answerId;
 }
