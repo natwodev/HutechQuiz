@@ -365,6 +365,32 @@ public async Task<IActionResult> SubmitExam([FromBody] SubmitExamRequest request
             return StatusCode(500);
         }
     }
+    
+    [HttpPost("start-exam/test")]
+    public async Task<IActionResult> StartExamtest()
+    {
+        try
+        {
+            var (result, pp, originalPaper) = await _studentService.StartExamAsync("012", 12);
+            if (result == null) 
+                return BadRequest(new { message = "Không thể bắt đầu làm bài vì không có phiên thi." });
+            
+            return Ok(new { studentSession = result, examPaper = pp, originalExamPaper = originalPaper });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Lỗi khi bắt đầu thi cho sinh viên");
+            return StatusCode(500, new { message = "Đã xảy ra lỗi hệ thống. Vui lòng thử lại sau." });
+        }
+    }
+    
+    
+    
+    
 
 }
 

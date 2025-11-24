@@ -1,95 +1,133 @@
+using System.Collections.Generic;
+using System.Linq;
 using frontend_manage.DTOs;
 using frontend_manage.Services;
 using Microsoft.AspNetCore.Components;
-using Microsoft.JSInterop;
 
-namespace frontend_manage.Pages.Exam
+namespace frontend_manage.Pages.Exam;
+
+public partial class Exam : ComponentBase
 {
-    public partial class Exam : ComponentBase
+    [Inject] private StudentService StudentService { get; set; } = default!;
+
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "studentExamSessionId")]
+    public int? StudentExamSessionId { get; set; }
+
+    private bool _isLoading;
+    private string? _errorMessage;
+    private StartExamResponseDto? _response;
+    private List<QuestionDisplayItem> _questionDisplayItems = new();
+    private bool _showQuestionPreview = true;
+    private int? _currentSessionId;
+
+    private bool _canTriggerFetch => StudentExamSessionId.HasValue && !_isLoading;
+    private string _fetchButtonLabel => _isLoading ? "Đang khởi tạo..." : "Tải lại dữ liệu";
+
+    protected override async Task OnParametersSetAsync()
     {
-        [Inject] private ExamMockService Mock { get; set; } = default!;
-        [Inject] private IJSRuntime JS { get; set; } = default!;
-
-        protected List<QuestionStructureDto> FlatQuestions { get; set; } = new();
-        protected Dictionary<int, object?> AnsweredMap { get; set; } = new();
-        protected Dictionary<int, object?> AnsweredMapDerived { get; set; } = new();
-        protected List<int> QuestionIds { get; set; } = new();
-
-
-        protected string StudentName { get; set; } = "Nguyễn Văn A";
-        protected string StudentCode { get; set; } = "20123456";
-        protected int DurationMinutes { get; set; } = 90;
-        protected DateTime StartTime { get; set; } = DateTime.Now;
-
-        protected override void OnInitialized()
+        if (!StudentExamSessionId.HasValue)
         {
-            var mock = Mock.GetMockExam();
-            DurationMinutes = mock.OriginalExamPaper.DurationMinutes;
-            // Duyệt theo thứ tự Order và tạo dãy hiển thị: cha, rồi đến từng con
-            FlatQuestions = new List<QuestionStructureDto>();
-            foreach (var q in mock.ExamPaper.QuestionStructures.OrderBy(x => x.Order))
+            _errorMessage = "Không xác định được ca thi. Vui lòng quay lại Dashboard và chọn lại.";
+            _response = null;
+            _questionDisplayItems.Clear();
+            return;
+        }
+
+        if (_currentSessionId == StudentExamSessionId)
+        {
+            return;
+        }
+
+        await FetchExamAsync(StudentExamSessionId.Value, false);
+    }
+
+    private async Task ReloadExamAsync()
+    {
+        if (!StudentExamSessionId.HasValue)
+        {
+            _errorMessage = "Không xác định được ca thi để tải.";
+            return;
+        }
+
+        await FetchExamAsync(StudentExamSessionId.Value, true);
+    }
+
+    private async Task FetchExamAsync(int studentExamSessionId, bool force)
+    {
+        if (_isLoading)
+        {
+            return;
+        }
+
+        _isLoading = true;
+        _errorMessage = null;
+
+        if (force)
+        {
+            _response = null;
+            _questionDisplayItems.Clear();
+        }
+
+        try
+        {
+            var result = await StudentService.StartExamAsync(studentExamSessionId);
+            if (result == null)
             {
-                FlatQuestions.Add(q);
-                if (q.ChildQuestions != null && q.ChildQuestions.Count > 0)
-                {
-                    FlatQuestions.AddRange(q.ChildQuestions.OrderBy(c => c.Order));
-                }
+                _errorMessage = "API không trả dữ liệu hoặc báo lỗi.";
+                _questionDisplayItems.Clear();
+                _response = null;
             }
-            // Build id list for navigation
-            QuestionIds = FlatQuestions.Select(q => q.OriginalExamPaperDetailId).ToList();
-            AnsweredMapDerived = ComputeAnsweredWithGroups();
-        }
-
-        private static List<QuestionStructureDto> FlattenQuestions(List<QuestionStructureDto> items)
-        {
-            var list = new List<QuestionStructureDto>();
-            foreach (var q in items.OrderBy(x => x.Order))
+            else
             {
-                list.Add(q);
-                // KHÔNG chèn trực tiếp con ở đây, vì chúng ta render danh sách phẳng theo thứ tự tự nhiên đã có trong DTO (Order)
+                _response = result;
+                _currentSessionId = studentExamSessionId;
+                _questionDisplayItems = BuildQuestionDisplayItems(result.ExamPaper?.QuestionStructures);
+                _showQuestionPreview = _questionDisplayItems.Count > 0;
             }
-            return list;
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Lỗi gọi API: {ex.Message}";
+        }
+        finally
+        {
+            _isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private static List<QuestionDisplayItem> BuildQuestionDisplayItems(IEnumerable<QuestionStructureDto>? questions, int depth = 0)
+    {
+        var items = new List<QuestionDisplayItem>();
+        if (questions == null)
+        {
+            return items;
         }
 
-        protected void MarkFlag()
+        foreach (var question in questions.OrderBy(q => q.Order))
         {
-            // could toggle a flag map; simplified here
-        }
-
-        protected void OnAnswered((int questionId, object? value) payload)
-        {
-            AnsweredMap[payload.questionId] = payload.value;
-            AnsweredMapDerived = ComputeAnsweredWithGroups();
-        }
-
-        protected void SubmitExam()
-        {
-            // Collect answers from AnsweredMap and submit
-        }
-
-        protected async Task ScrollTo(int index)
-        {
-            if (index < 0 || index >= FlatQuestions.Count) return;
-            var id = $"q-{FlatQuestions[index].OriginalExamPaperDetailId}";
-            await JS.InvokeVoidAsync("scrollToElement", id);
-        }
-
-        private Dictionary<int, object?> ComputeAnsweredWithGroups()
-        {
-            var result = new Dictionary<int, object?>(AnsweredMap);
-            foreach (var q in FlatQuestions)
+            items.Add(new QuestionDisplayItem
             {
-                if (q.ChildQuestions != null && q.ChildQuestions.Count > 0)
-                {
-                    var allChildIds = q.ChildQuestions.Select(c => c.OriginalExamPaperDetailId).ToList();
-                    var allAnswered = allChildIds.All(id => AnsweredMap.ContainsKey(id));
-                    if (allAnswered)
-                    {
-                        result[q.OriginalExamPaperDetailId] = true;
-                    }
-                }
+                Question = question,
+                Depth = depth
+            });
+
+            if (question.ChildQuestions?.Any() == true)
+            {
+                items.AddRange(BuildQuestionDisplayItems(question.ChildQuestions, depth + 1));
             }
-            return result;
         }
+
+        return items;
+    }
+
+    private static string GetIndentStyle(int depth) => $"margin-left: {depth * 16}px";
+    private void ToggleQuestionPreviewVisibility() => _showQuestionPreview = !_showQuestionPreview;
+
+    private class QuestionDisplayItem
+    {
+        public QuestionStructureDto Question { get; set; } = new();
+        public int Depth { get; set; }
     }
 }

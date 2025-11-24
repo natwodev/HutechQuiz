@@ -1,0 +1,179 @@
+@page "/testexam"
+@using System.Text.Json
+@using frontend_manage.DTOs
+@using Microsoft.AspNetCore.Components
+@using System.Linq
+@inject StudentService StudentService
+
+<MudContainer Class="py-6">
+    <MudPaper Class="pa-6" Elevation="4">
+        <MudText Typo="Typo.h5" Class="mb-4">Start Exam Test API</MudText>
+
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   OnClick="CallStartExamTestApiAsync"
+                   Disabled="_isLoading">
+            @_buttonLabel
+        </MudButton>
+
+        @if (!string.IsNullOrEmpty(_errorMessage))
+        {
+            <MudAlert Severity="Severity.Error" Dense="true">@_errorMessage</MudAlert>
+        }
+
+        @if (_isLoading)
+        {
+            <div class="d-flex align-center mt-4">
+                <MudProgressCircular Color="Color.Primary" Class="mr-3" />
+                <MudText>Đang gọi /api/Student/start-exam/test ...</MudText>
+            </div>
+        }
+
+        @if (_response != null)
+        {
+            <MudPaper Class="mt-4 pa-4">
+                <div class="d-flex justify-space-between align-center mb-2">
+                    <MudText Typo="Typo.subtitle1">Payload trả về</MudText>
+                    <MudButton Variant="Variant.Text"
+                               Size="Size.Small"
+                               OnClick="@TogglePayloadVisibility">
+                        @(_showPayload ? "Thu gọn" : "Xem")
+                    </MudButton>
+                </div>
+
+                @if (_showPayload)
+                {
+                    <pre class="api-response">@_responseJson</pre>
+                }
+            </MudPaper>
+        }
+
+        @if (_questionDisplayItems.Count > 0)
+        {
+            <MudPaper Class="mt-4 pa-4">
+                <div class="d-flex justify-space-between align-center mb-2">
+                    <MudText Typo="Typo.subtitle1">QuestionMapping preview</MudText>
+                    <MudButton Variant="Variant.Text"
+                               Size="Size.Small"
+                               OnClick="@ToggleQuestionPreviewVisibility">
+                        @(_showQuestionPreview ? "Thu gọn" : "Xem")
+                    </MudButton>
+                </div>
+
+                @if (_showQuestionPreview)
+                {
+                <MudList T="QuestionDisplayItem" Dense="true">
+                    @foreach (var item in _questionDisplayItems)
+                    {
+                        <MudListItem T="QuestionDisplayItem" Class="question-item" Style="@GetIndentStyle(item.Depth)">
+                            <div>
+                                <div class="question-title">Câu @item.Question.Order</div>
+                                <div class="question-content">@((MarkupString)(item.Question.QuestionContent ?? string.Empty))</div>
+
+                                @if (item.Question.Answers?.Any() == true)
+                                {
+                                    <ul class="answer-list mt-2">
+                                        @foreach (var answer in item.Question.Answers.OrderBy(a => a.Order))
+                                        {
+                                            <li>
+                                                <span class="answer-label">Đáp án @answer.Order:</span>
+                                                @((MarkupString)(answer.AnswerContent ?? string.Empty))
+                                            </li>
+                                        }
+                                    </ul>
+                                }
+                            </div>
+                        </MudListItem>
+                    }
+                </MudList>
+                }
+            </MudPaper>
+        }
+    </MudPaper>
+</MudContainer>
+
+@code {
+    private readonly JsonSerializerOptions _jsonOptions = new()
+    {
+        WriteIndented = true
+    };
+
+    private bool _isLoading;
+    private string? _errorMessage;
+    private StartExamResponseDto? _response;
+    private List<QuestionDisplayItem> _questionDisplayItems = new();
+    private bool _showPayload = true;
+    private bool _showQuestionPreview = true;
+
+    private string _buttonLabel => _isLoading ? "Đang gửi..." : "Gọi API";
+    private string _responseJson => _response == null ? string.Empty : JsonSerializer.Serialize(_response, _jsonOptions);
+
+    private async Task CallStartExamTestApiAsync()
+    {
+        _errorMessage = null;
+        _response = null;
+        _questionDisplayItems.Clear();
+
+        _isLoading = true;
+
+        try
+        {
+            var result = await StudentService.StartExamTestAsync();
+
+            if (result == null)
+            {
+                _errorMessage = "API không trả dữ liệu hoặc báo lỗi.";
+            }
+            else
+            {
+                _response = result;
+                _showPayload = true;
+                _questionDisplayItems = BuildQuestionDisplayItems(result.ExamPaper?.QuestionStructures);
+                _showQuestionPreview = _questionDisplayItems.Count > 0;
+            }
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Lỗi gọi API: {ex.Message}";
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private List<QuestionDisplayItem> BuildQuestionDisplayItems(IEnumerable<QuestionStructureDto>? questions, int depth = 0)
+    {
+        var items = new List<QuestionDisplayItem>();
+        if (questions == null)
+        {
+            return items;
+        }
+
+        foreach (var question in questions.OrderBy(q => q.Order))
+        {
+            items.Add(new QuestionDisplayItem
+            {
+                Question = question,
+                Depth = depth
+            });
+
+            if (question.ChildQuestions?.Any() == true)
+            {
+                items.AddRange(BuildQuestionDisplayItems(question.ChildQuestions, depth + 1));
+            }
+        }
+
+        return items;
+    }
+
+    private static string GetIndentStyle(int depth) => $"margin-left: {depth * 16}px";
+    private void TogglePayloadVisibility() => _showPayload = !_showPayload;
+    private void ToggleQuestionPreviewVisibility() => _showQuestionPreview = !_showQuestionPreview;
+
+    private class QuestionDisplayItem
+    {
+        public QuestionStructureDto Question { get; set; } = new();
+        public int Depth { get; set; }
+    }
+}

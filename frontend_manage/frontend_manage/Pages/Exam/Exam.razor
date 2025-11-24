@@ -1,40 +1,121 @@
-@page "/exam/mock"
+@page "/Exam"
 @using frontend_manage.DTOs
-@using frontend_manage.Pages.Exam.Components
-@using frontend_manage.Services
-@inject IKaTeXService KaTeX
-@inject NavigationManager Nav
+@using Microsoft.AspNetCore.Components
+@using MudBlazor
 
-<MudContainer MaxWidth="MaxWidth.False" Class="pa-2" Style="min-height:100vh; background:#f7f9fc;">
-    <MudGrid>
-        <MudItem xs="12" md="9">
-            <MudPaper Elevation="1" Class="pa-4" Style="border-radius:12px; min-height:70vh;">
-                @if (FlatQuestions.Count > 0)
+<MudContainer Class="py-6">
+    <MudPaper Class="pa-6" Elevation="4">
+        <MudStack Spacing="2" Class="mb-4">
+            <MudText Typo="Typo.h5">Bắt đầu làm bài thi</MudText>
+            @if (StudentExamSessionId.HasValue)
+            {
+                <MudText Typo="Typo.caption" Color="Color.Secondary">
+                    Mã ca thi: @StudentExamSessionId
+                </MudText>
+            }
+            else
+            {
+                <MudAlert Severity="Severity.Warning" Dense="true">
+                    Thiếu tham số <code>studentExamSessionId</code> trong URL. Vui lòng quay lại trang Dashboard.
+                </MudAlert>
+            }
+        </MudStack>
+
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   Disabled="@(!_canTriggerFetch)"
+                   OnClick="@ReloadExamAsync">
+            @_fetchButtonLabel
+        </MudButton>
+
+        @if (!string.IsNullOrEmpty(_errorMessage))
+        {
+            <MudAlert Severity="Severity.Error" Dense="true" Class="mt-3">
+                @_errorMessage
+            </MudAlert>
+        }
+
+        @if (_isLoading)
+        {
+            <div class="d-flex align-center mt-4">
+                <MudProgressCircular Color="Color.Primary" Class="mr-3" />
+                <MudText>Đang khởi tạo bài thi từ API /api/Student/start-exam ...</MudText>
+            </div>
+        }
+
+        @if (_response != null)
+        {
+            <MudPaper Class="mt-4 pa-4" Elevation="1">
+                <MudGrid>
+                    <MudItem xs="12" md="6">
+                        <MudText Typo="Typo.subtitle1" Class="mb-1">Thông tin ca thi</MudText>
+                        <MudList T="object" Dense="true">
+                            <MudListItem T="object">
+                                <b>Môn thi:</b>&nbsp;@_response.StudentSession?.SubjectName
+                            </MudListItem>
+                            <MudListItem T="object">
+                                <b>Phòng:</b>&nbsp;@_response.StudentSession?.RoomName
+                            </MudListItem>
+                            <MudListItem T="object">
+                                <b>Thời lượng:</b>&nbsp;@_response.StudentSession?.Duration phút (+ @_response.StudentSession?.ExtraMinutes phút bù)
+                            </MudListItem>
+                        </MudList>
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <MudText Typo="Typo.subtitle1" Class="mb-1">Đề thi được hoán vị</MudText>
+                        <MudList T="object" Dense="true">
+                            <MudListItem T="object">
+                                <b>Tên đề:</b>&nbsp;@_response.ExamPaper?.Title
+                            </MudListItem>
+                            <MudListItem T="object">
+                                <b>Số câu hỏi:</b>&nbsp;@(_questionDisplayItems.Count)
+                            </MudListItem>
+                        </MudList>
+                    </MudItem>
+                </MudGrid>
+            </MudPaper>
+        }
+
+        @if (_questionDisplayItems.Count > 0)
+        {
+            <MudPaper Class="mt-4 pa-4">
+                <div class="d-flex justify-space-between align-center mb-2">
+                    <MudText Typo="Typo.subtitle1">QuestionMapping preview</MudText>
+                    <MudButton Variant="Variant.Text"
+                               Size="Size.Small"
+                               OnClick="@ToggleQuestionPreviewVisibility">
+                        @(_showQuestionPreview ? "Thu gọn" : "Xem")
+                    </MudButton>
+                </div>
+
+                @if (_showQuestionPreview)
                 {
-                    var idx = 1;
-                    foreach (var q in FlatQuestions)
-                    {
-                        <div id="@($"q-{q.OriginalExamPaperDetailId}")" class="mb-6">
-                            <QuestionItem Question="@q" DisplayNumber="@idx" OnAnswered="@OnAnswered" />
-                            @{ idx++; }
-                            <MudDivider Class="my-4" />
-                        </div>
-                    }
+                    <MudList T="QuestionDisplayItem" Dense="true">
+                        @foreach (var item in _questionDisplayItems)
+                        {
+                            <MudListItem T="QuestionDisplayItem" Class="question-item" Style="@GetIndentStyle(item.Depth)">
+                                <div>
+                                    <div class="question-title">Câu @item.Question.Order</div>
+                                    <div class="question-content">@((MarkupString)(item.Question.QuestionContent ?? string.Empty))</div>
+
+                                    @if (item.Question.Answers?.Any() == true)
+                                    {
+                                        <ul class="answer-list mt-2">
+                                            @foreach (var answer in item.Question.Answers.OrderBy(a => a.Order))
+                                            {
+                                                <li>
+                                                    <span class="answer-label">Đáp án @answer.Order:</span>
+                                                    @((MarkupString)(answer.AnswerContent ?? string.Empty))
+                                                </li>
+                                            }
+                                        </ul>
+                                    }
+                                </div>
+                            </MudListItem>
+                        }
+                    </MudList>
                 }
             </MudPaper>
-        </MudItem>
-        <MudItem xs="12" md="3">
-            <MudPaper Elevation="1" Class="pa-3" Style="border-radius:12px; position:sticky; top:12px;">
-                <StudentInfo StudentName="@StudentName" StudentCode="@StudentCode" />
-                <MudDivider Class="my-2" />
-                <ExamTimer DurationMinutes="@DurationMinutes" StartTime="@StartTime" OnTimeUp="@SubmitExam" />
-                <MudDivider Class="my-2" />
-                <QuestionNavigation TotalQuestions="@FlatQuestions.Count" OnNavigate="@ScrollTo" AnsweredMap="@AnsweredMapDerived" QuestionIds="@QuestionIds" />
-                <MudDivider Class="my-2" />
-                <MudButton Color="Color.Primary" Variant="Variant.Filled" FullWidth="true" OnClick="@SubmitExam">Nộp bài</MudButton>
-            </MudPaper>
-        </MudItem>
-    </MudGrid>
+        }
+    </MudPaper>
 </MudContainer>
-
-
