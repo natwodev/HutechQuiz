@@ -10,29 +10,7 @@
                     <MudText Typo="Typo.subtitle2">
                         Trang @(CurrentIndex + 1)/@TotalQuestions
                     </MudText>
-                    @if (StudentSession is not null)
-                    {
-                        <ExamTimer DurationMinutes="@StudentSession.Duration"
-                                   ExtraMinutes="@StudentSession.ExtraMinutes"
-                                   StartTime="@(StudentSession.StartTime ?? StudentSession.ExamSessionStartTime)"
-                                   ExamSessionStartTime="@StudentSession.ExamSessionStartTime"
-                                   UseExamSessionFormula="true"
-                                   OnTimeUp="@OnExamTimerExpired" />
-                    }
-                    <MudStack Direction="Row" Spacing="1">
-                        <MudButton Variant="Variant.Outlined"
-                                   Color="Color.Default"
-                                   Disabled="@(CurrentIndex == 0)"
-                                   OnClick="@OnPrevious">
-                            Trước
-                        </MudButton>
-                        <MudButton Variant="Variant.Filled"
-                                   Color="Color.Primary"
-                                   Disabled="@(CurrentIndex >= TotalQuestions - 1)"
-                                   OnClick="@OnNext">
-                            Tiếp
-                        </MudButton>
-                    </MudStack>
+                   
                 </div>
 
                 <QuestionItem Question="@ActiveQuestion"
@@ -41,6 +19,24 @@
                               SelectedAnswerId="@GetSelectedAnswerId(ActiveQuestion.OriginalExamPaperDetailId)"
                               SelectedAnswerProvider="GetSelectedAnswerId"
                               OnAnswered="OnAnswered" />
+
+                <MudStack Direction="Row"
+                          Spacing="1"
+                          Justify="Justify.Center"
+                          Class="question-navigation-buttons">
+                    <MudButton Variant="Variant.Outlined"
+                               Color="Color.Default"
+                               Disabled="@(CurrentIndex == 0)"
+                               OnClick="@OnPrevious">
+                        Trước
+                    </MudButton>
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               Disabled="@(CurrentIndex >= TotalQuestions - 1)"
+                               OnClick="@OnNext">
+                        Tiếp
+                    </MudButton>
+                </MudStack>
             </MudStack>
         </MudPaper>
     }
@@ -63,5 +59,6 @@
     [Parameter] public EventCallback<(int questionId, object? value)> OnAnswered { get; set; }
     [Parameter] public StudentExamSessionCacheDto? StudentSession { get; set; }
     [Parameter] public EventCallback OnExamTimerExpired { get; set; }
+
 }
 

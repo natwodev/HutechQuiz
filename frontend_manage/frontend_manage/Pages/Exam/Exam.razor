@@ -11,6 +11,31 @@
                 <img src="images/logo-dai-hoc-hutech_012634748.png" alt="Trắc Nghiệm" class="exam-logo" />
                 <span class="exam-subtitle">Hệ thống thi trực tuyến HUTECH</span>
             </div>
+            @if (StudentSession is not null)
+            {
+                <div class="exam-timer-toggle-row"
+                     style="display:flex;align-items:center;gap:12px;">
+                    @if (_showTimer && StudentSession is not null)
+                    {
+                        <MudPaper Class="pa-2 exam-timer-card mb-0"
+                                  Variant="Variant.Outlined">
+                            <ExamTimer DurationMinutes="@StudentSession.Duration"
+                                       ExtraMinutes="@StudentSession.ExtraMinutes"
+                                       StartTime="@(StudentSession.StartTime ?? StudentSession.ExamSessionStartTime)"
+                                       ExamSessionStartTime="@StudentSession.ExamSessionStartTime"
+                                       UseExamSessionFormula="true"
+                                       OnTimeUp="@HandleExamTimerExpired" />
+                        </MudPaper>
+                    }
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Info"
+                               Size="Size.Small"
+                               Class="timer-toggle-button"
+                               OnClick="@ToggleTimerVisibility">
+                        @(_showTimer ? "Ẩn" : "Hiện")
+                    </MudButton>
+                </div>
+            }
             <MudIconButton Size="Size.Medium"
                            Color="@(_isFullscreen ? Color.Secondary : Color.Info)"
                            Class="fullscreen-toggle"

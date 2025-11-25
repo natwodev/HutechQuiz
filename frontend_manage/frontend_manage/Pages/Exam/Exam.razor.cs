@@ -39,6 +39,8 @@ public partial class Exam : ComponentBase, IAsyncDisposable
         _activeQuestionIndex >= 0 && _activeQuestionIndex < _questionDisplayItems.Count
             ? _questionDisplayItems[_activeQuestionIndex]
             : null;
+    private StudentExamSessionCacheDto? StudentSession => _response?.StudentSession;
+    private bool _showTimer = true;
 
     protected override async Task OnParametersSetAsync()
     {
@@ -347,6 +349,11 @@ public partial class Exam : ComponentBase, IAsyncDisposable
         _errorMessage = null;
         StateHasChanged();
         return Task.CompletedTask;
+    }
+
+    private void ToggleTimerVisibility()
+    {
+        _showTimer = !_showTimer;
     }
 
     private class QuestionDisplayItem
