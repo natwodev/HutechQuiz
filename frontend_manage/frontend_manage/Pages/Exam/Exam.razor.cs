@@ -316,4 +316,5 @@ public partial class Exam : ComponentBase, IAsyncDisposable
         public int QuestionId { get; set; }
         public int ParentIndex { get; set; }
     }
+
 }

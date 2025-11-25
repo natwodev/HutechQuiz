@@ -11,7 +11,7 @@
                 var idx = number - 1;
                 var answered = AnsweredMap.ContainsKey(QuestionIds[idx]);
                 var isActive = ActiveQuestionIndex.HasValue && ParentIndices.Count > idx && ParentIndices[idx] == ActiveQuestionIndex.Value;
-                <MudButton Style="width:40px; min-width:40px;" 
+                <MudButton Style="width:100%; min-width:40px;" 
                           Size="Size.Small" 
                           Variant="@((answered) ? Variant.Filled : Variant.Outlined)" 
                           Color="@(answered? Color.Success: Color.Default)" 

@@ -119,29 +119,32 @@
                                                OnClick="@ReloadExamAsync">
                                         @_fetchButtonLabel
                                     </MudButton>
-                             
+                                    <MudButton Variant="Variant.Outlined"
+                                               Color="Color.Error">
+                                        Nộp bài
+                                    </MudButton>
                                 </div>
-                                <MudText Typo="Typo.subtitle1" Class="mb-2 mt-2">Thông tin ca thi</MudText>
-                                @if (StudentExamSessionId.HasValue)
-                                {
-                                    <MudAlert Severity="Severity.Info" Dense="true">
-                                        Mã ca thi: <b>@StudentExamSessionId</b>
-                                    </MudAlert>
-                                }
-                            <MudList T="object" Dense="true" Class="mb-3">
-                                <MudListItem T="object">
-                                    <b>Môn thi:</b>&nbsp;@_response.StudentSession?.SubjectName
-                                </MudListItem>
-                                @if (!string.IsNullOrWhiteSpace(_response.StudentSession?.RoomName))
-                                {
+                                <MudText Typo="Typo.subtitle1" Class="mb-2 mt-2">Thông tin ca th sinh viêni</MudText>
+                                <MudList T="object" Dense="true" Class="mb-3">
                                     <MudListItem T="object">
-                                        <b>Phòng:</b>&nbsp;@_response.StudentSession.RoomName
+                                        <b>Mã Sinh viên:</b>&nbsp;@_response.StudentSession?.StudentCode
                                     </MudListItem>
-                                }
-                                <MudListItem T="object">
-                                    <b>Thời lượng:</b>&nbsp;@_response.StudentSession?.Duration phút (+ @_response.StudentSession?.ExtraMinutes phút bù)
-                                </MudListItem>
-                            </MudList>
+                                    <MudListItem T="object">
+                                        <b>Môn thi:</b>&nbsp;@_response.StudentSession?.SubjectName
+                                    </MudListItem>
+                                    @if (!string.IsNullOrWhiteSpace(_response.StudentSession?.RoomName))
+                                    {
+                                        <MudListItem T="object">
+                                            <b>Phòng:</b>&nbsp;@_response.StudentSession.RoomName
+                                        </MudListItem>
+                                    }
+                                    <MudListItem T="object">
+                                        <b>Sinh viên thi lúc:</b>&nbsp;@_response.StudentSession?.StartTime
+                                    </MudListItem>
+                                    <MudListItem T="object">
+                                        <b>Thời lượng:</b>&nbsp;@_response.StudentSession?.Duration phút (+ @_response.StudentSession?.ExtraMinutes phút bù)
+                                    </MudListItem>
+                                </MudList>
                                 
                             </MudStack>
                         </MudPaper>

@@ -287,9 +287,22 @@ h1:focus {
 }
 
 .question-navigation-grid {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
+    display: grid;
+    grid-template-columns: repeat(6, minmax(40px, 1fr));
+    gap: 6px;
+    justify-content: stretch;
+}
+
+@media (max-width: 900px) {
+    .question-navigation-grid {
+        grid-template-columns: repeat(4, minmax(36px, 1fr));
+    }
+}
+
+@media (max-width: 600px) {
+    .question-navigation-grid {
+        grid-template-columns: repeat(3, minmax(32px, 1fr));
+    }
 }
 
 .active-question-nav {
