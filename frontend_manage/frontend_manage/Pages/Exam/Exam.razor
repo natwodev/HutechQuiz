@@ -7,8 +7,23 @@
 <MudContainer MaxWidth="MaxWidth.False" Class="exam-fullscreen-container py-6">
     <MudPaper Id="exam-shell" Class="pa-6 exam-fullscreen-shell" Elevation="2">
         <div class="exam-header mb-4">
-            <img src="images/logo-dai-hoc-hutech_012634748.png" alt="Trắc Nghiệm" class="exam-logo" />
-            <span class="exam-subtitle">Hệ thống thi trực tuyến HUTECH</span>
+            <div class="d-flex align-items-center" style="gap: 16px;">
+                <img src="images/logo-dai-hoc-hutech_012634748.png" alt="Trắc Nghiệm" class="exam-logo" />
+                <span class="exam-subtitle">Hệ thống thi trực tuyến HUTECH</span>
+            </div>
+            <MudIconButton Size="Size.Medium"
+                           Color="@(_isFullscreen ? Color.Secondary : Color.Info)"
+                           Class="fullscreen-toggle"
+                           OnClick="@ToggleFullscreenAsync">
+                @if (_isFullscreen)
+                {
+                    <img src="css/icons/fullscreen-exit.svg" alt="Exit fullscreen" class="fullscreen-icon" />
+                }
+                else
+                {
+                    <img src="css/icons/fullscreen-enter.svg" alt="Enter fullscreen" class="fullscreen-icon" />
+                }
+            </MudIconButton>
         </div>
         @if (!StudentExamSessionId.HasValue)
         {
@@ -56,7 +71,7 @@
                             <MudStack Spacing="2">
                                 <div class="d-flex justify-space-between align-center">
                                     <MudText Typo="Typo.h6">
-                                        Câu hỏi @(_activeQuestionIndex + 1)/@_questionDisplayItems.Count
+                                        Trang @(_activeQuestionIndex + 1)/@_questionDisplayItems.Count
                                     </MudText>
                                     <MudStack Direction="Row" Spacing="1">
                                         <MudButton Variant="Variant.Outlined"
@@ -104,19 +119,7 @@
                                                OnClick="@ReloadExamAsync">
                                         @_fetchButtonLabel
                                     </MudButton>
-                                    <MudIconButton Size="Size.Medium"
-                                                   Color="@(_isFullscreen ? Color.Secondary : Color.Info)"
-                                                   Class="fullscreen-toggle"
-                                                   OnClick="@ToggleFullscreenAsync">
-                                        @if (_isFullscreen)
-                                        {
-                                            <img src="css/icons/fullscreen-exit.svg" alt="Exit fullscreen" class="fullscreen-icon" />
-                                        }
-                                        else
-                                        {
-                                            <img src="css/icons/fullscreen-enter.svg" alt="Enter fullscreen" class="fullscreen-icon" />
-                                        }
-                                    </MudIconButton>
+                             
                                 </div>
                                 <MudText Typo="Typo.subtitle1" Class="mb-2 mt-2">Thông tin ca thi</MudText>
                                 @if (StudentExamSessionId.HasValue)
@@ -139,18 +142,7 @@
                                     <b>Thời lượng:</b>&nbsp;@_response.StudentSession?.Duration phút (+ @_response.StudentSession?.ExtraMinutes phút bù)
                                 </MudListItem>
                             </MudList>
-
-                            <MudDivider Class="my-2" />
-
-                            <MudText Typo="Typo.subtitle1" Class="mb-2">Đề thi được hoán vị</MudText>
-                            <MudList T="object" Dense="true">
-                                <MudListItem T="object">
-                                    <b>Tên đề:</b>&nbsp;@_response.ExamPaper?.Title
-                                </MudListItem>
-                                <MudListItem T="object">
-                                <b>Số câu hỏi:</b>&nbsp;@(_navigationItems.Count)
-                                </MudListItem>
-                            </MudList>
+                                
                             </MudStack>
                         </MudPaper>
                     }
@@ -161,7 +153,9 @@
                                 <QuestionNavigation TotalQuestions="@_navigationItems.Count"
                                                     OnNavigate="@NavigateToEntry"
                                                     AnsweredMap="@_questionAnswers"
-                                                    QuestionIds="@_navigationItems.Select(n => n.QuestionId).ToList()" />
+                                                    QuestionIds="@_navigationItems.Select(n => n.QuestionId).ToList()"
+                                                    ActiveQuestionIndex="@_activeQuestionIndex"
+                                                    ParentIndices="@_navigationItems.Select(n => n.ParentIndex).ToList()" />
                             </MudPaper>
                         }
                     </div>

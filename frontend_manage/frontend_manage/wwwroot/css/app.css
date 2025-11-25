@@ -169,6 +169,7 @@ h1:focus {
 .exam-header {
     display: flex;
     align-items: center;
+    justify-content: space-between;
     gap: 16px;
 }
 
@@ -201,12 +202,34 @@ h1:focus {
 
 .exam-questions-pane {
     overflow-y: auto;
+    overflow-x: hidden;
     height: 100%;
+    max-height: calc(100vh - 200px);
     padding-right: 12px;
+}
+
+.exam-questions-pane::-webkit-scrollbar {
+    width: 8px;
+}
+
+.exam-questions-pane::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.exam-questions-pane::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 10px;
+}
+
+.exam-questions-pane::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
 }
 
 .exam-sidebar {
     overflow: hidden;
+    display: flex;
+    flex-direction: column;
 }
 
 .exam-sidebar-inner {
@@ -215,6 +238,65 @@ h1:focus {
     display: flex;
     flex-direction: column;
     gap: 16px;
+    max-height: calc(100vh - 120px);
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 8px;
+}
+
+.exam-sidebar-inner::-webkit-scrollbar {
+    width: 6px;
+}
+
+.exam-sidebar-inner::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.exam-sidebar-inner::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 10px;
+}
+
+.exam-sidebar-inner::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+.question-navigation-container {
+    max-height: 400px;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.question-navigation-container::-webkit-scrollbar {
+    width: 6px;
+}
+
+.question-navigation-container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.question-navigation-container::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 10px;
+}
+
+.question-navigation-container::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+.question-navigation-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.active-question-nav {
+    font-weight: 700;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+    transform: scale(1.1);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 @media (max-width: 900px) {
@@ -224,10 +306,16 @@ h1:focus {
 
     .exam-questions-pane {
         padding-right: 0;
+        max-height: calc(100vh - 250px);
     }
 
     .exam-sidebar,
     .exam-sidebar-inner {
         position: static;
+        max-height: none;
+    }
+
+    .question-navigation-container {
+        max-height: 300px;
     }
 }

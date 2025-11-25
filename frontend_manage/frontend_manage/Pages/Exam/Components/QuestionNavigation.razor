@@ -1,13 +1,22 @@
 <MudStack>
-    <MudText Typo="Typo.subtitle2">Điều hướng câu hỏi</MudText>
-    <MudPaper Elevation="0" Class="pa-2" Style="background:#fafafa; border-radius:8px;">
-        <div style="display:flex; flex-wrap:wrap; gap:8px;">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+        <MudText Typo="Typo.subtitle2">Điều hướng câu hỏi</MudText>
+        <MudText Typo="Typo.subtitle2">Số câu hỏi: @(TotalQuestions)</MudText>
+    </div>
+    <MudPaper Elevation="0" Class="pa-2 question-navigation-container" Style="background:#fafafa; border-radius:8px;">
+        <div class="question-navigation-grid">
             @for (int display = 1; display <= TotalQuestions; display++)
             {
                 var number = display; // avoid closure capture issues
                 var idx = number - 1;
                 var answered = AnsweredMap.ContainsKey(QuestionIds[idx]);
-                <MudButton Style="width:40px; min-width:40px;" Size="Size.Small" Variant="@((answered) ? Variant.Filled : Variant.Outlined)" Color="@(answered? Color.Success: Color.Default)" OnClick="@(()=>OnNavigate.InvokeAsync(idx))">@number</MudButton>
+                var isActive = ActiveQuestionIndex.HasValue && ParentIndices.Count > idx && ParentIndices[idx] == ActiveQuestionIndex.Value;
+                <MudButton Style="width:40px; min-width:40px;" 
+                          Size="Size.Small" 
+                          Variant="@((answered) ? Variant.Filled : Variant.Outlined)" 
+                          Color="@(answered? Color.Success: Color.Default)" 
+                          Class="@(isActive ? "active-question-nav" : "")"
+                          OnClick="@(()=>OnNavigate.InvokeAsync(idx))">@number</MudButton>
             }
         </div>
     </MudPaper>
@@ -17,6 +26,8 @@
     [Parameter] public EventCallback<int> OnNavigate { get; set; }
     [Parameter] public Dictionary<int, object?> AnsweredMap { get; set; } = new();
     [Parameter] public List<int> QuestionIds { get; set; } = new();
+    [Parameter] public int? ActiveQuestionIndex { get; set; }
+    [Parameter] public List<int> ParentIndices { get; set; } = new();
 }
 
 
