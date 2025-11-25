@@ -1,0 +1,67 @@
+@using frontend_manage.DTOs
+@using MudBlazor
+
+<div class="exam-questions-pane">
+    @if (ActiveQuestion != null)
+    {
+        <MudPaper Class="pa-4 exam-panel" Elevation="0">
+            <MudStack Spacing="2">
+                <div class="d-flex justify-space-between align-center">
+                    <MudText Typo="Typo.subtitle2">
+                        Trang @(CurrentIndex + 1)/@TotalQuestions
+                    </MudText>
+                    @if (StudentSession is not null)
+                    {
+                        <ExamTimer DurationMinutes="@StudentSession.Duration"
+                                   ExtraMinutes="@StudentSession.ExtraMinutes"
+                                   StartTime="@(StudentSession.StartTime ?? StudentSession.ExamSessionStartTime)"
+                                   ExamSessionStartTime="@StudentSession.ExamSessionStartTime"
+                                   UseExamSessionFormula="true"
+                                   OnTimeUp="@OnExamTimerExpired" />
+                    }
+                    <MudStack Direction="Row" Spacing="1">
+                        <MudButton Variant="Variant.Outlined"
+                                   Color="Color.Default"
+                                   Disabled="@(CurrentIndex == 0)"
+                                   OnClick="@OnPrevious">
+                            Trước
+                        </MudButton>
+                        <MudButton Variant="Variant.Filled"
+                                   Color="Color.Primary"
+                                   Disabled="@(CurrentIndex >= TotalQuestions - 1)"
+                                   OnClick="@OnNext">
+                            Tiếp
+                        </MudButton>
+                    </MudStack>
+                </div>
+
+                <QuestionItem Question="@ActiveQuestion"
+                              DisplayNumber="@GetQuestionLabel(ActiveQuestion.OriginalExamPaperDetailId)"
+                              LabelProvider="GetQuestionLabel"
+                              SelectedAnswerId="@GetSelectedAnswerId(ActiveQuestion.OriginalExamPaperDetailId)"
+                              SelectedAnswerProvider="GetSelectedAnswerId"
+                              OnAnswered="OnAnswered" />
+            </MudStack>
+        </MudPaper>
+    }
+    else
+    {
+        <MudAlert Severity="Severity.Info" Class="mt-4">
+            Chưa có câu hỏi nào để hiển thị.
+        </MudAlert>
+    }
+</div>
+
+@code {
+    [Parameter] public QuestionStructureDto? ActiveQuestion { get; set; }
+    [Parameter] public int CurrentIndex { get; set; }
+    [Parameter] public int TotalQuestions { get; set; }
+    [Parameter] public EventCallback OnPrevious { get; set; }
+    [Parameter] public EventCallback OnNext { get; set; }
+    [Parameter] public Func<int, string> GetQuestionLabel { get; set; } = _ => string.Empty;
+    [Parameter] public Func<int, int?> GetSelectedAnswerId { get; set; } = _ => null;
+    [Parameter] public EventCallback<(int questionId, object? value)> OnAnswered { get; set; }
+    [Parameter] public StudentExamSessionCacheDto? StudentSession { get; set; }
+    [Parameter] public EventCallback OnExamTimerExpired { get; set; }
+}
+

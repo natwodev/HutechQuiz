@@ -28,6 +28,7 @@ public partial class Exam : ComponentBase, IAsyncDisposable
     private bool _isFullscreen;
     private bool _autoFullscreenAttempted;
     private readonly Dictionary<int, string> _questionLabelMap = new();
+    private bool _showMissingExamSessionWarning;
     private bool _showFullscreenWarning;
     private bool _showFocusWarning;
     private DotNetObjectReference<Exam>? _dotNetRef;
@@ -43,11 +44,14 @@ public partial class Exam : ComponentBase, IAsyncDisposable
     {
         if (!StudentExamSessionId.HasValue)
         {
+            _showMissingExamSessionWarning = true;
             _errorMessage = "Không xác định được ca thi. Vui lòng quay lại Dashboard và chọn lại.";
             _response = null;
             _questionDisplayItems.Clear();
             return;
         }
+
+        _showMissingExamSessionWarning = false;
 
         if (_currentSessionId == StudentExamSessionId)
         {
@@ -110,6 +114,17 @@ public partial class Exam : ComponentBase, IAsyncDisposable
         }
 
         await FetchExamAsync(StudentExamSessionId.Value, true);
+    }
+
+    private Task HandleExamTimerExpired()
+    {
+        if (string.IsNullOrWhiteSpace(_errorMessage))
+        {
+            _errorMessage = "Thời gian làm bài đã kết thúc.";
+        }
+
+        StateHasChanged();
+        return Task.CompletedTask;
     }
 
     private async Task FetchExamAsync(int studentExamSessionId, bool force)
@@ -238,6 +253,7 @@ public partial class Exam : ComponentBase, IAsyncDisposable
     }
 
     private Task HandleQuestionAnswered((int questionId, object? value) payload)
+    
     {
         _questionAnswers[payload.questionId] = payload.value;
         return Task.CompletedTask;
@@ -303,6 +319,34 @@ public partial class Exam : ComponentBase, IAsyncDisposable
         }
 
         return false;
+    }
+
+    private Task DismissMissingExamSessionWarning()
+    {
+        _showMissingExamSessionWarning = false;
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
+
+    private Task DismissFullscreenWarning()
+    {
+        _showFullscreenWarning = false;
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
+
+    private Task DismissFocusWarning()
+    {
+        _showFocusWarning = false;
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
+
+    private Task DismissErrorMessage()
+    {
+        _errorMessage = null;
+        StateHasChanged();
+        return Task.CompletedTask;
     }
 
     private class QuestionDisplayItem

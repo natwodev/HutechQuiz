@@ -1,0 +1,54 @@
+@using MudBlazor
+
+@if (MissingExamSessionId)
+{
+    <MudAlert Severity="Severity.Warning" Dense="true" Class="mb-2 d-flex align-center justify-space-between">
+        <span>Thiếu tham số <code>studentExamSessionId</code> trong URL. Vui lòng quay lại trang Dashboard.</span>
+        <DismissAlertButton OnClick="OnDismissMissingExamSessionWarning" />
+    </MudAlert>
+}
+
+@if (ShowFullscreenWarning)
+{
+    <MudAlert Severity="Severity.Warning" Dense="true" Class="mb-2 d-flex align-center justify-space-between">
+        <span>Bạn vừa thoát khỏi chế độ toàn màn hình. Vui lòng bật lại để tiếp tục làm bài thi.</span>
+        <DismissAlertButton OnClick="OnDismissFullscreenWarning" />
+    </MudAlert>
+}
+
+@if (ShowFocusWarning)
+{
+    <MudAlert Severity="Severity.Warning" Dense="true" Class="mb-2 d-flex align-center justify-space-between">
+        <span>Hệ thống ghi nhận bạn đã rời khỏi tab thi. Vui lòng tập trung vào bài làm.</span>
+        <DismissAlertButton OnClick="OnDismissFocusWarning" />
+    </MudAlert>
+}
+
+@if (!string.IsNullOrEmpty(ErrorMessage))
+{
+    <MudAlert Severity="Severity.Error" Dense="true" Class="mt-3 d-flex align-center justify-space-between">
+        <span>@ErrorMessage</span>
+        <DismissAlertButton OnClick="OnDismissErrorMessage" Label="Đóng" />
+    </MudAlert>
+}
+
+@if (IsLoading)
+{
+    <div class="d-flex align-center mt-4">
+        <MudProgressCircular Color="Color.Primary" Class="mr-3" />
+        <MudText>Đang khởi tạo bài thi từ API /api/Student/start-exam ...</MudText>
+    </div>
+}
+
+@code {
+    [Parameter] public bool MissingExamSessionId { get; set; }
+    [Parameter] public bool ShowFullscreenWarning { get; set; }
+    [Parameter] public bool ShowFocusWarning { get; set; }
+    [Parameter] public string? ErrorMessage { get; set; }
+    [Parameter] public bool IsLoading { get; set; }
+    [Parameter] public EventCallback OnDismissMissingExamSessionWarning { get; set; }
+    [Parameter] public EventCallback OnDismissFullscreenWarning { get; set; }
+    [Parameter] public EventCallback OnDismissFocusWarning { get; set; }
+    [Parameter] public EventCallback OnDismissErrorMessage { get; set; }
+}
+

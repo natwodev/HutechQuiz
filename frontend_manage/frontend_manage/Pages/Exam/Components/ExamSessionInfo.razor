@@ -1,0 +1,34 @@
+@using frontend_manage.DTOs
+@using MudBlazor
+
+<div class="exam-session-info">
+    <MudText Typo="Typo.subtitle1" Class="mb-2 mt-2">Thông tin ca thi sinh viên</MudText>
+    <MudList T="object" Dense="true" Class="mb-3">
+        <MudListItem T="object">
+            <b>Mã Sinh viên:</b>&nbsp;@StudentSession?.StudentCode
+        </MudListItem>
+        <MudListItem T="object">
+            <b>Môn thi:</b>&nbsp;@StudentSession?.SubjectName
+        </MudListItem>
+        @if (!string.IsNullOrWhiteSpace(StudentSession?.RoomName))
+        {
+            <MudListItem T="object">
+                <b>Phòng:</b>&nbsp;@StudentSession.RoomName
+            </MudListItem>
+        }
+        <MudListItem T="object">
+            <b>Sinh viên thi lúc:</b>&nbsp;@StudentSession?.StartTime
+        </MudListItem>
+        <MudListItem T="object">
+            <b>Thời gian thi:</b>&nbsp;@StudentSession?.ExamSessionStartTime
+        </MudListItem>
+        <MudListItem T="object">
+            <b>Thời lượng:</b>&nbsp;@StudentSession?.Duration phút (+ @StudentSession?.ExtraMinutes phút bù)
+        </MudListItem>
+    </MudList>
+</div>
+
+@code {
+    [Parameter] public StudentExamSessionCacheDto? StudentSession { get; set; }
+}
+

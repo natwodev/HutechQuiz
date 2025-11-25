@@ -111,6 +111,9 @@ namespace frontend_manage.DTOs
         public string StudentAnswersString { get; set; }
         public int? ExamRoomId { get; set; }
     
+        public DateTime ExamSessionStartTime { get; set; }
+        public DateTime ExamSessionEndTime { get; set; }
+        
         // Từ DTO (những trường Entity không có)
         public string SubjectName { get; set; }
         public string RoomName { get; set; }
