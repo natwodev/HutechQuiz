@@ -14,6 +14,9 @@
         <MudListItem T="object">
             <b>Môn thi:</b>&nbsp;@StudentSession?.SubjectName
         </MudListItem>
+        <MudListItem T="object">
+            <b>Mã đề thi:</b>&nbsp;@StudentSession?.ShuffledExamPaperId
+        </MudListItem>
         @if (!string.IsNullOrWhiteSpace(StudentSession?.RoomName))
         {
             <MudListItem T="object">

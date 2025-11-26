@@ -91,7 +91,9 @@ public partial class Exam : ComponentBase, IAsyncDisposable
     public Task OnFullscreenStateChanged(bool isFullscreen)
     {
         _isFullscreen = isFullscreen;
-        if (!_isFullscreen && _autoFullscreenAttempted)
+        // Không cảnh báo nếu cho phép xem tài liệu
+        var allowViewMaterials = _response?.ExamPaper?.AllowViewMaterials ?? true;
+        if (!_isFullscreen && _autoFullscreenAttempted && !allowViewMaterials)
         {
             Snackbar.Add("Bạn vừa thoát khỏi chế độ toàn màn hình. Vui lòng bật lại để tiếp tục làm bài thi.", Severity.Warning);
         }
@@ -103,7 +105,9 @@ public partial class Exam : ComponentBase, IAsyncDisposable
     [JSInvokable]
     public Task OnVisibilityChanged(bool hidden)
     {
-        if (hidden)
+        // Không cảnh báo nếu cho phép xem tài liệu
+        var allowViewMaterials = _response?.ExamPaper?.AllowViewMaterials ?? true;
+        if (hidden && !allowViewMaterials)
         {
             Snackbar.Add("Hệ thống ghi nhận bạn đã rời khỏi tab thi. Vui lòng tập trung vào bài làm.", Severity.Warning);
         }
