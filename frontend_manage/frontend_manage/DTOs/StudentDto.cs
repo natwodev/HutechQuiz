@@ -111,6 +111,8 @@ namespace frontend_manage.DTOs
         public string StudentAnswersString { get; set; }
         public int? ExamRoomId { get; set; }
     
+        public string ExamSessionName { get; set; }
+
         public DateTime ExamSessionStartTime { get; set; }
         public DateTime ExamSessionEndTime { get; set; }
         

@@ -36,7 +36,9 @@
 
                 @* Right Sidebar - Session Info & Navigation *@
                 <aside class="exam-sidebar-right">
-                    <ExamSessionInfo StudentSession="@StudentSession" />
+                    <ExamSessionInfo StudentSession="@StudentSession"
+                                     AllowViewMaterialsShuffled="@(_response?.ExamPaper?.AllowViewMaterials ?? false)"
+                                     AllowViewMaterialsOriginal="@(_response?.OriginalExamPaper?.AllowViewMaterials ?? false)" />
                     <QuestionNavigation TotalQuestions="@_navigationItems.Count"
                                         QuestionIds="@_navigationItems.Select(n => n.QuestionId).ToList()"
                                         ParentIndices="@_navigationItems.Select(n => n.ParentIndex).ToList()"

@@ -171,7 +171,9 @@ namespace backend_manage.core.Services.AuthService
                 TotalQuestions = monHoc.TongSoCauLay > 0 ? monHoc.TongSoCauLay : 0,
                 OriginalExamPaperCore = originalExamPaperCore,
                 IsApproved = true, // Đề thi gốc mặc định được duyệt khi thêm mới
-                TotalShuffledPapers = 0
+                TotalShuffledPapers = 0,
+                // Mặc định khi import là đề đóng (không được phép xem tài liệu)
+                AllowViewMaterials = false
             };
             await _originalExamPaperRepository.AddAsync(originalExamPaper);
 
@@ -497,6 +499,8 @@ namespace backend_manage.core.Services.AuthService
                    // AnswerKey = originalExamPaper.KeyValueList,
                     SubjectId = subjectId,
                     IsApproved = true,
+                    // Kế thừa cấu hình đề mở/đề đóng từ đề gốc
+                    AllowViewMaterials = originalExamPaper.AllowViewMaterials,
                     CreatedBy = userId,
                     CreatedAt = now
                 };

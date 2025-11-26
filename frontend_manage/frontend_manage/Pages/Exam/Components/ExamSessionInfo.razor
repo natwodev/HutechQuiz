@@ -8,6 +8,10 @@
             <b>Mã Sinh viên:</b>&nbsp;@StudentSession?.StudentCode
         </MudListItem>
         <MudListItem T="object">
+            <b>Tên ca thi:</b>&nbsp;@StudentSession.ExamSessionName
+        </MudListItem>
+        
+        <MudListItem T="object">
             <b>Môn thi:</b>&nbsp;@StudentSession?.SubjectName
         </MudListItem>
         @if (!string.IsNullOrWhiteSpace(StudentSession?.RoomName))
@@ -25,10 +29,18 @@
         <MudListItem T="object">
             <b>Thời lượng:</b>&nbsp;@StudentSession?.Duration phút (+ @StudentSession?.ExtraMinutes phút bù)
         </MudListItem>
+        <MudListItem T="object">
+            <b>Đề hoán vị cho xem tài liệu:</b>&nbsp;@(AllowViewMaterialsShuffled ? "Có" : "Không")
+        </MudListItem>
+        <MudListItem T="object">
+            <b>Đề gốc cho xem tài liệu:</b>&nbsp;@(AllowViewMaterialsOriginal ? "Có" : "Không")
+        </MudListItem>
     </MudList>
 </div>
 
 @code {
     [Parameter] public StudentExamSessionCacheDto? StudentSession { get; set; }
+    [Parameter] public bool AllowViewMaterialsShuffled { get; set; }
+    [Parameter] public bool AllowViewMaterialsOriginal { get; set; }
 }
 

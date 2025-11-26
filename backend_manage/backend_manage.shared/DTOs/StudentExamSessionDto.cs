@@ -5,6 +5,7 @@ namespace backend_manage.shared.DTOs
         public int ExamSessionSubjectId { get; set; }
         public string SubjectName { get; set; } 
         public string RoomName { get; set; } 
+        public string ExamSessionName { get; set; }
         public int Duration { get; set; }
         public int ExtraMinutes { get; set; }
         public int RemainingMinutes { get; set; }

@@ -7,6 +7,7 @@ namespace backend_manage.shared.DTOs
         public string Title { get; set; }
         public int OriginalExamPaperId { get; set; }
         public int SubjectId { get; set; }
+        public bool AllowViewMaterials { get; set; }
         public bool IsApproved { get; set; }
         public string AnswerKey { get; set; }
         public string SubjectName { get; set; }

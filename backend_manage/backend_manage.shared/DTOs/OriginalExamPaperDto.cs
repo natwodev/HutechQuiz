@@ -7,6 +7,7 @@ namespace backend_manage.shared.DTOs
         public string Title { get; set; }
         public string? Description { get; set; }
         public int SubjectId { get; set; }
+        public bool AllowViewMaterials { get; set; }
         public int DurationMinutes { get; set; }
         public int TotalQuestions { get; set; }
         public string? KeyValueList { get; set; }
@@ -36,6 +37,7 @@ namespace backend_manage.shared.DTOs
         public int SubjectId { get; set; }
         public string SubjectName { get; set; }
         public bool? IsApproved { get; set; }
+        public bool AllowViewMaterials { get; set; }
         public int DurationMinutes { get; set; }
         public int TotalQuestions { get; set; }
         public int TotalShuffledPapers { get; set; }

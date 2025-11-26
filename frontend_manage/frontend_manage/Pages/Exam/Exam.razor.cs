@@ -28,8 +28,12 @@ public partial class Exam : ComponentBase, IAsyncDisposable
     private int _activeQuestionIndex;
     private bool _isFullscreen;
     private bool _autoFullscreenAttempted;
+    private bool _jsEventsRegistered;
     private readonly Dictionary<int, string> _questionLabelMap = new();
     private DotNetObjectReference<Exam>? _dotNetRef;
+
+    // Fullscreen chỉ được bật khi AllowViewMaterialsShuffled == false
+    private bool IsFullscreenEnabled => !(_response?.ExamPaper?.AllowViewMaterials ?? true);
 
     private bool _canTriggerFetch => StudentExamSessionId.HasValue && !_isLoading;
     private string _fetchButtonLabel => _isLoading ? "Đang khởi tạo..." : "Tải lại dữ liệu";
@@ -61,11 +65,20 @@ public partial class Exam : ComponentBase, IAsyncDisposable
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender && !_autoFullscreenAttempted)
+        if (firstRender && !_jsEventsRegistered)
         {
-            _autoFullscreenAttempted = true;
             _dotNetRef = DotNetObjectReference.Create(this);
             await JS.InvokeVoidAsync("examFullscreen.registerExamEvents", _dotNetRef);
+            _jsEventsRegistered = true;
+        }
+
+        // Tự động bật fullscreen một lần, sau khi:
+        // - JS events đã đăng ký
+        // - Dữ liệu đề thi (_response) đã load
+        // - AllowViewMaterialsShuffled == false (IsFullscreenEnabled == true)
+        if (!_autoFullscreenAttempted && _jsEventsRegistered && IsFullscreenEnabled)
+        {
+            _autoFullscreenAttempted = true;
             var entered = await TryEnterFullscreenAsync();
             if (entered)
             {
@@ -271,6 +284,12 @@ public partial class Exam : ComponentBase, IAsyncDisposable
 
     private async Task ToggleFullscreenAsync()
     {
+        // Không cho bật fullscreen nếu AllowViewMaterialsShuffled != false
+        if (!IsFullscreenEnabled)
+        {
+            return;
+        }
+
         try
         {
             var isActive = await JS.InvokeAsync<bool>("examFullscreen.isActive");

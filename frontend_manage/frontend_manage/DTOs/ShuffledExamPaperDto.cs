@@ -5,6 +5,7 @@ public class ShuffledExamPaperDto
     public int ShuffledExamPaperId { get; set; }
     public string ShuffledExamPaperCore { get; set; }
     public string Title { get; set; }
+    public bool AllowViewMaterials { get; set; }
     public int OriginalExamPaperId { get; set; }
     public int SubjectId { get; set; }
     public bool IsApproved { get; set; }
@@ -50,6 +51,7 @@ public class OriginalExamPaperDto
     public string Title { get; set; }
     public string? Description { get; set; }
     public int SubjectId { get; set; }
+    public bool AllowViewMaterials { get; set; }
     public int DurationMinutes { get; set; }
     public int TotalQuestions { get; set; }
     public string? KeyValueList { get; set; }

@@ -86,6 +86,8 @@ public class StudentExamSessionCacheHelper
                 .ThenInclude(x => x.Subject)
             .Include(x => x.ExamSessionSubject)
                 .ThenInclude(x => x.ExamRoom)
+            .Include(x => x.ExamSessionSubject)
+                .ThenInclude(x => x.ExamSession)
             .ToListAsync();
 
         if(sessions.Any())
@@ -219,10 +221,12 @@ public class StudentExamSessionCacheHelper
         {
             var examSessionSubject = await _examSessionSubjectRepository.GetQueryable()
                 .Include(ess => ess.Subject)
+                .Include(ess => ess.ExamSession)
                 .FirstOrDefaultAsync(ess => ess.ExamSessionSubjectId == session.ExamSessionSubjectId);
 
             cacheDto.SubjectName = examSessionSubject?.Subject?.SubjectName ?? string.Empty;
             cacheDto.Duration = examSessionSubject?.Duration ?? 0;
+            cacheDto.ExamSessionName = examSessionSubject?.ExamSession?.Name ?? string.Empty;
             
             // Đảm bảo thời gian ca thi được sync nếu chưa có trong entity
             if (cacheDto.ExamSessionStartTime == default(DateTime) && examSessionSubject != null)
@@ -237,10 +241,14 @@ public class StudentExamSessionCacheHelper
         {
             var examSessionSubject = await _examSessionSubjectRepository.GetQueryable()
                 .Include(x => x.ExamRoom)
+                .Include(x => x.ExamSession)
                 .FirstOrDefaultAsync(x => x.ExamSessionSubjectId == session.ExamSessionSubjectId);
 
             cacheDto.RoomName = examSessionSubject?.ExamRoom?.RoomName ?? string.Empty;
             cacheDto.ExamRoomId = examSessionSubject?.ExamRoomId;
+            cacheDto.ExamSessionName = string.IsNullOrWhiteSpace(cacheDto.ExamSessionName)
+                ? examSessionSubject?.ExamSession?.Name ?? string.Empty
+                : cacheDto.ExamSessionName;
         }
 
         return cacheDto;
@@ -293,6 +301,8 @@ public class StudentExamSessionCacheHelper
                     .ThenInclude(x => x.Subject)
                 .Include(x => x.ExamSessionSubject)
                     .ThenInclude(x => x.ExamRoom)
+            .Include(x => x.ExamSessionSubject)
+                .ThenInclude(x => x.ExamSession)
                 .FirstOrDefaultAsync();
 
             if (sessionEntity != null)

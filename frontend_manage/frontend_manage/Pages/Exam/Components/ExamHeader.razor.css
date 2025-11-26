@@ -33,6 +33,7 @@
     flex: 1;
     display: flex;
     justify-content: center;
+    align-items: center;
 }
 
 .exam-header-right {
@@ -107,6 +108,13 @@
     display: flex;
     gap: 12px;
     align-items: center;
+}
+
+.exam-session-name {
+    color: #ffffff;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 @media (max-width: 768px) {
