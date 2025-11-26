@@ -1,0 +1,57 @@
+@using frontend_manage.DTOs
+@using MudBlazor
+
+<header class="exam-header">
+    <div class="exam-header-left">
+        <div class="exam-brand">
+            <img src="images/logo-dai-hoc-hutech_012634748.png"
+                 alt="Trắc Nghiệm"
+                 class="exam-logo" />
+
+            <div class="exam-brand-text">
+                <div class="exam-brand-title">
+                    TRƯỜNG ĐẠI HỌC CÔNG NGHỆ THÀNH PHỐ HỒ CHÍ MINH - HUTECH 
+                </div>
+                <span class="exam-brand-subtitle">
+                    Hệ thống thi trực tuyến HUTECH
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <div class="exam-header-center">
+    </div>
+
+    <div class="exam-header-right">
+        @if (ShouldShowTimer && StudentSession != null)
+        {
+            <div class="exam-timer-inline">
+                <ExamTimer StartTime="@(StudentSession?.StartTime ?? DateTime.Now)"
+                           DurationMinutes="@(StudentSession?.Duration ?? 0)"
+                           ExtraMinutes="@(StudentSession?.ExtraMinutes ?? 0)"
+                           OnTimeUp="OnExamTimerExpired" />
+            </div>
+        }
+        <MudIconButton Icon="@(IsTimerVisible ? Icons.Material.Filled.VisibilityOff : Icons.Material.Filled.Visibility)"
+                       Size="Size.Small"
+                       Color="Color.Inherit"
+                       OnClick="ToggleTimerVisibility"
+                       Title="@(IsTimerVisible ? "Ẩn đồng hồ" : "Hiện đồng hồ")" />
+        <MudIconButton Icon="@(IsFullscreen ? Icons.Material.Filled.FullscreenExit : Icons.Material.Filled.Fullscreen)"
+                       Size="Size.Small"
+                       Color="Color.Inherit"
+                       OnClick="ToggleFullscreen"
+                       Title="@(IsFullscreen ? "Thoát toàn màn hình" : "Toàn màn hình")" />
+    </div>
+</header>
+
+@code {
+    [Parameter] public StudentExamSessionCacheDto? StudentSession { get; set; }
+    [Parameter] public bool ShouldShowTimer { get; set; }
+    [Parameter] public bool IsTimerVisible { get; set; }
+    [Parameter] public bool IsFullscreen { get; set; }
+    [Parameter] public EventCallback ToggleTimerVisibility { get; set; }
+    [Parameter] public EventCallback ToggleFullscreen { get; set; }
+    [Parameter] public EventCallback OnExamTimerExpired { get; set; }
+}
+

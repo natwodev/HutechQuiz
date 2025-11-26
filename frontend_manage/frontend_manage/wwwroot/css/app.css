@@ -98,6 +98,7 @@ h1:focus {
     }
 }
 
+/* Exam page styles */
 .exam-fullscreen-container {
     width: 100vw;
     height: 100vh;
@@ -179,62 +180,72 @@ h1:focus {
     background: #ffffff;
 }
 
-.exam-header {
+/* Exam Shell Layout */
+.exam-shell {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
+    flex-direction: column;
+    height: 100vh;
+    width: 100%;
+    overflow: hidden;
+    background: #f5f5f5;
+}
+
+/* Main Content */
+.exam-main {
+    flex: 1;
+    margin-top: 56px;
+    margin-bottom: 56px;
+    overflow-y: auto;
+    padding: 16px;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.exam-main::-webkit-scrollbar {
+    display: none;
+}
+
+.exam-content-wrapper {
+    display: flex;
     gap: 16px;
-}
-
-.exam-logo {
-    max-width: 150px;
-    height: auto;
-}
-
-.exam-subtitle {
-    font-size: 12px;
-    font-weight: 600;
-    color: #0f172a;
-    text-transform: uppercase;
-}
-
-.sidebar-actions {
-    display: flex;
-    gap: 12px;
-    align-items: center;
+    max-width: 1400px;
+    margin: 0 auto;
+    height: 100%;
 }
 
 /* Layout đã chuyển sang MudGrid, không cần CSS grid nữa */
 
-.exam-questions-pane {
+.exam-sidebar-right {
+    width: 320px;
+    flex-shrink: 0;
+    background: white;
+    border-radius: 8px;
+    padding: 16px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
     overflow-y: auto;
-    overflow-x: hidden;
-    padding-right: 12px;
-    max-height: 100vh;
-}
-
-.exam-questions-pane::-webkit-scrollbar {
-    width: 8px;
-}
-
-.exam-questions-pane::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 10px;
-}
-
-.exam-questions-pane::-webkit-scrollbar-thumb {
-    background: #c1c1c1;
-    border-radius: 10px;
-}
-
-.exam-questions-pane::-webkit-scrollbar-thumb:hover {
-    background: #a8a8a8;
-}
-
-.exam-sidebar {
-    overflow: hidden;
     display: flex;
     flex-direction: column;
+    gap: 16px;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.exam-sidebar-right::-webkit-scrollbar {
+    display: none;
+}
+
+.exam-question-area {
+    flex: 1;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+    overflow-y: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.exam-question-area::-webkit-scrollbar {
+    display: none;
 }
 
 .exam-sidebar-inner {
@@ -247,48 +258,24 @@ h1:focus {
     overflow-y: auto;
     overflow-x: hidden;
     padding-right: 8px;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
 }
 
 .exam-sidebar-inner::-webkit-scrollbar {
-    width: 6px;
-}
-
-.exam-sidebar-inner::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 10px;
-}
-
-.exam-sidebar-inner::-webkit-scrollbar-thumb {
-    background: #c1c1c1;
-    border-radius: 10px;
-}
-
-.exam-sidebar-inner::-webkit-scrollbar-thumb:hover {
-    background: #a8a8a8;
+    display: none;
 }
 
 .question-navigation-container {
     max-height: 400px;
     overflow-y: auto;
     overflow-x: hidden;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
 }
 
 .question-navigation-container::-webkit-scrollbar {
-    width: 6px;
-}
-
-.question-navigation-container::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 10px;
-}
-
-.question-navigation-container::-webkit-scrollbar-thumb {
-    background: #c1c1c1;
-    border-radius: 10px;
-}
-
-.question-navigation-container::-webkit-scrollbar-thumb:hover {
-    background: #a8a8a8;
+    display: none;
 }
 
 .question-navigation-grid {
@@ -318,10 +305,6 @@ h1:focus {
 }
 
 @media (max-width: 900px) {
-    .exam-questions-pane {
-        padding-right: 0;
-    }
-
     .exam-sidebar,
     .exam-sidebar-inner {
         position: static;
@@ -333,41 +316,14 @@ h1:focus {
     }
 }
 
-.exam-footer {
-    margin-top: auto;
-    padding-top: 24px;
-    padding-bottom: 0;
-}
-
-.exam-footer-content {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 16px;
-    padding: 12px 0;
-}
-
-.exam-footer-left,
-.exam-footer-right {
-    display: flex;
-    align-items: center;
-}
-
-.exam-footer-text {
-    font-size: 12px;
-    color: #64748b;
-    font-weight: 400;
-}
-
-@media (max-width: 900px) {
-    .exam-footer-content {
+/* Responsive */
+@media (max-width: 768px) {
+    .exam-content-wrapper {
         flex-direction: column;
-        text-align: center;
-        gap: 8px;
     }
-    
-    .exam-footer-left,
-    .exam-footer-right {
-        justify-content: center;
+
+    .exam-sidebar-right {
+        width: 100%;
+        max-height: none;
     }
 }

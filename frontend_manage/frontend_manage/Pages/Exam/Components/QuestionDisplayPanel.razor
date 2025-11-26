@@ -5,37 +5,12 @@
     @if (ActiveQuestion != null)
     {
         <MudPaper Class="pa-4 exam-panel" Elevation="0">
-                <div class="d-flex justify-space-between align-center">
-                    <MudText Typo="Typo.subtitle2">
-                        Trang @(CurrentIndex + 1)/@TotalQuestions
-                    </MudText>
-                   
-                </div>
-
                 <QuestionItem Question="@ActiveQuestion"
                               DisplayNumber="@GetQuestionLabel(ActiveQuestion.OriginalExamPaperDetailId)"
                               LabelProvider="GetQuestionLabel"
                               SelectedAnswerId="@GetSelectedAnswerId(ActiveQuestion.OriginalExamPaperDetailId)"
                               SelectedAnswerProvider="GetSelectedAnswerId"
                               OnAnswered="OnAnswered" />
-
-                <MudStack Direction="Row"
-                          Spacing="1"
-                          Justify="Justify.Center"
-                          Class="question-navigation-buttons">
-                    <MudButton Variant="Variant.Outlined"
-                               Color="Color.Default"
-                               Disabled="@(CurrentIndex == 0)"
-                               OnClick="@OnPrevious">
-                        Trước
-                    </MudButton>
-                    <MudButton Variant="Variant.Filled"
-                               Color="Color.Primary"
-                               Disabled="@(CurrentIndex >= TotalQuestions - 1)"
-                               OnClick="@OnNext">
-                        Tiếp
-                    </MudButton>
-                </MudStack>
             
         </MudPaper>
     }

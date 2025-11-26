@@ -1,0 +1,53 @@
+@using MudBlazor
+
+<footer class="exam-footer">
+    <div class="exam-footer-left">
+        <MudButton Variant="Variant.Text"
+                   Size="Size.Small"
+                   StartIcon="@Icons.Material.Filled.Refresh"
+                   Disabled="@(!CanReload)"
+                   OnClick="ReloadExam">
+            @ReloadLabel
+        </MudButton>
+    </div>
+
+    <div class="exam-footer-center">
+        <MudButton Variant="Variant.Outlined"
+                   Size="Size.Small"
+                   Disabled="@IsPreviousDisabled"
+                   OnClick="PreviousQuestion">
+            ← Trang trước
+        </MudButton>
+        <MudText Typo="Typo.body2" Class="mx-3">
+            Trang @(ActiveQuestionIndex + 1) / @TotalQuestions
+        </MudText>
+        <MudButton Variant="Variant.Outlined"
+                   Size="Size.Small"
+                   Disabled="@IsNextDisabled"
+                   OnClick="NextQuestion">
+            Trang sau →
+        </MudButton>
+    </div>
+
+    <div class="exam-footer-right">
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   Size="Size.Small">
+            Nộp bài
+        </MudButton>
+    </div>
+</footer>
+
+@code {
+    [Parameter] public bool CanReload { get; set; }
+    [Parameter] public string ReloadLabel { get; set; } = string.Empty;
+    [Parameter] public int ActiveQuestionIndex { get; set; }
+    [Parameter] public int TotalQuestions { get; set; }
+    [Parameter] public EventCallback ReloadExam { get; set; }
+    [Parameter] public EventCallback PreviousQuestion { get; set; }
+    [Parameter] public EventCallback NextQuestion { get; set; }
+
+    private bool IsPreviousDisabled => ActiveQuestionIndex <= 0;
+    private bool IsNextDisabled => ActiveQuestionIndex >= TotalQuestions - 1;
+}
+

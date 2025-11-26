@@ -5,6 +5,7 @@ using frontend_manage.DTOs;
 using frontend_manage.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
+using MudBlazor;
 
 namespace frontend_manage.Pages.Exam;
 
@@ -12,13 +13,13 @@ public partial class Exam : ComponentBase, IAsyncDisposable
 {
     [Inject] private StudentService StudentService { get; set; } = default!;
     [Inject] private IJSRuntime JS { get; set; } = default!;
+    [Inject] private ISnackbar Snackbar { get; set; } = default!;
 
     [Parameter]
     [SupplyParameterFromQuery(Name = "studentExamSessionId")]
     public int? StudentExamSessionId { get; set; }
 
     private bool _isLoading;
-    private string? _errorMessage;
     private StartExamResponseDto? _response;
     private List<QuestionDisplayItem> _questionDisplayItems = new();
     private int? _currentSessionId;
@@ -28,9 +29,6 @@ public partial class Exam : ComponentBase, IAsyncDisposable
     private bool _isFullscreen;
     private bool _autoFullscreenAttempted;
     private readonly Dictionary<int, string> _questionLabelMap = new();
-    private bool _showMissingExamSessionWarning;
-    private bool _showFullscreenWarning;
-    private bool _showFocusWarning;
     private DotNetObjectReference<Exam>? _dotNetRef;
 
     private bool _canTriggerFetch => StudentExamSessionId.HasValue && !_isLoading;
@@ -41,19 +39,17 @@ public partial class Exam : ComponentBase, IAsyncDisposable
             : null;
     private StudentExamSessionCacheDto? StudentSession => _response?.StudentSession;
     private bool _showTimer = true;
+    private bool ShouldShowTimer => _response != null && StudentSession != null && _showTimer;
 
     protected override async Task OnParametersSetAsync()
     {
         if (!StudentExamSessionId.HasValue)
         {
-            _showMissingExamSessionWarning = true;
-            _errorMessage = "Không xác định được ca thi. Vui lòng quay lại Dashboard và chọn lại.";
+            Snackbar.Add("Thiếu tham số studentExamSessionId trong URL. Vui lòng quay lại trang Dashboard.", Severity.Warning);
             _response = null;
             _questionDisplayItems.Clear();
             return;
         }
-
-        _showMissingExamSessionWarning = false;
 
         if (_currentSessionId == StudentExamSessionId)
         {
@@ -84,11 +80,7 @@ public partial class Exam : ComponentBase, IAsyncDisposable
         _isFullscreen = isFullscreen;
         if (!_isFullscreen && _autoFullscreenAttempted)
         {
-            _showFullscreenWarning = true;
-        }
-        else if (_isFullscreen)
-        {
-            _showFullscreenWarning = false;
+            Snackbar.Add("Bạn vừa thoát khỏi chế độ toàn màn hình. Vui lòng bật lại để tiếp tục làm bài thi.", Severity.Warning);
         }
 
         InvokeAsync(StateHasChanged);
@@ -100,8 +92,7 @@ public partial class Exam : ComponentBase, IAsyncDisposable
     {
         if (hidden)
         {
-            _showFocusWarning = true;
-            InvokeAsync(StateHasChanged);
+            Snackbar.Add("Hệ thống ghi nhận bạn đã rời khỏi tab thi. Vui lòng tập trung vào bài làm.", Severity.Warning);
         }
 
         return Task.CompletedTask;
@@ -111,7 +102,7 @@ public partial class Exam : ComponentBase, IAsyncDisposable
     {
         if (!StudentExamSessionId.HasValue)
         {
-            _errorMessage = "Không xác định được ca thi để tải.";
+            Snackbar.Add("Không xác định được ca thi để tải.", Severity.Error);
             return;
         }
 
@@ -120,11 +111,7 @@ public partial class Exam : ComponentBase, IAsyncDisposable
 
     private Task HandleExamTimerExpired()
     {
-        if (string.IsNullOrWhiteSpace(_errorMessage))
-        {
-            _errorMessage = "Thời gian làm bài đã kết thúc.";
-        }
-
+        Snackbar.Add("Thời gian làm bài đã kết thúc.", Severity.Error);
         StateHasChanged();
         return Task.CompletedTask;
     }
@@ -137,7 +124,6 @@ public partial class Exam : ComponentBase, IAsyncDisposable
         }
 
         _isLoading = true;
-        _errorMessage = null;
 
         if (force)
         {
@@ -153,7 +139,7 @@ public partial class Exam : ComponentBase, IAsyncDisposable
             var result = await StudentService.StartExamAsync(studentExamSessionId);
             if (result == null)
             {
-                _errorMessage = "API không trả dữ liệu hoặc báo lỗi.";
+                Snackbar.Add("API không trả dữ liệu hoặc báo lỗi.", Severity.Error);
                 _questionDisplayItems.Clear();
                 _response = null;
             }
@@ -171,7 +157,7 @@ public partial class Exam : ComponentBase, IAsyncDisposable
         }
         catch (Exception ex)
         {
-            _errorMessage = $"Lỗi gọi API: {ex.Message}";
+            Snackbar.Add($"Lỗi gọi API: {ex.Message}", Severity.Error);
         }
         finally
         {
@@ -321,34 +307,6 @@ public partial class Exam : ComponentBase, IAsyncDisposable
         }
 
         return false;
-    }
-
-    private Task DismissMissingExamSessionWarning()
-    {
-        _showMissingExamSessionWarning = false;
-        StateHasChanged();
-        return Task.CompletedTask;
-    }
-
-    private Task DismissFullscreenWarning()
-    {
-        _showFullscreenWarning = false;
-        StateHasChanged();
-        return Task.CompletedTask;
-    }
-
-    private Task DismissFocusWarning()
-    {
-        _showFocusWarning = false;
-        StateHasChanged();
-        return Task.CompletedTask;
-    }
-
-    private Task DismissErrorMessage()
-    {
-        _errorMessage = null;
-        StateHasChanged();
-        return Task.CompletedTask;
     }
 
     private void ToggleTimerVisibility()
