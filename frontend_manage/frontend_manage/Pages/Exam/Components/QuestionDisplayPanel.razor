@@ -5,7 +5,6 @@
     @if (ActiveQuestion != null)
     {
         <MudPaper Class="pa-4 exam-panel" Elevation="0">
-            <MudStack Spacing="2">
                 <div class="d-flex justify-space-between align-center">
                     <MudText Typo="Typo.subtitle2">
                         Trang @(CurrentIndex + 1)/@TotalQuestions
@@ -37,7 +36,7 @@
                         Tiếp
                     </MudButton>
                 </MudStack>
-            </MudStack>
+            
         </MudPaper>
     }
     else

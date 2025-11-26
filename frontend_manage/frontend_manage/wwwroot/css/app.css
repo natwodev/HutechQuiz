@@ -209,9 +209,8 @@ h1:focus {
 .exam-questions-pane {
     overflow-y: auto;
     overflow-x: hidden;
-    height: 100%;
-    max-height: calc(100vh - 200px);
     padding-right: 12px;
+    max-height: 100vh;
 }
 
 .exam-questions-pane::-webkit-scrollbar {
@@ -321,7 +320,6 @@ h1:focus {
 @media (max-width: 900px) {
     .exam-questions-pane {
         padding-right: 0;
-        max-height: calc(100vh - 250px);
     }
 
     .exam-sidebar,
