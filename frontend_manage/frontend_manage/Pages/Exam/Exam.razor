@@ -4,9 +4,8 @@
 @using Microsoft.AspNetCore.Components
 @using MudBlazor
 
-<MudContainer MaxWidth="MaxWidth.False" Class="exam-fullscreen-container py-6">
-    <MudPaper Id="exam-shell" Class="pa-6 exam-fullscreen-shell" Elevation="2">
-        <div class="exam-header mb-4">
+<MudContainer MaxWidth="MaxWidth.False" Class="pa-2" Style="min-height:100vh; background:#f7f9fc;">
+    <div class="exam-header mb-4">
             <div class="d-flex align-items-center" style="gap: 16px;">
                 <img src="images/logo-dai-hoc-hutech_012634748.png" alt="Trắc Nghiệm" class="exam-logo" />
                 <span class="exam-subtitle">Hệ thống thi trực tuyến HUTECH</span>
@@ -17,15 +16,12 @@
                      style="display:flex;align-items:center;gap:12px;">
                     @if (_showTimer && StudentSession is not null)
                     {
-                        <MudPaper Class="pa-2 exam-timer-card mb-0"
-                                  Variant="Variant.Outlined">
-                            <ExamTimer DurationMinutes="@StudentSession.Duration"
-                                       ExtraMinutes="@StudentSession.ExtraMinutes"
-                                       StartTime="@(StudentSession.StartTime ?? StudentSession.ExamSessionStartTime)"
-                                       ExamSessionStartTime="@StudentSession.ExamSessionStartTime"
-                                       UseExamSessionFormula="true"
-                                       OnTimeUp="@HandleExamTimerExpired" />
-                        </MudPaper>
+                        <ExamTimer DurationMinutes="@StudentSession.Duration"
+                                   ExtraMinutes="@StudentSession.ExtraMinutes"
+                                   StartTime="@(StudentSession.StartTime ?? StudentSession.ExamSessionStartTime)"
+                                   ExamSessionStartTime="@StudentSession.ExamSessionStartTime"
+                                   UseExamSessionFormula="true"
+                                   OnTimeUp="@HandleExamTimerExpired" />
                     }
                     <MudButton Variant="Variant.Filled"
                                Color="Color.Info"
@@ -49,7 +45,7 @@
                     <img src="css/icons/fullscreen-enter.svg" alt="Enter fullscreen" class="fullscreen-icon" />
                 }
             </MudIconButton>
-        </div>
+            </div>
         <ExamStatusAlerts MissingExamSessionId="@_showMissingExamSessionWarning"
                           ShowFullscreenWarning="@_showFullscreenWarning"
                           ShowFocusWarning="@_showFocusWarning"
@@ -62,55 +58,57 @@
 
         @if (_response != null || _questionDisplayItems.Count > 0)
         {
-            <div class="exam-main-layout mt-4">
-                <QuestionDisplayPanel ActiveQuestion="@ActiveQuestion?.Question"
-                                      CurrentIndex="@_activeQuestionIndex"
-                                      TotalQuestions="@_questionDisplayItems.Count"
-                                      StudentSession="@_response?.StudentSession"
-                                      OnExamTimerExpired="EventCallback.Factory.Create(this, HandleExamTimerExpired)"
-                                      OnPrevious="EventCallback.Factory.Create(this, PreviousQuestion)"
-                                      OnNext="EventCallback.Factory.Create(this, NextQuestion)"
-                                      GetQuestionLabel="GetQuestionLabel"
-                                      GetSelectedAnswerId="GetSelectedAnswerId"
-                                      OnAnswered="HandleQuestionAnswered" />
-                <div class="exam-sidebar">
-                    <div class="exam-sidebar-inner">
-                    @if (_response != null)
-                    {
-                        <MudPaper Class="pa-4 exam-panel" Elevation="0">
-                            <MudStack Spacing="2">
-                                <div class="sidebar-actions">
-                                    <MudButton Variant="Variant.Filled"
-                                               Color="Color.Primary"
-                                               Disabled="@(!_canTriggerFetch)"
-                                               OnClick="@ReloadExamAsync">
-                                        @_fetchButtonLabel
-                                    </MudButton>
-                                    <MudButton Variant="Variant.Outlined"
-                                               Color="Color.Error">
-                                        Nộp bài
-                                    </MudButton>
-                                </div>
-                                <ExamSessionInfo StudentSession="@_response.StudentSession" />
-                                
-                            </MudStack>
-                        </MudPaper>
-                    }
+            <MudGrid Class="mt-4">
+                <MudItem xs="12" md="8" lg="9">
+                    <QuestionDisplayPanel ActiveQuestion="@ActiveQuestion?.Question"
+                                          CurrentIndex="@_activeQuestionIndex"
+                                          TotalQuestions="@_questionDisplayItems.Count"
+                                          StudentSession="@_response?.StudentSession"
+                                          OnExamTimerExpired="EventCallback.Factory.Create(this, HandleExamTimerExpired)"
+                                          OnPrevious="EventCallback.Factory.Create(this, PreviousQuestion)"
+                                          OnNext="EventCallback.Factory.Create(this, NextQuestion)"
+                                          GetQuestionLabel="GetQuestionLabel"
+                                          GetSelectedAnswerId="GetSelectedAnswerId"
+                                          OnAnswered="HandleQuestionAnswered" />
+                </MudItem>
+                <MudItem xs="12" md="4" lg="3">
+                    <div class="exam-sidebar">
+                        <div class="exam-sidebar-inner">
+                            @if (_response != null)
+                            {
+                                <MudPaper Class="pa-4 exam-panel mb-3" Elevation="0">
+                                    <MudStack Spacing="2">
+                                        <div class="sidebar-actions">
+                                            <MudButton Variant="Variant.Filled"
+                                                       Color="Color.Primary"
+                                                       Disabled="@(!_canTriggerFetch)"
+                                                       OnClick="@ReloadExamAsync">
+                                                @_fetchButtonLabel
+                                            </MudButton>
+                                            <MudButton Variant="Variant.Outlined"
+                                                       Color="Color.Error">
+                                                Nộp bài
+                                            </MudButton>
+                                        </div>
+                                        <ExamSessionInfo StudentSession="@_response.StudentSession" />
+                                    </MudStack>
+                                </MudPaper>
+                            }
 
-                        @if (_navigationItems.Count > 0)
-                        {
-                            <MudPaper Class="pa-3 exam-panel" Elevation="0">
-                                <QuestionNavigation TotalQuestions="@_navigationItems.Count"
-                                                    OnNavigate="@NavigateToEntry"
-                                                    AnsweredMap="@_questionAnswers"
-                                                    QuestionIds="@_navigationItems.Select(n => n.QuestionId).ToList()"
-                                                    ActiveQuestionIndex="@_activeQuestionIndex"
-                                                    ParentIndices="@_navigationItems.Select(n => n.ParentIndex).ToList()" />
-                            </MudPaper>
-                        }
+                            @if (_navigationItems.Count > 0)
+                            {
+                                <MudPaper Class="pa-3 exam-panel" Elevation="0">
+                                    <QuestionNavigation TotalQuestions="@_navigationItems.Count"
+                                                        OnNavigate="@NavigateToEntry"
+                                                        AnsweredMap="@_questionAnswers"
+                                                        QuestionIds="@_navigationItems.Select(n => n.QuestionId).ToList()"
+                                                        ActiveQuestionIndex="@_activeQuestionIndex"
+                                                        ParentIndices="@_navigationItems.Select(n => n.ParentIndex).ToList()" />
+                                </MudPaper>
+                            }
+                        </div>
                     </div>
-                </div>
-            </div>
+                </MudItem>
+            </MudGrid>
         }
-    </MudPaper>
 </MudContainer>

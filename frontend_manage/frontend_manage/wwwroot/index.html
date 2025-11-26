@@ -89,64 +89,7 @@
         };
     </script>
     <script>
-        // Chặn chuột phải
-        document.addEventListener('contextmenu', function (e) {
-            e.preventDefault();
-            return false;
-        });
-
-        // Chặn F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+U
-        document.addEventListener('keydown', function (e) {
-            // Chặn F12
-            if (e.key === 'F12') {
-                e.preventDefault();
-                return false;
-            }
-
-            // Chặn Ctrl+Shift+I (Developer Tools)
-            if (e.ctrlKey && e.shiftKey && e.key === 'I') {
-                e.preventDefault();
-                return false;
-            }
-
-            // Chặn Ctrl+Shift+J (Console)
-            if (e.ctrlKey && e.shiftKey && e.key === 'J') {
-                e.preventDefault();
-                return false;
-            }
-
-            // Chặn Ctrl+U (View Source)
-            if (e.ctrlKey && e.key === 'u') {
-                e.preventDefault();
-                return false;
-            }
-
-            // Chặn Ctrl+Shift+C (Inspect Element)
-            if (e.ctrlKey && e.shiftKey && e.key === 'C') {
-                e.preventDefault();
-                return false;
-            }
-        });
-
-        // Chặn DevTools bằng cách detect khi window resize
-        let devtools = { open: false, orientation: null };
-        setInterval(() => {
-            const threshold = 160;
-            const widthThreshold = window.outerWidth - window.innerWidth > threshold;
-            const heightThreshold = window.outerHeight - window.innerHeight > threshold;
-
-            if (widthThreshold || heightThreshold) {
-                if (!devtools.open) {
-                    devtools.open = true;
-                    devtools.orientation = widthThreshold ? 'vertical' : 'horizontal';
-                }
-                // Có thể thêm action khi detect devtools mở
-                // window.location.reload();
-            } else {
-                devtools.open = false;
-                devtools.orientation = null;
-            }
-        }, 500);
+        // Đã loại bỏ chức năng chặn chuột phải và DevTools
 
         // Fetch với credentials để gửi cookie
         window.fetchWithCredentials = async function (url, method, body) {

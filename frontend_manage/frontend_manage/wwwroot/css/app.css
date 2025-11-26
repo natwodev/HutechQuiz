@@ -99,28 +99,38 @@ h1:focus {
 }
 
 .exam-fullscreen-container {
+    width: 100vw;
+    height: 100vh;
     min-height: 100vh;
-    background: #f5f7fb;
-    padding-left: clamp(16px, 4vw, 64px);
-    padding-right: clamp(16px, 4vw, 64px);
+    max-width: 100vw;
+    margin: 0;
+    padding: 0;
+    background: #ffffff;
+    position: fixed;
+    top: 0;
+    left: 0;
+    overflow: auto;
 }
 
 .exam-fullscreen-shell {
     width: 100%;
+    height: 100%;
     background: #ffffff;
-    border-radius: 18px;
-    border: 1px solid #dfe4ec;
+    border-radius: 0;
+    border: none;
     display: flex;
     flex-direction: column;
-    min-height: calc(100vh - 80px);
     overflow: visible;
+    padding-top: 48px;
+    padding-left: 48px;
+    padding-right: 48px;
+    padding-bottom: 24px;
 }
 
 @media (max-width: 900px) {
     .exam-fullscreen-shell {
-        padding: 1.5rem !important;
-        border-radius: 12px;
-        box-shadow: 0 12px 24px rgba(15, 23, 42, 0.12);
+        border-radius: 0;
+        border: none;
     }
 }
 
@@ -130,7 +140,10 @@ h1:focus {
     height: 100vh;
     border-radius: 0;
     border: none;
-    padding: clamp(16px, 4vw, 48px);
+    padding-top: clamp(16px, 4vw, 48px);
+    padding-left: clamp(16px, 4vw, 48px);
+    padding-right: clamp(16px, 4vw, 48px);
+    padding-bottom: clamp(8px, 2vw, 24px);
     background: #ffffff;
     display: flex;
     flex-direction: column;
@@ -191,14 +204,7 @@ h1:focus {
     align-items: center;
 }
 
-.exam-main-layout {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) 320px;
-    gap: 24px;
-    flex: 1;
-    min-height: 0;
-    overflow: visible;
-}
+/* Layout đã chuyển sang MudGrid, không cần CSS grid nữa */
 
 .exam-questions-pane {
     overflow-y: auto;
@@ -313,10 +319,6 @@ h1:focus {
 }
 
 @media (max-width: 900px) {
-    .exam-main-layout {
-        grid-template-columns: 1fr;
-    }
-
     .exam-questions-pane {
         padding-right: 0;
         max-height: calc(100vh - 250px);
@@ -330,5 +332,44 @@ h1:focus {
 
     .question-navigation-container {
         max-height: 300px;
+    }
+}
+
+.exam-footer {
+    margin-top: auto;
+    padding-top: 24px;
+    padding-bottom: 0;
+}
+
+.exam-footer-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    padding: 12px 0;
+}
+
+.exam-footer-left,
+.exam-footer-right {
+    display: flex;
+    align-items: center;
+}
+
+.exam-footer-text {
+    font-size: 12px;
+    color: #64748b;
+    font-weight: 400;
+}
+
+@media (max-width: 900px) {
+    .exam-footer-content {
+        flex-direction: column;
+        text-align: center;
+        gap: 8px;
+    }
+    
+    .exam-footer-left,
+    .exam-footer-right {
+        justify-content: center;
     }
 }
