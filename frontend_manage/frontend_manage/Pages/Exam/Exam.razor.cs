@@ -165,7 +165,16 @@ public partial class Exam : ComponentBase, IAsyncDisposable
                 _questionLabelMap.Clear();
                 _navigationItems.AddRange(BuildNavigationItems());
                 _activeQuestionIndex = 0;
+
+                // Khởi tạo lại map câu trả lời
                 _questionAnswers.Clear();
+
+                // Nếu backend trả về chuỗi đáp án đã lưu, parse lại để hiển thị
+                var savedAnswersString = result.StudentSession?.StudentAnswersString;
+                if (!string.IsNullOrWhiteSpace(savedAnswersString))
+                {
+                    RestoreAnswersFromString(savedAnswersString);
+                }
             }
         }
         catch (Exception ex)
@@ -233,6 +242,58 @@ public partial class Exam : ComponentBase, IAsyncDisposable
 
     private string GetQuestionLabel(int questionId) =>
         _questionLabelMap.TryGetValue(questionId, out var label) ? label : string.Empty;
+
+    /// <summary>
+    /// Parse chuỗi studentAnswersString dạng "(1:1);(2:6);..." 
+    /// thành dictionary _questionAnswers với key = OriginalExamPaperDetailId, value = answerId.
+    /// </summary>
+    /// <param name="answersString"></param>
+    private void RestoreAnswersFromString(string answersString)
+    {
+        // Ví dụ chuỗi: "(1:1);(2:6);(3:10);..."
+        var segments = answersString
+            .Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+        foreach (var rawSegment in segments)
+        {
+            var segment = rawSegment.Trim();
+            if (string.IsNullOrWhiteSpace(segment))
+            {
+                continue;
+            }
+
+            // Bỏ ngoặc tròn nếu có
+            if (segment.StartsWith('(') && segment.EndsWith(')') && segment.Length >= 3)
+            {
+                segment = segment[1..^1];
+            }
+
+            var parts = segment.Split(':', StringSplitOptions.TrimEntries);
+            if (parts.Length != 2)
+            {
+                continue;
+            }
+
+            if (!int.TryParse(parts[0], out var questionId))
+            {
+                continue;
+            }
+
+            // Nếu value trống => chưa chọn
+            if (string.IsNullOrWhiteSpace(parts[1]))
+            {
+                continue;
+            }
+
+            if (!int.TryParse(parts[1], out var answerId))
+            {
+                continue;
+            }
+
+            // Lưu vào map để GetSelectedAnswerId sử dụng
+            _questionAnswers[questionId] = answerId;
+        }
+    }
 
     public async ValueTask DisposeAsync()
     {
