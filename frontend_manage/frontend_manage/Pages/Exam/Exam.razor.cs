@@ -253,11 +253,59 @@ public partial class Exam : ComponentBase, IAsyncDisposable
         return null;
     }
 
-    private Task HandleQuestionAnswered((int questionId, object? value) payload)
-    
+    private async Task HandleQuestionAnswered((int questionId, object? value) payload)
     {
+        // Lưu trạng thái chọn đáp án trên UI
         _questionAnswers[payload.questionId] = payload.value;
-        return Task.CompletedTask;
+
+        // Nếu chưa có session id thì không gọi API
+        if (!StudentExamSessionId.HasValue)
+        {
+            return;
+        }
+
+        // Giá trị từ UI: với câu hỏi 1 đáp án sẽ là int (answerId)
+        int? answerId = null;
+        if (payload.value is int intValue)
+        {
+            answerId = intValue;
+        }
+
+        var request = new SaveAnswerDto
+        {
+            StudentExamSessionId = StudentExamSessionId.Value,
+            // key chính là OriginalExamPaperDetailId
+            key = payload.questionId,
+            // value là answerId (có thể null nếu bỏ chọn)
+            value = answerId
+        };
+
+        var result = await StudentService.SaveAnswerAsync(request);
+
+        if (result == null)
+        {
+            Snackbar.Add("Không thể lưu câu trả lời. Vui lòng kiểm tra kết nối.", Severity.Error);
+            return;
+        }
+
+        if (!result.Success)
+        {
+            if (result.IsRateLimited)
+            {
+                Snackbar.Add(result.Message, Severity.Warning);
+            }
+            else if (result.IsUnauthorized)
+            {
+                Snackbar.Add(result.Message, Severity.Error);
+            }
+            else
+            {
+                Snackbar.Add(string.IsNullOrWhiteSpace(result.Message)
+                        ? "Lưu câu trả lời thất bại."
+                        : result.Message,
+                    Severity.Error);
+            }
+        }
     }
 
     private void GoToQuestion(int index)

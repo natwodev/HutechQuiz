@@ -9,9 +9,8 @@ public class SaveAnswerDto
     public int StudentExamSessionId { get; set; }
 
     [Required]
-    public int key { get; set; }
+    public int key { get; set; } // key này là OriginalExamPaperDetailId
 
-    // Dùng cho câu hỏi con trong câu cha
     public int? value { get; set; }
     
 }
