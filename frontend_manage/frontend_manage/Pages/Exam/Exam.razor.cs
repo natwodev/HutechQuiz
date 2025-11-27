@@ -15,6 +15,8 @@ public partial class Exam : ComponentBase, IAsyncDisposable
     [Inject] private IJSRuntime JS { get; set; } = default!;
     [Inject] private ISnackbar Snackbar { get; set; } = default!;
 
+    [Inject] NavigationManager Navigation { get; set; } = default!;
+
     [Parameter]
     [SupplyParameterFromQuery(Name = "studentExamSessionId")]
     public int? StudentExamSessionId { get; set; }
@@ -244,6 +246,47 @@ public partial class Exam : ComponentBase, IAsyncDisposable
         });
     }
 
+    private bool _isSubmitting = false;
+
+    private async Task SubmitExam()
+    {
+        if (_isSubmitting)
+            return; // tránh nộp nhiều lần
+
+        if (!StudentExamSessionId.HasValue)
+        {
+            Snackbar.Add("Không xác định được ca thi để nộp.", Severity.Error);
+            return;
+        }
+
+        _isSubmitting = true;
+        StateHasChanged();
+
+        Snackbar.Add("Đang nộp bài...", Severity.Info);
+
+        var request = new SubmitExamRequest
+        {
+            StudentExamSessionId = StudentExamSessionId.Value
+        };
+
+        var result = await StudentService.SubmitExamAsync(request);
+
+        if (result == null)
+        {
+            Snackbar.Add("Không nhận được phản hồi từ server.", Severity.Error);
+            _isSubmitting = false;
+            return;
+        }
+
+        Snackbar.Add(result.Message, Severity.Success);
+
+        Navigation.NavigateTo("/Exam/Result");
+
+        _isSubmitting = false;
+        StateHasChanged();
+    }
+
+    
     private string GetQuestionLabel(int questionId) =>
         _questionLabelMap.TryGetValue(questionId, out var label) ? label : string.Empty;
 

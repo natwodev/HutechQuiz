@@ -32,7 +32,8 @@
     <div class="exam-footer-right">
         <MudButton Variant="Variant.Filled"
                    Color="Color.Primary"
-                   Size="Size.Small">
+                   Size="Size.Small"
+                   OnClick="SubmitExam">
             Nộp bài
         </MudButton>
     </div>
@@ -46,6 +47,8 @@
     [Parameter] public EventCallback ReloadExam { get; set; }
     [Parameter] public EventCallback PreviousQuestion { get; set; }
     [Parameter] public EventCallback NextQuestion { get; set; }
+
+    [Parameter] public EventCallback SubmitExam { get; set; }
 
     private bool IsPreviousDisabled => ActiveQuestionIndex <= 0;
     private bool IsNextDisabled => ActiveQuestionIndex >= TotalQuestions - 1;
