@@ -102,7 +102,7 @@ namespace backend_manage.Controllers
             }
         }
 
-        [HttpPut("{core}/allow-view-materials")]
+        [HttpPut("allow-view-materials/{core}")]
         [Authorize(Policy = "ExamManagement")]
         public async Task<IActionResult> UpdateAllowViewMaterials(string core, [FromBody] UpdateAllowViewMaterialsRequest request)
         {

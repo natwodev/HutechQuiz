@@ -226,6 +226,54 @@ namespace frontend_manage.Services.ExamManager
                 throw new Exception($"Lỗi khi lấy danh sách đề thi gốc: {ex.Message}", ex);
             }
         }
+
+        public async Task<bool> UpdateOriginalExamAllowViewMaterialsAsync(string originalExamPaperCore, bool allowViewMaterials)
+        {
+            try
+            {
+                var request = new { AllowViewMaterials = allowViewMaterials };
+                var encodedCore = Uri.EscapeDataString(originalExamPaperCore);
+                var response = await _httpClient.PutAsJsonAsync($"{_baseUrl}/allow-view-materials/{encodedCore}", request);
+                
+                if (response.IsSuccessStatusCode)
+                {
+                    return true;
+                }
+                else
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    throw new Exception($"Lỗi khi cập nhật AllowViewMaterials: {errorContent}");
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Lỗi khi cập nhật AllowViewMaterials: {ex.Message}", ex);
+            }
+        }
+
+        public async Task<bool> UpdateShuffledExamAllowViewMaterialsAsync(string shuffledExamPaperCore, bool allowViewMaterials)
+        {
+            try
+            {
+                var request = new { AllowViewMaterials = allowViewMaterials };
+                var encodedCore = Uri.EscapeDataString(shuffledExamPaperCore);
+                var response = await _httpClient.PutAsJsonAsync($"{_shuffledBaseUrl}/allow-view-materials/{encodedCore}", request);
+                
+                if (response.IsSuccessStatusCode)
+                {
+                    return true;
+                }
+                else
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    throw new Exception($"Lỗi khi cập nhật AllowViewMaterials: {errorContent}");
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Lỗi khi cập nhật AllowViewMaterials: {ex.Message}", ex);
+            }
+        }
     }
 
     public class ImportResultDto

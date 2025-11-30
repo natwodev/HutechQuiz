@@ -1,10 +1,6 @@
 @page "/exammanager/preview/original"
 @using frontend_manage.DTOs
-@using frontend_manage.Services.ExamManager
-@using frontend_manage.Services
 @using System.Linq
-@inject ExamManagerService ExamManagerService
-@inject IKaTeXService KaTeX
 
 <link href="css/monitor/MonitorPage.css" rel="stylesheet" />
 
@@ -22,6 +18,21 @@
                 <div><strong>Mã đề gốc:</strong> @Exam?.OriginalExamPaperCore</div>
                 <div><strong>Tiêu đề:</strong> @Exam?.Title</div>
                 <div><strong>Tổng số câu:</strong> @(GetTotalQuestionsCount())</div>
+                <div class="allow-view-materials-control">
+                    <label class="toggle-label">
+                        <span>Cho phép xem tài liệu:</span>
+                        <input type="checkbox" 
+                               class="toggle-switch" 
+                               checked="@(Exam?.AllowViewMaterials ?? false)" 
+                               disabled="@isUpdating"
+                               @onchange="@((ChangeEventArgs e) => HandleToggleAllowViewMaterials(e))" />
+                        <span class="toggle-status">@(Exam?.AllowViewMaterials == true ? "Bật" : "Tắt")</span>
+                    </label>
+                    @if (isUpdating)
+                    {
+                        <span class="updating-text">Đang cập nhật...</span>
+                    }
+                </div>
             </div>
         </div>
 
@@ -85,115 +96,6 @@
     </div>
 </div>
 
-@code {
-    [Parameter]
-    [SupplyParameterFromQuery]
-    public string? core { get; set; }
-
-    private OriginalExamPaperDto? Exam;
-    private bool isLoading = true;
-
-    protected override async Task OnInitializedAsync()
-    {
-        if (!string.IsNullOrWhiteSpace(core))
-        {
-            isLoading = true;
-            try
-            {
-                Exam = await ExamManagerService.GetOriginalExamWithDetailsAsync(core);
-            }
-            catch (Exception ex)
-            {
-                // Handle error
-            }
-            finally
-            {
-                isLoading = false;
-            }
-        }
-    }
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender)
-        {
-            await KaTeX.RenderAsync(".shuffled-preview-page");
-        }
-    }
-
-    private string RenderHtml(string? content)
-    {
-        if (string.IsNullOrEmpty(content))
-            return string.Empty;
-        
-        // Loại bỏ các ký tự {<number>} khỏi nội dung
-        return System.Text.RegularExpressions.Regex.Replace(
-            content, 
-            @"\{<\d+>\}", 
-            string.Empty
-        );
-    }
-    
-    private char GetLetter(int order) => (char)('A' + Math.Max(0, order - 1));
-
-    private List<OriginalExamPaperDetailDto> GetFlatQuestions()
-    {
-        if (Exam?.Details == null || Exam.Details.Count == 0)
-            return new List<OriginalExamPaperDetailDto>();
-
-        var flatQuestions = new List<OriginalExamPaperDetailDto>();
-        var parentQuestions = Exam.Details.Where(d => d.ParentQuestionId == null).OrderBy(d => d.Order).ToList();
-        
-        foreach (var parentQ in parentQuestions)
-        {
-            // Nếu là câu hỏi cha (có child questions)
-            if (parentQ.ChildQuestions != null && parentQ.ChildQuestions.Count > 0)
-            {
-                flatQuestions.Add(parentQ); // Thêm câu hỏi cha
-                // Thêm các câu hỏi con
-                foreach (var child in parentQ.ChildQuestions.OrderBy(c => c.Order))
-                {
-                    flatQuestions.Add(child);
-                }
-            }
-            // Nếu là câu hỏi độc lập (không có child)
-            else
-            {
-                flatQuestions.Add(parentQ);
-            }
-        }
-
-        return flatQuestions;
-    }
-
-    private int GetTotalQuestionsCount()
-    {
-        if (Exam?.Details == null || Exam.Details.Count == 0)
-            return 0;
-
-        int count = 0;
-        foreach (var q in Exam.Details.Where(d => d.ParentQuestionId == null))
-        {
-            var isParentQuestion = q.ChildQuestions != null && q.ChildQuestions.Count > 0;
-            
-            if (isParentQuestion)
-            {
-                // Câu hỏi cha: chỉ đếm các câu hỏi con
-                if (q.ChildQuestions != null && q.ChildQuestions.Count > 0)
-                {
-                    count += q.ChildQuestions.Count;
-                }
-            }
-            else
-            {
-                // Câu hỏi độc lập: đếm chính nó
-                count++;
-            }
-        }
-        return count;
-    }
-}
-
 <style>
 .shuffled-preview-page { padding: 16px; background: #f5f5f5; min-height: 100vh; }
 .preview-header { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 20px; padding: 16px; background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
@@ -203,6 +105,16 @@
 .university { font-size: 1rem; }
 .suite { color: #1976d2; font-weight: 700; font-size: 0.9rem; }
 .exam-meta { text-align: right; font-size: 0.9rem; }
+.allow-view-materials-control { margin-top: 12px; padding-top: 12px; border-top: 1px solid #e0e0e0; }
+.toggle-label { display: flex; align-items: center; gap: 12px; cursor: pointer; user-select: none; }
+.toggle-label span:first-child { font-weight: 600; color: #333; }
+.toggle-switch { width: 48px; height: 24px; cursor: pointer; appearance: none; background: #ccc; border-radius: 12px; position: relative; transition: background 0.3s; }
+.toggle-switch:checked { background: #4caf50; }
+.toggle-switch:disabled { opacity: 0.6; cursor: not-allowed; }
+.toggle-switch::before { content: ''; position: absolute; width: 20px; height: 20px; border-radius: 50%; background: white; top: 2px; left: 2px; transition: transform 0.3s; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+.toggle-switch:checked::before { transform: translateX(24px); }
+.toggle-status { font-weight: 600; color: #1976d2; min-width: 40px; }
+.updating-text { font-size: 0.85rem; color: #666; font-style: italic; margin-left: 8px; }
 .exam-paper { background: #fff; border: 1px solid #e0e0e0; border-radius: 10px; padding: 24px; box-shadow: 0 2px 10px rgba(0,0,0,0.04); }
 .question-item { margin-bottom: 24px; padding: 16px; border: 1px solid #f0f0f0; border-radius: 8px; background: #fafafa; }
 .q-number { font-weight: 700; color: #1976d2; margin-bottom: 8px; }
