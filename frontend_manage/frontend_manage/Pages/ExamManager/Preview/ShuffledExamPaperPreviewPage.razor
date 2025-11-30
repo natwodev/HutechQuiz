@@ -1,5 +1,6 @@
 @page "/exammanager/preview/shuffled"
 @using frontend_manage.DTOs
+@using frontend_manage.DTOs.Mapp
 @using frontend_manage.Services.ExamManager
 @using frontend_manage.Services
 @using System.Linq
@@ -31,9 +32,13 @@
                 var idx = 1;
                 @foreach (var q in GetFlatQuestions())
                 {
-                    <div class="question-item @(q.ParentQuestionId != null ? "child-question" : "")">
+                    var isParentQuestion = q.ParentQuestionId == null && q.ChildQuestions != null && q.ChildQuestions.Count > 0;
+                    <div class="question-item @(q.ParentQuestionId != null ? "child-question" : "") @(isParentQuestion ? "parent-question" : "")">
                         <div class="q-number">
-                            <span class="q-chip">@idx</span> 
+                            @if (!isParentQuestion)
+                            {
+                                <span class="q-chip">@idx</span> 
+                            }
                             Câu hỏi
                             @if (q.ParentQuestionId != null)
                             {
@@ -72,7 +77,10 @@
                             </ul>
                         }
                     </div>
-                    idx++;
+                    @if (!isParentQuestion)
+                    {
+                        idx++;
+                    }
                 }
             }
             else if (isLoading)
@@ -110,112 +118,28 @@
             {
                 Exam = await ExamManagerService.GetShuffledExamWithDetailsAsync(core);
                 
-                // Lấy OriginalExamPaper để có đầy đủ QuestionContent và AnswerContent
-                if (Exam != null && Exam.OriginalExamPaperId > 0)
+                // Sử dụng OriginalExamPaper từ response và map bằng QuestionMapping
+                if (Exam != null && Exam.OriginalExamPaper != null)
                 {
-                    // Lấy OriginalExamPaperCore từ ShuffledExamPaper để gọi API
-                    // Cần lấy từ OriginalExamPaper navigation property hoặc gọi API khác
-                    // Tạm thời, ta sẽ merge dữ liệu từ Exam nếu có
-                    await PopulateQuestionContentAndAnswers();
+                    OriginalExam = Exam.OriginalExamPaper;
+                    
+                    if (OriginalExam.Details != null)
+                    {
+                        // Sử dụng QuestionMapping để map từ OriginalExamPaperDetailDto sang QuestionStructureDto
+                        Exam.QuestionStructures = QuestionMapping.MapToQuestionStructureList(OriginalExam.Details);
+                        StateHasChanged(); // Cập nhật UI sau khi map
+                    }
                 }
             }
             catch (Exception ex)
             {
                 // Handle error
+                System.Diagnostics.Debug.WriteLine($"Lỗi khi tải đề thi: {ex.Message}");
             }
             finally
             {
                 isLoading = false;
             }
-        }
-    }
-
-    private async Task PopulateQuestionContentAndAnswers()
-    {
-        if (Exam == null) return;
-
-        // Lấy OriginalExamPaper thông qua API
-        // Cần tìm OriginalExamPaperCore từ ShuffledExamPaper
-        // Vì ShuffledExamPaper có OriginalExamPaperId, ta cần API mới hoặc thông tin từ Exam
-        
-        // Tạm thời, ta sẽ tìm OriginalExamPaperCore từ danh sách
-        // Hoặc backend cần trả về OriginalExamPaperCore trong ShuffledExamPaperDto
-        try
-        {
-            // Thử lấy từ danh sách OriginalExamPapers
-            var originalExams = await ExamManagerService.GetAllOriginalExamPapersAsync();
-            var originalExam = originalExams.FirstOrDefault(x => x.OriginalExamPaperId == Exam.OriginalExamPaperId);
-            
-            if (originalExam != null)
-            {
-                OriginalExam = await ExamManagerService.GetOriginalExamWithDetailsAsync(originalExam.OriginalExamPaperCore);
-                
-                if (OriginalExam != null && OriginalExam.Details != null)
-                {
-                    // Merge QuestionContent và AnswerContent vào QuestionStructures
-                    MergeQuestionContentAndAnswers();
-                    StateHasChanged(); // Cập nhật UI sau khi merge
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            // Log error nhưng không throw để không làm gián đoạn hiển thị
-            System.Diagnostics.Debug.WriteLine($"Lỗi khi lấy OriginalExamPaper: {ex.Message}");
-        }
-    }
-
-    private void MergeQuestionContentAndAnswers()
-    {
-        if (Exam?.QuestionStructures == null || OriginalExam?.Details == null) return;
-
-        // Tạo dictionary để tra cứu nhanh
-        var questionDict = OriginalExam.Details.ToDictionary(d => d.OriginalExamPaperDetailId);
-        var answerDict = OriginalExam.Details
-            .Where(d => d.Answers != null)
-            .SelectMany(d => d.Answers!)
-            .ToDictionary(a => a.AnswerId);
-
-        // Hàm đệ quy để merge
-        void MergeQuestion(QuestionStructureDto q)
-        {
-            // Merge QuestionContent
-            if (questionDict.TryGetValue(q.OriginalExamPaperDetailId, out var originalDetail))
-            {
-                q.QuestionContent = originalDetail.QuestionContent ?? q.QuestionContent;
-            }
-
-            // Merge AnswerContent
-            if (q.Answers != null && q.Answers.Count > 0)
-            {
-                foreach (var answer in q.Answers)
-                {
-                    if (answerDict.TryGetValue(answer.AnswerId, out var originalAnswer))
-                    {
-                        answer.AnswerContent = originalAnswer.AnswerContent ?? answer.AnswerContent ?? string.Empty;
-                    }
-                    else if (string.IsNullOrEmpty(answer.AnswerContent))
-                    {
-                        // Nếu không tìm thấy và AnswerContent rỗng, đặt giá trị mặc định
-                        answer.AnswerContent = string.Empty;
-                    }
-                }
-            }
-
-            // Merge cho ChildQuestions
-            if (q.ChildQuestions != null && q.ChildQuestions.Count > 0)
-            {
-                foreach (var child in q.ChildQuestions)
-                {
-                    MergeQuestion(child);
-                }
-            }
-        }
-
-        // Merge tất cả questions
-        foreach (var question in Exam.QuestionStructures)
-        {
-            MergeQuestion(question);
         }
     }
 
@@ -280,10 +204,20 @@
         int count = 0;
         foreach (var q in Exam.QuestionStructures)
         {
-            count++; // Đếm câu hỏi cha
-            if (q.ChildQuestions != null && q.ChildQuestions.Count > 0)
+            var isParentQuestion = q.ParentQuestionId == null && q.ChildQuestions != null && q.ChildQuestions.Count > 0;
+            
+            if (isParentQuestion)
             {
-                count += q.ChildQuestions.Count; // Đếm các câu hỏi con
+                // Câu hỏi cha: chỉ đếm các câu hỏi con
+                if (q.ChildQuestions != null && q.ChildQuestions.Count > 0)
+                {
+                    count += q.ChildQuestions.Count;
+                }
+            }
+            else
+            {
+                // Câu hỏi độc lập: đếm chính nó
+                count++;
             }
         }
         return count;
@@ -301,7 +235,6 @@
 .exam-meta { text-align: right; font-size: 0.9rem; }
 .exam-paper { background: #fff; border: 1px solid #e0e0e0; border-radius: 10px; padding: 24px; box-shadow: 0 2px 10px rgba(0,0,0,0.04); }
 .question-item { margin-bottom: 24px; padding: 16px; border: 1px solid #f0f0f0; border-radius: 8px; background: #fafafa; }
-.question-item.child-question { margin-left: 32px; background: #f5f5f5; border-left: 3px solid #1976d2; }
 .q-number { font-weight: 700; color: #1976d2; margin-bottom: 8px; }
 .q-chip { display: inline-flex; width: 32px; height: 32px; align-items: center; justify-content: center; border-radius: 50%; background: #e3f2fd; color: #1976d2; font-weight: 700; margin-right: 8px; }
 .child-badge { font-size: 0.85rem; color: #666; font-weight: normal; margin-left: 8px; }

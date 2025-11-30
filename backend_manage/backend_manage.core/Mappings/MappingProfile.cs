@@ -212,7 +212,8 @@ public class MappingProfile : Profile
         CreateMap<ShuffledExamPaper, ShuffledExamPaperDto>()
             .ForMember(dest => dest.SubjectName, opt => opt.MapFrom(src => src.Subject != null ? src.Subject.SubjectName : null))
             .ForMember(dest => dest.SubjectCode, opt => opt.MapFrom(src => src.Subject != null ? src.Subject.SubjectCore : null))
-            .ForMember(dest => dest.QuestionStructures, opt => opt.MapFrom(src => ParseQuestionStructure(src.QuestionStructure)));
+            .ForMember(dest => dest.QuestionStructures, opt => opt.MapFrom(src => ParseQuestionStructure(src.QuestionStructure)))
+            .ForMember(dest => dest.OriginalExamPaper, opt => opt.MapFrom(src => src.OriginalExamPaper));
     }
 
 

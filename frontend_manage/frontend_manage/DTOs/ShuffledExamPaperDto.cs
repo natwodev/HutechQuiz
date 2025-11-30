@@ -18,6 +18,8 @@ public class ShuffledExamPaperDto
         
     public List<QuestionStructureDto> QuestionStructures { get; set; } = new();
         
+    public OriginalExamPaperDto? OriginalExamPaper { get; set; }
+        
 }
 
 public class QuestionStructureDto

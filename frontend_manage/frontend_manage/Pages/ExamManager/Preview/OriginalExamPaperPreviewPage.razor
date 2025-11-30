@@ -21,7 +21,7 @@
             <div class="exam-meta">
                 <div><strong>Mã đề gốc:</strong> @Exam?.OriginalExamPaperCore</div>
                 <div><strong>Tiêu đề:</strong> @Exam?.Title</div>
-                <div><strong>Tổng số câu:</strong> @Exam?.TotalQuestions</div>
+                <div><strong>Tổng số câu:</strong> @(GetTotalQuestionsCount())</div>
             </div>
         </div>
 
@@ -31,9 +31,13 @@
                 var idx = 1;
                 @foreach (var q in GetFlatQuestions())
                 {
-                    <div class="question-item @(q.ParentQuestionId != null ? "child-question" : "")">
+                    var isParentQuestion = q.ParentQuestionId == null && q.ChildQuestions != null && q.ChildQuestions.Count > 0;
+                    <div class="question-item @(q.ParentQuestionId != null ? "child-question" : "") @(isParentQuestion ? "parent-question" : "")">
                         <div class="q-number">
-                            <span class="q-chip">@idx</span> 
+                            @if (!isParentQuestion)
+                            {
+                                <span class="q-chip">@idx</span> 
+                            }
                             Câu hỏi
                             @if (q.ParentQuestionId != null)
                             {
@@ -58,7 +62,10 @@
                             </ul>
                         }
                     </div>
-                    idx++;
+                    @if (!isParentQuestion)
+                    {
+                        idx++;
+                    }
                 }
             }
             else if (isLoading)
@@ -158,6 +165,33 @@
 
         return flatQuestions;
     }
+
+    private int GetTotalQuestionsCount()
+    {
+        if (Exam?.Details == null || Exam.Details.Count == 0)
+            return 0;
+
+        int count = 0;
+        foreach (var q in Exam.Details.Where(d => d.ParentQuestionId == null))
+        {
+            var isParentQuestion = q.ChildQuestions != null && q.ChildQuestions.Count > 0;
+            
+            if (isParentQuestion)
+            {
+                // Câu hỏi cha: chỉ đếm các câu hỏi con
+                if (q.ChildQuestions != null && q.ChildQuestions.Count > 0)
+                {
+                    count += q.ChildQuestions.Count;
+                }
+            }
+            else
+            {
+                // Câu hỏi độc lập: đếm chính nó
+                count++;
+            }
+        }
+        return count;
+    }
 }
 
 <style>
@@ -171,7 +205,6 @@
 .exam-meta { text-align: right; font-size: 0.9rem; }
 .exam-paper { background: #fff; border: 1px solid #e0e0e0; border-radius: 10px; padding: 24px; box-shadow: 0 2px 10px rgba(0,0,0,0.04); }
 .question-item { margin-bottom: 24px; padding: 16px; border: 1px solid #f0f0f0; border-radius: 8px; background: #fafafa; }
-.question-item.child-question { margin-left: 32px; background: #f5f5f5; border-left: 3px solid #1976d2; }
 .q-number { font-weight: 700; color: #1976d2; margin-bottom: 8px; }
 .q-chip { display: inline-flex; width: 32px; height: 32px; align-items: center; justify-content: center; border-radius: 50%; background: #e3f2fd; color: #1976d2; font-weight: 700; margin-right: 8px; }
 .child-badge { font-size: 0.85rem; color: #666; font-weight: normal; margin-left: 8px; }

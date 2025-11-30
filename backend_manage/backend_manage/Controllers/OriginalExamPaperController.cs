@@ -101,6 +101,36 @@ namespace backend_manage.Controllers
                 return StatusCode(500, new { message = $"Lỗi khi tạo đề hoán vị: {ex.Message}" });
             }
         }
+
+        [HttpPut("{core}/allow-view-materials")]
+        [Authorize(Policy = "ExamManagement")]
+        public async Task<IActionResult> UpdateAllowViewMaterials(string core, [FromBody] UpdateAllowViewMaterialsRequest request)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(core))
+                    return BadRequest("Mã đề thi gốc không hợp lệ");
+
+                var result = await _originalExamPaperService.UpdateAllowViewMaterialsAsync(core, request.AllowViewMaterials);
+                if (result)
+                {
+                    _logger.LogInformation("Đã cập nhật AllowViewMaterials = {Value} cho đề thi gốc {Core} và các đề hoán vị liên quan", 
+                        request.AllowViewMaterials, core);
+                    return Ok(new { message = $"Đã cập nhật AllowViewMaterials = {request.AllowViewMaterials} cho đề thi gốc và các đề hoán vị liên quan" });
+                }
+                return BadRequest("Không thể cập nhật AllowViewMaterials");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi cập nhật AllowViewMaterials cho đề thi gốc {Core}", core);
+                return StatusCode(500, new { message = $"Lỗi khi cập nhật AllowViewMaterials: {ex.Message}" });
+            }
+        }
+        
+        public class UpdateAllowViewMaterialsRequest
+        {
+            public bool AllowViewMaterials { get; set; }
+        }
         
         /*
         

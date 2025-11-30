@@ -36,6 +36,12 @@ namespace backend_manage.core.Services.AuthService
             var paper = await _shuffledExamPaperRepository.GetQueryable()
                 .Where(x => x.ShuffledExamPaperCore == shuffledExamPaperCore)
                 .Include(x => x.OriginalExamPaper)
+                    .ThenInclude(o => o.OriginalExamPaperDetails)
+                        .ThenInclude(d => d.Answers)
+                .Include(x => x.OriginalExamPaper)
+                    .ThenInclude(o => o.OriginalExamPaperDetails)
+                        .ThenInclude(d => d.ChildQuestions)
+                            .ThenInclude(c => c.Answers)
                 .Include(x => x.Subject)
                 .FirstOrDefaultAsync();
             if (paper == null) return null;
@@ -79,6 +85,32 @@ namespace backend_manage.core.Services.AuthService
                 .ToListAsync();
             
             return papers.Select(x => _mapper.Map<ShuffledExamPaperDto>(x)).ToList();
+        }
+
+        public async Task<bool> UpdateAllowViewMaterialsAsync(string shuffledExamPaperCore, bool allowViewMaterials)
+        {
+            if (string.IsNullOrWhiteSpace(shuffledExamPaperCore))
+                throw new ArgumentException("Mã đề hoán vị không hợp lệ");
+
+            var shuffledExamPaper = await _shuffledExamPaperRepository.GetQueryable()
+                .FirstOrDefaultAsync(x => x.ShuffledExamPaperCore == shuffledExamPaperCore && !x.IsDeleted);
+            
+            if (shuffledExamPaper == null)
+                throw new Exception($"Không tìm thấy đề hoán vị với mã '{shuffledExamPaperCore}'");
+
+            var userId = _httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+                throw new UnauthorizedAccessException("Không thể xác định người dùng cập nhật đề hoán vị.");
+
+            var now = DateTimeHelper.GetVietnamTime();
+
+            // Cập nhật AllowViewMaterials cho đề hoán vị
+            shuffledExamPaper.AllowViewMaterials = allowViewMaterials;
+            shuffledExamPaper.UpdatedBy = userId;
+            shuffledExamPaper.UpdatedAt = now;
+            await _shuffledExamPaperRepository.UpdateAsync(shuffledExamPaper);
+
+            return true;
         }
         
     }

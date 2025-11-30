@@ -18,6 +18,8 @@ namespace backend_manage.shared.DTOs
         
         public List<QuestionStructureDto> QuestionStructures { get; set; } = new();
         
+        public OriginalExamPaperDto? OriginalExamPaper { get; set; }
+        
     }
     
 } 
