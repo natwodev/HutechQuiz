@@ -8,6 +8,7 @@ using backend_manage.core.Services.Interfaces;
 using backend_manage.shared.DTOs;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace backend_manage.core.Services.AuthService
 {
@@ -21,6 +22,11 @@ namespace backend_manage.core.Services.AuthService
         private readonly IRepository<ShuffledExamPaper> _shuffledExamPaperRepository;
         private readonly ExamPaperHelper _examPaperHelper;
         private readonly ExamSessionSubjectCacheHelper _examSessionSubjectCacheHelper;
+        private readonly IRepository<Student> _studentRepository;
+        private readonly IRepository<StudentExamSession> _studentExamSessionRepository;
+        private readonly StudentCacheHelper _studentCacheHelper;
+        private readonly ILogger<ExamSessionSubjectService> _logger;
+        
         public ExamSessionSubjectService(
             IRepository<ExamSessionSubject> repository,
             IRepository<Lecturer> lecturerRepository,
@@ -29,7 +35,11 @@ namespace backend_manage.core.Services.AuthService
             IRepository<ExamSessionSubject> examSessionSubjectRepository,
             IRepository<ShuffledExamPaper> shuffledExamPaperRepository,
             ExamPaperHelper examPaperHelper,
-            ExamSessionSubjectCacheHelper examSessionSubjectCacheHelper
+            ExamSessionSubjectCacheHelper examSessionSubjectCacheHelper,
+            IRepository<Student> studentRepository,
+            IRepository<StudentExamSession> studentExamSessionRepository,
+            StudentCacheHelper studentCacheHelper,
+            ILogger<ExamSessionSubjectService> logger
             )
         {
             _repository = repository;
@@ -40,6 +50,10 @@ namespace backend_manage.core.Services.AuthService
             _shuffledExamPaperRepository = shuffledExamPaperRepository;
             _examPaperHelper = examPaperHelper;
             _examSessionSubjectCacheHelper = examSessionSubjectCacheHelper;
+            _studentRepository = studentRepository;
+            _studentExamSessionRepository = studentExamSessionRepository;
+            _studentCacheHelper = studentCacheHelper;
+            _logger = logger;
         }
 
         public async Task<bool> IsOpenAsync(int examSessionSubjectId)
@@ -325,6 +339,103 @@ namespace backend_manage.core.Services.AuthService
                 .ToListAsync();
 
             return _mapper.Map<IEnumerable<SubjectExamRoomStatusDto>>(entities);
+        }
+
+        public async Task<(bool Success, string Message, int UpdatedCount)> ToggleIsLoginForAllStudentsAsync(int examSessionSubjectId, bool isLogin)
+        {
+            try
+            {
+                // Kiểm tra ExamSessionSubject có tồn tại không
+                var examSessionSubject = await _repository.GetQueryable()
+                    .FirstOrDefaultAsync(x => x.ExamSessionSubjectId == examSessionSubjectId);
+                
+                if (examSessionSubject == null)
+                {
+                    return (false, $"Không tìm thấy ExamSessionSubject với ID: {examSessionSubjectId}", 0);
+                }
+
+                // Lấy tất cả StudentExamSession thuộc ExamSessionSubject này
+                var studentExamSessions = await _studentExamSessionRepository.GetQueryable()
+                    .Where(x => x.ExamSessionSubjectId == examSessionSubjectId)
+                    .Include(x => x.Student)
+                    .ToListAsync();
+
+                if (!studentExamSessions.Any())
+                {
+                    return (false, "Không có sinh viên nào thuộc ExamSessionSubject này", 0);
+                }
+
+                // Lấy danh sách các StudentId duy nhất
+                var studentIds = studentExamSessions
+                    .Select(x => x.StudentId)
+                    .Distinct()
+                    .ToList();
+
+                // Lấy tất cả sinh viên cần cập nhật
+                var students = await _studentRepository.GetQueryable()
+                    .Where(s => studentIds.Contains(s.StudentId))
+                    .ToListAsync();
+
+                if (!students.Any())
+                {
+                    return (false, "Không tìm thấy sinh viên để cập nhật", 0);
+                }
+
+                var userId = _httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+                var updatedCount = 0;
+                var now = DateTimeHelper.GetVietnamTime();
+
+                // Cập nhật IsLogin cho từng sinh viên
+                foreach (var student in students)
+                {
+                    // Chỉ cập nhật nếu giá trị khác với giá trị hiện tại
+                    if (student.IsLogin != isLogin)
+                    {
+                        student.IsLogin = isLogin;
+                        student.UpdatedBy = userId;
+                        student.UpdatedAt = now;
+                        student.Version++;
+
+                        // Cập nhật Redis cache trước
+                        try
+                        {
+                            await _studentCacheHelper.CacheStudent(student.StudentCode, student);
+                            _logger.LogInformation("✅ Đã cập nhật Redis cache cho sinh viên {StudentCode} với trạng thái IsLogin: {IsLogin}", 
+                                student.StudentCode, isLogin);
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogWarning(ex, "⚠️ Không thể cập nhật Redis cache cho sinh viên {StudentCode}, sẽ tiếp tục cập nhật DB", 
+                                student.StudentCode);
+                        }
+
+                        // Cập nhật database
+                        try
+                        {
+                            await _studentRepository.UpdateAsync(student);
+                            updatedCount++;
+                            _logger.LogInformation("✅ Đã cập nhật database cho sinh viên {StudentCode} với trạng thái IsLogin: {IsLogin}", 
+                                student.StudentCode, isLogin);
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError(ex, "❌ Lỗi khi cập nhật database cho sinh viên {StudentCode}", student.StudentCode);
+                        }
+                    }
+                }
+
+                var message = updatedCount > 0 
+                    ? $"Đã cập nhật trạng thái IsLogin = {isLogin} cho {updatedCount} sinh viên" 
+                    : $"Tất cả sinh viên đã có trạng thái IsLogin = {isLogin}, không cần cập nhật";
+
+                return (true, message, updatedCount);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Lỗi khi bật/tắt IsLogin cho sinh viên thuộc ExamSessionSubject {ExamSessionSubjectId}", 
+                    examSessionSubjectId);
+                return (false, $"Lỗi khi cập nhật: {ex.Message}", 0);
+            }
         }
     }
 } 

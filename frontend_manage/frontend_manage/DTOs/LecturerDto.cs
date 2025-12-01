@@ -17,6 +17,42 @@ namespace frontend_manage.DTOs
         public string UserId { get; set; }
     }
     
+    public class LecturerCreateDto
+    {
+        [Required(ErrorMessage = "Mã giảng viên không được để trống")]
+        public string LecturerCode { get; set; } = string.Empty;
+        
+        [Required(ErrorMessage = "Họ không được để trống")]
+        public string FirstName { get; set; } = string.Empty;
+        
+        [Required(ErrorMessage = "Tên không được để trống")]
+        public string LastName { get; set; } = string.Empty;
+        
+        public bool? Gender { get; set; }
+        public DateTime? DateOfBirth { get; set; }
+        public string? Email { get; set; }
+        public string? PhoneNumber { get; set; }
+        
+        [Required(ErrorMessage = "Khoa không được để trống")]
+        public string DepartmentId { get; set; } = string.Empty;
+    }
+    
+    public class LecturerUpdateDto
+    {
+        [Required(ErrorMessage = "Họ không được để trống")]
+        public string FirstName { get; set; } = string.Empty;
+        
+        [Required(ErrorMessage = "Tên không được để trống")]
+        public string LastName { get; set; } = string.Empty;
+        
+        public bool? Gender { get; set; }
+        public DateTime? DateOfBirth { get; set; }
+        public string? Email { get; set; }
+        public string? PhoneNumber { get; set; }
+        
+        [Required(ErrorMessage = "Khoa không được để trống")]
+        public string DepartmentId { get; set; } = string.Empty;
+    }
     
     
     public class LecturerExamRoomDto

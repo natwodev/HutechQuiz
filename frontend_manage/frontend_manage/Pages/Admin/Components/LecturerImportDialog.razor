@@ -1,0 +1,53 @@
+@using Microsoft.AspNetCore.Components.Forms
+
+<MudDialog MaxWidth="MaxWidth.Medium" FullWidth="true">
+    <DialogContent>
+        <MudStack Spacing="3">
+            <MudText Typo="Typo.body1" Style="margin-bottom: 16px;">
+                Vui lòng chọn file Excel theo mẫu. File Excel cần có các cột:
+                <ul style="margin: 8px 0; padding-left: 24px;">
+                    <li>Cột 1: STT (bỏ qua)</li>
+                    <li>Cột 2: Mã giảng viên (LecturerCode)</li>
+                    <li>Cột 3: Họ (FirstName)</li>
+                    <li>Cột 4: Tên (LastName)</li>
+                    <li>Cột 5: Giới tính (Gender) - Nam/Nữ hoặc true/false</li>
+                    <li>Cột 6: Ngày sinh (DateOfBirth) - định dạng dd/MM/yyyy hoặc yyyy-MM-dd</li>
+                    <li>Cột 7: Email</li>
+                    <li>Cột 8: Số điện thoại (PhoneNumber)</li>
+                    <li>Cột 9: Mã khoa (DepartmentId)</li>
+                </ul>
+            </MudText>
+            
+            <MudButton Color="Color.Info" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Download" 
+                      OnClick="DownloadTemplate" Size="Size.Small" FullWidth="true" Disabled="@isDownloadingTemplate">
+                @if (isDownloadingTemplate)
+                {
+                    <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                    <span class="ms-2">Đang tải...</span>
+                }
+                else
+                {
+                    <span>Tải mẫu file Excel</span>
+                }
+            </MudButton>
+            
+            <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center">
+                <InputFile OnChange="OnInputFileChange" accept=".xlsx,.xls" />
+                @if (selectedFile != null)
+                {
+                    <div style="display: flex; align-items: center; gap: 8px; padding: 4px 12px; background-color: #4caf50; color: white; border-radius: 16px;">
+                        <span>@selectedFile.Name</span>
+                        <button type="button" @onclick="ClearFile" style="background: none; border: none; color: white; cursor: pointer; padding: 0 4px; font-size: 18px; line-height: 1;">&times;</button>
+                    </div>
+                }
+            </MudStack>
+        </MudStack>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Hủy</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="HandleImport" Disabled="@(selectedFile == null)">
+            Import
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+

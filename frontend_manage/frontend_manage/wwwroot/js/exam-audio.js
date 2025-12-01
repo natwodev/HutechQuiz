@@ -21,12 +21,7 @@ document.addEventListener('keydown', function(event) {
         return false;
     }
     
-    // Block F1-F12 keys that might control media
-    if (event.code.startsWith('F') && event.code.length <= 3) {
-        event.preventDefault();
-        event.stopPropagation();
-        return false;
-    }
+    // Đã loại bỏ chặn F12 để cho phép mở DevTools
 });
 
 // Block media session API

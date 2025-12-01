@@ -1,6 +1,7 @@
 using System.Net.Http.Json;
-using frontend_manage.DTOs;
 using System.Linq;
+using frontend_manage.DTOs;
+using frontend_manage.DTOs.Mapp;
 
 namespace frontend_manage.Services;
 
@@ -75,10 +76,26 @@ public class StudentService
         var response = await _httpClient.PostAsync("api/Student/start-exam", form);
         if (response.IsSuccessStatusCode)
         {
-            return await response.Content.ReadFromJsonAsync<StartExamResponseDto>();
+            var result = await response.Content.ReadFromJsonAsync<StartExamResponseDto>();
+            ApplyQuestionMapping(result);
+            return result;
         }
         return null;
     }
+
+    public async Task<StartExamResponseDto?> StartExamTestAsync()
+    {
+        var response = await _httpClient.PostAsync("api/Student/start-exam/test", null);
+        if (response.IsSuccessStatusCode)
+        {
+            var result = await response.Content.ReadFromJsonAsync<StartExamResponseDto>();
+            ApplyQuestionMapping(result);
+            return result;
+        }
+
+        return null;
+    }
+
 
     public async Task<SaveAnswerResponse?> SaveAnswerAsync(SaveAnswerDto request)
     {
@@ -175,5 +192,16 @@ public class StudentService
         
         // Mặc định 5 giây nếu không có header
         return 5;
+    }
+
+    private static void ApplyQuestionMapping(StartExamResponseDto? response)
+    {
+        if (response?.OriginalExamPaper?.Details == null || response.ExamPaper == null)
+        {
+            return;
+        }
+
+        var mappedQuestions = QuestionMapping.MapToQuestionStructureList(response.OriginalExamPaper.Details);
+        response.ExamPaper.QuestionStructures = mappedQuestions;
     }
 }

@@ -1,0 +1,81 @@
+@using Microsoft.AspNetCore.Components
+
+@using System.Timers
+@implements IDisposable
+
+<div class="monitor-footer">
+    <div class="footer-left">
+        @if (LeftContent is not null)
+        {
+            @LeftContent
+        }
+        else if (ShowClock)
+        {
+            <span class="footer-time">@CurrentTime</span>
+            <span class="footer-date">@CurrentDate</span>
+        }
+        else
+        {
+            <span class="footer-time">--:--</span>
+            <span class="footer-date">--/--/----</span>
+        }
+    </div>
+    <div class="footer-center">
+        <div class="footer-logo">
+            <span class="footer-brand">@Brand</span>
+            <span class="footer-divider">|</span>
+            <span>@ModeLabel</span>
+        </div>
+        <div class="footer-copyright">
+            © @CopyrightYear @CopyrightHolder. All rights reserved.
+        </div>
+    </div>
+    <div class="footer-right">
+        <span class="footer-version">Version @Version</span>
+        <span class="footer-divider">|</span>
+        <span class="footer-developers">@DevelopedBy</span>
+    </div>
+</div>
+
+@code {
+    [Parameter] public string Brand { get; set; } = "HUTECH";
+    [Parameter] public string ModeLabel { get; set; } = "Exam Suite";
+    [Parameter] public string Version { get; set; } = "1.0.0";
+    [Parameter] public string DevelopedBy { get; set; } = "Developed by Natwodev & Juo";
+    [Parameter] public string CopyrightHolder { get; set; } = "Trường Đại học Công nghệ TP.HCM";
+    [Parameter] public int CopyrightYear { get; set; } = DateTime.Now.Year;
+    [Parameter] public RenderFragment? LeftContent { get; set; }
+    [Parameter] public bool ShowClock { get; set; } = true;
+
+    private DateTime _currentDateTime = DateTime.Now;
+    private Timer? _timer;
+
+    private string CurrentTime => _currentDateTime.ToString("HH:mm:ss");
+    private string CurrentDate => _currentDateTime.ToString("dd/MM/yyyy");
+
+    protected override void OnInitialized()
+    {
+        if (ShowClock)
+        {
+            _timer = new Timer(1000);
+            _timer.Elapsed += OnTimerElapsed;
+            _timer.AutoReset = true;
+            _timer.Enabled = true;
+        }
+    }
+
+    private void OnTimerElapsed(object? sender, ElapsedEventArgs e)
+    {
+        _currentDateTime = DateTime.Now;
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        if (_timer is null) return;
+
+        _timer.Elapsed -= OnTimerElapsed;
+        _timer.Dispose();
+    }
+}
+

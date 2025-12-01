@@ -1,0 +1,50 @@
+@using frontend_manage.DTOs.AcademicAffairs
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">@(isEdit ? "Sửa ca thi" : "Thêm ca thi mới")</MudText>
+    </TitleContent>
+    <DialogContent>
+        <EditForm Model="examSession" OnValidSubmit="HandleSubmit">
+            <DataAnnotationsValidator />
+            <MudStack Spacing="3">
+                <MudTextField @bind-Value="examSession.Name" 
+                             Label="Tên ca thi" 
+                             Variant="Variant.Outlined" 
+                             Required="true"
+                             RequiredError="Tên ca thi không được để trống" />
+                
+                <MudTextField @bind-Value="startTimeString" 
+                             Label="Thời gian bắt đầu" 
+                             Variant="Variant.Outlined"
+                             InputType="InputType.DateTimeLocal"
+                             Required="true"
+                             RequiredError="Thời gian bắt đầu không được để trống" />
+                
+                <MudTextField @bind-Value="endTimeString" 
+                             Label="Thời gian kết thúc" 
+                             Variant="Variant.Outlined"
+                             InputType="InputType.DateTimeLocal"
+                             Required="true"
+                             RequiredError="Thời gian kết thúc không được để trống" />
+                
+                <MudSelect T="int" @bind-Value="examSession.ExamBatchDetailId" 
+                           Label="Chi tiết đợt thi" 
+                           Variant="Variant.Outlined"
+                           Required="true"
+                           RequiredError="Chi tiết đợt thi không được để trống">
+                    <MudSelectItem Value="0">-- Chọn chi tiết đợt thi --</MudSelectItem>
+                    @foreach (var ebd in ExamBatchDetails)
+                    {
+                        <MudSelectItem Value="@ebd.ExamBatchDetailId">@ebd.Name</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudStack>
+        </EditForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Hủy</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="HandleSubmit">Lưu</MudButton>
+    </DialogActions>
+</MudDialog>
+

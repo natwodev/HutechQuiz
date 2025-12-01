@@ -1,0 +1,78 @@
+@using frontend_manage.DTOs
+@inject IJSRuntime JS
+
+<div class="matching-root" id="@ContainerId">
+    <div class="matching-header">
+        <div class="side-title">Kéo để nối</div>
+        <div class="legend">
+            <span class="dot left"></span> Trái ↔ <span class="dot right"></span> Phải
+        </div>
+    </div>
+    <svg class="matching-lines" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none"></svg>
+    <div class="matching-columns">
+        <div class="col left">
+            @foreach (var left in LeftItems)
+            {
+                var id = $"left-{left.AnswerId}";
+                var isActive = _pendingLeft == left.AnswerId;
+                <div id="@id" class="match-item @(isActive? "active":"")" @onclick="@(()=>SelectLeft(left.AnswerId))">
+                    <span class="anchor left" aria-hidden="true"></span>
+                    <span class="match-text katex-content">@((MarkupString)left.AnswerContent)</span>
+                </div>
+            }
+        </div>
+        <div class="col right">
+            @foreach (var right in RightItems)
+            {
+                var id = $"right-{right.AnswerId}";
+                <div id="@id" class="match-item" @onclick="@(()=>SelectRight(right.AnswerId))">
+                    <span class="anchor right" aria-hidden="true"></span>
+                    <span class="match-text katex-content">@((MarkupString)right.AnswerContent)</span>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public List<AnswerStructureDto> LeftItems { get; set; } = new();
+    [Parameter] public List<AnswerStructureDto> RightItems { get; set; } = new();
+    [Parameter] public EventCallback<(int leftId, int rightId)> OnPair { get; set; }
+    [Parameter] public EventCallback<List<(int leftId, int rightId)>> OnPairsChanged { get; set; }
+
+    private int? _pendingLeft;
+    private string ContainerId = $"match-" + Guid.NewGuid().ToString("N");
+    private List<(int leftId, int rightId)> _pairs = new();
+
+    private async Task DrawLineAsync(int leftId, int rightId)
+    {
+        // Use LeaderLine to draw dynamic connection
+        await JS.InvokeVoidAsync("matchingHelpers.addLeaderLine", ContainerId, $"left-{leftId}", $"right-{rightId}");
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        // Re-draw all pairs after render (in case DOM re-render clears lines)
+        await JS.InvokeVoidAsync("matchingHelpers.redrawLeaderLines", ContainerId);
+    }
+
+    private async Task SelectLeft(int leftId)
+    {
+        _pendingLeft = leftId;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task SelectRight(int rightId)
+    {
+        if (_pendingLeft.HasValue)
+        {
+            await OnPair.InvokeAsync((_pendingLeft.Value, rightId));
+            await DrawLineAsync(_pendingLeft.Value, rightId);
+            _pairs.Add((_pendingLeft.Value, rightId));
+            await OnPairsChanged.InvokeAsync(_pairs);
+            _pendingLeft = null;
+        }
+    }
+}
+
+

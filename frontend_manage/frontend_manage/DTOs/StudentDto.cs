@@ -44,6 +44,13 @@ namespace frontend_manage.DTOs
         public List<StudentExamRoomStatusDto> Students { get; set; }
     }
 
+    // Response từ API /api/Student/by-exam-session-subject
+    public class StudentsByExamSessionSubjectApiResponse
+    {
+        public SubjectExamRoomStatusDto subject { get; set; }
+        public List<StudentExamRoomStatusDto> students { get; set; }
+    }
+
     
     public class StudentExamSessionDto
     {
@@ -104,6 +111,11 @@ namespace frontend_manage.DTOs
         public string StudentAnswersString { get; set; }
         public int? ExamRoomId { get; set; }
     
+        public string ExamSessionName { get; set; }
+
+        public DateTime ExamSessionStartTime { get; set; }
+        public DateTime ExamSessionEndTime { get; set; }
+        
         // Từ DTO (những trường Entity không có)
         public string SubjectName { get; set; }
         public string RoomName { get; set; }

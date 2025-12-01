@@ -1,0 +1,17 @@
+@using MudBlazor
+
+@if (OnClick.HasDelegate)
+{
+    <MudButton Variant="Variant.Text"
+               Color="Color.Primary"
+               Dense="true"
+               OnClick="@OnClick">
+        @Label
+    </MudButton>
+}
+
+@code {
+    [Parameter] public EventCallback OnClick { get; set; }
+    [Parameter] public string Label { get; set; } = "Đã hiểu";
+}
+

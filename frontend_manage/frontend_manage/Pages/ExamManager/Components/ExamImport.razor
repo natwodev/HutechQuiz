@@ -1,0 +1,49 @@
+@using MudBlazor
+@using frontend_manage.Services.ExamManager
+@using Microsoft.AspNetCore.Components.Forms
+@using frontend_manage.DTOs
+
+<MudPaper Class="pa-4" Elevation="4">
+    <MudText Typo="Typo.h6" Class="mb-2">Nhập đề thi (.epz)</MudText>
+    <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center">
+        <MudTextField @bind-Value="originalExamPaperCore" 
+                      Label="Mã đề gốc (OriginalExamPaperCore)" 
+                      Variant="Variant.Outlined" 
+                      HelperText="Mã sẽ tự động tạo từ tên file khi chọn file"
+                      Style="flex: 1;" />
+        <MudButton Color="Color.Secondary" 
+                   Variant="Variant.Outlined" 
+                   StartIcon="@Icons.Material.Filled.AutoAwesome"
+                   OnClick="GenerateAutoCode"
+                   Size="Size.Small">Tạo mã tự động</MudButton>
+        <InputFile OnChange="OnInputFileChange" accept=".epz" />
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.CloudUpload" OnClick="UploadAsync" Disabled="isUploading || selectedFileStream == null || string.IsNullOrWhiteSpace(originalExamPaperCore)">Upload</MudButton>
+        @if (isUploading)
+        {
+            <MudProgressCircular Indeterminate="true" Size="Size.Small" />
+        }
+    </MudStack>
+
+    @if (!string.IsNullOrEmpty(importMessage))
+    {
+        <MudAlert Severity="@(importMessage.StartsWith("Lỗi") ? Severity.Error : Severity.Success)" Class="mt-2">@importMessage</MudAlert>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(originalExamPaperCore))
+    {
+        <div class="mt-4">
+            <MudButton Color="Color.Primary" 
+                       Variant="Variant.Filled" 
+                       StartIcon="@Icons.Material.Filled.Visibility"
+                       OnClick="OpenPreviewInNewTab"
+                       Disabled="string.IsNullOrWhiteSpace(originalExamPaperCore)">
+                Xem chi tiết đề gốc
+            </MudButton>
+        </div>
+    }
+</MudPaper>
+
+@code { }
+
+
+

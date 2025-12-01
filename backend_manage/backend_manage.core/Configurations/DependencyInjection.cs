@@ -33,6 +33,7 @@ namespace backend_manage.core.Configurations
             services.AddScoped<IExamBatchDetailService, ExamBatchDetailService>();
             services.AddScoped<IExamSessionService, ExamSessionService>();
             services.AddScoped<IExamSessionSubjectService, ExamSessionSubjectService>();
+            services.AddScoped<IExamRoomService, ExamRoomService>();
             services.AddScoped<IOriginalExamPaperService, OriginalExamPaperService>();
             services.AddScoped<IShuffledExamPaperService, ShuffledExamPaperService>();
             services.AddScoped<ILecturerService, LecturerService>();

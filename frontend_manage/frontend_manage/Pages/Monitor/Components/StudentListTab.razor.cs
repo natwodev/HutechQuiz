@@ -76,6 +76,74 @@ namespace frontend_manage.Pages.Monitor.Components
             Snackbar.Add("Dữ liệu đã được làm mới", Severity.Success);
         }
 
+        private async Task ToggleIsLoginForAllStudentsAsync(bool isLogin)
+        {
+            if (!ExamSessionSubjectId.HasValue)
+            {
+                Snackbar.Add("Không tìm thấy ExamSessionSubjectId", Severity.Error);
+                return;
+            }
+
+            // Hiển thị dialog xác nhận
+            var confirmMessage = isLogin 
+                ? $"Bạn có chắc chắn muốn KHÓA đăng nhập cho TẤT CẢ sinh viên trong ca thi này? ({TotalStudents} sinh viên)"
+                : $"Bạn có chắc chắn muốn MỞ đăng nhập cho TẤT CẢ sinh viên trong ca thi này? ({TotalStudents} sinh viên)";
+
+            var parameters = new DialogParameters
+            {
+                { "ContentText", confirmMessage },
+                { "ButtonText", isLogin ? "Khóa đăng nhập" : "Mở đăng nhập" },
+                { "Color", isLogin ? Color.Error : Color.Success }
+            };
+
+            var options = new DialogOptions
+            {
+                CloseOnEscapeKey = true,
+                MaxWidth = MaxWidth.Small,
+                FullWidth = true,
+                Position = DialogPosition.Center
+            };
+
+            var dialog = await DialogService.ShowAsync<frontend_manage.Pages.Admin.Components.ConfirmDialog>("Xác nhận", parameters, options);
+            var result = await dialog.Result;
+
+            if (result.Canceled)
+            {
+                return;
+            }
+
+            try
+            {
+                Snackbar.Add("Đang xử lý...", Severity.Info);
+                var (success, message, updatedCount) = await MonitorService.ToggleIsLoginForAllStudentsAsync(
+                    ExamSessionSubjectId.Value, 
+                    isLogin);
+
+                if (success)
+                {
+                    Snackbar.Add(message, Severity.Success);
+                    
+                    // Cập nhật trạng thái IsLogin cho tất cả sinh viên trong danh sách
+                    if (Students != null)
+                    {
+                        foreach (var student in Students)
+                        {
+                            student.IsLogin = isLogin;
+                        }
+                        StateHasChanged();
+                    }
+                }
+                else
+                {
+                    Snackbar.Add(message, Severity.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Lỗi: {ex.Message}", Severity.Error);
+            }
+        }
+
         private void MessageStudent(string studentCode)
         {
             Snackbar.Add($"Gửi thông báo cho sinh viên: {studentCode}", Severity.Info);

@@ -1,0 +1,158 @@
+@using frontend_manage.DTOs
+@using frontend_manage.Services.ExamManager
+@using Microsoft.JSInterop
+@inject ExamManagerService ExamManagerService
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+
+<MudCard>
+    <MudCardHeader>
+        <CardHeaderContent>
+            <MudText Typo="Typo.h6">Danh sách đề hoán vị</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary">Chọn mã đề gốc để xem danh sách đề hoán vị</MudText>
+        </CardHeaderContent>
+    </MudCardHeader>
+    <MudCardContent>
+        <MudSelect @bind-Value="selectedOriginalCore" 
+                   Label="Chọn mã đề gốc" 
+                   Variant="Variant.Outlined"
+                   Margin="Margin.Normal"
+                   T="string">
+            <MudSelectItem Value="@((string?)null)">-- Chọn mã đề gốc --</MudSelectItem>
+            @foreach (var item in originalExamOptions)
+            {
+                <MudSelectItem Value="@item.OriginalExamPaperCore">@item.OriginalExamPaperCore - @item.Title</MudSelectItem>
+            }
+        </MudSelect>
+
+        <MudButton Variant="Variant.Filled" 
+                   Color="Color.Primary" 
+                   StartIcon="@Icons.Material.Filled.Search"
+                   OnClick="LoadShuffledExamsAsync"
+                   Disabled="@(string.IsNullOrWhiteSpace(selectedOriginalCore) || isLoadingShuffled)"
+                   Margin="Margin.Normal">
+            Tải danh sách
+        </MudButton>
+
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <MudAlert Severity="Severity.Error" Margin="Margin.Normal">@errorMessage</MudAlert>
+        }
+
+        @if (isLoadingShuffled)
+        {
+            <MudProgressLinear Color="Color.Primary" Indeterminate="true" Margin="Margin.Normal" />
+        }
+        else if (shuffledExams != null && shuffledExams.Count > 0)
+        {
+            <MudTable Items="@shuffledExams" Hover="true" Dense="true" Striped="true" Margin="Margin.Normal">
+                <HeaderContent>
+                    <MudTh>Mã đề hoán vị</MudTh>
+                    <MudTh>Tiêu đề</MudTh>
+                    <MudTh>Môn học</MudTh>
+                    <MudTh>Trạng thái</MudTh>
+                    <MudTh>Thao tác</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Mã đề hoán vị">@context.ShuffledExamPaperCore</MudTd>
+                    <MudTd DataLabel="Tiêu đề">@context.Title</MudTd>
+                    <MudTd DataLabel="Môn học">@context.SubjectName (@context.SubjectCode)</MudTd>
+                    <MudTd DataLabel="Trạng thái">
+                        @if (context.IsApproved == true)
+                        {
+                            <MudChip T="string" Size="Size.Small" Color="Color.Success">Đã duyệt</MudChip>
+                        }
+                        else if (context.IsApproved == false)
+                        {
+                            <MudChip T="string" Size="Size.Small" Color="Color.Warning">Chưa duyệt</MudChip>
+                        }
+                        else
+                        {
+                            <MudChip T="string" Size="Size.Small" Color="Color.Default">Chưa xét</MudChip>
+                        }
+                    </MudTd>
+                    <MudTd DataLabel="Thao tác">
+                        <MudButton Variant="Variant.Text" 
+                                   Color="Color.Primary" 
+                                   Size="Size.Small"
+                                   StartIcon="@Icons.Material.Filled.Visibility"
+                                   OnClick="@(() => ViewDetails(context.ShuffledExamPaperCore))">
+                            Xem chi tiết
+                        </MudButton>
+                    </MudTd>
+                </RowTemplate>
+            </MudTable>
+        }
+        else if (shuffledExams != null && shuffledExams.Count == 0 && !string.IsNullOrWhiteSpace(selectedOriginalCore))
+        {
+            <MudAlert Severity="Severity.Info" Margin="Margin.Normal">
+                Không có đề hoán vị nào cho mã đề gốc này.
+            </MudAlert>
+        }
+    </MudCardContent>
+</MudCard>
+
+@code {
+    private string? selectedOriginalCore;
+    private List<ShuffledExamPaperDto>? shuffledExams;
+    private bool isLoadingShuffled = false;
+    private string? errorMessage;
+    private List<OriginalExamPaperSelectItem> originalExamOptions = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadOriginalExamOptionsAsync();
+    }
+
+    private async Task LoadOriginalExamOptionsAsync()
+    {
+        try
+        {
+            var allOriginalExams = await ExamManagerService.GetAllOriginalExamPapersAsync();
+            originalExamOptions = allOriginalExams.Select(x => new OriginalExamPaperSelectItem
+            {
+                OriginalExamPaperCore = x.OriginalExamPaperCore,
+                Title = x.Title
+            }).ToList();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Lỗi khi tải danh sách đề gốc: {ex.Message}";
+        }
+    }
+
+    private async Task LoadShuffledExamsAsync()
+    {
+        if (string.IsNullOrWhiteSpace(selectedOriginalCore))
+            return;
+
+        isLoadingShuffled = true;
+        errorMessage = null;
+        try
+        {
+            shuffledExams = await ExamManagerService.GetShuffledExamsByOriginalCoreAsync(selectedOriginalCore);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Lỗi khi tải danh sách đề hoán vị: {ex.Message}";
+            shuffledExams = null;
+        }
+        finally
+        {
+            isLoadingShuffled = false;
+        }
+    }
+
+    private async Task ViewDetails(string shuffledExamPaperCore)
+    {
+        var url = $"{NavigationManager.BaseUri}exammanager/preview/shuffled?core={Uri.EscapeDataString(shuffledExamPaperCore)}";
+        await JSRuntime.InvokeVoidAsync("window.open", url, "_blank");
+    }
+
+    public class OriginalExamPaperSelectItem
+    {
+        public string OriginalExamPaperCore { get; set; } = string.Empty;
+        public string Title { get; set; } = string.Empty;
+    }
+}
+

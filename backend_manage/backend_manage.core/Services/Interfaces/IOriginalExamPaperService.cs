@@ -11,6 +11,7 @@ namespace backend_manage.core.Services.Interfaces
 
         Task<OriginalExamPaperDto> GetWithDetailsAsync(string originalExamPaperCore);
         Task CreateShuffledExamPapersAsync(string originalExamPaperCore, int count);
+        Task<List<OriginalExamDto>> GetAllAsync();
         /*
         Task ImportFromXmlAsync(Microsoft.AspNetCore.Http.IFormFile file, string OriginalExamPaperCore);
         //
@@ -43,5 +44,8 @@ namespace backend_manage.core.Services.Interfaces
           
           // Phương thức hoán vị câu trả lời
           Task<IEnumerable<AnswerShufferDto>> ShuffleAnswersAsync(int originalExamPaperDetailId);
+          
+          // Phương thức cập nhật AllowViewMaterials cho đề thi gốc và đồng bộ với đề hoán vị
+          Task<bool> UpdateAllowViewMaterialsAsync(string originalExamPaperCore, bool allowViewMaterials);
       }
 } 

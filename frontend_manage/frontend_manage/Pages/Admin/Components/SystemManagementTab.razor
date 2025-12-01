@@ -1,0 +1,53 @@
+@using frontend_manage.Services.Admin
+
+<MudGrid>
+    <MudItem xs="12" md="6">
+        <MudCard Elevation="2">
+            <MudCardHeader>
+                <CardHeaderContent>
+                    <MudText Typo="Typo.h6">Trạng thái RabbitMQ</MudText>
+                </CardHeaderContent>
+            </MudCardHeader>
+            <MudCardContent>
+                @if (QueueStatus != null)
+                {
+                    <MudStack Spacing="2">
+                        <div style="display: inline-block; padding: 4px 12px; background-color: @(QueueStatus.IsHealthy ? "#4caf50" : "#f44336"); color: white; border-radius: 16px; font-size: 14px;">
+                            @(QueueStatus.IsHealthy ? "Hoạt động bình thường" : "Có lỗi")
+                        </div>
+                        <MudText Typo="Typo.body2">@QueueStatus.Message</MudText>
+                        <MudButton Color="Color.Primary" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Refresh" 
+                                 OnClick="CheckQueueStatus" Size="Size.Small">
+                            Kiểm tra lại
+                        </MudButton>
+                    </MudStack>
+                }
+                else
+                {
+                    <MudText Typo="Typo.body2">Chưa kiểm tra</MudText>
+                    <MudButton Color="Color.Primary" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Refresh" 
+                             OnClick="CheckQueueStatus" Size="Size.Small">
+                        Kiểm tra
+                    </MudButton>
+                }
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+    
+    <MudItem xs="12" md="6">
+        <MudCard Elevation="2">
+            <MudCardHeader>
+                <CardHeaderContent>
+                    <MudText Typo="Typo.h6">Gửi thông báo</MudText>
+                </CardHeaderContent>
+            </MudCardHeader>
+            <MudCardContent>
+                <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Notifications" 
+                         OnClick="OpenNotificationDialog">
+                    Gửi thông báo
+                </MudButton>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+</MudGrid>
+

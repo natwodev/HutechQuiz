@@ -1,0 +1,18 @@
+@using frontend_manage.DTOs
+
+<label class="answer-option @(SelectedAnswerId==Answer.AnswerId? "selected" : string.Empty)">
+    <input type="radio" name="@GroupName" checked="@(SelectedAnswerId==Answer.AnswerId)" @onchange="@(()=>OnSelect.InvokeAsync(Answer.AnswerId))" />
+    <span class="indicator" aria-hidden="true"></span>
+    <span class="answer-letter">@Letter.</span>
+    <span class="katex-content answer-text">@((MarkupString)(Answer.AnswerContent ?? string.Empty))</span>
+</label>
+
+@code {
+    [Parameter] public AnswerStructureDto Answer { get; set; } = new();
+    [Parameter] public char Letter { get; set; }
+    [Parameter] public int SelectedAnswerId { get; set; }
+    [Parameter] public string GroupName { get; set; } = string.Empty;
+    [Parameter] public EventCallback<int> OnSelect { get; set; }
+}
+
+

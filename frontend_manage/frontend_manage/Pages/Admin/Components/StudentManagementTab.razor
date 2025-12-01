@@ -1,0 +1,117 @@
+@using frontend_manage.DTOs
+@using frontend_manage.DTOs.AcademicAffairs
+
+<MudCard Elevation="0">
+    <MudCardHeader>
+        <MudText Typo="Typo.h6" Style="font-size: 1.1rem; font-weight: 600;">Quản lý Sinh viên</MudText>
+        <MudSpacer />
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Upload" 
+                  OnClick="OpenImportDialog" Size="Size.Small">Import từ Excel</MudButton>
+    </MudCardHeader>
+    <MudCardContent>
+        <!-- Filter Section -->
+        <div class="student-filter-section">
+            <MudPaper Elevation="1" Class="filter-paper">
+                <MudStack Spacing="3" Row="false">
+                    <MudText Typo="Typo.subtitle2" Class="filter-title">
+                        <MudIcon Icon="@Icons.Material.Filled.FilterList" Class="mr-2" Size="Size.Small" />
+                        Bộ lọc
+                    </MudText>
+                    <MudGrid Spacing="3" AlignItems="Center">
+                        <MudItem xs="12" md="5">
+                            <MudSelect T="int?" 
+                                       @bind-Value="_selectedExamSessionSubjectId" 
+                                       Label="Ca thi môn học" 
+                                       Variant="Variant.Outlined"
+                                       Clearable="true"
+                                       Adornment="Adornment.Start"
+                                       AdornmentIcon="@Icons.Material.Filled.EventNote"
+                                       Class="professional-select"
+                                       HelperText="Chọn ca thi để lọc danh sách sinh viên">
+                                <MudSelectItem T="int?" Value="@((int?)null)">
+                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                        <MudIcon Icon="@Icons.Material.Filled.List" Size="Size.Small" Style="color: #666;" />
+                                        <span>Tất cả sinh viên</span>
+                                    </div>
+                                </MudSelectItem>
+                                @foreach (var ess in ExamSessionSubjects)
+                                {
+                                    <MudSelectItem T="int?" Value="@ess.ExamSessionSubjectId">
+                                        <div style="display: flex; align-items: center; gap: 10px;">
+                                            <MudIcon Icon="@Icons.Material.Filled.School" Size="Size.Small" Style="color: #1976d2;" />
+                                            <div style="display: flex; flex-direction: column; gap: 2px;">
+                                                <span style="font-weight: 500; font-size: 0.875rem;">@ess.ExamSessionSubjectCore</span>
+                                                <span style="color: #666; font-size: 0.75rem;">@ess.SubjectName</span>
+                                            </div>
+                                        </div>
+                                    </MudSelectItem>
+                                }
+                            </MudSelect>
+                        </MudItem>
+                        <MudItem xs="12" md="7">
+                            <MudTextField @bind-Value="searchString" 
+                                         Placeholder="Tìm kiếm theo mã SV, họ tên..." 
+                                         Adornment="Adornment.Start" 
+                                         AdornmentIcon="@Icons.Material.Filled.Search" 
+                                         IconSize="Size.Medium" 
+                                         Variant="Variant.Outlined"
+                                         Class="professional-search"
+                                         Clearable="true" />
+                        </MudItem>
+                    </MudGrid>
+                    @if (_isLoadingFilteredStudents)
+                    {
+                        <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mt-2" />
+                    }
+                </MudStack>
+            </MudPaper>
+        </div>
+
+        <MudTable Items="@FilteredStudents" Hover="true" Dense="true" Striped="true" Filter="new Func<StudentInfoDto, bool>(FilterFunc)">
+            <ToolBarContent>
+                <MudText Typo="Typo.body2" Style="color: #666;">
+                    @if (_selectedExamSessionSubjectId.HasValue)
+                    {
+                        <span>Đang hiển thị sinh viên của ca thi đã chọn</span>
+                    }
+                    else
+                    {
+                        <span>Tổng số: @FilteredStudents.Count sinh viên</span>
+                    }
+                </MudText>
+            </ToolBarContent>
+            <HeaderContent>
+                <MudTh>Mã SV</MudTh>
+                <MudTh>Họ tên</MudTh>
+                <MudTh>Giới tính</MudTh>
+                <MudTh>Ngày sinh</MudTh>
+                <MudTh>Trạng thái đăng nhập</MudTh>
+                <MudTh>Thao tác</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Mã SV">@context.StudentCode</MudTd>
+                <MudTd DataLabel="Họ tên">@context.FirstName @context.LastName</MudTd>
+                <MudTd DataLabel="Giới tính">@context.Gender</MudTd>
+                <MudTd DataLabel="Ngày sinh">@(context.DateOfBirth ?? "N/A")</MudTd>
+                <MudTd DataLabel="Trạng thái đăng nhập">
+                    <div style="display: inline-block; padding: 4px 10px; background-color: @(context.IsLogin == true ? "#4caf50" : "#f44336"); color: white; border-radius: 12px; font-size: 0.75rem; font-weight: 500;">
+                        @(context.IsLogin == true ? "Đã kích hoạt" : "Chưa kích hoạt")
+                    </div>
+                </MudTd>
+                <MudTd>
+                    <MudIconButton Icon="@(context.IsLogin == true ? Icons.Material.Filled.Block : Icons.Material.Filled.CheckCircle)" 
+                                  Color="@(context.IsLogin == true ? Color.Error : Color.Success)" 
+                                  Size="Size.Small" 
+                                  OnClick="@(() => ToggleLoginStatus(context))" 
+                                  Title="@(context.IsLogin == true ? "Vô hiệu hóa đăng nhập" : "Kích hoạt đăng nhập")" />
+                    <MudIconButton Icon="@Icons.Material.Filled.Visibility" Color="Color.Info" Size="Size.Small" 
+                                  OnClick="@(() => ViewStudentDetails(context))" />
+                </MudTd>
+            </RowTemplate>
+            <PagerContent>
+                <MudTablePager PageSizeOptions="new int[] { 5, 10, 25, 50 }" />
+            </PagerContent>
+        </MudTable>
+    </MudCardContent>
+</MudCard>
+

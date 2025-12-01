@@ -1,0 +1,15 @@
+.exam-session-info {
+    font-size: 0.9rem;
+    line-height: 1.3;
+}
+
+.exam-session-info .mud-list-item {
+    font-size: 0.85rem;
+    padding-top: 2px;
+    padding-bottom: 2px;
+}
+
+.exam-session-info b {
+    font-weight: 600;
+}
+

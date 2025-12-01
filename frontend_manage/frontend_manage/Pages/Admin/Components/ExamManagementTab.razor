@@ -1,0 +1,25 @@
+@using frontend_manage.DTOs
+@using frontend_manage.Pages.ExamManager.Components
+@inject ISnackbar Snackbar
+@using Microsoft.AspNetCore.Components
+
+<MudTabs Elevation="1" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-3">
+    <MudTabPanel Text="Import đề thi">
+        <ExamImport />
+    </MudTabPanel>
+    <MudTabPanel Text="Tạo đề hoán vị">
+        <ExamPermutation />
+    </MudTabPanel>
+    <MudTabPanel Text="Danh sách đề gốc">
+        <OriginalExamPaperList />
+    </MudTabPanel>
+    <MudTabPanel Text="Danh sách đề hoán vị">
+        <ShuffledExamPaperList />
+    </MudTabPanel>
+</MudTabs>
+
+@code {
+    [Parameter]
+    public EventCallback OnExamUpdated { get; set; }
+}
+

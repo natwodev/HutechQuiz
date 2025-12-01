@@ -34,6 +34,10 @@ public class ShuffledExamPaper : BaseEntity  //đề thi đã được hoán v�
     // true: đã phê duyệt, false: chưa phê duyệt, null: chưa xét duyệt
     public bool? IsApproved { get; set; }
     
+    // Đề hoán vị này có được phép xem tài liệu hay không
+    // true: được phép xem tài liệu (open-book), false: không được phép xem tài liệu (closed-book)
+    public bool AllowViewMaterials { get; set; }
+    
     // Total number of times this shuffled exam paper has been used for testing
     public int TotalUsageCount { get; set; } = 0;
     

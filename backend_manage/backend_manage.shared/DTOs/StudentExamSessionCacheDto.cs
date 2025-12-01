@@ -26,6 +26,7 @@ namespace backend_manage.shared.DTOs
         // Từ DTO (những trường Entity không có)
         public string SubjectName { get; set; }
         public string RoomName { get; set; }
+        public string ExamSessionName { get; set; }
         public int Duration { get; set; }
         
         // Thời gian được phép làm bài (cached từ ExamSessionSubject)

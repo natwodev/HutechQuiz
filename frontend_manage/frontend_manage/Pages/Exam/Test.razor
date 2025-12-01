@@ -1,0 +1,303 @@
+@page "/testexam"
+@using System.Text.Json
+@using frontend_manage.DTOs
+@using frontend_manage.Pages.Exam.Components
+@using MudBlazor
+@using Microsoft.AspNetCore.Components
+@using frontend_manage.Services
+@using System.Linq
+@inject StudentService StudentService
+@inject IKaTeXService KaTeX
+
+<MudContainer Class="py-6">
+    <MudPaper Class="pa-6" Elevation="4">
+        <MudText Typo="Typo.h5" Class="mb-4">Start Exam Test API</MudText>
+
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   OnClick="CallStartExamTestApiAsync"
+                   Disabled="_isLoading">
+            @_buttonLabel
+        </MudButton>
+
+        @if (!string.IsNullOrEmpty(_errorMessage))
+        {
+            <MudAlert Severity="Severity.Error" Dense="true">@_errorMessage</MudAlert>
+        }
+
+        @if (_isLoading)
+        {
+            <div class="d-flex align-center mt-4">
+                <MudProgressCircular Color="Color.Primary" Class="mr-3" />
+                <MudText>Đang gọi /api/Student/start-exam/test ...</MudText>
+            </div>
+        }
+
+        @if (_sampleLatexQuestions.Count > 0)
+        {
+            <MudPaper Class="mt-4 pa-4" Elevation="1">
+                <div class="d-flex justify-space-between align-center mb-2">
+                    <MudText Typo="Typo.subtitle1">Ví dụ câu hỏi chứa LaTeX</MudText>
+                    <MudChip T="object" Color="Color.Info" Variant="Variant.Outlined" Size="Size.Small">Demo</MudChip>
+                </div>
+
+                <MudList T="QuestionDisplayItem" Dense="true">
+                    @foreach (var item in _sampleLatexQuestions)
+                    {
+                        <MudListItem T="QuestionDisplayItem" Class="question-item" Style="@GetIndentStyle(item.Depth)">
+                            <div>
+                                <div class="question-title">Câu @item.Question.Order</div>
+                                <div class="question-content katex-content">@((MarkupString)(item.Question.QuestionContent ?? string.Empty))</div>
+
+                                @if (item.Question.Answers?.Any() == true)
+                                {
+                                    <div class="answer-button-list mt-2">
+                                        @foreach (var answer in item.Question.Answers.OrderBy(a => a.Order))
+                                        {
+                                            var letter = (char)('A' + (answer.Order - 1));
+                                            <AnswerOption Answer="@answer"
+                                                          Letter="@letter"
+                                                          GroupName="@($"sample-{item.Question.OriginalExamPaperDetailId}")"
+                                                          SelectedAnswerId="@GetSampleSelectedAnswer(item.Question.OriginalExamPaperDetailId)"
+                                                          OnSelect="@(id => SelectSampleAnswer(item.Question.OriginalExamPaperDetailId, id))" />
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        </MudListItem>
+                    }
+                </MudList>
+            </MudPaper>
+        }
+
+        @if (_response != null)
+        {
+            <MudPaper Class="mt-4 pa-4">
+                <div class="d-flex justify-space-between align-center mb-2">
+                    <MudText Typo="Typo.subtitle1">Payload trả về</MudText>
+                    <MudButton Variant="Variant.Text"
+                               Size="Size.Small"
+                               OnClick="@TogglePayloadVisibility">
+                        @(_showPayload ? "Thu gọn" : "Xem")
+                    </MudButton>
+                </div>
+
+                @if (_showPayload)
+                {
+                    <pre class="api-response">@_responseJson</pre>
+                }
+            </MudPaper>
+        }
+
+        @if (_questionDisplayItems.Count > 0)
+        {
+            <MudPaper Class="mt-4 pa-4">
+                <div class="d-flex justify-space-between align-center mb-2">
+                    <MudText Typo="Typo.subtitle1">QuestionMapping preview</MudText>
+                    <MudButton Variant="Variant.Text"
+                               Size="Size.Small"
+                               OnClick="@ToggleQuestionPreviewVisibility">
+                        @(_showQuestionPreview ? "Thu gọn" : "Xem")
+                    </MudButton>
+                </div>
+
+                @if (_showQuestionPreview)
+                {
+                <MudList T="QuestionDisplayItem" Dense="true">
+                    @foreach (var item in _questionDisplayItems)
+                    {
+                        <MudListItem T="QuestionDisplayItem" Class="question-item" Style="@GetIndentStyle(item.Depth)">
+                            <div>
+                                <div class="question-title">Câu @item.Question.Order</div>
+                                    <div class="question-content katex-content">@((MarkupString)(item.Question.QuestionContent ?? string.Empty))</div>
+
+                                @if (item.Question.Answers?.Any() == true)
+                                {
+                                    <div class="answer-button-list mt-2">
+                                        @foreach (var answer in item.Question.Answers.OrderBy(a => a.Order))
+                                        {
+                                            var letter = (char)('A' + (answer.Order - 1));
+                                            <AnswerOption Answer="@answer"
+                                                          Letter="@letter"
+                                                          GroupName="@($"preview-{item.Question.OriginalExamPaperDetailId}")"
+                                                          SelectedAnswerId="@GetPreviewSelectedAnswer(item.Question.OriginalExamPaperDetailId)"
+                                                          OnSelect="@(id => SelectPreviewAnswer(item.Question.OriginalExamPaperDetailId, id))" />
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        </MudListItem>
+                    }
+                </MudList>
+                }
+            </MudPaper>
+        }
+    </MudPaper>
+</MudContainer>
+
+@code {
+    private readonly JsonSerializerOptions _jsonOptions = new()
+    {
+        WriteIndented = true
+    };
+
+    private bool _isLoading;
+    private string? _errorMessage;
+    private StartExamResponseDto? _response;
+    private readonly List<QuestionDisplayItem> _sampleLatexQuestions = new();
+    private List<QuestionDisplayItem> _questionDisplayItems = new();
+    private bool _shouldRenderKatex;
+    private bool _showPayload = true;
+    private bool _showQuestionPreview = true;
+    private readonly Dictionary<int, int> _sampleAnswerSelections = new();
+    private readonly Dictionary<int, int> _previewAnswerSelections = new();
+
+    private string _buttonLabel => _isLoading ? "Đang gửi..." : "Gọi API";
+    private string _responseJson => _response == null ? string.Empty : JsonSerializer.Serialize(_response, _jsonOptions);
+
+    protected override void OnInitialized()
+    {
+        LoadSampleLatexQuestions();
+        _shouldRenderKatex = true;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_shouldRenderKatex)
+        {
+            _shouldRenderKatex = false;
+            await KaTeX.RenderAsync(".katex-content");
+        }
+    }
+
+    private async Task CallStartExamTestApiAsync()
+    {
+        _errorMessage = null;
+        _response = null;
+        _questionDisplayItems.Clear();
+
+        _isLoading = true;
+
+        try
+        {
+            var result = await StudentService.StartExamTestAsync();
+
+            if (result == null)
+            {
+                _errorMessage = "API không trả dữ liệu hoặc báo lỗi.";
+            }
+            else
+            {
+                _response = result;
+                _showPayload = true;
+                _questionDisplayItems = BuildQuestionDisplayItems(result.ExamPaper?.QuestionStructures);
+                _showQuestionPreview = _questionDisplayItems.Count > 0;
+                _previewAnswerSelections.Clear();
+                _shouldRenderKatex = true;
+            }
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Lỗi gọi API: {ex.Message}";
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private List<QuestionDisplayItem> BuildQuestionDisplayItems(IEnumerable<QuestionStructureDto>? questions, int depth = 0)
+    {
+        var items = new List<QuestionDisplayItem>();
+        if (questions == null)
+        {
+            return items;
+        }
+
+        foreach (var question in questions.OrderBy(q => q.Order))
+        {
+            items.Add(new QuestionDisplayItem
+            {
+                Question = question,
+                Depth = depth
+            });
+
+            if (question.ChildQuestions?.Any() == true)
+            {
+                items.AddRange(BuildQuestionDisplayItems(question.ChildQuestions, depth + 1));
+            }
+        }
+
+        return items;
+    }
+
+    private static string GetIndentStyle(int depth) => $"margin-left: {depth * 16}px";
+    private void TogglePayloadVisibility() => _showPayload = !_showPayload;
+    private void ToggleQuestionPreviewVisibility() => _showQuestionPreview = !_showQuestionPreview;
+
+    private void LoadSampleLatexQuestions()
+    {
+        var sample = new List<QuestionStructureDto>
+        {
+            new()
+            {
+                OriginalExamPaperDetailId = 101,
+                Order = 1,
+                QuestionContent = @"<p>Tính tích phân \( \int_{0}^{\pi} \sin x \, dx \).</p>",
+                Answers = new List<AnswerStructureDto>
+                {
+                    new() { AnswerId = 1011, Order = 1, AnswerContent = @"\(0\)" },
+                    new() { AnswerId = 1012, Order = 2, AnswerContent = @"\(2\)" },
+                    new() { AnswerId = 1013, Order = 3, AnswerContent = @"\(\frac{\pi}{2}\)" },
+                    new() { AnswerId = 1014, Order = 4, AnswerContent = @"\( -2 \)" }
+                }
+            },
+            new()
+            {
+                OriginalExamPaperDetailId = 102,
+                Order = 2,
+                QuestionContent = @"<p>Cho phương trình \( ax^2 + bx + c = 0 \) với \(\Delta = b^2 - 4ac\). <br/> Điều kiện để phương trình có nghiệm kép là gì?</p>",
+                Answers = new List<AnswerStructureDto>
+                {
+                    new() { AnswerId = 1021, Order = 1, AnswerContent = @"\(\Delta &gt; 0\)" },
+                    new() { AnswerId = 1022, Order = 2, AnswerContent = @"\(\Delta = 0\)" },
+                    new() { AnswerId = 1023, Order = 3, AnswerContent = @"\(\Delta &lt; 0\)" },
+                    new() { AnswerId = 1024, Order = 4, AnswerContent = @"\(\Delta \neq 0\)" }
+                }
+            }
+        };
+
+        _sampleLatexQuestions.Clear();
+        _sampleLatexQuestions.AddRange(BuildQuestionDisplayItems(sample));
+        _sampleAnswerSelections.Clear();
+    }
+
+    private class QuestionDisplayItem
+    {
+        public QuestionStructureDto Question { get; set; } = new();
+        public int Depth { get; set; }
+    }
+
+    private static string GetAnswerLetter(int order)
+    {
+        if (order <= 0)
+        {
+            return string.Empty;
+        }
+
+        var index = (order - 1) % 26;
+        return ((char)('A' + index)).ToString();
+    }
+
+    private int GetSampleSelectedAnswer(int questionId) =>
+        _sampleAnswerSelections.TryGetValue(questionId, out var answerId) ? answerId : -1;
+
+    private void SelectSampleAnswer(int questionId, int answerId) =>
+        _sampleAnswerSelections[questionId] = answerId;
+
+    private int GetPreviewSelectedAnswer(int questionId) =>
+        _previewAnswerSelections.TryGetValue(questionId, out var answerId) ? answerId : -1;
+
+    private void SelectPreviewAnswer(int questionId, int answerId) =>
+        _previewAnswerSelections[questionId] = answerId;
+}

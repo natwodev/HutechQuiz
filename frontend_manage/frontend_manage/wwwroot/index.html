@@ -3,42 +3,25 @@
 
 <head>
     <meta charset="utf-8" />
-    <title>Hutech.Exam</title>
+    <title>Trắc Nghiệm</title>
     <base href="/" />
     <link href="/bootstrap/css/bootstrap.min.css" rel="stylesheet">
     <script src="/jquery/jquery.min.js"></script>
     <script src="/bootstrap/js/bootstrap.bundle.min.js"></script>
     <!-- Load thư viện canvas ảnh cho điểm thí sinh -->
     <script src="_content/Blazor.Extensions.Canvas/blazor.extensions.canvas.js"></script>
-    <!-- Load thư viện Latex ngay ban đầu tránh tải lâu-->
-    <script id="MathJax-script" async
-            src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
-    </script>
-    <script>
-        window.MathJax = {
-            tex: {
-                inlineMath: [['$', '$'], ['\\(', '\\)']],
-                displayMath: [['$$', '$$'], ['\\[', '\\]']],
-                processEscapes: true,
-                processEnvironments: true
-            },
-            svg: {
-                fontCache: 'global'
-            },
-            startup: {
-                pageReady: () => {
-                    return MathJax.startup.defaultPageReady().then(() => {
-                        console.log('MathJax is ready');
-                    });
-                }
-            }
-        };
-    </script>
+    <!-- Removed MathJax; using KaTeX auto-render instead -->
     <link href="css/app.css" rel="stylesheet" />
     <link href="css/result-page.css" rel="stylesheet" />
     <!--Tải MudBlazor-->
     <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" rel="stylesheet" />
     <link href="_content/MudBlazor/MudBlazor.min.css" rel="stylesheet" />
+    <!-- Load scoped component CSS (Blazor CSS isolation) -->
+    <link href="frontend_manage.styles.css" rel="stylesheet" />
+    <!-- KaTeX for LaTeX rendering -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
     <!-- If you add any scoped CSS files, uncomment the following to load them
     <link href="Hutech.Exam.Client.styles.css" rel="stylesheet" /> -->
 </head>
@@ -61,7 +44,16 @@
     </div>
     <script src="_framework/blazor.webassembly.js"></script>
     <script src="_content/MudBlazor/MudBlazor.min.js"></script>
-    <script src="js/mathJaxBlazor.js"></script>
+    <script src="js/katexInterop.js"></script>
+    <script src="js/matching.js"></script>
+    <script src="js/examSecurity.js"></script>
+    <script src="js/examFullscreen.js"></script>
+    <!-- LeaderLine for matching connections -->
+    <script src="https://cdn.jsdelivr.net/npm/leader-line@1.0.7/leader-line.min.js"></script>
+    <style>
+        /* Ensure leader lines are visible above all */
+        .leader-line { z-index: 100000 !important; pointer-events: none; }
+    </style>
     <script src="js/scroll.js"></script>
     <script src="js/lecturer.js"></script>
     <script>
@@ -71,66 +63,33 @@
                 i.setAttribute("autocomplete", "off");
             });
         };
+
+        // Function to download file from base64
+        window.downloadFile = (fileName, base64Content) => {
+            try {
+                const byteCharacters = atob(base64Content);
+                const byteNumbers = new Array(byteCharacters.length);
+                for (let i = 0; i < byteCharacters.length; i++) {
+                    byteNumbers[i] = byteCharacters.charCodeAt(i);
+                }
+                const byteArray = new Uint8Array(byteNumbers);
+                const blob = new Blob([byteArray], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+                
+                const url = window.URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = fileName;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                window.URL.revokeObjectURL(url);
+            } catch (error) {
+                console.error('Error downloading file:', error);
+            }
+        };
     </script>
     <script>
-        // Chặn chuột phải
-        document.addEventListener('contextmenu', function (e) {
-            e.preventDefault();
-            return false;
-        });
-
-        // Chặn F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+U
-        document.addEventListener('keydown', function (e) {
-            // Chặn F12
-            if (e.key === 'F12') {
-                e.preventDefault();
-                return false;
-            }
-
-            // Chặn Ctrl+Shift+I (Developer Tools)
-            if (e.ctrlKey && e.shiftKey && e.key === 'I') {
-                e.preventDefault();
-                return false;
-            }
-
-            // Chặn Ctrl+Shift+J (Console)
-            if (e.ctrlKey && e.shiftKey && e.key === 'J') {
-                e.preventDefault();
-                return false;
-            }
-
-            // Chặn Ctrl+U (View Source)
-            if (e.ctrlKey && e.key === 'u') {
-                e.preventDefault();
-                return false;
-            }
-
-            // Chặn Ctrl+Shift+C (Inspect Element)
-            if (e.ctrlKey && e.shiftKey && e.key === 'C') {
-                e.preventDefault();
-                return false;
-            }
-        });
-
-        // Chặn DevTools bằng cách detect khi window resize
-        let devtools = { open: false, orientation: null };
-        setInterval(() => {
-            const threshold = 160;
-            const widthThreshold = window.outerWidth - window.innerWidth > threshold;
-            const heightThreshold = window.outerHeight - window.innerHeight > threshold;
-
-            if (widthThreshold || heightThreshold) {
-                if (!devtools.open) {
-                    devtools.open = true;
-                    devtools.orientation = widthThreshold ? 'vertical' : 'horizontal';
-                }
-                // Có thể thêm action khi detect devtools mở
-                // window.location.reload();
-            } else {
-                devtools.open = false;
-                devtools.orientation = null;
-            }
-        }, 500);
+        // Đã loại bỏ chức năng chặn chuột phải và DevTools
 
         // Fetch với credentials để gửi cookie
         window.fetchWithCredentials = async function (url, method, body) {
@@ -160,12 +119,7 @@
             }
         };
 
-        // Chặn console.log
-        console.log = function () { };
-        console.info = function () { };
-        console.warn = function () { };
-        console.error = function () { };
-        console.debug = function () { };
+        // Giữ nguyên console để dễ debug lỗi
     </script>
 </body>
 

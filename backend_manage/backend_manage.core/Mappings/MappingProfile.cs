@@ -111,6 +111,7 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.StudentExamSessionId, opt => opt.MapFrom(src => src.StudentExamSessionId))
             .ForMember(dest => dest.SubjectName, opt => opt.MapFrom(src => src.ExamSessionSubject.Subject.SubjectName))
             .ForMember(dest => dest.RoomName, opt => opt.MapFrom(src => src.ExamSessionSubject.ExamRoom.RoomName))
+            .ForMember(dest => dest.ExamSessionName, opt => opt.MapFrom(src => src.ExamSessionSubject.ExamSession.Name))
             .ForMember(dest => dest.Duration, opt => opt.MapFrom(src => src.ExamSessionSubject.Duration))
             .ForMember(dest => dest.StartTime, opt => opt.MapFrom(src => src.ExamSessionSubject.StartTime))
             .ForMember(dest => dest.EndTime, opt => opt.MapFrom(src => src.ExamSessionSubject.EndTime))
@@ -121,6 +122,7 @@ public class MappingProfile : Profile
         CreateMap<StudentExamSession, StudentExamSessionCacheDto>()
             .ForMember(dest => dest.SubjectName, opt => opt.MapFrom(src => src.ExamSessionSubject.Subject.SubjectName))
             .ForMember(dest => dest.RoomName, opt => opt.MapFrom(src => src.ExamSessionSubject.ExamRoom.RoomName))
+            .ForMember(dest => dest.ExamSessionName, opt => opt.MapFrom(src => src.ExamSessionSubject.ExamSession.Name))
             .ForMember(dest => dest.Duration, opt => opt.MapFrom(src => src.ExamSessionSubject.Duration))
             .ForMember(dest => dest.ExamSessionStartTime, opt => opt.MapFrom(src => src.ExamSessionStartTime))
             .ForMember(dest => dest.ExamSessionEndTime, opt => opt.MapFrom(src => src.ExamSessionEndTime))
@@ -184,6 +186,9 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.DepartmentName, opt => opt.MapFrom(src => src.Department != null ? src.Department.DepartmentName : null));
         CreateMap<StudentExamSessionCacheDto, StudentExamSessionDto>();
 
+        // ExamRoom
+        CreateMap<ExamRoom, ExamRoomDto>();
+
         // Mapping cho ExamSubmissionMessage
         CreateMap<ExamSubmissionDto, ExamSubmissionMessage>()
             .ForMember(dest => dest.StudentCode, opt => opt.MapFrom(src => src.StudentCode))
@@ -207,7 +212,8 @@ public class MappingProfile : Profile
         CreateMap<ShuffledExamPaper, ShuffledExamPaperDto>()
             .ForMember(dest => dest.SubjectName, opt => opt.MapFrom(src => src.Subject != null ? src.Subject.SubjectName : null))
             .ForMember(dest => dest.SubjectCode, opt => opt.MapFrom(src => src.Subject != null ? src.Subject.SubjectCore : null))
-            .ForMember(dest => dest.QuestionStructures, opt => opt.MapFrom(src => ParseQuestionStructure(src.QuestionStructure)));
+            .ForMember(dest => dest.QuestionStructures, opt => opt.MapFrom(src => ParseQuestionStructure(src.QuestionStructure)))
+            .ForMember(dest => dest.OriginalExamPaper, opt => opt.MapFrom(src => src.OriginalExamPaper));
     }
 
 
@@ -218,16 +224,14 @@ public class MappingProfile : Profile
 
         try
         {
-            var options = new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true
-            };
-            
-            var questionStructures = JsonSerializer.Deserialize<List<QuestionStructureDto>>(questionStructureJson, options);
+            // Dùng Newtonsoft.Json để deserialize vì khi lưu cũng dùng JsonConvert (Newtonsoft.Json)
+            var questionStructures = Newtonsoft.Json.JsonConvert.DeserializeObject<List<QuestionStructureDto>>(questionStructureJson);
             return questionStructures ?? new List<QuestionStructureDto>();
         }
-        catch
+        catch (Exception ex)
         {
+            // Log lỗi để debug
+            System.Diagnostics.Debug.WriteLine($"Lỗi khi parse QuestionStructure: {ex.Message}");
             return new List<QuestionStructureDto>();
         }
     }

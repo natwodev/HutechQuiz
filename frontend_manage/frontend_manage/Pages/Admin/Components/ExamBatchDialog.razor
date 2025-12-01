@@ -1,0 +1,36 @@
+@using frontend_manage.DTOs.AcademicAffairs
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">@(isEdit ? "Sửa đợt thi" : "Thêm đợt thi mới")</MudText>
+    </TitleContent>
+    <DialogContent>
+        <EditForm Model="examBatch" OnValidSubmit="HandleSubmit">
+            <DataAnnotationsValidator />
+            <MudStack Spacing="3">
+                <MudTextField @bind-Value="examBatch.BatchName" 
+                             Label="Tên đợt thi" 
+                             Variant="Variant.Outlined" 
+                             Required="true"
+                             RequiredError="Tên đợt thi không được để trống" />
+                
+                <MudSelect T="int" @bind-Value="examBatch.SemesterId" 
+                           Label="Học kỳ" 
+                           Variant="Variant.Outlined"
+                           Required="true"
+                           RequiredError="Học kỳ không được để trống">
+                    <MudSelectItem Value="0">-- Chọn học kỳ --</MudSelectItem>
+                    @foreach (var s in Semesters)
+                    {
+                        <MudSelectItem Value="@s.SemesterId">@s.SemesterName</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudStack>
+        </EditForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Hủy</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="HandleSubmit">Lưu</MudButton>
+    </DialogActions>
+</MudDialog>
+

@@ -1,0 +1,19 @@
+.exam-questions-pane {
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 0;
+    max-height: 100vh;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.exam-questions-pane::-webkit-scrollbar {
+    display: none;
+}
+
+@media (max-width: 900px) {
+    .exam-questions-pane {
+        padding-right: 0;
+    }
+}
+

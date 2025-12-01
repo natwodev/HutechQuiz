@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using System.Linq;
 using AutoMapper;
 using backend_manage.core.Entities;
 using backend_manage.core.Hubs;
@@ -35,10 +36,24 @@ namespace backend_manage.core.Services.AuthService
             var paper = await _shuffledExamPaperRepository.GetQueryable()
                 .Where(x => x.ShuffledExamPaperCore == shuffledExamPaperCore)
                 .Include(x => x.OriginalExamPaper)
+                    .ThenInclude(o => o.OriginalExamPaperDetails)
+                        .ThenInclude(d => d.Answers)
+                .Include(x => x.OriginalExamPaper)
+                    .ThenInclude(o => o.OriginalExamPaperDetails)
+                        .ThenInclude(d => d.ChildQuestions)
+                            .ThenInclude(c => c.Answers)
                 .Include(x => x.Subject)
                 .FirstOrDefaultAsync();
             if (paper == null) return null;
-            return _mapper.Map<ShuffledExamPaperDto>(paper);
+            
+            var dto = _mapper.Map<ShuffledExamPaperDto>(paper);
+            
+            // Debug: Log để kiểm tra QuestionStructure
+            System.Diagnostics.Debug.WriteLine($"ShuffledExamPaperCore: {shuffledExamPaperCore}");
+            System.Diagnostics.Debug.WriteLine($"QuestionStructure (raw): {paper.QuestionStructure}");
+            System.Diagnostics.Debug.WriteLine($"QuestionStructures (parsed) count: {dto?.QuestionStructures?.Count ?? 0}");
+            
+            return dto;
         }
 
         public async Task<bool> DeleteSoftAsync(int shuffledExamPaperId)
@@ -57,6 +72,44 @@ namespace backend_manage.core.Services.AuthService
             paper.UpdatedAt = DateTimeHelper.GetVietnamTime();
             paper.UpdatedBy = userId;
             await _shuffledExamPaperRepository.UpdateAsync(paper);
+            return true;
+        }
+
+        public async Task<List<ShuffledExamPaperDto>> GetByOriginalExamPaperCoreAsync(string originalExamPaperCore)
+        {
+            var papers = await _shuffledExamPaperRepository.GetQueryable()
+                .Where(x => x.OriginalExamPaper.OriginalExamPaperCore == originalExamPaperCore && !x.IsDeleted)
+                .Include(x => x.OriginalExamPaper)
+                .Include(x => x.Subject)
+                .OrderByDescending(x => x.CreatedAt)
+                .ToListAsync();
+            
+            return papers.Select(x => _mapper.Map<ShuffledExamPaperDto>(x)).ToList();
+        }
+
+        public async Task<bool> UpdateAllowViewMaterialsAsync(string shuffledExamPaperCore, bool allowViewMaterials)
+        {
+            if (string.IsNullOrWhiteSpace(shuffledExamPaperCore))
+                throw new ArgumentException("Mã đề hoán vị không hợp lệ");
+
+            var shuffledExamPaper = await _shuffledExamPaperRepository.GetQueryable()
+                .FirstOrDefaultAsync(x => x.ShuffledExamPaperCore == shuffledExamPaperCore && !x.IsDeleted);
+            
+            if (shuffledExamPaper == null)
+                throw new Exception($"Không tìm thấy đề hoán vị với mã '{shuffledExamPaperCore}'");
+
+            var userId = _httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+                throw new UnauthorizedAccessException("Không thể xác định người dùng cập nhật đề hoán vị.");
+
+            var now = DateTimeHelper.GetVietnamTime();
+
+            // Cập nhật AllowViewMaterials cho đề hoán vị
+            shuffledExamPaper.AllowViewMaterials = allowViewMaterials;
+            shuffledExamPaper.UpdatedBy = userId;
+            shuffledExamPaper.UpdatedAt = now;
+            await _shuffledExamPaperRepository.UpdateAsync(shuffledExamPaper);
+
             return true;
         }
         

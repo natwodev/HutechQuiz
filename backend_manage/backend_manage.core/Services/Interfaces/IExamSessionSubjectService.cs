@@ -28,5 +28,8 @@ namespace backend_manage.core.Services.Interfaces
 
         // Kiểm tra môn thi trong ca thi đã mở hay chưa
         Task<bool> IsOpenAsync(int examSessionSubjectId);
+        
+        // Bật/tắt IsLogin cho tất cả sinh viên thuộc ExamSessionSubject
+        Task<(bool Success, string Message, int UpdatedCount)> ToggleIsLoginForAllStudentsAsync(int examSessionSubjectId, bool isLogin);
     }
 } 

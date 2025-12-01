@@ -1,73 +1,33 @@
-@using MudBlazor
-@using frontend_manage.DTOs
-
-<!-- Question Navigation -->
-<MudPaper Class="pa-4" Style="text-align: center; border: 1px solid #ccc; max-height: 450px; overflow-y: auto">
-    <MudText Typo="Typo.subtitle2" Class="mb-2"><b>Danh sách câu hỏi</b></MudText>
-    <MudGrid>
-        @if (Questions != null)
-        {
-            var navOverallQuestionNumber = 1;
-            @foreach (var q in Questions.OrderBy(d => d.Order))
+<MudStack>
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+        <MudText Typo="Typo.subtitle2">Điều hướng câu hỏi</MudText>
+        <MudText Typo="Typo.subtitle2">Số câu hỏi: @(TotalQuestions)</MudText>
+    </div>
+    <MudPaper Elevation="0" Class="pa-2 question-navigation-container" Style="background:#fafafa; border-radius:8px;">
+        <div class="question-navigation-grid">
+            @for (int display = 1; display <= TotalQuestions; display++)
             {
-                if (q.ChildQuestions != null && q.ChildQuestions.Any())
-                {
-                    // Câu hỏi cha có câu con - không hiển thị navigation button cho câu cha
-                    var startNumber = navOverallQuestionNumber;
-                    navOverallQuestionNumber += q.ChildQuestions.Count;
-
-                    @foreach (var childQ in q.ChildQuestions.OrderBy(cq => cq.Order))
-                    {
-                        var childIndex = q.ChildQuestions.OrderBy(cq => cq.Order).ToList().IndexOf(childQ);
-                        var childQuestionNumber = startNumber + childIndex;
-                        var isChildAnswered = IsChildQuestionAnswered(childQ.OriginalExamPaperDetailId);
-
-                        <MudItem xs="2" md="3" Style="padding-left: 15px">
-                            <MudButton Size="Size.Small" Variant="Variant.Filled"
-                                       Color="@(isChildAnswered ? Color.Success : Color.Default)"
-                                       OnClick="@(async () => await ScrollToQuestionAsync(childQuestionNumber.ToString()))"
-                                       Style="font-size: 0.8em;">
-                                @childQuestionNumber
-                            </MudButton>
-                        </MudItem>
-                    }
-                }
-                else
-                {
-                    // Câu hỏi đơn lẻ
-                    var questionNumber = navOverallQuestionNumber++;
-                    var isAnswered = IsQuestionAnswered(q.OriginalExamPaperDetailId);
-
-                    <MudItem xs="2" md="3" Style="padding-left: 15px">
-                        <MudButton Size="Size.Small" Variant="Variant.Filled"
-                                   Color="@(isAnswered ? Color.Success : Color.Default)"
-                                   OnClick="@(async () => await ScrollToQuestionAsync(questionNumber.ToString()))">
-                            @questionNumber
-                        </MudButton>
-                    </MudItem>
-                }
+                var number = display; // avoid closure capture issues
+                var idx = number - 1;
+                var answered = AnsweredMap.ContainsKey(QuestionIds[idx]);
+                var isActive = ActiveQuestionIndex.HasValue && ParentIndices.Count > idx && ParentIndices[idx] == ActiveQuestionIndex.Value;
+                <MudButton Style="width:100%; min-width:40px;" 
+                          Size="Size.Small" 
+                          Variant="@((answered) ? Variant.Filled : Variant.Outlined)" 
+                          Color="@(answered? Color.Success: Color.Default)" 
+                          Class="@(isActive ? "active-question-nav" : "")"
+                          OnClick="@(()=>OnNavigate.InvokeAsync(idx))">@number</MudButton>
             }
-        }
-    </MudGrid>
+        </div>
+    </MudPaper>
+</MudStack>
+@code {
+    [Parameter] public int TotalQuestions { get; set; }
+    [Parameter] public EventCallback<int> OnNavigate { get; set; }
+    [Parameter] public Dictionary<int, object?> AnsweredMap { get; set; } = new();
+    [Parameter] public List<int> QuestionIds { get; set; } = new();
+    [Parameter] public int? ActiveQuestionIndex { get; set; }
+    [Parameter] public List<int> ParentIndices { get; set; } = new();
+}
 
-    <MudDivider Class="my-3" />
-    
-    <!-- Summary Stats -->
-    @if (Questions != null)
-    {
-        var totalQuestions = GetTotalQuestionsCount();
-        var answeredQuestions = GetAnsweredQuestionsCount();
-        
-        <MudText Typo="Typo.body2" Class="mb-2">
-            <b>Đã làm:</b> @answeredQuestions/@totalQuestions câu
-        </MudText>
-        
-        <MudProgressLinear Color="Color.Success" 
-                           Value="@(totalQuestions > 0 ? (double)answeredQuestions / totalQuestions * 100 : 0)" 
-                           Class="mb-2" />
-        
-        <MudText Typo="Typo.body2">
-            <b>Còn lại:</b> @(totalQuestions - answeredQuestions) câu
-        </MudText>
-    }
-</MudPaper>
+

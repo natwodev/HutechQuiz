@@ -10,7 +10,8 @@ using Microsoft.Extensions.Http;
 using Microsoft.JSInterop;
 
 using frontend_manage.Services;
-using frontend_manage.Services.AcademicAffairs;
+using frontend_manage.Services.ExamManager;
+using frontend_manage.Services.Admin; 
 
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
@@ -27,16 +28,26 @@ builder.Services.AddScoped<StudentService>();
 builder.Services.AddScoped<MonitorService>();
 builder.Services.AddSingleton<NotificationService>();
 
-// Academic Affairs Services
-builder.Services.AddScoped<AcademicYearService>();
-builder.Services.AddScoped<SemesterService>();
-builder.Services.AddScoped<ExamBatchService>();
-builder.Services.AddScoped<ExamBatchDetailService>();
-builder.Services.AddScoped<ExamSessionService>();
-builder.Services.AddScoped<ExamSessionSubjectService>();
+// Exam Manager Services
+builder.Services.AddScoped<ExamManagerService>();
 
-// Đăng ký MathJax service
-builder.Services.AddScoped<IMathJaxService, MathJaxService>();
+// Admin Services
+builder.Services.AddScoped<AdminAcademicYearService>();
+builder.Services.AddScoped<AdminSemesterService>();
+builder.Services.AddScoped<AdminExamBatchService>();
+builder.Services.AddScoped<AdminExamBatchDetailService>();
+builder.Services.AddScoped<AdminExamSessionService>();
+builder.Services.AddScoped<AdminExamSessionSubjectService>();
+builder.Services.AddScoped<ExamRoomService>();
+builder.Services.AddScoped<LecturerService>();
+builder.Services.AddScoped<AdminStudentService>();
+builder.Services.AddScoped<SystemService>();
+
+// Removed MathJax service (migrated to KaTeX)
+// Đăng ký KaTeX service
+builder.Services.AddScoped<IKaTeXService, KaTeXService>();
+// Mock exam service
+builder.Services.AddSingleton<ExamMockService>();
 
 // Đăng ký AuthHeaderHandler
 builder.Services.AddScoped<AuthHeaderHandler>();

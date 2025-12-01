@@ -1,0 +1,46 @@
+@using frontend_manage.DTOs
+@using frontend_manage.DTOs.AcademicAffairs
+
+<MudCard Elevation="0">
+    <MudCardHeader>
+        <MudText Typo="Typo.h6" Style="font-size: 1.1rem; font-weight: 600;">Quản lý Giảng viên</MudText>
+        <MudSpacer />
+        <MudButton Color="Color.Success" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Upload" 
+                  OnClick="OpenImportDialog" Size="Size.Small">Import Excel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add" 
+                  OnClick="OpenCreateDialog" Size="Size.Small">Thêm giảng viên</MudButton>
+    </MudCardHeader>
+    <MudCardContent>
+        <MudTable Items="@Lecturers" Hover="true" Dense="true" Striped="true" Filter="new Func<LecturerDto, bool>(FilterFunc)">
+            <ToolBarContent>
+                <MudTextField @bind-Value="searchString" Placeholder="Tìm kiếm" Adornment="Adornment.Start" 
+                             AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+            </ToolBarContent>
+            <HeaderContent>
+                <MudTh>Mã GV</MudTh>
+                <MudTh>Họ tên</MudTh>
+                <MudTh>Email</MudTh>
+                <MudTh>Số điện thoại</MudTh>
+                <MudTh>Khoa</MudTh>
+                <MudTh>Thao tác</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Mã GV">@context.LecturerCode</MudTd>
+                <MudTd DataLabel="Họ tên">@context.FirstName @context.LastName</MudTd>
+                <MudTd DataLabel="Email">@context.Email</MudTd>
+                <MudTd DataLabel="Số điện thoại">@context.PhoneNumber</MudTd>
+                <MudTd DataLabel="Khoa">@context.DepartmentName</MudTd>
+                <MudTd>
+                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Size="Size.Small" 
+                                  OnClick="@(() => OpenEditDialog(context))" />
+                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" 
+                                  OnClick="@(() => OpenDeleteDialog(context))" />
+                </MudTd>
+            </RowTemplate>
+            <PagerContent>
+                <MudTablePager PageSizeOptions="new int[] { 5, 10, 25, 50 }" />
+            </PagerContent>
+        </MudTable>
+    </MudCardContent>
+</MudCard>
+

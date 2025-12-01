@@ -173,7 +173,7 @@ p {
         background: #fff;
     }
 
-        .layout .form_question .txt_question {
+            .layout .form_question .txt_question {
             padding: calc(var(--fraction-rem-height) * 0.3);
             display: block;
             text-align: left;
@@ -185,7 +185,7 @@ p {
             justify-content: center;
             color: #000;
             font-family: "Helvetica";
-            font-size: 1vw;
+            font-size: calc(1vw * 0.85);
             font-weight: 500;
             line-height: normal;
         }
@@ -203,7 +203,7 @@ p {
             width: 100%;
             height: auto;
             border-radius: 9px;
-            font-size: 0.9vw;
+            font-size: calc(0.9vw * 0.85);
             justify-content: start;
             padding: calc(var(--fraction-rem-height) * 0.3) calc(var(--fraction-rem-height) * 0.3);
             display: flex;

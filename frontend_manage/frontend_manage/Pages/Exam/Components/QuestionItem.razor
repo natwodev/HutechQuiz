@@ -1,94 +1,53 @@
 @using frontend_manage.DTOs
-@using MudBlazor
+@using frontend_manage.Services
 
-@if (Question != null)
-{
-    // Kiểm tra xem đây có phải câu cha không (có câu con)
-    bool isParentQuestion = Question.ChildQuestions?.Any() == true;
-    
-    // Hiển thị câu hỏi chính
-    if (!string.IsNullOrEmpty(Question.QuestionContent))
-    {
-        if (isParentQuestion)
-        { 
-            // Câu cha: hiển thị phạm vi câu hỏi con (không có MudPaper)
-            <MudText id="@($"question-parent-{Question.OriginalExamPaperDetailId}")" Typo="Typo.body1" GutterBottom="true">
-                <b>@((MarkupString)ProcessQuestionContent(Question.QuestionContent))</b>
-            </MudText>
+<div class="question-item @(IsGroupParent(Question) ? "group-parent" : (Question.ParentQuestionId != null ? "group-child" : string.Empty))" @ref="_root">
+    <MudStack Spacing="2">
+        <div class="question-title" @onclick:preventDefault="true">
+            @if (!string.IsNullOrWhiteSpace(DisplayNumber))
+            {
+                <span class="title-prefix">Câu @DisplayNumber: </span>
+            }
+            <span class="katex-content question-inline">@((MarkupString)NormalizeLatex(Question.QuestionContent))</span>
+        </div>
+
+        @if (IsMatching(Question))
+        {
+            var mid = (int)Math.Ceiling(Question.Answers.Count/2.0);
+            var left = Question.Answers.OrderBy(a=>a.Order).Take(mid).ToList();
+            var right = Question.Answers.OrderBy(a=>a.Order).Skip(mid).ToList();
+            <MatchingQuestion LeftItems="@left" RightItems="@right" OnPair="@(pair=>SelectMatching(Question.OriginalExamPaperDetailId, pair.leftId, pair.rightId.ToString()))" />
         }
         else
         {
-            // Câu đơn: có số thứ tự và MudPaper riêng
-            <MudPaper Class="pa-3 mb-3" Style="border: 1px solid #e0e0e0; border-radius: 8px;">
-                <MudText id="@($"question-{QuestionNumber}")" Typo="Typo.body1" GutterBottom="true">
-                    <b>Câu @(QuestionNumber): @((MarkupString)ProcessQuestionContent(Question.QuestionContent))</b>
-                </MudText>
-                
-                @if (Question.Answers != null && Question.Answers?.Count > 0)
-                {
-                                    <MudRadioGroup T="int?" 
-                               Class="mt-2" 
-                               Style="display: flex; flex-direction: column;"
-                               Value="@GetSelectedAnswerAsInt(Question.OriginalExamPaperDetailId)"
-                               ValueChanged="@(async (selectedAnswerId) => 
-                                                 await HandleAnswerSelectedWithDebounce(new AnswerSelectedArgs 
-                                                 { 
-                                                     QuestionId = Question.OriginalExamPaperDetailId, 
-                                                     AnswerId = selectedAnswerId ?? 0 
-                                                 }))">
-                        @foreach (var answer in Question.Answers.OrderBy(a => a.Order))
-                        {
-                            <MudPaper Class="pa-2 mb-2" 
-                                      Style="border: 1px solid #ddd; border-radius: 6px; background-color: #fafafa; width: 100%;">
-                                <MudRadio T="int?" Value="@answer.AnswerId" Style="width: 100%;">
-                                    @((MarkupString)answer.AnswerContent)
-                                </MudRadio>
-                            </MudPaper>
-                        }
-                    </MudRadioGroup>
-                }
-            </MudPaper>
+            <MudRadioGroup T="int" Class="answers-group" Row="false" SelectedOption="@_selectedSingle" SelectedOptionChanged="@((int v)=>SelectSingle(Question.OriginalExamPaperDetailId, v))">
+                <div class="answers">
+                    @foreach (var ans in Question.Answers.OrderBy(a=>a.Order))
+                    {
+                        var letter = (char)('A' + (ans.Order - 1));
+                        <div class="answer-row">
+                            <AnswerOption Answer="@ans" Letter="@letter" SelectedAnswerId="@(_selectedSingle ?? -1)" OnSelect="@(id => SelectSingle(Question.OriginalExamPaperDetailId, id))" />
+                        </div>
+                    }
+                </div>
+            </MudRadioGroup>
         }
-    }
+    </MudStack>
+</div>
 
-    // Hiển thị câu hỏi con
-    if (Question.ChildQuestions?.Any() == true)
-    {
-        @foreach (var childQuestion in Question.ChildQuestions.OrderBy(c => c.Order))
+@if (Question.ChildQuestions?.Any() == true)
+{
+    <div class="child-questions mt-3">
+        @foreach (var child in Question.ChildQuestions.OrderBy(c => c.Order))
         {
-            var childQuestionNumber = GetChildQuestionNumber(childQuestion);
-            <MudPaper Class="pa-3 mb-3" Style="border: 1px solid #e0e0e0; border-radius: 8px;">
-                @if (!string.IsNullOrEmpty(childQuestion.QuestionContent))
-                {
-                    <MudText id="@($"question-{childQuestionNumber}")" Typo="Typo.body1" GutterBottom="true">
-                        <b>Câu @(childQuestionNumber): @((MarkupString)ProcessQuestionContent(childQuestion.QuestionContent))</b>
-                </MudText>
-                }
-
-                @if (childQuestion.Answers != null && childQuestion.Answers?.Count > 0)
-                {
-                    <MudRadioGroup T="int?" 
-                                   Class="mt-2" 
-                                   Style="display: flex; flex-direction: column;"
-                                   Value="@GetSelectedChildAnswerAsInt(childQuestion.OriginalExamPaperDetailId)"
-                                   ValueChanged="@(async (selectedAnswerId) => 
-                                                     await HandleChildAnswerSelectedWithDebounce(new AnswerSelectedArgs 
-                                                     { 
-                                                         QuestionId = childQuestion.OriginalExamPaperDetailId, 
-                                                         AnswerId = selectedAnswerId ?? 0 
-                                                     }))">
-                        @foreach (var answer in childQuestion.Answers.OrderBy(a => a.Order))
-                        {
-                            <MudPaper Class="pa-2 mb-2" 
-                                      Style="border: 1px solid #ddd; border-radius: 6px; background-color: #fafafa; width: 100%;">
-                                <MudRadio T="int?" Value="@answer.AnswerId" Style="width: 100%;">
-                                    @((MarkupString)answer.AnswerContent)
-                                </MudRadio>
-                            </MudPaper>
-                        }
-                    </MudRadioGroup>
-                }
-            </MudPaper>
+            var childLabel = LabelProvider?.Invoke(child.OriginalExamPaperDetailId) ?? string.Empty;
+            <QuestionItem Question="@child"
+                          DisplayNumber="@childLabel"
+                          LabelProvider="LabelProvider"
+                          SelectedAnswerProvider="SelectedAnswerProvider"
+                          OnAnswered="OnAnswered" />
         }
-    }
+    </div>
 }
+
+@code { }

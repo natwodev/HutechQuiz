@@ -33,6 +33,10 @@ public class OriginalExamPaper : BaseEntity
     // true: đã phê duyệt, false: chưa phê duyệt, null: chưa xét duyệt
     public bool? IsApproved { get; set; }
     
+    // Đề thi này có được phép xem tài liệu hay không
+    // true: được phép xem tài liệu (open-book), false: không được phép xem tài liệu (closed-book)
+    public bool AllowViewMaterials { get; set; }
+    
     // Thời gian làm bài (tính bằng phút)
     public int DurationMinutes { get; set; }
     

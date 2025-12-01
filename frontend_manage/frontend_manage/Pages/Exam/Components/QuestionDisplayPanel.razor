@@ -1,0 +1,20 @@
+<div class="exam-questions-pane">
+    @if (ActiveQuestion != null)
+    {
+        <MudPaper Class="pa-4 exam-panel" Elevation="0">
+                <QuestionItem Question="@ActiveQuestion"
+                              DisplayNumber="@GetQuestionLabel(ActiveQuestion.OriginalExamPaperDetailId)"
+                              LabelProvider="GetQuestionLabel"
+                              SelectedAnswerId="@GetSelectedAnswerId(ActiveQuestion.OriginalExamPaperDetailId)"
+                              SelectedAnswerProvider="GetSelectedAnswerId"
+                              OnAnswered="OnAnswered" />
+            
+        </MudPaper>
+    }
+    else
+    {
+        <MudAlert Severity="Severity.Info" Class="mt-4">
+            Chưa có câu hỏi nào để hiển thị.
+        </MudAlert>
+    }
+</div>
