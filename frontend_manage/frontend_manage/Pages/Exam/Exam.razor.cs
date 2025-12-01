@@ -280,7 +280,7 @@ public partial class Exam : ComponentBase, IAsyncDisposable
 
         Snackbar.Add(result.Message, Severity.Success);
 
-        Navigation.NavigateTo("/Exam/Result");
+        Navigation.NavigateTo($"/Exam/Result?studentExamSessionId={StudentExamSessionId.Value}");
 
         _isSubmitting = false;
         StateHasChanged();

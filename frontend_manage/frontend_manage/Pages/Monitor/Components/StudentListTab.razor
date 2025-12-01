@@ -29,6 +29,14 @@
                 <MudIcon Icon="@Icons.Material.Filled.TableChart" Class="mr-1" />
                 Tải danh sách bảng điểm
             </MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Error" Class="mx-2" Size="Size.Small" OnClick="() => ToggleIsLoginForAllStudentsAsync(true)" Disabled="@(Students == null || !Students.Any())">
+                <MudIcon Icon="@Icons.Material.Filled.Lock" Class="mr-1" />
+                Khóa đăng nhập tất cả
+            </MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Success" Class="mx-2" Size="Size.Small" OnClick="() => ToggleIsLoginForAllStudentsAsync(false)" Disabled="@(Students == null || !Students.Any())">
+                <MudIcon Icon="@Icons.Material.Filled.LockOpen" Class="mr-1" />
+                Mở đăng nhập tất cả
+            </MudButton>
             <div class="search-input-wrapper">
                 <MudIcon Icon="@Icons.Material.Filled.Search" Class="search-icon" Size="Size.Small"/>
                 <input type="text" class="search-input" placeholder="Tìm kiếm theo mã SV hoặc họ tên..." @bind="searchText" @bind:event="oninput"/>

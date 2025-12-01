@@ -22,7 +22,7 @@ public partial class Result : ComponentBase
     private string? _errorMessage;
     private ExamSubmissionDto? _submission;
     private int? _loadedSessionId;
-    private IReadOnlyList<AnswerComparison> _answerComparisons = Array.Empty<AnswerComparison>();
+    private List<AnswerComparison> _answerComparisons = new List<AnswerComparison>();
     private int _correctCount;
     private int _incorrectCount;
     private int _unansweredCount;
@@ -54,7 +54,7 @@ public partial class Result : ComponentBase
         {
             _errorMessage = "Không tìm thấy kết quả nộp bài cho ca thi này.";
             _submission = null;
-            _answerComparisons = Array.Empty<AnswerComparison>();
+            _answerComparisons = new List<AnswerComparison>();
             ResetSummaryCounts();
             Snackbar.Add(_errorMessage, Severity.Warning);
         }
@@ -99,7 +99,7 @@ public partial class Result : ComponentBase
     {
         if (_submission == null)
         {
-            _answerComparisons = Array.Empty<AnswerComparison>();
+            _answerComparisons = new List<AnswerComparison>();
             ResetSummaryCounts();
             return;
         }

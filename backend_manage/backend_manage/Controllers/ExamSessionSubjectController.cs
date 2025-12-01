@@ -295,5 +295,33 @@ namespace backend_manage.Controllers
                 return StatusCode(500, $"Lỗi nội bộ: {ex.Message}");
             }
         }
+
+        [HttpPut("{examSessionSubjectId}/students/toggle-is-login")]
+        public async Task<ActionResult> ToggleIsLoginForAllStudents(int examSessionSubjectId, [FromBody] ToggleIsLoginRequest request)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                    return BadRequest(ModelState);
+
+                var (success, message, updatedCount) = await _examSessionSubjectService.ToggleIsLoginForAllStudentsAsync(
+                    examSessionSubjectId, 
+                    request.IsLogin);
+
+                if (!success)
+                    return BadRequest(new { message, updatedCount });
+
+                return Ok(new { message, updatedCount });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Lỗi nội bộ: {ex.Message}");
+            }
+        }
+
+        public class ToggleIsLoginRequest
+        {
+            public bool IsLogin { get; set; }
+        }
     }
 } 

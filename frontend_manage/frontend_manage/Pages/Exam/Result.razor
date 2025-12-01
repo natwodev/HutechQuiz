@@ -67,16 +67,28 @@ else
         </MudItem>
         <MudItem xs="12" md="6">
             <MudPaper Class="pa-6">
-                <MudText Typo="Typo.h5">Thông tin lưu vết</MudText>
+                <MudText Typo="Typo.h5">Thống kê</MudText>
                 <MudDivider Class="my-4" />
-                <MudText Typo="Typo.subtitle2">Chuỗi đáp án đã lưu</MudText>
-                <MudPaper Class="pa-3 mb-4" Style="font-family: monospace; white-space: pre-wrap;">
-                    @_submission.StudentAnswersString ?? "Không có"
-                </MudPaper>
-                <MudText Typo="Typo.subtitle2">Đáp án đúng</MudText>
-                <MudPaper Class="pa-3" Style="font-family: monospace; white-space: pre-wrap;">
-                    @_submission.AnswerKey ?? "Không có"
-                </MudPaper>
+                <MudStack Spacing="3">
+                    <MudStack Direction="Row" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+                        <MudText Color="Color.Success" Typo="Typo.subtitle1">Câu trả lời đúng</MudText>
+                        <MudChip T="int" Color="Color.Success" Variant="Variant.Filled" Style="min-width:48px;justify-content:center;">
+                            @_correctCount
+                        </MudChip>
+                    </MudStack>
+                    <MudStack Direction="Row" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+                        <MudText Color="Color.Error" Typo="Typo.subtitle1">Câu trả lời sai</MudText>
+                        <MudChip T="int" Color="Color.Error" Variant="Variant.Filled" Style="min-width:48px;justify-content:center;">
+                            @_incorrectCount
+                        </MudChip>
+                    </MudStack>
+                    <MudStack Direction="Row" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+                        <MudText Color="Color.Warning" Typo="Typo.subtitle1">Chưa trả lời</MudText>
+                        <MudChip T="int" Color="Color.Dark" Variant="Variant.Filled" Style="min-width:48px;justify-content:center;">
+                            @_unansweredCount
+                        </MudChip>
+                    </MudStack>
+                </MudStack>
             </MudPaper>
         </MudItem>
     </MudGrid>
@@ -85,36 +97,14 @@ else
         <MudText Typo="Typo.h5">Tổng quan câu trả lời</MudText>
         <MudDivider Class="my-4" />
 
-        <MudStack Spacing="2" Class="mb-5">
-            <MudStack Direction="Row" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
-                <MudText Color="Color.Success" Typo="Typo.subtitle1">Câu trả lời đúng</MudText>
-                <MudChip T="int" Color="Color.Success" Variant="Variant.Filled" Style="min-width:48px;justify-content:center;">
-                    @_correctCount
-                </MudChip>
-            </MudStack>
-            <MudStack Direction="Row" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
-                <MudText Color="Color.Error" Typo="Typo.subtitle1">Câu trả lời sai</MudText>
-                <MudChip T="int" Color="Color.Error" Variant="Variant.Filled" Style="min-width:48px;justify-content:center;">
-                    @_incorrectCount
-                </MudChip>
-            </MudStack>
-            <MudStack Direction="Row" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
-                <MudText Color="Color.Warning" Typo="Typo.subtitle1">Chưa trả lời</MudText>
-                <MudChip T="int" Color="Color.Dark" Variant="Variant.Filled" Style="min-width:48px;justify-content:center;">
-                    @_unansweredCount
-                </MudChip>
-            </MudStack>
-        </MudStack>
-
         @if (_answerComparisons is { Count: > 0 })
         {
-            <MudDivider Class="my-4" />
-            <MudStack Direction="Row" Spacing="1" Class="flex-wrap gap-2 mb-6">
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(42px, 1fr)); gap: 8px;">
                 @foreach (var answer in _answerComparisons)
                 {
                     <MudTooltip Text="@($"Câu {answer.QuestionId}")">
                         <MudChip T="int"
-                                 Style="width:42px;height:42px;border-radius:50%;justify-content:center;"
+                                 Style="width:42px;height:42px;border-radius:50%;justify-content:center;margin:0 auto;"
                                  Color="@GetStateColor(answer.State)"
                                  Variant="Variant.Filled"
                                  Size="Size.Medium">
@@ -122,38 +112,12 @@ else
                         </MudChip>
                     </MudTooltip>
                 }
-            </MudStack>
-        }
-
-        <MudDivider Class="my-4" />
-
-        <MudText Typo="Typo.h5">Chi tiết đáp án</MudText>
-        <MudDivider Class="my-4" />
-
-        @if (_answerComparisons != null && _answerComparisons.Count > 0)
-        {
-            <MudTable Items="_answerComparisons" Dense="true" Hover="true" Bordered="true">
-                <HeaderContent>
-                    <MudTh>Câu</MudTh>
-                    <MudTh>Đã chọn</MudTh>
-                    <MudTh>Đáp án đúng</MudTh>
-                    <MudTh>Trạng thái</MudTh>
-                </HeaderContent>
-                <RowTemplate>
-                    <MudTd DataLabel="Câu">@context.QuestionId</MudTd>
-                    <MudTd DataLabel="Đã chọn">@FormatAnswerValue(context.StudentAnswer)</MudTd>
-                    <MudTd DataLabel="Đáp án đúng">@FormatAnswerValue(context.CorrectAnswer)</MudTd>
-                    <MudTd DataLabel="Trạng thái">
-                        <MudChip T="string" Color="@GetStateColor(context.State)" Variant="Variant.Filled" Size="Size.Small">
-                            @GetStateLabel(context.State)
-                        </MudChip>
-                    </MudTd>
-                </RowTemplate>
-            </MudTable>
+            </div>
         }
         else
         {
             <MudText Color="Color.Secondary">Không có dữ liệu chi tiết câu trả lời.</MudText>
         }
     </MudPaper>
+   
 }

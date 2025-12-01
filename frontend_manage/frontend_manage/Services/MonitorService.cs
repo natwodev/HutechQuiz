@@ -285,5 +285,63 @@ public class MonitorService
         public bool isActive { get; set; }
     }
 
+    public async Task<(bool Success, string Message, int UpdatedCount)> ToggleIsLoginForAllStudentsAsync(int examSessionSubjectId, bool isLogin)
+    {
+        try
+        {
+            var request = new ToggleIsLoginRequest
+            {
+                IsLogin = isLogin
+            };
+
+            var response = await _httpClient.PutAsJsonAsync(
+                $"/api/ExamSessionSubject/{examSessionSubjectId}/students/toggle-is-login", 
+                request);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var result = await response.Content.ReadFromJsonAsync<ToggleIsLoginResponse>();
+                if (result != null)
+                {
+                    return (true, result.Message ?? "Cập nhật thành công", result.UpdatedCount);
+                }
+                return (true, "Cập nhật trạng thái đăng nhập thành công", 0);
+            }
+            else
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"HTTP {response.StatusCode}: {errorContent}");
+                
+                try
+                {
+                    var errorResult = await response.Content.ReadFromJsonAsync<Dictionary<string, object>>();
+                    if (errorResult != null && errorResult.TryGetValue("message", out var errorMessage))
+                        return (false, errorMessage.ToString() ?? $"Lỗi {response.StatusCode}", 0);
+                }
+                catch
+                {
+                    // Nếu không parse được JSON, trả về raw content
+                }
+                
+                return (false, $"Lỗi {response.StatusCode}: {errorContent}", 0);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error toggling IsLogin for all students: {ex.Message}");
+            return (false, $"Lỗi: {ex.Message}", 0);
+        }
+    }
+
+    public class ToggleIsLoginRequest
+    {
+        public bool IsLogin { get; set; }
+    }
+
+    public class ToggleIsLoginResponse
+    {
+        public string Message { get; set; } = string.Empty;
+        public int UpdatedCount { get; set; }
+    }
 
 }
