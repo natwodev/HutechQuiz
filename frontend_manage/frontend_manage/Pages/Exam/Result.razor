@@ -2,12 +2,9 @@
 
 <PageTitle>Kết quả bài thi</PageTitle>
 
-<MudPaper Class="pa-6">
-    <MudText Typo="Typo.h4">Kết quả</MudText>
-    <MudText Typo="Typo.subtitle2" Color="Color.Secondary">
-        @(_submission?.StudentCode is null ? "Không xác định sinh viên" : $"Mã sinh viên: {_submission.StudentCode}")
-    </MudText>
-</MudPaper>
+<ResultHeader />
+
+<div style="position:fixed; inset:0; width:100vw; height:100vh; z-index:-1; background: url('/images/Home_Page2.jpg') no-repeat center center fixed; background-size: cover;"></div>
 
 @if (_isLoading)
 {
@@ -34,10 +31,20 @@ else
             <MudPaper Class="pa-6">
                 <MudText Typo="Typo.h5">Thông tin bài thi</MudText>
                 <MudDivider Class="my-4" />
+                <MudText Typo="Typo.subtitle2" Color="Color.Secondary">
+                    @(_submission?.StudentCode is null ? "Không xác định sinh viên" : $"Mã sinh viên: {_submission.StudentCode}")
+                </MudText>
                 <MudGrid>
                     <MudItem xs="12" sm="6">
                         <MudText Typo="Typo.subtitle2">Điểm</MudText>
-                        <MudText Typo="Typo.h6">@ScoreDisplay</MudText>
+                        @if (_submission?.Score.HasValue == true)
+                        {
+                            <img src="@ScoreSvgDataUri" alt="Điểm số" style="max-width: 100%; height: auto;" />
+                        }
+                        else
+                        {
+                            <MudText Typo="Typo.h6">Chưa có điểm</MudText>
+                        }
                     </MudItem>
                     <MudItem xs="12" sm="6">
                         <MudText Typo="Typo.subtitle2">Số câu đúng</MudText>
@@ -58,10 +65,6 @@ else
                         <MudText Typo="Typo.subtitle2">Thời lượng làm bài</MudText>
                         <MudText>@FormatDuration(_submission.StartTime, _submission.EndTime)</MudText>
                     </MudItem>
-                    <MudItem xs="12" sm="6">
-                        <MudText Typo="Typo.subtitle2">Đề thi hoán vị</MudText>
-                        <MudText>@_submission.ShuffledExamPaperId</MudText>
-                    </MudItem>
                 </MudGrid>
             </MudPaper>
         </MudItem>
@@ -69,55 +72,57 @@ else
             <MudPaper Class="pa-6">
                 <MudText Typo="Typo.h5">Thống kê</MudText>
                 <MudDivider Class="my-4" />
-                <MudStack Spacing="3">
-                    <MudStack Direction="Row" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+                <div style="display:flex; gap:32px; align-items:center; justify-content:space-between;">
+
+                    <div style="display:flex; align-items:center; gap:8px;">
                         <MudText Color="Color.Success" Typo="Typo.subtitle1">Câu trả lời đúng</MudText>
                         <MudChip T="int" Color="Color.Success" Variant="Variant.Filled" Style="min-width:48px;justify-content:center;">
                             @_correctCount
                         </MudChip>
-                    </MudStack>
-                    <MudStack Direction="Row" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+                    </div>
+
+                    <div style="display:flex; align-items:center; gap:8px;">
                         <MudText Color="Color.Error" Typo="Typo.subtitle1">Câu trả lời sai</MudText>
                         <MudChip T="int" Color="Color.Error" Variant="Variant.Filled" Style="min-width:48px;justify-content:center;">
                             @_incorrectCount
                         </MudChip>
-                    </MudStack>
-                    <MudStack Direction="Row" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+                    </div>
+
+                    <div style="display:flex; align-items:center; gap:8px;">
                         <MudText Color="Color.Warning" Typo="Typo.subtitle1">Chưa trả lời</MudText>
-                        <MudChip T="int" Color="Color.Dark" Variant="Variant.Filled" Style="min-width:48px;justify-content:center;">
+                        <MudChip T="int" Color="Color.Warning" Variant="Variant.Filled" Style="min-width:48px;justify-content:center;">
                             @_unansweredCount
                         </MudChip>
-                    </MudStack>
-                </MudStack>
+                    </div>
+                </div>
+
+                <MudDivider Class="my-4" />
+
+                @if (_answerComparisons is { Count: > 0 })
+                {
+                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(42px, 1fr)); gap: 8px;">
+                        @foreach (var (answer, index) in _answerComparisons.Select((answer, index) => (answer, index)))
+                        {
+                            var stt = index + 1;
+                            <MudTooltip Text="@($"Câu {answer.QuestionId}")">
+                                <MudChip T="int"
+                                         Style="width:42px;height:42px;border-radius:50%;justify-content:center;margin:0 auto;"
+                                         Color="@GetStateColor(answer.State)"
+                                         Variant="Variant.Filled"
+                                         Size="Size.Medium">
+                                    @stt
+                                </MudChip>
+                            </MudTooltip>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <MudText Color="Color.Secondary">Không có dữ liệu chi tiết câu trả lời.</MudText>
+                }
             </MudPaper>
         </MudItem>
     </MudGrid>
-
-    <MudPaper Class="pa-6 mt-6">
-        <MudText Typo="Typo.h5">Tổng quan câu trả lời</MudText>
-        <MudDivider Class="my-4" />
-
-        @if (_answerComparisons is { Count: > 0 })
-        {
-            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(42px, 1fr)); gap: 8px;">
-                @foreach (var answer in _answerComparisons)
-                {
-                    <MudTooltip Text="@($"Câu {answer.QuestionId}")">
-                        <MudChip T="int"
-                                 Style="width:42px;height:42px;border-radius:50%;justify-content:center;margin:0 auto;"
-                                 Color="@GetStateColor(answer.State)"
-                                 Variant="Variant.Filled"
-                                 Size="Size.Medium">
-                            @answer.QuestionId
-                        </MudChip>
-                    </MudTooltip>
-                }
-            </div>
-        }
-        else
-        {
-            <MudText Color="Color.Secondary">Không có dữ liệu chi tiết câu trả lời.</MudText>
-        }
-    </MudPaper>
+    
    
 }

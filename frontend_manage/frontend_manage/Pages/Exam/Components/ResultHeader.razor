@@ -1,0 +1,39 @@
+@using MudBlazor
+@inject NavigationManager Navigation
+
+<header class="result-header" style="background: #264488 !important;">
+    <div class="result-header-left">
+        <div class="result-brand">
+            <img src="images/logo-dai-hoc-hutech_012634748.png"
+                 alt="Trắc Nghiệm"
+                 class="result-logo" />
+
+            <div class="result-brand-text">
+                <div class="result-brand-title">
+                    TRƯỜNG ĐẠI HỌC CÔNG NGHỆ THÀNH PHỐ HỒ CHÍ MINH - HUTECH 
+                </div>
+                <span class="result-brand-subtitle">
+                    Hệ thống thi trực tuyến HUTECH
+                </span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="result-header-right">
+        <MudButton Variant="Variant.Text"
+                   Color="Color.Inherit"
+                   StartIcon="@Icons.Material.Filled.ArrowBack"
+                   OnClick="NavigateToDashboard"
+                   Class="result-back-button">
+            Quay lại
+        </MudButton>
+    </div>
+</header>
+
+@code {
+    private void NavigateToDashboard()
+    {
+        Navigation.NavigateTo("/student-dashboard");
+    }
+}
+

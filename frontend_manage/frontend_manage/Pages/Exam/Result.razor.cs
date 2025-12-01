@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 using frontend_manage.DTOs;
 using frontend_manage.Services;
@@ -9,10 +10,11 @@ using MudBlazor;
 
 namespace frontend_manage.Pages.Exam;
 
-public partial class Result : ComponentBase
+public partial class Result : ComponentBase, IDisposable
 {
     [Inject] private StudentService StudentService { get; set; } = default!;
     [Inject] private ISnackbar Snackbar { get; set; } = default!;
+    [Inject] private NotificationService NotificationService { get; set; } = default!;
 
     [Parameter]
     [SupplyParameterFromQuery(Name = "studentExamSessionId")]
@@ -27,12 +29,65 @@ public partial class Result : ComponentBase
     private int _incorrectCount;
     private int _unansweredCount;
 
-    protected override async Task OnParametersSetAsync()
+    protected override async Task OnInitializedAsync()
     {
         if (!StudentExamSessionId.HasValue)
         {
             _errorMessage = "Thiếu tham số studentExamSessionId. Vui lòng quay lại trang thi.";
             _submission = null;
+            _isLoading = false;
+            return;
+        }
+
+        try
+        {
+            _submission = await StudentService.GetSubmissionResultAsync(StudentExamSessionId.Value);
+            if (_submission == null)
+            {
+                _errorMessage = "Không tìm thấy kết quả bài thi.";
+                Snackbar.Add(_errorMessage, Severity.Warning);
+            }
+            else
+            {
+                _loadedSessionId = StudentExamSessionId.Value;
+                BuildAnswerComparisons();
+            }
+
+            // Đăng ký nhận điểm cập nhật qua SignalR (nếu có)
+            NotificationService.OnExamScoreReceived += HandleExamScoreReceived;
+
+            // Đảm bảo đã kết nối SignalR để có thể nhận sự kiện
+            if (!NotificationService.IsConnected)
+            {
+                _ = NotificationService.StartAsync();
+            }
+
+            // Tham gia group theo mã sinh viên để nhận điểm đẩy về
+            var studentCode = _submission?.StudentCode;
+            if (!string.IsNullOrWhiteSpace(studentCode))
+            {
+                try
+                {
+                    await NotificationService.JoinStudentGroup(studentCode);
+                }
+                catch { }
+            }
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Lỗi khi tải kết quả: {ex.Message}";
+            Snackbar.Add(_errorMessage, Severity.Error);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!StudentExamSessionId.HasValue)
+        {
             return;
         }
 
@@ -63,6 +118,22 @@ public partial class Result : ComponentBase
             _submission = result;
             _loadedSessionId = sessionId;
             BuildAnswerComparisons();
+
+            // Tham gia group theo mã sinh viên để nhận điểm đẩy về
+            var studentCode = _submission?.StudentCode;
+            if (!string.IsNullOrWhiteSpace(studentCode))
+            {
+                try
+                {
+                    // Đảm bảo SignalR connection đã sẵn sàng
+                    if (!NotificationService.IsConnected)
+                    {
+                        _ = NotificationService.StartAsync();
+                    }
+                    await NotificationService.JoinStudentGroup(studentCode);
+                }
+                catch { }
+            }
         }
 
         _isLoading = false;
@@ -73,6 +144,9 @@ public partial class Result : ComponentBase
         _submission?.Score.HasValue == true
             ? $"{_submission.Score:0.##}"
             : "Chưa có điểm";
+
+    private string ScoreSvgDataUri => BuildScoreSvgDataUri(
+        _submission?.Score ?? 0);
 
     private static string FormatDate(DateTime? value) =>
         value?.ToString("HH:mm dd/MM/yyyy") ?? "Không có";
@@ -213,5 +287,64 @@ public partial class Result : ComponentBase
     }
 
     private sealed record AnswerComparison(int QuestionId, string? StudentAnswer, string? CorrectAnswer, AnswerState State);
+
+    private void HandleExamScoreReceived(object data)
+    {
+        try
+        {
+            if (data is JsonElement json)
+            {
+                // Chỉ cập nhật điểm số và số câu đúng từ payload
+                // Không cập nhật studentAnswersString, answerKey để tránh làm sai thống kê
+                _submission ??= new ExamSubmissionDto();
+                
+                if (json.TryGetProperty("score", out var pScore))
+                    _submission.Score = pScore.GetDouble();
+                if (json.TryGetProperty("correctAnswers", out var pCorrect))
+                    _submission.CorrectAnswers = pCorrect.GetInt32();
+                if (json.TryGetProperty("totalQuestions", out var pTotal))
+                    _submission.TotalQuestions = pTotal.GetInt32();
+
+                // Không gọi BuildAnswerComparisons() để giữ nguyên thống kê hiện tại
+                // Chỉ cập nhật điểm số và số câu đúng
+
+                InvokeAsync(StateHasChanged);
+            }
+        }
+        catch
+        {
+            // bỏ qua lỗi parse, không làm gián đoạn UI
+        }
+    }
+
+    private string BuildScoreSvgDataUri(double score, int width = 560, int height = 220)
+    {
+        var scoreText = score.ToString("0.00");
+        var midY = (int)Math.Round(height * 0.62);
+        var bigFont = (int)Math.Round(height * 0.60);
+        var svg = $@"
+<svg xmlns='http://www.w3.org/2000/svg' width='{width}' height='{height}' viewBox='0 0 {width} {height}'>
+  <defs>
+    <linearGradient id='g' x1='0' y1='0' x2='1' y2='1'>
+      <stop offset='0' stop-color='#1976d2'/><stop offset='1' stop-color='#42a5f5'/>
+    </linearGradient>
+    <filter id='ds' x='-20%' y='-20%' width='140%' height='140%'>
+      <feDropShadow dx='0' dy='8' stdDeviation='10' flood-color='#1565c0' flood-opacity='.35'/>
+    </filter>
+  </defs>
+  <rect rx='24' width='{width}' height='{height}' fill='url(#g)' filter='url(#ds)'/>
+  <text x='{width / 2}' y='{midY}' text-anchor='middle'
+        font-family='Segoe UI,Roboto,Arial' font-weight='900' font-size='{bigFont}'
+        fill='#ffffff'>{scoreText}</text>
+</svg>";
+        var bytes = System.Text.Encoding.UTF8.GetBytes(svg);
+        return "data:image/svg+xml;base64," + Convert.ToBase64String(bytes);
+    }
+
+    public void Dispose()
+    {
+        NotificationService.OnExamScoreReceived -= HandleExamScoreReceived;
+        // Không có studentCode chắc chắn ở đây để Leave, bỏ qua an toàn
+    }
 }
 
