@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace backend_manage.shared.DTOs
 {
     public class StudentExamRoomStatusDto
@@ -14,6 +16,8 @@ namespace backend_manage.shared.DTOs
         public double Score { get; set; } = 0;
         public DateTime? StartTime { get; set; }
         public DateTime? EndTime { get; set; }
+        public int CheatingWarningCount { get; set; }
+        public List<string> CheatingWarningDetails { get; set; } = new();
     }
 
     public class SubjectExamRoomStatusDto

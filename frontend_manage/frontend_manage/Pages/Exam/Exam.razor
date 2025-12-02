@@ -23,6 +23,7 @@
                 @* Main Question Panel *@
                 <div class="exam-question-area">
                     <QuestionDisplayPanel ActiveQuestion="@ActiveQuestion?.Question"
+                                          ShuffledExamPaperCore="@_response?.ExamPaper?.ShuffledExamPaperCore"
                                           CurrentIndex="@_activeQuestionIndex"
                                           TotalQuestions="@_questionDisplayItems.Count"
                                           OnPrevious="PreviousQuestion"

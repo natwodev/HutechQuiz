@@ -146,32 +146,43 @@ namespace frontend_manage.Pages.Monitor.Components
 
         private void MessageStudent(string studentCode)
         {
-            Snackbar.Add($"Gửi thông báo cho sinh viên: {studentCode}", Severity.Info);
+            Snackbar.Add("Tính năng đang phát triển", Severity.Info);
         }
 
-        private void ManageStudent(string studentCode)
+        private async Task ToggleStudentLogin(StudentExamRoomStatusDto student)
         {
-            _ = ManageStudentAsync(studentCode);
-        }
-
-        private async Task ManageStudentAsync(string studentCode)
-        {
-            // Tìm sinh viên theo mã
-            var student = Students?.FirstOrDefault(s => s.StudentCode == studentCode);
             if (student == null)
             {
                 Snackbar.Add("Không tìm thấy sinh viên!", Severity.Error);
                 return;
             }
 
-            // Đảo trạng thái đăng nhập (ví dụ: nếu đang đăng nhập thì chuyển thành chưa đăng nhập)
+            // Đảo trạng thái đăng nhập
             bool newLoginStatus = !student.IsLogin;
-            var result = await MonitorService.ActiveLoginAsync(studentCode, newLoginStatus);
+            var result = await MonitorService.ActiveLoginAsync(student.StudentCode, newLoginStatus);
             Snackbar.Add(result, Severity.Success);
 
-            // Cập nhật trạng thái trong danh sách (nếu muốn cập nhật UI ngay)
+            // Cập nhật trạng thái trong danh sách
             student.IsLogin = newLoginStatus;
             StateHasChanged();
+        }
+
+        private void ViewStudentDetails(StudentExamRoomStatusDto student)
+        {
+            if (student == null)
+            {
+                Snackbar.Add("Không tìm thấy sinh viên!", Severity.Error);
+                return;
+            }
+
+            var message = $"Mã SV: {student.StudentCode}\n" +
+                         $"Họ tên: {student.FirstName} {student.LastName}\n" +
+                         $"Trạng thái đăng nhập: {(student.IsLogin ? "Đã đăng nhập" : "Chưa đăng nhập")}\n" +
+                         $"Trạng thái thi: {GetExamStatusDisplayName(GetExamStatus(student))}\n" +
+                         $"Thời gian cộng: {student.ExtraMinutes} phút\n" +
+                         $"Điểm số: {student.Score.ToString("0.0")}";
+
+            Snackbar.Add(message, Severity.Info);
         }
         
         
@@ -218,10 +229,83 @@ namespace frontend_manage.Pages.Monitor.Components
                 }
             }
         }
+
+        private async Task ShowCheatingWarnings(StudentExamRoomStatusDto student)
+        {
+            if (student == null || student.CheatingWarningCount <= 0)
+                return;
+
+            string content;
+
+            if (student.CheatingWarningDetails != null && student.CheatingWarningDetails.Any())
+            {
+                var lines = student.CheatingWarningDetails
+                    .Select((w, idx) => $"{idx + 1}. {w}")
+                    .ToList();
+                content = string.Join("\n", lines);
+            }
+            else
+            {
+                content =
+                    $"Đã ghi nhận {student.CheatingWarningCount} cảnh báo gian lận cho sinh viên {student.StudentCode}.\n" +
+                    "Hiện hệ thống chỉ lưu số lần cảnh báo, chưa có chi tiết từng lần.";
+            }
+
+            await DialogService.ShowMessageBox(
+                $"Cảnh báo gian lận - {student.StudentCode}",
+                content,
+                yesText: "Đóng");
+        }
+
         protected override void OnParametersSet()
         {
             // Khi parent truyền Students mới → ép re-render lại UI
+            SeedFakeCheatingWarnings(); // Dữ liệu ảo demo UI cảnh báo gian lận
             StateHasChanged();
+        }
+
+        /// <summary>
+        /// TẠM THỜI: sinh dữ liệu ảo cho cột cảnh báo gian lận để demo UI.
+        /// Khi backend có dữ liệu thật thì xoá/hủy hàm này.
+        /// </summary>
+        private void SeedFakeCheatingWarnings()
+        {
+            if (Students == null || !Students.Any())
+                return;
+
+            // Nếu đã có dữ liệu thật (được map từ backend) thì không đụng vào
+            if (Students.Any(s => s.CheatingWarningCount > 0 || 
+                                  (s.CheatingWarningDetails != null && s.CheatingWarningDetails.Any())))
+                return;
+
+            var random = new Random();
+
+            foreach (var student in Students)
+            {
+                // Xác suất nhỏ để tránh quá nhiều cảnh báo ảo
+                var roll = random.Next(0, 100);
+                if (roll < 15) // 15% sinh viên có cảnh báo
+                {
+                    var count = random.Next(1, 4); // 1–3 cảnh báo
+                    student.CheatingWarningCount = count;
+                    student.CheatingWarningDetails ??= new();
+                    student.CheatingWarningDetails.Clear();
+
+                    for (int i = 0; i < count; i++)
+                    {
+                        var reasonIndex = random.Next(0, 3);
+                        string reason = reasonIndex switch
+                        {
+                            0 => "Rời khỏi tab thi (trình duyệt bị ẩn / chuyển tab).",
+                            1 => "Thoát chế độ toàn màn hình trong khi đang làm bài.",
+                            2 => "Chuyển sang ứng dụng khác trong lúc thi.",
+                            _ => "Hệ thống ghi nhận hành vi bất thường khi làm bài."
+                        };
+
+                        student.CheatingWarningDetails.Add(reason);
+                    }
+                }
+            }
         }
 
         private async Task RefreshStudentData()

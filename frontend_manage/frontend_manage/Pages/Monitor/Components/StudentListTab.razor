@@ -93,14 +93,15 @@
             <table class="student-table">
                 <thead>
                     <tr>
-                        <th style="width: 5%">STT</th>
-                        <th style="width: 8%">Mã SV</th>
-                        <th style="width: 20%">Họ tên</th>
-                        <th style="width: 18%">Trạng thái thi</th>
-                        <th style="width: 15%">Trạng thái đăng nhập</th>
-                        <th style="width: 8%">Giờ cộng</th>
-                        <th style="width: 8%">Điểm số</th>
-                        <th style="width: 12%">Thao tác</th>
+                        <th class="col-stt">STT</th>
+                        <th class="col-student-code">Mã SV</th>
+                        <th class="col-name">Họ tên</th>
+                        <th class="col-exam-status">Trạng thái thi</th>
+                        <th class="col-login-status">Trạng thái đăng nhập</th>
+                        <th class="col-cheat">Cảnh báo gian lận</th>
+                        <th class="col-extra-time">Giờ cộng</th>
+                        <th class="col-score">Điểm số</th>
+                        <th class="col-actions">Thao tác</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -108,10 +109,10 @@
                     {
                         var index = Students.IndexOf(student) + 1;
                         <tr>
-                            <td>@index</td>
-                            <td>@($"#{student.StudentCode}")</td>
-                            <td>@($"{student.FirstName} {student.LastName}")</td>
-                            <td>
+                            <td class="col-stt">@index</td>
+                            <td class="col-student-code">@($"#{student.StudentCode}")</td>
+                            <td class="col-name">@($"{student.FirstName} {student.LastName}")</td>
+                            <td class="col-exam-status">
                                 @{
                                     var examStatus = GetExamStatus(student);
                                     var statusDisplayName = GetExamStatusDisplayName(examStatus);
@@ -119,7 +120,7 @@
                                 }
                                 <span class="@statusCssClass">@statusDisplayName</span>
                             </td>
-                            <td>
+                            <td class="col-login-status">
                                 @if (student.IsLogin)
                                 {
                                     <span class="status-tag success">Đã đăng nhập</span>
@@ -129,17 +130,61 @@
                                     <span class="status-tag danger">Chưa đăng nhập</span>
                                 }
                             </td>
-                            <td>@student.ExtraMinutes phút</td>
-                            <td>@(student.Score.ToString("0.0"))</td>
-                            <td class="actions-cell">
-                                <MudIconButton Icon="@Icons.Material.Filled.Timer" Size="Size.Small" 
-                                              Color="Color.Warning" Class="mx-1"
-                                              OnClick="() => AddExtraTime(student)" 
-                                              Title="Thêm thời gian thi" />
-                                <MudIconButton Icon="@Icons.Material.Filled.Settings" Size="Size.Small" 
-                                              Color="Color.Default" Class="mx-1"
-                                              OnClick="() => ManageStudent(student.StudentCode)" 
-                                              Title="Quản lý" />
+                            <td class="col-cheat">
+                                @if (student.CheatingWarningCount > 0)
+                                {
+                                    <span class="cheating-pill has-warning" @onclick="() => ShowCheatingWarnings(student)">
+                                        <MudIcon Icon="@Icons.Material.Filled.ReportProblem" Size="Size.Small" Class="cheating-pill__icon" />
+                                        <span>@student.CheatingWarningCount cảnh báo</span>
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="cheating-pill no-warning">
+                                        <MudIcon Icon="@Icons.Material.Filled.VerifiedUser" Size="Size.Small" Class="cheating-pill__icon" />
+                                        <span>An toàn</span>
+                                    </span>
+                                }
+                            </td>
+                            <td class="col-extra-time">@student.ExtraMinutes phút</td>
+                            <td class="col-score">@(student.Score.ToString("0.0"))</td>
+                            <td class="actions-cell col-actions">
+                                <MudMenu AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight">
+                                    <ActivatorContent>
+                                        <MudIconButton Icon="@Icons.Material.Filled.Settings" 
+                                                      Size="Size.Small" 
+                                                      Color="Color.Default" 
+                                                      Class="mx-1"
+                                                      Title="Quản lý" />
+                                    </ActivatorContent>
+                                    <ChildContent>
+                                        <MudMenuItem OnClick="() => ToggleStudentLogin(student)">
+                                            @if (student.IsLogin)
+                                            {
+                                                <MudIcon Icon="@Icons.Material.Filled.Lock" Class="mr-2" Size="Size.Small" />
+                                                <span>Khóa đăng nhập</span>
+                                            }
+                                            else
+                                            {
+                                                <MudIcon Icon="@Icons.Material.Filled.LockOpen" Class="mr-2" Size="Size.Small" />
+                                                <span>Mở đăng nhập</span>
+                                            }
+                                        </MudMenuItem>
+                                        <MudMenuItem OnClick="() => AddExtraTime(student)">
+                                            <MudIcon Icon="@Icons.Material.Filled.Timer" Class="mr-2" Size="Size.Small" />
+                                            <span>Thêm thời gian thi</span>
+                                        </MudMenuItem>
+                                        <MudMenuItem OnClick="() => MessageStudent(student.StudentCode)">
+                                            <MudIcon Icon="@Icons.Material.Filled.Message" Class="mr-2" Size="Size.Small" />
+                                            <span>Gửi thông báo</span>
+                                        </MudMenuItem>
+                                        <MudDivider />
+                                        <MudMenuItem OnClick="() => ViewStudentDetails(student)">
+                                            <MudIcon Icon="@Icons.Material.Filled.Info" Class="mr-2" Size="Size.Small" />
+                                            <span>Xem chi tiết</span>
+                                        </MudMenuItem>
+                                    </ChildContent>
+                                </MudMenu>
                             </td>
                         </tr>
                     }
@@ -153,12 +198,7 @@
                 </div>
             }
         </div>
-
-        <div class="table-actions">
-            <div class="total-info">
-                <span>Tổng số @TotalStudents sinh viên</span>
-            </div>
-        </div>
+        
     }
     else
     {

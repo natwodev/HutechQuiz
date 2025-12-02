@@ -42,6 +42,7 @@
         {
             var childLabel = LabelProvider?.Invoke(child.OriginalExamPaperDetailId) ?? string.Empty;
             <QuestionItem Question="@child"
+                          ShuffledExamPaperCore="@ShuffledExamPaperCore"
                           DisplayNumber="@childLabel"
                           LabelProvider="LabelProvider"
                           SelectedAnswerProvider="SelectedAnswerProvider"

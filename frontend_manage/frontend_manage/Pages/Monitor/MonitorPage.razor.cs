@@ -23,10 +23,6 @@ namespace frontend_manage.Pages.Monitor
 
         private int activeTab = 0;
         private int previousTab = 0;
-        private string currentDate = DateTime.Now.ToString("dd/MM/yyyy");
-        private string currentTime = DateTime.Now.ToString("HH:mm:ss");
-        private Timer timer;
-
         // Dữ liệu từ API
         private StudentListResponse? examData;
         private bool isLoading = true;
@@ -43,12 +39,6 @@ namespace frontend_manage.Pages.Monitor
 
         protected override async Task OnInitializedAsync()
         {
-            timer = new Timer(_ =>
-            {
-                currentTime = DateTime.Now.ToString("HH:mm:ss");
-                InvokeAsync(StateHasChanged);
-            }, null, 0, 1000);
-
             // Timer để tự động ẩn thông báo sau 5 giây
             notificationTimer = new Timer(_ =>
             {
@@ -238,7 +228,6 @@ namespace frontend_manage.Pages.Monitor
 
             _ = NotificationService?.StopAsync();
 
-            timer?.Dispose();
             notificationTimer?.Dispose();
         }
 

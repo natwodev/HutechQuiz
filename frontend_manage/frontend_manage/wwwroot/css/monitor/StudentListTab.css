@@ -137,14 +137,19 @@
     width: 100%;
     border-collapse: collapse;
     position: relative;
-    table-layout: fixed; /* Fixed layout for better control */
-    min-width: 1100px; /* Ensure table has minimum width for all columns */
+    table-layout: auto; /* Let browser size columns based on content */
+    min-width: 1100px; /* Keep a reasonable minimum so columns don't squash */
 }
 
 .student-table th, .student-table td {
     padding: 6px 12px;
-    text-align: left;
+    text-align: center;
     border-bottom: 1px solid #eeeeee;
+}
+
+/* Giữ cột Họ tên căn trái để dễ đọc hơn */
+.student-table .col-name {
+    text-align: left;
 }
 
 .student-table thead {
@@ -209,6 +214,32 @@
 .status-tag.danger {
     background-color: #fce8e6;
     color: #ea4335;
+}
+
+.cheating-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    border-radius: 999px;
+    padding: 3px 10px;
+    white-space: nowrap;
+}
+
+.cheating-pill.has-warning {
+    background-color: #fce8e6;
+    color: #c5221f;
+    cursor: pointer;
+}
+
+.cheating-pill.no-warning {
+    background-color: #e6f7ed;
+    color: #0f9d58;
+}
+
+.cheating-pill__icon {
+    font-size: 1rem;
 }
 
 .actions-cell {
