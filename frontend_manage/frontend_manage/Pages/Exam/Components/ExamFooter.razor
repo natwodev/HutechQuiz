@@ -13,6 +13,7 @@
 
     <div class="exam-footer-center">
         <MudButton Variant="Variant.Outlined"
+                   Color="Color.Primary"
                    Size="Size.Small"
                    Disabled="@IsPreviousDisabled"
                    OnClick="PreviousQuestion">
@@ -22,6 +23,7 @@
             Trang @(ActiveQuestionIndex + 1) / @TotalQuestions
         </MudText>
         <MudButton Variant="Variant.Outlined"
+                   Color="Color.Warning"
                    Size="Size.Small"
                    Disabled="@IsNextDisabled"
                    OnClick="NextQuestion">
