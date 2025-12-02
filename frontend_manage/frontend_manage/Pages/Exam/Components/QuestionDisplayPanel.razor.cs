@@ -6,6 +6,7 @@ namespace frontend_manage.Pages.Exam.Components;
 public partial class QuestionDisplayPanel : ComponentBase
 {
     [Parameter] public QuestionStructureDto? ActiveQuestion { get; set; }
+    [Parameter] public string? ShuffledExamPaperCore { get; set; }
     [Parameter] public int CurrentIndex { get; set; }
     [Parameter] public int TotalQuestions { get; set; }
     [Parameter] public EventCallback OnPrevious { get; set; }

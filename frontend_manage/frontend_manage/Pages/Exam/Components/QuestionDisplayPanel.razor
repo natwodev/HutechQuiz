@@ -2,13 +2,13 @@
     @if (ActiveQuestion != null)
     {
         <MudPaper Class="pa-4 exam-panel" Elevation="0">
-                <QuestionItem Question="@ActiveQuestion"
-                              DisplayNumber="@GetQuestionLabel(ActiveQuestion.OriginalExamPaperDetailId)"
-                              LabelProvider="GetQuestionLabel"
-                              SelectedAnswerId="@GetSelectedAnswerId(ActiveQuestion.OriginalExamPaperDetailId)"
-                              SelectedAnswerProvider="GetSelectedAnswerId"
-                              OnAnswered="OnAnswered" />
-            
+            <QuestionItem Question="@ActiveQuestion"
+                          ShuffledExamPaperCore="@ShuffledExamPaperCore"
+                          DisplayNumber="@GetQuestionLabel(ActiveQuestion.OriginalExamPaperDetailId)"
+                          LabelProvider="GetQuestionLabel"
+                          SelectedAnswerId="@GetSelectedAnswerId(ActiveQuestion.OriginalExamPaperDetailId)"
+                          SelectedAnswerProvider="GetSelectedAnswerId"
+                          OnAnswered="OnAnswered" />
         </MudPaper>
     }
     else

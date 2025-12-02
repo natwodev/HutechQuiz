@@ -3,7 +3,9 @@ using frontend_manage.DTOs;
 using frontend_manage.DTOs.Mapp;
 using frontend_manage.Services.ExamManager;
 using frontend_manage.Services;
-
+using System.IO;
+using System.Text.RegularExpressions;
+using System.Net.Http;
 namespace frontend_manage.Pages.ExamManager.Preview
 {
     public partial class ShuffledExamPaperPreviewPage : ComponentBase
@@ -17,6 +19,10 @@ namespace frontend_manage.Pages.ExamManager.Preview
 
         [Inject]
         private IKaTeXService KaTeX { get; set; } = null!;
+
+        // Dùng HttpClient để lấy BaseAddress của backend (http://localhost:5163/)
+        [Inject]
+        private HttpClient HttpClient { get; set; } = null!;
 
         private ShuffledExamPaperDto? Exam;
         private OriginalExamPaperDto? OriginalExam;
@@ -74,13 +80,61 @@ namespace frontend_manage.Pages.ExamManager.Preview
         {
             if (string.IsNullOrEmpty(content))
                 return string.Empty;
-            
-            // Loại bỏ các ký tự {<number>} khỏi nội dung
-            return System.Text.RegularExpressions.Regex.Replace(
-                content, 
-                @"\{<\d+>\}", 
+
+            // 1. Loại bỏ các ký tự {<number>} khỏi nội dung
+            var cleaned = Regex.Replace(
+                content,
+                @"\{<\d+>\}",
                 string.Empty
             );
+
+            // 2. Xử lý thẻ <audio>...</audio> → chuẩn hóa path + thêm controls/src
+            cleaned = Regex.Replace(
+                cleaned,
+                @"<audio>(.*?)</audio>",
+                match =>
+                {
+                    var inner = match.Groups[1].Value.Trim();
+                    if (string.IsNullOrEmpty(inner))
+                        return match.Value;
+
+                    // Chuẩn hóa path (giữ cả thư mục con)
+                    var normalized = inner.Replace("\\", "/").TrimStart('/');
+
+                    // Một số nội dung cũ dùng "audio/ENG3.mp3" → map về "Data/Audio/ENG3.mp3"
+                    if (normalized.StartsWith("audio/", StringComparison.OrdinalIgnoreCase))
+                    {
+                        normalized = "Data/Audio/" + normalized.Substring("audio/".Length);
+                    }
+
+                    var relativePath = normalized;
+                    if (string.IsNullOrEmpty(relativePath))
+                        return match.Value;
+
+                    var audioUrl = GetAudioPath(relativePath);
+                    if (string.IsNullOrEmpty(audioUrl))
+                        return match.Value;
+
+                    // Trả về thẻ audio có nút bật/tắt (controls)
+                    return $"<audio controls src=\"{audioUrl}\"></audio>";
+                },
+                RegexOptions.IgnoreCase | RegexOptions.Singleline
+            );
+
+            return cleaned;
+        }
+
+        private string GetAudioPath(string audioFileName)
+        {
+            if (Exam == null || string.IsNullOrEmpty(Exam.ShuffledExamPaperCore) || string.IsNullOrEmpty(audioFileName))
+                return string.Empty;
+
+            var folderName = Exam.ShuffledExamPaperCore.Split('_')[0];
+
+            // Lấy base address từ HttpClient (backend), ví dụ: http://localhost:5163
+            var baseAddr = (HttpClient.BaseAddress?.ToString() ?? "http://localhost:5163/").TrimEnd('/');
+
+            return $"{baseAddr}/EPZ/{folderName}/{audioFileName}";
         }
         
         private char GetLetter(int order) => (char)('A' + Math.Max(0, order - 1));
