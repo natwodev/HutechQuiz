@@ -3,10 +3,14 @@ using backend_manage.core.Extensions;
 using OfficeOpenXml;
 using Serilog;
 using Microsoft.EntityFrameworkCore;
+using DotNetEnv;
 
 
 
 
+
+// Load .env (ConnectionStrings__DefaultConnection, Redis, etc.)
+Env.TraversePath().Load();
 
 var builder = WebApplication.CreateBuilder(args);
 

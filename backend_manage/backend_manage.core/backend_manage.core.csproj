@@ -11,6 +11,7 @@
         <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="12.0.1" />
         <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
         <PackageReference Include="Confluent.Kafka" Version="2.11.0" />
+        <PackageReference Include="DotNetEnv" Version="3.1.1" />
         <PackageReference Include="EPPlus" Version="7.7.0" />
         <PackageReference Include="iText7" Version="9.1.0" />
         <PackageReference Include="MailKit" Version="4.11.0" />
