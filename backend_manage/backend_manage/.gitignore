@@ -77,3 +77,4 @@ epz_dl/
 
 # Git ignore files
 .gitignore
+.env
