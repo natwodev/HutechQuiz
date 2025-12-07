@@ -833,6 +833,33 @@ public class StudentService : IStudentService
         }
     }
     #endregion
+
+
+
+    #region GetStudentExamSessionsByStudentCodeAsync
+
+    public async Task<IEnumerable<StudentExamSessionHistoryDto>> GetStudentExamSessionsByStudentCodeAsync(string studentCode)
+    {
+        var studentExamSession = await _studentExamSessionRepository
+            .GetQueryable()
+            .Where(x => x.StudentCode == studentCode && x.IsCompleted)
+            .Include(x => x.ExamSessionSubject)
+            .ThenInclude(x => x.Subject)        // nếu cần thông tin môn học
+            .Include(x => x.ExamSessionSubject)
+            .ThenInclude(x => x.ExamRoom)       // để lấy ExamName
+            .Include(x => x.ExamSessionSubject)
+            .ThenInclude(x => x.ExamSession)    // để lấy ExamSessionName
+            .ToListAsync();
+
+
+        // Map sang DTO
+        var result = _mapper.Map<List<StudentExamSessionHistoryDto>>(studentExamSession);
+
+        return result;
+    }
+
+
+    #endregion
     
 } 
 

@@ -1,7 +1,17 @@
 ﻿services:
   backend_manage:
-    image: backend_manage
+    image: hutechquiz-app
     build:
       context: .
       dockerfile: backend_manage/Dockerfile
+    ports:
+      - "8080:5163"
+      - "8081:8081"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      # Connection string đã được build vào image, không cần override
+    volumes:
+      - ./backend_manage/Logs:/app/Logs
+    restart: unless-stopped
 

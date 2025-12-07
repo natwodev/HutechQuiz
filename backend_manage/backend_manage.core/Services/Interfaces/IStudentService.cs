@@ -40,4 +40,6 @@ public interface IStudentService
     
     // Method để export Excel bảng điểm sinh viên theo ExamSessionSubjectId
     Task<byte[]> ExportStudentGradesToExcelAsync(IEnumerable<StudentGradeDto> grades);
+    
+    Task<IEnumerable<StudentExamSessionHistoryDto>> GetStudentExamSessionsByStudentCodeAsync(string studentCode);
 } 
