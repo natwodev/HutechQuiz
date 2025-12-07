@@ -4,8 +4,8 @@ using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Configuration;
 using frontend_manage.DTOs;
+using Microsoft.Extensions.Configuration;
 
 namespace frontend_manage.Services.ExamManager
 {
@@ -13,16 +13,22 @@ namespace frontend_manage.Services.ExamManager
     {
         private readonly HttpClient _httpClient;
         private readonly string _baseUrl;
+        private readonly string _shuffledBaseUrl;
 
         public ExamManagerService(HttpClient httpClient, IConfiguration configuration)
         {
             _httpClient = httpClient;
-            var apiBaseUrl = configuration["ApiSettings:BaseUrl"] ?? "http://localhost:5163";
+            var apiBaseUrl = GetApiBaseUrl(configuration);
             _baseUrl = $"{apiBaseUrl}/api/OriginalExamPaper";
             _shuffledBaseUrl = $"{apiBaseUrl}/api/ShuffledExamPaper";
         }
 
-        private readonly string _shuffledBaseUrl;
+        private static string GetApiBaseUrl(IConfiguration configuration)
+        {
+            var apiBaseUrl = configuration["ApiBaseUrl"] ?? throw new InvalidOperationException(
+                "ApiBaseUrl chưa được cấu hình trong appsettings.json");
+            return apiBaseUrl.TrimEnd('/');
+        }
 
         public async Task<ImportResultDto?> ImportOriginalExamXmlAsync(Stream fileStream, string fileName, string originalExamPaperCore)
         {

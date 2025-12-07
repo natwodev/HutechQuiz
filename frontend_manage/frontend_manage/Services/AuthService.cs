@@ -25,10 +25,11 @@ public class AuthService
         _navigationManager = navigationManager;
         _jsRuntime = jsRuntime;
         
-        // Đảm bảo BaseAddress được set
+        // BaseAddress đã được cấu hình trong Program.cs từ User Secrets hoặc appsettings.json
+        // Nếu BaseAddress chưa được set, sẽ throw exception để dễ debug
         if (_httpClient.BaseAddress == null)
         {
-            _httpClient.BaseAddress = new Uri("http://localhost:5163/");
+            throw new InvalidOperationException("HttpClient BaseAddress chưa được cấu hình. Vui lòng kiểm tra User Secrets hoặc appsettings.json và đảm bảo ApiBaseUrl đã được thiết lập.");
         }
     }
 
