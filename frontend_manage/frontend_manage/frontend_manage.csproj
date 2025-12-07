@@ -4,6 +4,7 @@
     <TargetFramework>net9.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>frontend-manage-secrets</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
@@ -22,5 +23,6 @@
     <Folder Include="Pages\AcademicAffairs\" />
     <Folder Include="Pages\Admin\" />
   </ItemGroup>
+
 
 </Project>
