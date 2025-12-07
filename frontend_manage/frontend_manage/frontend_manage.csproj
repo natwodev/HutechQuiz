@@ -18,6 +18,12 @@
     <PackageReference Include="EPPlus" Version="6.2.4" />
   </ItemGroup>
 
+  <!-- Copy appsettings.json vào wwwroot để Blazor WASM có thể đọc -->
+  <Target Name="CopyAppSettingsToWwwroot" AfterTargets="Build">
+    <Copy SourceFiles="$(ProjectDir)appsettings.json" DestinationFolder="$(ProjectDir)wwwroot\" Condition="Exists('$(ProjectDir)appsettings.json')" />
+    <Copy SourceFiles="$(ProjectDir)appsettings.Development.json" DestinationFolder="$(ProjectDir)wwwroot\" Condition="Exists('$(ProjectDir)appsettings.Development.json')" />
+  </Target>
+
   <ItemGroup>
     <Folder Include="DTOs\Mapp\" />
     <Folder Include="Pages\AcademicAffairs\" />
