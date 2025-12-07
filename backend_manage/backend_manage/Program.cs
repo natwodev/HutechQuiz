@@ -10,7 +10,7 @@ using DotNetEnv;
 
 
 // Load .env (ConnectionStrings__DefaultConnection, Redis, etc.)
-Env.TraversePath().Load();
+//Env.TraversePath().Load();
 
 var builder = WebApplication.CreateBuilder(args);
 

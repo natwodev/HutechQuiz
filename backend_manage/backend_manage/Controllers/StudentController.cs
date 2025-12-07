@@ -6,6 +6,7 @@ using OfficeOpenXml;
 using System.IO;
 using System.Linq;
 using System.Security.Claims;
+using backend_manage.core.Entities;
 using backend_manage.core.Messages;
 using backend_manage.core.Services.Interfaces;
 using backend_manage.shared.DTOs;
@@ -388,7 +389,17 @@ public async Task<IActionResult> SubmitExam([FromBody] SubmitExamRequest request
         }
     }
     
-    
+    [HttpGet("ExamSession-by-student-code")]
+    public async Task<ActionResult<IEnumerable<StudentExamSessionHistoryDto>>> GetStudentExamSessionsByStudentCodeAsync()
+    {
+        var studentCode = User.FindFirst("studentCode")?.Value;
+        if (string.IsNullOrEmpty(studentCode))
+        {
+            return Unauthorized(new { message = "Không tìm thấy thông tin sinh viên" });
+        }
+        var result = await _studentService.GetStudentExamSessionsByStudentCodeAsync(studentCode);
+        return Ok(result);
+    }
     
     
 

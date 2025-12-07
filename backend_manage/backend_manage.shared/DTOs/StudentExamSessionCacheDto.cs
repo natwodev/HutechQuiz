@@ -1,8 +1,6 @@
 namespace backend_manage.shared.DTOs
 {
-    /// <summary>
-    /// DTO cho cache StudentExamSession với đầy đủ thông tin từ cả Entity và DTO
-    /// </summary>
+
     public class StudentExamSessionCacheDto
     {
         // Từ Entity

@@ -57,7 +57,8 @@ public class MappingProfile : Profile
         CreateMap<ChapterUpdateDto, Chapter>();
 
         // Student
-        CreateMap<Student, StudentDto>();
+        CreateMap<Student, StudentDto>();//cần sửa lại để map thêm dữ liệu 
+        
         CreateMap<StudentCreateDto, Student>();
         CreateMap<StudentUpdateDto, Student>();
 
@@ -129,6 +130,12 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.ExamRoomId, opt => opt.MapFrom(src => src.ExamSessionSubject.ExamRoomId))
             .ForMember(dest => dest.RemainingMinutes, opt => opt.MapFrom(src => src.RemainingMinutes));
 
+        CreateMap<StudentExamSession, StudentExamSessionHistoryDto>() //lịch sử ca thi
+            .ForMember(dest => dest.SubjectName, opt => opt.MapFrom(src => src.ExamSessionSubject.Subject.SubjectName))
+            .ForMember(dest => dest.RoomName, opt => opt.MapFrom(src => src.ExamSessionSubject.ExamRoom.RoomName))
+            .ForMember(dest => dest.ExamSessionName,opt => opt.MapFrom(src => src.ExamSessionSubject.ExamSession.Name));
+
+        
         // Mapping ngược từ StudentExamSessionCacheDto về StudentExamSession
         CreateMap<StudentExamSessionCacheDto, StudentExamSession>();
 
