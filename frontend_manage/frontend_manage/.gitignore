@@ -1,12 +1,10 @@
 bin/
-obj/ 
+obj/
 .vs/
 
-# User Secrets và config files nhạy cảm
+# Config files nhạy cảm
 appsettings.json
 appsettings.*.json
 !.gitignore
-config.json
 .env
 .env.local
-*.secrets.json
