@@ -6,6 +6,7 @@ using frontend_manage.DTOs;
 using frontend_manage.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
+using Microsoft.Extensions.Configuration;
 
 namespace frontend_manage.Pages.Exam.Components
 {
@@ -21,8 +22,9 @@ namespace frontend_manage.Pages.Exam.Components
 
         [Inject] private IKaTeXService KaTeX { get; set; } = default!;
 
-        // Dùng HttpClient để lấy BaseAddress backend (http://localhost:5163/)
+        // Dùng HttpClient để lấy BaseAddress backend (từ appsettings.json)
         [Inject] private HttpClient HttpClient { get; set; } = default!;
+        [Inject] private IConfiguration Configuration { get; set; } = default!;
 
         private ElementReference _root;
 
@@ -103,7 +105,10 @@ namespace frontend_manage.Pages.Exam.Components
 
             var folderName = core.Split('_')[0];
 
-            var baseAddr = (HttpClient.BaseAddress?.ToString() ?? "http://localhost:5163/").TrimEnd('/');
+            var baseAddr = HttpClient.BaseAddress?.ToString() 
+                ?? Configuration["ApiBaseUrl"] 
+                ?? throw new InvalidOperationException("ApiBaseUrl chưa được cấu hình");
+            baseAddr = baseAddr.TrimEnd('/');
 
             return $"{baseAddr}/EPZ/{folderName}/{audioFileName}";
         }

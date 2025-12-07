@@ -6,6 +6,7 @@ using frontend_manage.Services;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Net.Http;
+using Microsoft.Extensions.Configuration;
 namespace frontend_manage.Pages.ExamManager.Preview
 {
     public partial class ShuffledExamPaperPreviewPage : ComponentBase
@@ -20,9 +21,11 @@ namespace frontend_manage.Pages.ExamManager.Preview
         [Inject]
         private IKaTeXService KaTeX { get; set; } = null!;
 
-        // Dùng HttpClient để lấy BaseAddress của backend (http://localhost:5163/)
+        // Dùng HttpClient để lấy BaseAddress của backend (từ appsettings.json)
         [Inject]
         private HttpClient HttpClient { get; set; } = null!;
+        [Inject]
+        private IConfiguration Configuration { get; set; } = null!;
 
         private ShuffledExamPaperDto? Exam;
         private OriginalExamPaperDto? OriginalExam;
@@ -131,8 +134,11 @@ namespace frontend_manage.Pages.ExamManager.Preview
 
             var folderName = Exam.ShuffledExamPaperCore.Split('_')[0];
 
-            // Lấy base address từ HttpClient (backend), ví dụ: http://localhost:5163
-            var baseAddr = (HttpClient.BaseAddress?.ToString() ?? "http://localhost:5163/").TrimEnd('/');
+            // Lấy base address từ HttpClient (backend)
+            var baseAddr = HttpClient.BaseAddress?.ToString() 
+                ?? Configuration["ApiBaseUrl"] 
+                ?? throw new InvalidOperationException("ApiBaseUrl chưa được cấu hình");
+            baseAddr = baseAddr.TrimEnd('/');
 
             return $"{baseAddr}/EPZ/{folderName}/{audioFileName}";
         }
