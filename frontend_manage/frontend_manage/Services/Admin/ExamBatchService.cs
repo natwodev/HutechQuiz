@@ -16,13 +16,15 @@ namespace frontend_manage.Services.Admin
         public AdminExamBatchService(HttpClient httpClient, IConfiguration configuration)
         {
             _httpClient = httpClient;
-            var baseUrl = configuration["ApiSettings:BaseUrl"];
-            if (string.IsNullOrWhiteSpace(baseUrl))
-            {
-                baseUrl = "http://localhost:5163";
-            }
+            var baseUrl = GetApiBaseUrl(configuration);
+            _baseUrl = $"{baseUrl}/api/ExamBatch";
+        }
 
-            _baseUrl = $"{baseUrl.TrimEnd('/')}/api/ExamBatch";
+        private static string GetApiBaseUrl(IConfiguration configuration)
+        {
+            var apiBaseUrl = configuration["ApiBaseUrl"] ?? throw new InvalidOperationException(
+                "ApiBaseUrl chưa được cấu hình trong appsettings.json");
+            return apiBaseUrl.TrimEnd('/');
         }
 
         public async Task<List<ExamBatchDto>> GetAllAsync()

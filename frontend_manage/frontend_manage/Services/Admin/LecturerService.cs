@@ -5,8 +5,8 @@ using System.Net.Http.Json;
 using System.Threading.Tasks;
 using frontend_manage.DTOs;
 using frontend_manage.Services;
-using Microsoft.Extensions.Configuration;
 using Microsoft.JSInterop;
+using Microsoft.Extensions.Configuration;
 
 namespace frontend_manage.Services.Admin
 {
@@ -16,17 +16,19 @@ namespace frontend_manage.Services.Admin
         private readonly string _baseUrl;
         private readonly AuthService _authService;
 
-        public LecturerService(HttpClient httpClient, IConfiguration configuration, AuthService authService)
+        public LecturerService(HttpClient httpClient, AuthService authService, IConfiguration configuration)
         {
             _httpClient = httpClient;
-            var baseUrl = configuration["ApiSettings:BaseUrl"];
-            if (string.IsNullOrWhiteSpace(baseUrl))
-            {
-                baseUrl = "http://localhost:5163";
-            }
-
-            _baseUrl = $"{baseUrl.TrimEnd('/')}/api/Lecturer";
+            var baseUrl = GetApiBaseUrl(configuration);
+            _baseUrl = $"{baseUrl}/api/Lecturer";
             _authService = authService;
+        }
+
+        private static string GetApiBaseUrl(IConfiguration configuration)
+        {
+            var apiBaseUrl = configuration["ApiBaseUrl"] ?? throw new InvalidOperationException(
+                "ApiBaseUrl chưa được cấu hình trong appsettings.json");
+            return apiBaseUrl.TrimEnd('/');
         }
 
         public async Task<List<LecturerDto>> GetAllLecturersAsync()
