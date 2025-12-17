@@ -61,11 +61,21 @@ namespace frontend_manage.Pages.ExamManager.Components
             StateHasChanged();
         }
         
-        private void GenerateAutoCode()
+        private async Task GenerateAutoCode()
         {
-            // Tạo mã tự động: EXP_YYYYMMDDHHmmss
-            originalExamPaperCore = $"EXP_{DateTime.Now:yyyyMMddHHmmss}";
-            StateHasChanged();
+            try
+            {
+                originalExamPaperCore = await ExamManagerService.GenerateRandomOriginalExamPaperCoreAsync();
+                importMessage = null; // Clear any previous error messages
+            }
+            catch (Exception ex)
+            {
+                importMessage = $"Lỗi khi tạo mã tự động: {ex.Message}";
+            }
+            finally
+            {
+                StateHasChanged();
+            }
         }
 
         private async Task UploadAsync()

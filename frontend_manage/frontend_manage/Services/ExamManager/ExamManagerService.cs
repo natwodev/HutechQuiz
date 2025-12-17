@@ -4,8 +4,9 @@ using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Configuration;
 using frontend_manage.DTOs;
+using frontend_manage.DTOs.AcademicAffairs;
+using System.Collections.Generic;
 
 namespace frontend_manage.Services.ExamManager
 {
@@ -14,15 +15,18 @@ namespace frontend_manage.Services.ExamManager
         private readonly HttpClient _httpClient;
         private readonly string _baseUrl;
 
-        public ExamManagerService(HttpClient httpClient, IConfiguration configuration)
+        public ExamManagerService(HttpClient httpClient)
         {
             _httpClient = httpClient;
-            var apiBaseUrl = configuration["ApiSettings:BaseUrl"] ?? "http://localhost:5163";
-            _baseUrl = $"{apiBaseUrl}/api/OriginalExamPaper";
-            _shuffledBaseUrl = $"{apiBaseUrl}/api/ShuffledExamPaper";
+            // Sử dụng BaseAddress đã được cấu hình trong Program.cs (ApiBaseUrl)
+            // Chỉ cần giữ các đường dẫn tương đối, HttpClient sẽ tự kết hợp với BaseAddress.
+            _baseUrl = "api/OriginalExamPaper";
+            _shuffledBaseUrl = "api/ShuffledExamPaper";
+            _subjectBaseUrl = "api/Subject";
         }
 
         private readonly string _shuffledBaseUrl;
+        private readonly string _subjectBaseUrl;
 
         public async Task<ImportResultDto?> ImportOriginalExamXmlAsync(Stream fileStream, string fileName, string originalExamPaperCore)
         {
@@ -70,44 +74,7 @@ namespace frontend_manage.Services.ExamManager
             }
         }
 
-        public async Task<OriginalExamPaperDto> GenerateOriginalExamMockAsync(int questionCount)
-        {
-            // Tạo mock data cho testing
-            var mock = new OriginalExamPaperDto
-            {
-                OriginalExamPaperId = 1,
-                OriginalExamPaperCore = "MOCK_001",
-                Title = "Đề thi Mock",
-                Description = "Đề thi mẫu để test",
-                SubjectId = 1,
-                DurationMinutes = 90,
-                TotalQuestions = questionCount,
-                Details = new List<OriginalExamPaperDetailDto>()
-            };
-
-            for (int i = 1; i <= questionCount; i++)
-            {
-                mock.Details.Add(new OriginalExamPaperDetailDto
-                {
-                    OriginalExamPaperDetailId = i,
-                    Order = i,
-                    QuestionContent = $"Câu hỏi số {i}: Đây là nội dung câu hỏi mẫu để test hiển thị.",
-                    CorrectAnswerIndex = 1,
-                    ParentQuestionId = null,
-                    ChapterId = 1,
-                    CanShuffleQuestion = true,
-                    Answers = new List<AnswerDto>
-                    {
-                        new AnswerDto { AnswerId = i * 4 - 3, Order = 1, AnswerContent = "Đáp án A", IsCorrect = true },
-                        new AnswerDto { AnswerId = i * 4 - 2, Order = 2, AnswerContent = "Đáp án B", IsCorrect = false },
-                        new AnswerDto { AnswerId = i * 4 - 1, Order = 3, AnswerContent = "Đáp án C", IsCorrect = false },
-                        new AnswerDto { AnswerId = i * 4, Order = 4, AnswerContent = "Đáp án D", IsCorrect = false }
-                    }
-                });
-            }
-
-            return mock;
-        }
+      
 
         public async Task<CreateShuffledResultDto?> CreateShuffledPapersAsync(string originalExamPaperCore, int count)
         {
@@ -163,33 +130,7 @@ namespace frontend_manage.Services.ExamManager
                 throw new Exception($"Lỗi khi lấy danh sách đề hoán vị: {ex.Message}", ex);
             }
         }
-
-        public async Task<List<ShuffledExamPaperDto>> GetShuffledExamsMockAsync()
-        {
-            // Tạo mock data cho testing
-            var mockList = new List<ShuffledExamPaperDto>();
-            
-            for (int i = 1; i <= 5; i++)
-            {
-                mockList.Add(new ShuffledExamPaperDto
-                {
-                    ShuffledExamPaperId = i,
-                    ShuffledExamPaperCore = $"MOCK_SHUFFLED_{i:D3}",
-                    Title = $"Đề hoán vị Mock {i}",
-                    OriginalExamPaperId = 1,
-                    SubjectId = 1,
-                    IsApproved = true,
-                    AnswerKey = "",
-                    SubjectName = "Lập trình C#",
-                    SubjectCode = "CS101",
-                    ExamSessionSubjectId = null,
-                    QuestionStructures = new List<QuestionStructureDto>()
-                });
-            }
-            
-            return mockList;
-        }
-
+        
         public async Task<List<OriginalExamPaperListItemDto>> GetAllOriginalExamPapersAsync()
         {
             try
@@ -216,6 +157,7 @@ namespace frontend_manage.Services.ExamManager
                     SubjectId = x.SubjectId,
                     SubjectName = x.SubjectName,
                     IsApproved = x.IsApproved,
+                    IsManualCreated = x.IsManualCreated,
                     DurationMinutes = x.DurationMinutes,
                     TotalQuestions = x.TotalQuestions,
                     TotalShuffledPapers = x.TotalShuffledPapers
@@ -274,6 +216,152 @@ namespace frontend_manage.Services.ExamManager
                 throw new Exception($"Lỗi khi cập nhật AllowViewMaterials: {ex.Message}", ex);
             }
         }
+
+        public async Task<OriginalExamPaperDto?> CreateOriginalExamPaperAsync(CreateOriginalExamPaperRequest request)
+        {
+            try
+            {
+                var response = await _httpClient.PostAsJsonAsync($"{_baseUrl}/create", request);
+                
+                if (response.IsSuccessStatusCode)
+                {
+                    var result = await response.Content.ReadFromJsonAsync<OriginalExamPaperDto>();
+                    return result;
+                }
+                else
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    throw new Exception($"Lỗi khi tạo đề thi: {errorContent}");
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Lỗi khi tạo đề thi: {ex.Message}", ex);
+            }
+        }
+
+        public async Task<OriginalExamPaperDto?> UpdateOriginalExamPaperAsync(UpdateOriginalExamPaperRequest request)
+        {
+            try
+            {
+                var response = await _httpClient.PutAsJsonAsync($"{_baseUrl}/update", request);
+                
+                if (response.IsSuccessStatusCode)
+                {
+                    var result = await response.Content.ReadFromJsonAsync<OriginalExamPaperDto>();
+                    return result;
+                }
+                else
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    throw new Exception($"Lỗi khi cập nhật đề thi: {errorContent}");
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Lỗi khi cập nhật đề thi: {ex.Message}", ex);
+            }
+        }
+
+        public async Task<OriginalExamPaperDetailDto?> AddQuestionWithAnswersAsync(CreateQuestionWithAnswersRequest request)
+        {
+            try
+            {
+                var response = await _httpClient.PostAsJsonAsync($"{_baseUrl}/add-question", request);
+                
+                if (response.IsSuccessStatusCode)
+                {
+                    var result = await response.Content.ReadFromJsonAsync<OriginalExamPaperDetailDto>();
+                    return result;
+                }
+                else
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    throw new Exception($"Lỗi khi thêm câu hỏi: {errorContent}");
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Lỗi khi thêm câu hỏi: {ex.Message}", ex);
+            }
+        }
+
+        public async Task<OriginalExamPaperDetailDto?> UpdateQuestionWithAnswersAsync(UpdateQuestionWithAnswersRequest request)
+        {
+            try
+            {
+                var response = await _httpClient.PutAsJsonAsync($"{_baseUrl}/update-question", request);
+                
+                if (response.IsSuccessStatusCode)
+                {
+                    var result = await response.Content.ReadFromJsonAsync<OriginalExamPaperDetailDto>();
+                    return result;
+                }
+                else
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    throw new Exception($"Lỗi khi cập nhật câu hỏi: {errorContent}");
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Lỗi khi cập nhật câu hỏi: {ex.Message}", ex);
+            }
+        }
+
+        public async Task<List<SubjectDto>> GetAllSubjectsAsync()
+        {
+            try
+            {
+                var response = await _httpClient.GetFromJsonAsync<List<SubjectDto>>(_subjectBaseUrl);
+                return response ?? new List<SubjectDto>();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Lỗi khi lấy danh sách môn học: {ex.Message}", ex);
+            }
+        }
+
+        public async Task<List<OriginalExamPaperListItemDto>> GetManualCreatedExamPapersAsync()
+        {
+            try
+            {
+                var allPapers = await GetAllOriginalExamPapersAsync();
+                return allPapers.Where(x => x.IsManualCreated).ToList();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Lỗi khi lấy danh sách đề thi thủ công: {ex.Message}", ex);
+            }
+        }
+
+        public async Task<string> GenerateRandomOriginalExamPaperCoreAsync()
+        {
+            try
+            {
+                var response = await _httpClient.GetAsync($"{_baseUrl}/generate-random-core");
+                
+                if (response.IsSuccessStatusCode)
+                {
+                    var result = await response.Content.ReadFromJsonAsync<GenerateRandomCoreResponse>();
+                    return result?.OriginalExamPaperCore ?? string.Empty;
+                }
+                else
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    throw new Exception($"Lỗi khi sinh mã OriginalExamPaperCore: {errorContent}");
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Lỗi khi sinh mã OriginalExamPaperCore: {ex.Message}", ex);
+            }
+        }
+    }
+
+    public class GenerateRandomCoreResponse
+    {
+        public string OriginalExamPaperCore { get; set; } = string.Empty;
     }
 
     public class ImportResultDto
@@ -295,6 +383,7 @@ namespace frontend_manage.Services.ExamManager
         public int SubjectId { get; set; }
         public string SubjectName { get; set; } = string.Empty;
         public bool? IsApproved { get; set; }
+        public bool IsManualCreated { get; set; }
         public int DurationMinutes { get; set; }
         public int TotalQuestions { get; set; }
         public int TotalShuffledPapers { get; set; }

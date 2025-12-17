@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Security.Claims;
 using System.Text;
 using System.Xml.Serialization;
@@ -49,6 +50,121 @@ namespace backend_manage.core.Services.AuthService
             _mapper = mapper;
         }
 
+        public async Task<OriginalExamPaperDto> CreateAsync(CreateOriginalExamPaperRequest request)
+        {
+            if (string.IsNullOrWhiteSpace(request.OriginalExamPaperCore))
+                throw new ArgumentException("Mã đề thi gốc không được để trống");
+            
+            if (string.IsNullOrWhiteSpace(request.Title))
+                throw new ArgumentException("Tiêu đề đề thi không được để trống");
+
+            // Kiểm tra xem OriginalExamPaperCore đã tồn tại chưa
+            var existingExamPaper = await _originalExamPaperRepository.GetQueryable()
+                .AnyAsync(x => x.OriginalExamPaperCore == request.OriginalExamPaperCore);
+            if (existingExamPaper)
+                throw new Exception($"Đã tồn tại đề thi với mã '{request.OriginalExamPaperCore}' trong hệ thống.");
+
+            // Kiểm tra SubjectId có tồn tại không
+            var subjectExists = await _subjectRepository.GetQueryable()
+                .AnyAsync(s => s.SubjectId == request.SubjectId);
+            if (!subjectExists)
+                throw new Exception($"Không tìm thấy môn học với ID '{request.SubjectId}'.");
+
+            var userId = _httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+                throw new UnauthorizedAccessException("Không thể xác định người dùng tạo đề thi gốc.");
+
+            var now = DateTimeHelper.GetVietnamTime();
+
+            // Tạo OriginalExamPaper
+            var originalExamPaper = new OriginalExamPaper
+            {
+                OriginalExamPaperCore = request.OriginalExamPaperCore,
+                Title = request.Title,
+                Description = request.Description,
+                SubjectId = request.SubjectId,
+                AllowViewMaterials = request.AllowViewMaterials,
+                DurationMinutes = request.DurationMinutes,
+                IsApproved = request.IsApproved ?? false, // Mặc định chưa phê duyệt
+                IsManualCreated = true, // Đề thi được tạo thủ công
+                TotalQuestions = 0, // Sẽ cập nhật khi thêm câu hỏi
+                TotalShuffledPapers = 0,
+                KeyValueList = null,
+                CreatedBy = userId,
+                CreatedAt = now
+            };
+
+            await _originalExamPaperRepository.AddAsync(originalExamPaper);
+
+            // Map sang DTO để trả về
+            var dto = _mapper.Map<OriginalExamPaperDto>(originalExamPaper);
+            dto.Details = new List<OriginalExamPaperDetailDto>(); // Chưa có câu hỏi nào
+
+            return dto;
+        }
+
+        public async Task<OriginalExamPaperDto> UpdateAsync(UpdateOriginalExamPaperRequest request)
+        {
+            if (string.IsNullOrWhiteSpace(request.OriginalExamPaperCore))
+                throw new ArgumentException("Mã đề thi gốc không được để trống");
+            
+            if (string.IsNullOrWhiteSpace(request.Title))
+                throw new ArgumentException("Tiêu đề đề thi không được để trống");
+
+            // Kiểm tra xem OriginalExamPaperCore có tồn tại không
+            var existingExamPaper = await _originalExamPaperRepository.GetQueryable()
+                .FirstOrDefaultAsync(x => x.OriginalExamPaperCore == request.OriginalExamPaperCore);
+            if (existingExamPaper == null)
+                throw new Exception($"Không tìm thấy đề thi với mã '{request.OriginalExamPaperCore}' trong hệ thống.");
+
+            // Kiểm tra SubjectId có tồn tại không
+            var subjectExists = await _subjectRepository.GetQueryable()
+                .AnyAsync(s => s.SubjectId == request.SubjectId);
+            if (!subjectExists)
+                throw new Exception($"Không tìm thấy môn học với ID '{request.SubjectId}'.");
+
+            var userId = _httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+                throw new UnauthorizedAccessException("Không thể xác định người dùng cập nhật đề thi gốc.");
+
+            var now = DateTimeHelper.GetVietnamTime();
+
+            // Cập nhật OriginalExamPaper
+            existingExamPaper.Title = request.Title;
+            existingExamPaper.Description = request.Description;
+            existingExamPaper.SubjectId = request.SubjectId;
+            existingExamPaper.AllowViewMaterials = request.AllowViewMaterials;
+            existingExamPaper.DurationMinutes = request.DurationMinutes;
+            existingExamPaper.IsApproved = request.IsApproved ?? existingExamPaper.IsApproved;
+            existingExamPaper.UpdatedBy = userId;
+            existingExamPaper.UpdatedAt = now;
+
+            await _originalExamPaperRepository.UpdateAsync(existingExamPaper);
+
+            // Map sang DTO để trả về
+            var dto = _mapper.Map<OriginalExamPaperDto>(existingExamPaper);
+            
+            // Load Details nếu cần
+            var examPaperWithDetails = await _originalExamPaperRepository.GetQueryable()
+                .Where(x => x.OriginalExamPaperId == existingExamPaper.OriginalExamPaperId)
+                .Include(x => x.OriginalExamPaperDetails)
+                    .ThenInclude(d => d.Answers)
+                .Include(x => x.OriginalExamPaperDetails)
+                    .ThenInclude(d => d.ChildQuestions)
+                        .ThenInclude(c => c.Answers)
+                .FirstOrDefaultAsync();
+            
+            if (examPaperWithDetails != null)
+            {
+                dto.Details = _mapper.Map<List<OriginalExamPaperDetailDto>>(examPaperWithDetails.OriginalExamPaperDetails);
+            }
+            else
+            {
+                dto.Details = new List<OriginalExamPaperDetailDto>();
+            }
+
+            return dto;
+        }
 
         #region ExtractAndReadXmlAsync thêm đề thi
         private const string ExtractPassword =
@@ -171,6 +287,7 @@ namespace backend_manage.core.Services.AuthService
                 TotalQuestions = monHoc.TongSoCauLay > 0 ? monHoc.TongSoCauLay : 0,
                 OriginalExamPaperCore = originalExamPaperCore,
                 IsApproved = true, // Đề thi gốc mặc định được duyệt khi thêm mới
+                IsManualCreated = false, // Đề thi được import từ file XML
                 TotalShuffledPapers = 0,
                 // Mặc định khi import là đề đóng (không được phép xem tài liệu)
                 AllowViewMaterials = false
@@ -984,7 +1101,343 @@ namespace backend_manage.core.Services.AuthService
             return true;
         }
 
-        
+        public async Task<OriginalExamPaperDetailDto> AddQuestionWithAnswersAsync(CreateQuestionWithAnswersRequest request)
+        {
+            // Kiểm tra OriginalExamPaper có tồn tại và là đề thi thủ công
+            var originalExamPaper = await _originalExamPaperRepository.GetQueryable()
+                .FirstOrDefaultAsync(o => o.OriginalExamPaperId == request.OriginalExamPaperId);
+            
+            if (originalExamPaper == null)
+                throw new Exception($"Không tìm thấy đề thi với ID '{request.OriginalExamPaperId}'");
+            
+            if (!originalExamPaper.IsManualCreated)
+                throw new Exception("Chỉ có thể thêm câu hỏi cho đề thi được tạo thủ công");
+            
+            // Kiểm tra ChapterId có tồn tại (nếu có)
+            if (request.ChapterId.HasValue)
+            {
+                var chapter = await _chapterRepository.GetQueryable()
+                    .FirstOrDefaultAsync(c => c.ChapterId == request.ChapterId.Value);
+                
+                if (chapter == null)
+                    throw new Exception($"Không tìm thấy chương với ID '{request.ChapterId.Value}'");
+                
+                // Kiểm tra Chapter thuộc cùng Subject với OriginalExamPaper
+                if (chapter.SubjectId != originalExamPaper.SubjectId)
+                    throw new Exception("Chương không thuộc cùng môn học với đề thi");
+            }
+            
+            // Kiểm tra ParentQuestionId nếu có
+            if (request.ParentQuestionId.HasValue)
+            {
+                var parentQuestion = await _originalExamPaperDetailRepository.GetQueryable()
+                    .FirstOrDefaultAsync(q => q.OriginalExamPaperDetailId == request.ParentQuestionId.Value);
+                
+                if (parentQuestion == null)
+                    throw new Exception($"Không tìm thấy câu hỏi cha với ID '{request.ParentQuestionId.Value}'");
+                
+                if (parentQuestion.OriginalExamPaperId != request.OriginalExamPaperId)
+                    throw new Exception("Câu hỏi cha không thuộc cùng đề thi");
+            }
+            
+            var userId = _httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+                throw new UnauthorizedAccessException("Không thể xác định người dùng tạo câu hỏi.");
+            
+            var now = DateTimeHelper.GetVietnamTime();
+            
+            // Tạo OriginalExamPaperDetail
+            var questionDetail = new OriginalExamPaperDetail
+            {
+                OriginalExamPaperId = request.OriginalExamPaperId,
+                Order = request.Order,
+                QuestionContent = request.QuestionContent,
+                CorrectAnswerIndex = request.CorrectAnswerIndex,
+                ParentQuestionId = request.ParentQuestionId,
+                ChapterId = request.ChapterId,
+                CanShuffleQuestion = request.CanShuffleQuestion,
+                CreatedBy = userId,
+                CreatedAt = now
+            };
+            
+            await _originalExamPaperDetailRepository.AddAsync(questionDetail);
+            
+            // Tạo các Answers
+            if (request.Answers != null && request.Answers.Any())
+            {
+                foreach (var answerRequest in request.Answers)
+                {
+                    var answer = new Answers
+                    {
+                        Order = answerRequest.Order,
+                        AnswerContent = answerRequest.AnswerContent,
+                        IsCorrect = answerRequest.IsCorrect,
+                        CanShuffleAnswer = answerRequest.CanShuffleAnswer,
+                        OriginalExamPaperDetailId = questionDetail.OriginalExamPaperDetailId,
+                        CreatedBy = userId,
+                        CreatedAt = now
+                    };
+                    
+                    await _answersRepository.AddAsync(answer);
+                }
+            }
+            
+            // Cập nhật TotalQuestions của OriginalExamPaper
+            var totalQuestions = await _originalExamPaperDetailRepository.GetQueryable()
+                .CountAsync(q => q.OriginalExamPaperId == request.OriginalExamPaperId && 
+                                q.ParentQuestionId == null); // Chỉ đếm câu hỏi độc lập và câu hỏi cha
+            
+            originalExamPaper.TotalQuestions = totalQuestions;
+            originalExamPaper.UpdatedBy = userId;
+            originalExamPaper.UpdatedAt = now;
+            await _originalExamPaperRepository.UpdateAsync(originalExamPaper);
+            
+            // Cập nhật KeyValueList với mapping OriginalExamPaperDetailId : AnswerId của đáp án đúng
+            await UpdateKeyValueListFromDbAsync(originalExamPaper.OriginalExamPaperId);
+            
+            // Load lại questionDetail với Answers để trả về
+            var questionDetailWithAnswers = await _originalExamPaperDetailRepository.GetQueryable()
+                .Include(q => q.Answers)
+                .FirstOrDefaultAsync(q => q.OriginalExamPaperDetailId == questionDetail.OriginalExamPaperDetailId);
+            
+            if (questionDetailWithAnswers == null)
+                throw new Exception("Lỗi khi tạo câu hỏi");
+            
+            // Map sang DTO
+            var dto = _mapper.Map<OriginalExamPaperDetailDto>(questionDetailWithAnswers);
+            dto.Answers = questionDetailWithAnswers.Answers?
+                .OrderBy(a => a.Order)
+                .Select(a => _mapper.Map<AnswerDto>(a))
+                .ToList() ?? new List<AnswerDto>();
+            
+            return dto;
+        }
+
+        public async Task<OriginalExamPaperDetailDto> UpdateQuestionWithAnswersAsync(UpdateQuestionWithAnswersRequest request)
+        {
+            // Kiểm tra câu hỏi có tồn tại
+            var questionDetail = await _originalExamPaperDetailRepository.GetQueryable()
+                .Include(q => q.Answers)
+                .Include(q => q.OriginalExamPaper)
+                .FirstOrDefaultAsync(q => q.OriginalExamPaperDetailId == request.OriginalExamPaperDetailId);
+            
+            if (questionDetail == null)
+                throw new Exception($"Không tìm thấy câu hỏi với ID '{request.OriginalExamPaperDetailId}'");
+            
+            if (questionDetail.OriginalExamPaper == null)
+                throw new Exception("Không tìm thấy đề thi liên quan");
+            
+            if (!questionDetail.OriginalExamPaper.IsManualCreated)
+                throw new Exception("Chỉ có thể sửa câu hỏi cho đề thi được tạo thủ công");
+            
+            // Kiểm tra ChapterId có tồn tại (nếu có)
+            if (request.ChapterId.HasValue)
+            {
+                var chapter = await _chapterRepository.GetQueryable()
+                    .FirstOrDefaultAsync(c => c.ChapterId == request.ChapterId.Value);
+                
+                if (chapter == null)
+                    throw new Exception($"Không tìm thấy chương với ID '{request.ChapterId.Value}'");
+                
+                // Kiểm tra Chapter thuộc cùng Subject với OriginalExamPaper
+                if (chapter.SubjectId != questionDetail.OriginalExamPaper.SubjectId)
+                    throw new Exception("Chương không thuộc cùng môn học với đề thi");
+            }
+            
+            // Kiểm tra ParentQuestionId nếu có
+            if (request.ParentQuestionId.HasValue)
+            {
+                var parentQuestion = await _originalExamPaperDetailRepository.GetQueryable()
+                    .FirstOrDefaultAsync(q => q.OriginalExamPaperDetailId == request.ParentQuestionId.Value);
+                
+                if (parentQuestion == null)
+                    throw new Exception($"Không tìm thấy câu hỏi cha với ID '{request.ParentQuestionId.Value}'");
+                
+                if (parentQuestion.OriginalExamPaperId != questionDetail.OriginalExamPaperId)
+                    throw new Exception("Câu hỏi cha không thuộc cùng đề thi");
+            }
+            
+            var userId = _httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+                throw new UnauthorizedAccessException("Không thể xác định người dùng cập nhật câu hỏi.");
+            
+            var now = DateTimeHelper.GetVietnamTime();
+            
+            // Cập nhật thông tin câu hỏi
+            questionDetail.Order = request.Order;
+            questionDetail.QuestionContent = request.QuestionContent;
+            questionDetail.CorrectAnswerIndex = request.CorrectAnswerIndex;
+            questionDetail.ParentQuestionId = request.ParentQuestionId;
+            questionDetail.ChapterId = request.ChapterId;
+            questionDetail.CanShuffleQuestion = request.CanShuffleQuestion;
+            questionDetail.UpdatedBy = userId;
+            questionDetail.UpdatedAt = now;
+            
+            await _originalExamPaperDetailRepository.UpdateAsync(questionDetail);
+            
+            // Xử lý câu trả lời
+            if (request.Answers != null && request.Answers.Any())
+            {
+                // Lấy danh sách AnswerId hiện có
+                var existingAnswerIds = questionDetail.Answers?
+                    .Select(a => a.AnswerId)
+                    .ToList() ?? new List<int>();
+                
+                // Lấy danh sách AnswerId từ request (những câu trả lời cần giữ lại)
+                var requestAnswerIds = request.Answers
+                    .Where(a => a.AnswerId.HasValue)
+                    .Select(a => a.AnswerId.Value)
+                    .ToList();
+                
+                // Xóa những câu trả lời không còn trong request
+                var answersToDelete = existingAnswerIds
+                    .Where(id => !requestAnswerIds.Contains(id))
+                    .ToList();
+                
+                foreach (var answerIdToDelete in answersToDelete)
+                {
+                    var answerToDelete = await _answersRepository.GetQueryable()
+                        .FirstOrDefaultAsync(a => a.AnswerId == answerIdToDelete);
+                    
+                    if (answerToDelete != null)
+                    {
+                        await _answersRepository.DeleteAsync(answerToDelete);
+                    }
+                }
+                
+                // Cập nhật hoặc thêm mới câu trả lời
+                foreach (var answerRequest in request.Answers)
+                {
+                    if (answerRequest.AnswerId.HasValue)
+                    {
+                        // Cập nhật câu trả lời hiện có
+                        var existingAnswer = await _answersRepository.GetQueryable()
+                            .FirstOrDefaultAsync(a => a.AnswerId == answerRequest.AnswerId.Value);
+                        
+                        if (existingAnswer != null)
+                        {
+                            existingAnswer.Order = answerRequest.Order;
+                            existingAnswer.AnswerContent = answerRequest.AnswerContent;
+                            existingAnswer.IsCorrect = answerRequest.IsCorrect;
+                            existingAnswer.CanShuffleAnswer = answerRequest.CanShuffleAnswer;
+                            existingAnswer.UpdatedBy = userId;
+                            existingAnswer.UpdatedAt = now;
+                            
+                            await _answersRepository.UpdateAsync(existingAnswer);
+                        }
+                    }
+                    else
+                    {
+                        // Thêm câu trả lời mới
+                        var newAnswer = new Answers
+                        {
+                            Order = answerRequest.Order,
+                            AnswerContent = answerRequest.AnswerContent,
+                            IsCorrect = answerRequest.IsCorrect,
+                            CanShuffleAnswer = answerRequest.CanShuffleAnswer,
+                            OriginalExamPaperDetailId = questionDetail.OriginalExamPaperDetailId,
+                            CreatedBy = userId,
+                            CreatedAt = now
+                        };
+                        
+                        await _answersRepository.AddAsync(newAnswer);
+                    }
+                }
+            }
+            
+            // Load lại questionDetail với Answers để trả về
+            var updatedQuestionDetail = await _originalExamPaperDetailRepository.GetQueryable()
+                .Include(q => q.Answers)
+                .FirstOrDefaultAsync(q => q.OriginalExamPaperDetailId == questionDetail.OriginalExamPaperDetailId);
+            
+            if (updatedQuestionDetail == null)
+                throw new Exception("Lỗi khi cập nhật câu hỏi");
+            
+            // Cập nhật KeyValueList sau khi thay đổi đáp án/câu hỏi
+            await UpdateKeyValueListFromDbAsync(questionDetail.OriginalExamPaperId);
+            
+            // Map sang DTO
+            var dto = _mapper.Map<OriginalExamPaperDetailDto>(updatedQuestionDetail);
+            dto.Answers = updatedQuestionDetail.Answers?
+                .OrderBy(a => a.Order)
+                .Select(a => _mapper.Map<AnswerDto>(a))
+                .ToList() ?? new List<AnswerDto>();
+            
+            return dto;
+        }
+
+        /// <summary>
+        /// Regenerate KeyValueList string in format "(QuestionId:AnswerId);..." using current correct answers.
+        /// </summary>
+        private async Task UpdateKeyValueListFromDbAsync(int originalExamPaperId)
+        {
+            var examPaper = await _originalExamPaperRepository.GetQueryable()
+                .Include(o => o.OriginalExamPaperDetails)
+                    .ThenInclude(d => d.Answers)
+                .FirstOrDefaultAsync(o => o.OriginalExamPaperId == originalExamPaperId);
+
+            if (examPaper == null)
+            {
+                return;
+            }
+
+            var keyValuePairs = examPaper.OriginalExamPaperDetails
+                .OrderBy(d => d.OriginalExamPaperDetailId)
+                .Select(detail =>
+                {
+                    var correctAnswerId = detail.Answers?
+                        .FirstOrDefault(a => a.IsCorrect)?
+                        .AnswerId;
+
+                    return correctAnswerId.HasValue
+                        ? $"({detail.OriginalExamPaperDetailId}:{correctAnswerId.Value})"
+                        : null;
+                })
+                .Where(pair => pair != null)
+                .ToList();
+
+            examPaper.KeyValueList = keyValuePairs.Any()
+                ? string.Join(";", keyValuePairs) + ";"
+                : null;
+
+            await _originalExamPaperRepository.UpdateAsync(examPaper);
+        }
+
+        public async Task<string> GenerateRandomOriginalExamPaperCoreAsync()
+        {
+            const string uppercaseLetters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+            const int codeLength = 26;
+            const int maxAttempts = 100; // Giới hạn số lần thử để tránh vòng lặp vô hạn
+            
+            var random = new Random();
+            int attempts = 0;
+            string generatedCode;
+            
+            do
+            {
+                // Tạo mã ngẫu nhiên 26 chữ cái in hoa
+                generatedCode = new string(Enumerable.Range(0, codeLength)
+                    .Select(_ => uppercaseLetters[random.Next(uppercaseLetters.Length)])
+                    .ToArray());
+                
+                // Kiểm tra xem mã đã tồn tại chưa
+                var exists = await _originalExamPaperRepository.GetQueryable()
+                    .AnyAsync(x => x.OriginalExamPaperCore == generatedCode);
+                
+                if (!exists)
+                {
+                    return generatedCode;
+                }
+                
+                attempts++;
+                
+                // Nếu đã thử quá nhiều lần, throw exception
+                if (attempts >= maxAttempts)
+                {
+                    throw new Exception("Không thể tạo mã OriginalExamPaperCore duy nhất sau nhiều lần thử. Vui lòng thử lại.");
+                }
+            } while (true);
+        }
 
         
     }

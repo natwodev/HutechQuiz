@@ -95,6 +95,7 @@
     <ItemGroup>
       <Folder Include="Logs\" />
       <Folder Include="wwwroot\EPZ\" />
+      <Folder Include="wwwroot\Images\" />
     </ItemGroup>
 
     <ItemGroup>

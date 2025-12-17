@@ -112,6 +112,12 @@ namespace backend_manage.core.Data
                 .HasForeignKey(s => s.ShuffledExamPaperId)
                 .OnDelete(DeleteBehavior.Cascade); // giữ lại 1 cascade là đủ
 
+            builder.Entity<StudentExamSession>()
+                .HasOne(s => s.OriginalExamPaper)
+                .WithMany()
+                .HasForeignKey(s => s.OriginalExamPaperId)
+                .OnDelete(DeleteBehavior.Restrict);
+
             // Thêm index cho StudentExamSession để tối ưu hóa tìm kiếm theo StudentExamSessionId
             builder.Entity<StudentExamSession>()
                 .HasIndex(s => s.StudentExamSessionId)

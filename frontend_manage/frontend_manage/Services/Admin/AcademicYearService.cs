@@ -4,7 +4,6 @@ using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
 using frontend_manage.DTOs.AcademicAffairs;
-using Microsoft.Extensions.Configuration;
 
 namespace frontend_manage.Services.Admin
 {
@@ -13,16 +12,11 @@ namespace frontend_manage.Services.Admin
         private readonly HttpClient _httpClient;
         private readonly string _baseUrl;
 
-        public AdminAcademicYearService(HttpClient httpClient, IConfiguration configuration)
+        public AdminAcademicYearService(HttpClient httpClient)
         {
             _httpClient = httpClient;
-            var baseUrl = configuration["ApiSettings:BaseUrl"];
-            if (string.IsNullOrWhiteSpace(baseUrl))
-            {
-                baseUrl = "http://localhost:5163";
-            }
-
-            _baseUrl = $"{baseUrl.TrimEnd('/')}/api/AcademicYear";
+            // Đường dẫn tương đối, HttpClient.BaseAddress (từ ApiBaseUrl) sẽ được dùng làm gốc.
+            _baseUrl = "api/AcademicYear";
         }
 
         public async Task<List<AcademicYearDto>> GetAllAsync()

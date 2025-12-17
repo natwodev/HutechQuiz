@@ -8,6 +8,7 @@ namespace backend_manage.shared.DTOs
         public string? Description { get; set; }
         public int SubjectId { get; set; }
         public bool AllowViewMaterials { get; set; }
+        public bool IsManualCreated { get; set; }
         public int DurationMinutes { get; set; }
         public int TotalQuestions { get; set; }
         public string? KeyValueList { get; set; }
@@ -20,7 +21,7 @@ namespace backend_manage.shared.DTOs
         public string? QuestionContent { get; set; }
         public int? CorrectAnswerIndex { get; set; }
         public int? ParentQuestionId { get; set; }
-        public int ChapterId { get; set; }
+        public int? ChapterId { get; set; }
         public bool CanShuffleQuestion { get; set; }
         public string? AnswerShuffleInfo { get; set; }
         public OriginalExamPaperDetailDto? ParentQuestion { get; set; }
@@ -38,6 +39,7 @@ namespace backend_manage.shared.DTOs
         public string SubjectName { get; set; }
         public bool? IsApproved { get; set; }
         public bool AllowViewMaterials { get; set; }
+        public bool IsManualCreated { get; set; }
         public int DurationMinutes { get; set; }
         public int TotalQuestions { get; set; }
         public int TotalShuffledPapers { get; set; }
@@ -53,6 +55,28 @@ namespace backend_manage.shared.DTOs
         public int? ParentQuestionId { get; set; }
         public bool CanShuffleQuestion { get; set; }
         public string? AnswerShuffleInfo { get; set; } 
+    }
+
+    public class CreateOriginalExamPaperRequest
+    {
+        public string OriginalExamPaperCore { get; set; }
+        public string Title { get; set; }
+        public string? Description { get; set; }
+        public int SubjectId { get; set; }
+        public bool AllowViewMaterials { get; set; }
+        public int DurationMinutes { get; set; }
+        public bool? IsApproved { get; set; }
+    }
+
+    public class UpdateOriginalExamPaperRequest
+    {
+        public string OriginalExamPaperCore { get; set; }
+        public string Title { get; set; }
+        public string? Description { get; set; }
+        public int SubjectId { get; set; }
+        public bool AllowViewMaterials { get; set; }
+        public int DurationMinutes { get; set; }
+        public bool? IsApproved { get; set; }
     }
     
 } 

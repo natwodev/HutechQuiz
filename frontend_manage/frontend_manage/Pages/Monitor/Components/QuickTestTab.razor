@@ -1,0 +1,226 @@
+@using frontend_manage.Services
+@using frontend_manage.DTOs
+@using frontend_manage.Pages.Monitor.Components
+@using Microsoft.AspNetCore.Components
+@using Microsoft.AspNetCore.Components.Web
+@using Microsoft.AspNetCore.SignalR.Client
+@using MudBlazor
+@using System.Collections.Generic
+@using System.Linq
+@using System.Threading.Tasks
+
+<link href="css/monitor/ExamInfoPage.css" rel="stylesheet" />
+
+<div class="exam-info-tab">
+    <div class="exam-info-header">
+        <h2>Preview đề gốc</h2>
+    </div>
+
+    @if (Subject != null)
+    {
+        <div class="exam-info-content">
+            <MudGrid>
+                <!-- Preview đề gốc -->
+                <MudItem xs="12" md="5" Class="mt-4">
+                <MudCard Elevation="2" Class="exam-preview-card">
+                    <MudCardHeader>
+                        <CardHeaderContent>
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                <MudText Typo="Typo.h6">Preview đề gốc</MudText>
+                                @if (Exam != null && !string.IsNullOrWhiteSpace(Exam.OriginalExamPaperCore))
+                                {
+                                    <MudIconButton 
+                                        Icon="@Icons.Material.Filled.QrCode" 
+                                        Color="Color.Primary" 
+                                        Size="Size.Small"
+                                        OnClick="ToggleQRCodeDisplay"
+                                        Title="Hiển thị/Ẩn QR Code" />
+                                }
+                            </MudStack>
+                        </CardHeaderContent>
+                        <CardHeaderActions>
+                            <MudIcon Icon="@Icons.Material.Filled.Description" Color="Color.Info" />
+                        </CardHeaderActions>
+                    </MudCardHeader>
+                    <MudCardContent Style="max-height: calc(100vh - 250px); overflow-y: auto; overflow-x: hidden;">
+                        @if (showQRCode && !string.IsNullOrEmpty(qrCodeBase64) && Exam != null)
+                        {
+                            <MudPaper Elevation="2" Class="pa-4 mb-4" Style="background: white;">
+                                <MudStack Spacing="3" AlignItems="AlignItems.Center">
+                                    <MudText Typo="Typo.h6" Class="font-weight-bold">Mã QR Code - Mã đề gốc</MudText>
+                                    <MudPaper Elevation="2" Class="pa-4" Style="background: white; max-width: 100%;">
+                                        <MudStack Spacing="2" AlignItems="AlignItems.Center">
+                                            <img src="data:image/png;base64,@qrCodeBase64" alt="QR Code" style="max-width: 100%; height: auto; display: block;" />
+                                        </MudStack>
+                                    </MudPaper>
+                                    <MudText Typo="Typo.body2" Style="color: #666;">Mã đề: @Exam.OriginalExamPaperCore</MudText>
+                                </MudStack>
+                            </MudPaper>
+                        }
+                        
+                        @if (isLoadingExam)
+                        {
+                            <MudStack AlignItems="AlignItems.Center" Justify="Justify.Center" Spacing="3" Style="padding: 40px;">
+                                <MudProgressCircular Indeterminate="true" />
+                                <MudText Typo="Typo.body1" Style="color: #666;">Đang tải đề thi...</MudText>
+                            </MudStack>
+                        }
+                        else if (Exam != null && Exam.Details != null && Exam.Details.Count > 0)
+                        {
+                            <MudStack Spacing="3">
+                                @{
+                                    var flatQuestions = GetFlatQuestions();
+                                }
+                                @for (int i = 0; i < flatQuestions.Count; i++)
+                                {
+                                    var q = flatQuestions[i];
+                                    var isParentQuestion = q.ParentQuestionId == null && q.ChildQuestions != null && q.ChildQuestions.Count > 0;
+                                    var isChildQuestion = q.ParentQuestionId != null;
+                                    var questionNumber = GetQuestionNumber(q, i);
+                                    
+                                    <MudPaper Elevation="1" Class="pa-4" Style="@(isChildQuestion ? "background: #fafafa;" : "")">
+                                        <MudStack Spacing="2">
+                                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                                @if (questionNumber.HasValue)
+                                                {
+                                                    <MudChip T="int" Color="Color.Primary" Size="Size.Small" Variant="Variant.Filled">@questionNumber.Value</MudChip>
+                                                }
+                                                <MudText Typo="Typo.h6" Color="Color.Primary" Class="font-weight-bold">
+                                                    Câu hỏi
+                                                    @if (isChildQuestion)
+                                                    {
+                                                        <MudText Typo="Typo.body2" Style="color: #666; font-weight: normal;">(Câu hỏi con)</MudText>
+                                                    }
+                                                </MudText>
+                                            </MudStack>
+                                            <MudPaper Elevation="0" Class="pa-3 katex-content" Style="background: white;">
+                                                @((MarkupString)RenderHtml(q.QuestionContent))
+                                            </MudPaper>
+                                            @if (q.Answers != null && q.Answers.Count > 0)
+                                            {
+                                                <MudList T="object" Dense="true" Style="margin-left: 24px;">
+                                                    @foreach (var ans in q.Answers.OrderBy(a => a.Order))
+                                                    {
+                                                        <MudListItem T="object"
+                                                            Style="@(ans.IsCorrect ? "background: #f1f8f4; border: 1px solid #4caf50; border-radius: 6px; margin-bottom: 8px;" : "background: white; border: 1px solid #e0e0e0; border-radius: 6px; margin-bottom: 8px;")">
+                                                            <MudStack Row="true" AlignItems="AlignItems.Start" Spacing="2" Style="width: 100%;">
+                                                                <MudText Typo="Typo.body2" Class="font-weight-bold" Style="min-width: 24px; color: #555;">@GetLetter(ans.Order).</MudText>
+                                                                <MudText Typo="Typo.body2" Class="katex-content" Style="flex: 1;">
+                                                                    @((MarkupString)RenderHtml(ans.AnswerContent))
+                                                                </MudText>
+                                                                @if (ans.IsCorrect)
+                                                                {
+                                                                    <MudChip T="string" Color="Color.Success" Size="Size.Small" Variant="Variant.Filled" Style="font-size: 0.7rem; padding: 2px 8px; height: auto;">
+                                                                        ✓ Đúng
+                                                                    </MudChip>
+                                                                }
+                                                            </MudStack>
+                                                        </MudListItem>
+                                                    }
+                                                </MudList>
+                                            }
+                                        </MudStack>
+                                    </MudPaper>
+                                }
+                            </MudStack>
+                        }
+                        else if (string.IsNullOrWhiteSpace(Subject?.OriginalExamPaperCore))
+                        {
+                            <MudAlert Severity="Severity.Info" Class="text-center" Style="padding: 40px;">
+                                Chưa có đề
+                            </MudAlert>
+                        }
+                        else
+                        {
+                            <MudAlert Severity="Severity.Warning" Class="text-center" Style="padding: 40px;">
+                                @if (!string.IsNullOrWhiteSpace(examLoadError))
+                                {
+                                    @examLoadError
+                                }
+                                else
+                                {
+                                    <text>Không tìm thấy đề thi hoặc đề thi chưa có câu hỏi.</text>
+                                }
+                                <br />
+                                <MudText Typo="Typo.body2" Style="margin-top: 8px; color: #666;">
+                                    Mã đề: @Subject?.OriginalExamPaperCore
+                                </MudText>
+                            </MudAlert>
+                        }
+                    </MudCardContent>
+                </MudCard>
+                </MudItem>
+                
+                <!-- Đang phát triển -->
+                <MudItem xs="12" md="7" Class="mt-4">
+                <MudCard Elevation="2" Class="exam-preview-card">
+                    <MudCardHeader>
+                        <CardHeaderContent>
+                            <MudText Typo="Typo.h6">Đang phát triển</MudText>
+                        </CardHeaderContent>
+                        <CardHeaderActions>
+                            <MudIcon Icon="@Icons.Material.Filled.Construction" Color="Color.Warning" />
+                        </CardHeaderActions>
+                    </MudCardHeader>
+                    <MudCardContent>
+                        <MudStack AlignItems="AlignItems.Center" Justify="Justify.Center" Spacing="3" Style="padding: 40px;">
+                            <MudIcon Icon="@Icons.Material.Filled.Construction" Size="Size.Large" Color="Color.Warning" Style="font-size: 64px;" />
+                            <MudText Typo="Typo.h6" Style="color: #666; text-align: center;">
+                                Tính năng đang được phát triển
+                            </MudText>
+                            <MudText Typo="Typo.body2" Style="color: #999; text-align: center;">
+                                Vui lòng quay lại sau
+                            </MudText>
+                        </MudStack>
+                    </MudCardContent>
+                </MudCard>
+                </MudItem>
+            </MudGrid>
+        </div>
+    }
+    else
+    {
+        <div class="no-data">
+            <MudAlert Severity="Severity.Info" Variant="Variant.Filled">
+                Không có thông tin ca thi
+            </MudAlert>
+        </div>
+    }
+</div>
+
+<style>
+    .katex-content img {
+        max-width: 100%;
+        height: auto;
+        display: inline-block;
+        margin: 4px 0;
+    }
+    .katex-content audio {
+        width: 100%;
+        margin-top: 8px;
+    }
+    
+    /* Custom scrollbar for preview card */
+    .exam-preview-card .mud-card-content {
+        scrollbar-width: thin;
+        scrollbar-color: #888 #f1f1f1;
+    }
+    
+    .exam-preview-card .mud-card-content::-webkit-scrollbar {
+        width: 8px;
+    }
+    
+    .exam-preview-card .mud-card-content::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 4px;
+    }
+    
+    .exam-preview-card .mud-card-content::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 4px;
+    }
+    
+    .exam-preview-card .mud-card-content::-webkit-scrollbar-thumb:hover {
+        background: #555;
+    }
+</style>

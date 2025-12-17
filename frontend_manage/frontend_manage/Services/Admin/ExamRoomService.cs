@@ -1,5 +1,4 @@
 using frontend_manage.DTOs.AcademicAffairs;
-using Microsoft.Extensions.Configuration;
 using System.Net.Http.Json;
 
 namespace frontend_manage.Services.Admin
@@ -10,16 +9,11 @@ namespace frontend_manage.Services.Admin
         private readonly string _baseUrl;
 
         public ExamRoomService(
-            HttpClient httpClient,
-            IConfiguration configuration)
+            HttpClient httpClient)
         {
             _httpClient = httpClient;
-            var baseUrl = configuration["ApiSettings:BaseUrl"];
-            if (string.IsNullOrWhiteSpace(baseUrl))
-            {
-                baseUrl = "http://localhost:5163";
-            }
-            _baseUrl = $"{baseUrl.TrimEnd('/')}/api/ExamRoom";
+            // Đường dẫn tương đối, HttpClient.BaseAddress (từ ApiBaseUrl) sẽ được dùng làm gốc.
+            _baseUrl = "api/ExamRoom";
         }
 
         public async Task<List<ExamRoomDto>> GetAllAsync()

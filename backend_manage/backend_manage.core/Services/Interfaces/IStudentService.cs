@@ -7,6 +7,8 @@ namespace backend_manage.core.Services.Interfaces;
 public interface IStudentService
 {
     Task<StudentAuthResultDto> LoginAsync(string studentCode1, string studentCode2);
+
+    Task<StudentAuthResultDto> LoginMobileAsync(string studentCode1, string studentCode2);
     Task<IEnumerable<Student>> GetAllAsync();
     Task<Student> AddAsync(StudentCreateDto dto);
     Task<Student> UpdateAsync(string id, Student student);
@@ -19,8 +21,10 @@ public interface IStudentService
     Task<(StudentExamSessionCacheDto studentExamSessionCacheDto, ShuffledExamPaperDto? shuffledExamPaperDto, OriginalExamPaperDto? originalExamPaperDto)>
         StartExamAsync(string studentCode,
             int studentExamSessionId);
+    Task<(StudentExamSessionCacheDto studentExamSessionCacheDto, OriginalExamPaperDto? originalExamPaperDto)>
+        StartExamWithOriginalPaperAsync(string studentCode, int studentExamSessionId);
     Task<IEnumerable<StudentExamSessionDto>> GetStudentExamSessionsAsync(string studentCode);
-    Task<(IEnumerable<StudentExamRoomStatusDto> Students, SubjectExamRoomStatusDto SubjectInfo)> GetStudentsByExamSessionSubjectAsync(int examSessionSubjectId);
+    Task<(IEnumerable<StudentExamRoomStatusDto> Students, SubjectExamRoomStatusDto SubjectInfo)> GetStudentsByExamSessionSubjectAsync(int? examSessionSubjectId);
     Task<(bool Success, string Message)> AvtiveLoginAsync(string studentCode, bool isLogin);
     Task AddExtraMinutesAsync(string studentCode, int studentExamSessionId, int extraMinutes, string? reasonForExtra);
 
@@ -28,6 +32,10 @@ public interface IStudentService
     
     Task<StudentImportResultDto> ImportFromExcelStreamAsync(Stream stream, string examSessionSubjectCore,
         string userId);
+    
+    // Tạo StudentExamSession mới từ OriginalExamPaperId và studentCode, trả về phiên thi + đề gốc
+    Task<(StudentExamSessionCacheDto studentExamSessionCacheDto, OriginalExamPaperDto? originalExamPaperDto)>
+        CreateSessionWithOriginalPaperAsync(string studentCode, int originalExamPaperId);
     
     // Method để nộp bài thi
     Task<(bool Success, string Message)> SubmitExamAsync(string studentCode, int studentExamSessionId);

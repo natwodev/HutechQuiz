@@ -108,7 +108,8 @@ public partial class Dashboard : ComponentBase
     {
         try
         {
-            var httpClient = new HttpClient { BaseAddress = new Uri("http://localhost:5163/") };
+            // Sử dụng HttpClient được inject với BaseAddress đã cấu hình qua ApiBaseUrl
+            var httpClient = new HttpClient { BaseAddress = NavigationManager.ToAbsoluteUri("/") };
             var token = await AuthService.GetTokenAsync();
             if (!string.IsNullOrEmpty(token))
             {

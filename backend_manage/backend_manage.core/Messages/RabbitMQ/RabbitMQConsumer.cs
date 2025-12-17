@@ -190,6 +190,7 @@ namespace backend_manage.core.Messages.RabbitMQ
                 // Cập nhật thông tin bắt đầu làm bài
                 studentExamSession.StartTime = message.StartTime;
                 studentExamSession.ShuffledExamPaperId = message.ShuffledExamPaperId;
+            studentExamSession.OriginalExamPaperId = message.OriginalExamPaperId;
                 studentExamSession.StudentAnswersString = message.StudentAnswersString;
                 studentExamSession.IsCompleted = message.IsCompleted;
 

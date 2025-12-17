@@ -24,12 +24,8 @@ public class AuthService
         _httpClient = httpClient;
         _navigationManager = navigationManager;
         _jsRuntime = jsRuntime;
-        
-        // Đảm bảo BaseAddress được set
-        if (_httpClient.BaseAddress == null)
-        {
-            _httpClient.BaseAddress = new Uri("http://localhost:5163/");
-        }
+        // BaseAddress đã được cấu hình tập trung trong Program.cs thông qua ApiBaseUrl
+        // Không override lại tại đây để tránh bị fix cứng localhost.
     }
 
     // JWT Authentication (cho các trường hợp khác)

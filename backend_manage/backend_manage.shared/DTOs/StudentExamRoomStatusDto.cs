@@ -33,6 +33,7 @@ namespace backend_manage.shared.DTOs
         public DateTime ExamSessionEndTime { get; set; }
         public string ExamSessionName { get; set; }
         public string LecturerCode { get; set; }
+        public string? OriginalExamPaperCore { get; set; }
     }
     public class StudentListResponse
     { 

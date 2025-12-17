@@ -40,6 +40,7 @@ namespace frontend_manage.DTOs
         public DateTime ExamSessionEndTime { get; set; }
         public string ExamSessionName { get; set; }
         public string LecturerCode { get; set; }
+        public string? OriginalExamPaperCore { get; set; }
     }
 
     public class StudentListResponse
@@ -66,6 +67,7 @@ namespace frontend_manage.DTOs
         public DateTime? StartTime { get; set; }
         public DateTime EndTime { get; set; }
         public int StudentExamSessionId { get; set; }
+        public int? OriginalExamPaperId { get; set; }
         public int? ShuffledExamPaperId { get; set; }
         public string StudentAnswersString { get; set; }
         public DateTime ExamSessionStartTime { get; set; }
@@ -105,6 +107,7 @@ namespace frontend_manage.DTOs
         public string StudentCode { get; set; }
         public int StudentId { get; set; }
         public int ExamSessionSubjectId { get; set; }
+        public int? OriginalExamPaperId { get; set; }
         public int? ShuffledExamPaperId { get; set; }
         public int ExtraMinutes { get; set; }
         public string? ReasonForExtra { get; set; }

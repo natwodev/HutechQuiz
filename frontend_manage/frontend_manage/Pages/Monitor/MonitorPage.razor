@@ -42,6 +42,10 @@
             <MudIcon Icon="@Icons.Material.Filled.Info" />
             <span>THÔNG TIN CA THI</span>
         </div>
+        <div class="nav-item @(activeTab == 2 ? "active" : "")" @onclick="() => ActivateTab(2)">
+            <MudIcon Icon="@Icons.Material.Filled.Assignment" />
+            <span>BÀI KIỂM TRA NHANH</span>
+        </div>
     </div>
 
 
@@ -61,6 +65,15 @@
             </div>
             <div class="@(activeTab == 1 ? "tab-content-active" : "tab-content-hidden")">
                 @if (activeTab == 1 || previousTab == 1)
+                {
+                    <div class="loading-container">
+                        <div class="loading-spinner"></div>
+                        <div class="loading-text">Đang tải dữ liệu...</div>
+                    </div>
+                }
+            </div>
+            <div class="@(activeTab == 2 ? "tab-content-active" : "tab-content-hidden")">
+                @if (activeTab == 2 || previousTab == 2)
                 {
                     <div class="loading-container">
                         <div class="loading-spinner"></div>
@@ -91,6 +104,16 @@
                     </div>
                 }
             </div>
+            <div class="@(activeTab == 2 ? "tab-content-active" : "tab-content-hidden")">
+                @if (activeTab == 2 || previousTab == 2)
+                {
+                    <div class="error-container">
+                        <MudAlert Severity="Severity.Error" Variant="Variant.Filled">
+                            @errorMessage
+                        </MudAlert>
+                    </div>
+                }
+            </div>
         }
         else if (examData != null)
         {
@@ -104,6 +127,12 @@
                 @if (activeTab == 1 || previousTab == 1)
                 {
                     <ExamInfoTab Subject="@examData.Subject" ExamSessionSubjectId="@ExamSessionSubjectId" />
+                }
+            </div>
+            <div class="@(activeTab == 2 ? "tab-content-active" : "tab-content-hidden")">
+                @if (activeTab == 2 || previousTab == 2)
+                {
+                    <QuickTestTab Subject="@examData.Subject" ExamSessionSubjectId="@ExamSessionSubjectId" />
                 }
             </div>
         }
@@ -125,6 +154,16 @@
                     <div class="no-data-container">
                         <MudAlert Severity="Severity.Info" Variant="Variant.Filled">
                             Vui lòng chọn phòng thi để xem thông tin ca thi
+                        </MudAlert>
+                    </div>
+                }
+            </div>
+            <div class="@(activeTab == 2 ? "tab-content-active" : "tab-content-hidden")">
+                @if (activeTab == 2 || previousTab == 2)
+                {
+                    <div class="no-data-container">
+                        <MudAlert Severity="Severity.Info" Variant="Variant.Filled">
+                            Vui lòng chọn phòng thi để xem bài kiểm tra nhanh
                         </MudAlert>
                     </div>
                 }

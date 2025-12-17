@@ -251,6 +251,14 @@ public class StudentExamSessionCacheHelper
                 : cacheDto.ExamSessionName;
         }
 
+        if (!cacheDto.OriginalExamPaperId.HasValue)
+        {
+            cacheDto.OriginalExamPaperId = await _examSessionSubjectRepository.GetQueryable()
+                .Where(x => x.ExamSessionSubjectId == session.ExamSessionSubjectId)
+                .Select(x => x.OriginalExamPaperId)
+                .FirstOrDefaultAsync();
+        }
+
         return cacheDto;
     }
     

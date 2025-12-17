@@ -1,0 +1,100 @@
+@using frontend_manage.DTOs
+@using Microsoft.AspNetCore.Components.Forms
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">Thêm câu hỏi mới</MudText>
+    </TitleContent>
+    <DialogContent>
+        <EditForm Model="@questionRequest" OnValidSubmit="HandleSubmit">
+            <DataAnnotationsValidator />
+            
+            <MudStack Spacing="3">
+                <MudNumericField @bind-Value="questionRequest.Order" 
+                                 Label="Thứ tự câu hỏi" 
+                                 Variant="Variant.Outlined"
+                                 Required="true"
+                                 RequiredError="Thứ tự là bắt buộc"
+                                 Min="1"
+                                 HelperText="Số thứ tự của câu hỏi trong đề thi" />
+                
+                <MudTextField @bind-Value="questionRequest.QuestionContent" 
+                              Label="Nội dung câu hỏi" 
+                              Variant="Variant.Outlined"
+                              Lines="3"
+                              HelperText="Nhập nội dung câu hỏi" />
+                
+                <MudNumericField @bind-Value="questionRequest.CorrectAnswerIndex" 
+                                 Label="Đáp án đúng (chỉ số)" 
+                                 Variant="Variant.Outlined"
+                                 Min="1"
+                                 HelperText="Chỉ số của đáp án đúng (1, 2, 3, ...)" />
+                
+                <MudCheckBox @bind-Value="questionRequest.CanShuffleQuestion" 
+                             Label="Cho phép hoán vị câu hỏi"
+                             Color="Color.Primary" />
+                
+                <MudDivider />
+                <MudText Typo="Typo.subtitle1">Đáp án</MudText>
+                
+                @for (int i = 0; i < questionRequest.Answers.Count; i++)
+                {
+                    var index = i;
+                    <MudPaper Class="pa-3" Elevation="1">
+                        <MudStack Row="true" AlignItems="AlignItems.Start" Spacing="2">
+                            <MudText Typo="Typo.body1" Class="mt-2" Style="min-width: 100px;">
+                                <strong>Đáp án @(index + 1):</strong>
+                            </MudText>
+                            <MudTextField @bind-Value="questionRequest.Answers[index].AnswerContent" 
+                                          Label="Nội dung đáp án" 
+                                          Variant="Variant.Outlined"
+                                          Required="true"
+                                          RequiredError="Nội dung đáp án là bắt buộc"
+                                          Style="flex: 1;" />
+                            <MudCheckBox @bind-Value="questionRequest.Answers[index].IsCorrect" 
+                                         Label="Đáp án đúng"
+                                         Color="Color.Success"
+                                         Class="mt-2" />
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete" 
+                                           Color="Color.Error" 
+                                           OnClick="() => RemoveAnswer(index)"
+                                           Disabled="questionRequest.Answers.Count <= 2"
+                                           Class="mt-1" />
+                        </MudStack>
+                    </MudPaper>
+                }
+                
+                <MudButton Color="Color.Secondary" 
+                           Variant="Variant.Outlined" 
+                           StartIcon="@Icons.Material.Filled.Add"
+                           OnClick="AddAnswer">
+                    Thêm đáp án
+                </MudButton>
+                
+                @if (!string.IsNullOrEmpty(message))
+                {
+                    <MudAlert Severity="@(message.StartsWith("Lỗi") ? Severity.Error : Severity.Success)" 
+                              Dismissible="true"
+                              OnClose="() => message = string.Empty">
+                        @message
+                    </MudAlert>
+                }
+            </MudStack>
+        </EditForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel" Disabled="@isSubmitting">Hủy</MudButton>
+        <MudButton Color="Color.Primary" 
+                   Variant="Variant.Filled"
+                   ButtonType="ButtonType.Submit"
+                   Disabled="@isSubmitting"
+                   StartIcon="@Icons.Material.Filled.Save">
+            @if (isSubmitting)
+            {
+                <MudProgressCircular Indeterminate="true" Size="Size.Small" Class="mr-2" />
+            }
+            Thêm câu hỏi
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+

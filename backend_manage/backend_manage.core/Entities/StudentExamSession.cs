@@ -27,13 +27,18 @@ public class StudentExamSession : BaseEntity
     
     // Khóa ngoại liên kết với bảng ExamSessionSubject
     // Xác định môn thi và ca thi mà sinh viên tham gia
+    // Cho phép null trong trường hợp phiên thi chưa được gán ca/môn cụ thể
     [ForeignKey("ExamSessionSubject")]
-    public int ExamSessionSubjectId { get; set; }
+    public int? ExamSessionSubjectId { get; set; }
     
     // Khóa ngoại liên kết với bảng ShuffledExamPaper
     // Xác định đề thi hoán vị mà sinh viên làm
     [ForeignKey("ShuffledExamPaper")]
     public int? ShuffledExamPaperId { get; set; }
+
+    // Khóa ngoại liên kết với đề thi gốc được gán cho phiên thi
+    [ForeignKey("OriginalExamPaper")]
+    public int? OriginalExamPaperId { get; set; }
 
     // Số phút được cộng thêm cho sinh viên (nếu có)
     public int ExtraMinutes { get; set; }
@@ -75,10 +80,13 @@ public class StudentExamSession : BaseEntity
     public Student Student { get; set; }
     
     // Navigation property đến entity ExamSessionSubject
-    public ExamSessionSubject ExamSessionSubject { get; set; }
+    public ExamSessionSubject? ExamSessionSubject { get; set; }
     
     // Navigation property đến entity ShuffledExamPaper
     public ShuffledExamPaper ShuffledExamPaper { get; set; }
+
+    // Navigation property đến đề thi gốc
+    public OriginalExamPaper? OriginalExamPaper { get; set; }
 
 }
 

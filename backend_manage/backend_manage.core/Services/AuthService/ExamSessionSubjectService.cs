@@ -312,6 +312,7 @@ namespace backend_manage.core.Services.AuthService
                 .Include(x => x.Subject)
                 .Include(x => x.ExamRoom)
                 .Include(x => x.ExamSession)
+                .Include(x => x.OriginalExamPaper)
                 .Include(x => x.StudentExamSessions)
                     .ThenInclude(s => s.Student)
                 .AsSplitQuery()
@@ -335,6 +336,7 @@ namespace backend_manage.core.Services.AuthService
                 .Include(x => x.ExamRoom)
                 .Include(x => x.ExamSession)
                 .Include(x => x.Monitor)
+                .Include(x => x.OriginalExamPaper)
                 .AsSplitQuery()
                 .ToListAsync();
 

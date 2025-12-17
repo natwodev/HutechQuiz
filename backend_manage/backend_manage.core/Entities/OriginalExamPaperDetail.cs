@@ -33,9 +33,9 @@ namespace backend_manage.core.Entities
         public bool CanShuffleQuestion { get; set; } = true;
 
         // Khóa ngoại liên kết với bảng Chapter
-        // Xác định câu hỏi thuộc chương nào
+        // Xác định câu hỏi thuộc chương nào (có thể null)
         [ForeignKey("Chapter")]
-        public int ChapterId { get; set; }
+        public int? ChapterId { get; set; }
         
         // Navigation property đến câu hỏi cha
         public OriginalExamPaperDetail? ParentQuestion { get; set; }
@@ -47,7 +47,7 @@ namespace backend_manage.core.Entities
         public OriginalExamPaper OriginalExamPaper { get; set; }
         
         // Navigation property đến entity Chapter
-        public Chapter Chapter { get; set; }
+        public Chapter? Chapter { get; set; }
 
         // Navigation property đến danh sách các câu hỏi hoán vị
         // public ICollection<ShuffledExamPaperDetail>? ShuffledExamPaperDetails { get; set; }

@@ -20,7 +20,7 @@ namespace frontend_manage.Pages.ExamManager.Preview
         [Inject]
         private IKaTeXService KaTeX { get; set; } = null!;
 
-        // Dùng HttpClient để lấy BaseAddress của backend (http://localhost:5163/)
+        // Dùng HttpClient để lấy BaseAddress của backend (đã cấu hình qua ApiBaseUrl)
         [Inject]
         private HttpClient HttpClient { get; set; } = null!;
 
@@ -131,8 +131,10 @@ namespace frontend_manage.Pages.ExamManager.Preview
 
             var folderName = Exam.ShuffledExamPaperCore.Split('_')[0];
 
-            // Lấy base address từ HttpClient (backend), ví dụ: http://localhost:5163
-            var baseAddr = (HttpClient.BaseAddress?.ToString() ?? "http://localhost:5163/").TrimEnd('/');
+            // Lấy base address từ HttpClient (backend), đã cấu hình từ ApiBaseUrl trong Program.cs
+            var baseAddr = (HttpClient.BaseAddress?.ToString() ?? string.Empty).TrimEnd('/');
+            if (string.IsNullOrEmpty(baseAddr))
+                return string.Empty;
 
             return $"{baseAddr}/EPZ/{folderName}/{audioFileName}";
         }

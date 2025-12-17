@@ -327,3 +327,20 @@ h1:focus {
         max-height: none;
     }
 }
+
+/* QR Code Dialog - Đảm bảo dialog hiển thị ở giữa màn hình */
+.mud-dialog-container {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-height: 100vh !important;
+}
+
+.mud-dialog {
+    margin: auto !important;
+    position: relative !important;
+    top: auto !important;
+    left: auto !important;
+    transform: none !important;
+}
+
