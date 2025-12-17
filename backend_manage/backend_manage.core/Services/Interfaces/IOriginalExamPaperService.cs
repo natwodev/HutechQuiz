@@ -6,7 +6,8 @@ namespace backend_manage.core.Services.Interfaces
 {
     public interface IOriginalExamPaperService
     {
-
+        Task<OriginalExamPaperDto> CreateAsync(CreateOriginalExamPaperRequest request);
+        Task<OriginalExamPaperDto> UpdateAsync(UpdateOriginalExamPaperRequest request);
         Task ImportFromXmlAsync(IFormFile file, string originalExamPaperCore);
 
         Task<OriginalExamPaperDto> GetWithDetailsAsync(string originalExamPaperCore);
@@ -47,5 +48,14 @@ namespace backend_manage.core.Services.Interfaces
           
           // Phương thức cập nhật AllowViewMaterials cho đề thi gốc và đồng bộ với đề hoán vị
           Task<bool> UpdateAllowViewMaterialsAsync(string originalExamPaperCore, bool allowViewMaterials);
+          
+          // Phương thức thêm câu hỏi và đáp án cho đề thi thủ công
+          Task<OriginalExamPaperDetailDto> AddQuestionWithAnswersAsync(CreateQuestionWithAnswersRequest request);
+          
+          // Phương thức cập nhật câu hỏi và đáp án
+          Task<OriginalExamPaperDetailDto> UpdateQuestionWithAnswersAsync(UpdateQuestionWithAnswersRequest request);
+          
+          // Phương thức sinh mã OriginalExamPaperCore ngẫu nhiên 26 chữ cái in hoa
+          Task<string> GenerateRandomOriginalExamPaperCoreAsync();
       }
 } 

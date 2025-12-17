@@ -9,18 +9,12 @@ namespace frontend_manage.Services.Admin
         private readonly HttpClient _httpClient;
         private readonly string _baseUrl;
 
-        public ExamRoomService(HttpClient httpClient, IConfiguration configuration)
+        public ExamRoomService(
+            HttpClient httpClient)
         {
             _httpClient = httpClient;
-            var baseUrl = GetApiBaseUrl(configuration);
-            _baseUrl = $"{baseUrl}/api/ExamRoom";
-        }
-
-        private static string GetApiBaseUrl(IConfiguration configuration)
-        {
-            var apiBaseUrl = configuration["ApiBaseUrl"] ?? throw new InvalidOperationException(
-                "ApiBaseUrl chưa được cấu hình trong appsettings.json");
-            return apiBaseUrl.TrimEnd('/');
+            // Đường dẫn tương đối, HttpClient.BaseAddress (từ ApiBaseUrl) sẽ được dùng làm gốc.
+            _baseUrl = "api/ExamRoom";
         }
 
         public async Task<List<ExamRoomDto>> GetAllAsync()

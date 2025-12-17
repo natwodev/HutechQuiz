@@ -110,6 +110,7 @@ public class StudentImportHelper
                         StudentId = dbStudent.StudentId,
                         StudentCode = student.StudentCode,
                         ExamSessionSubjectId = examSessionSubject.ExamSessionSubjectId,
+                        OriginalExamPaperId = examSessionSubject.OriginalExamPaperId,
                         CreatedBy = userId,
                         CreatedAt = DateTimeHelper.GetVietnamTime(),
                         StudentAnswersString = "",

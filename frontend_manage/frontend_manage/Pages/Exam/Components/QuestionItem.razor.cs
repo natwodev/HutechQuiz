@@ -22,7 +22,7 @@ namespace frontend_manage.Pages.Exam.Components
 
         [Inject] private IKaTeXService KaTeX { get; set; } = default!;
 
-        // Dùng HttpClient để lấy BaseAddress backend (từ appsettings.json)
+        // Dùng HttpClient để lấy BaseAddress backend (đã cấu hình qua ApiBaseUrl)
         [Inject] private HttpClient HttpClient { get; set; } = default!;
         [Inject] private IConfiguration Configuration { get; set; } = default!;
 
@@ -105,10 +105,10 @@ namespace frontend_manage.Pages.Exam.Components
 
             var folderName = core.Split('_')[0];
 
-            var baseAddr = HttpClient.BaseAddress?.ToString() 
-                ?? Configuration["ApiBaseUrl"] 
-                ?? throw new InvalidOperationException("ApiBaseUrl chưa được cấu hình");
-            baseAddr = baseAddr.TrimEnd('/');
+            // Lấy base address từ HttpClient (backend), đã cấu hình từ ApiBaseUrl trong Program.cs
+            var baseAddr = (HttpClient.BaseAddress?.ToString() ?? string.Empty).TrimEnd('/');
+            if (string.IsNullOrEmpty(baseAddr))
+                return string.Empty;
 
             return $"{baseAddr}/EPZ/{folderName}/{audioFileName}";
         }

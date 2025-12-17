@@ -16,11 +16,11 @@ namespace frontend_manage.Services.Admin
         private readonly string _baseUrl;
         private readonly AuthService _authService;
 
-        public LecturerService(HttpClient httpClient, AuthService authService, IConfiguration configuration)
+        public LecturerService(HttpClient httpClient, AuthService authService)
         {
             _httpClient = httpClient;
-            var baseUrl = GetApiBaseUrl(configuration);
-            _baseUrl = $"{baseUrl}/api/Lecturer";
+            // Đường dẫn tương đối, HttpClient.BaseAddress (từ ApiBaseUrl) sẽ được dùng làm gốc.
+            _baseUrl = "api/Lecturer";
             _authService = authService;
         }
 

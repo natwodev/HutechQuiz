@@ -110,10 +110,8 @@ public partial class Dashboard : ComponentBase
     {
         try
         {
-            var apiBaseUrl = Configuration["ApiBaseUrl"] ?? throw new InvalidOperationException("ApiBaseUrl chưa được cấu hình");
-            if (!apiBaseUrl.EndsWith("/"))
-                apiBaseUrl += "/";
-            var httpClient = new HttpClient { BaseAddress = new Uri(apiBaseUrl) };
+            // Sử dụng HttpClient được inject với BaseAddress đã cấu hình qua ApiBaseUrl
+            var httpClient = new HttpClient { BaseAddress = NavigationManager.ToAbsoluteUri("/") };
             var token = await AuthService.GetTokenAsync();
             if (!string.IsNullOrEmpty(token))
             {

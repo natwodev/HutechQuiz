@@ -44,6 +44,10 @@ builder.Services.AddScoped<SystemService>();
 // Removed MathJax service (migrated to KaTeX)
 // Đăng ký KaTeX service
 builder.Services.AddScoped<IKaTeXService, KaTeXService>();
+
+// Đăng ký QRCode service
+builder.Services.AddScoped<IQrCodeService, QrCodeService>();
+
 // Mock exam service
 builder.Services.AddSingleton<ExamMockService>();
 

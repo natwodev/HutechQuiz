@@ -37,6 +37,12 @@ public class StudentController : ControllerBase
         return Ok(result);
     }
 
+    [HttpPost("login-mobile")]
+    public async Task<IActionResult> LoginMoblie([FromBody] LoginRequest request)
+    {
+        var result = await _studentService.LoginMobileAsync(request.StudentCode1, request.StudentCode2);
+        return Ok(result);
+    }
     [HttpPost("import-excel")]
     public async Task<IActionResult> ImportExcel([FromForm] IFormFile file, [FromForm] string examSessionSubjectCore)
     {
@@ -105,6 +111,67 @@ public class StudentController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Lỗi khi bắt đầu thi cho sinh viên");
+            return StatusCode(500, new { message = "Đã xảy ra lỗi hệ thống. Vui lòng thử lại sau." });
+        }
+    }
+
+    [HttpPost("start-exam-original")]
+    public async Task<IActionResult> StartExamOriginal([FromForm] int studentExamSessionId)
+    {
+        try
+        {
+            var studentCode = User.FindFirst("studentCode")?.Value;
+            if (string.IsNullOrEmpty(studentCode))
+                return Unauthorized(new { message = "Token không hợp lệ!" });
+
+            var (result, originalPaper) = await _studentService.StartExamWithOriginalPaperAsync(studentCode, studentExamSessionId);
+            if (result == null)
+                return BadRequest(new { message = "Không thể bắt đầu làm bài vì không có phiên thi." });
+
+            return Ok(new { studentSession = result, originalExamPaper = originalPaper });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Lỗi khi bắt đầu thi (đề gốc) cho sinh viên");
+            return StatusCode(500, new { message = "Đã xảy ra lỗi hệ thống. Vui lòng thử lại sau." });
+        }
+    }
+    
+    /// <summary>
+    /// Tạo một StudentExamSession mới từ OriginalExamPaperId và trả về phiên thi + đề gốc.
+    /// </summary>
+    [HttpPost("create-session-original")]
+    public async Task<IActionResult> CreateSessionWithOriginalPaper([FromForm] int originalExamPaperId)
+    {
+        try
+        {
+            var studentCode = User.FindFirst("studentCode")?.Value;
+            if (string.IsNullOrEmpty(studentCode))
+                return Unauthorized(new { message = "Token không hợp lệ!" });
+
+            var (session, originalPaper) =
+                await _studentService.CreateSessionWithOriginalPaperAsync(studentCode, originalExamPaperId);
+
+            if (session == null)
+                return BadRequest(new { message = "Không thể tạo phiên thi." });
+
+            return Ok(new
+            {
+                studentSession = session,
+                originalExamPaper = originalPaper
+            });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Lỗi khi tạo phiên thi (đề gốc) cho sinh viên");
             return StatusCode(500, new { message = "Đã xảy ra lỗi hệ thống. Vui lòng thử lại sau." });
         }
     }

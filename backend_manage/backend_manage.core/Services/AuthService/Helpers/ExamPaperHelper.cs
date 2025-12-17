@@ -135,6 +135,7 @@ public class ExamPaperHelper
             var newExamPaper = await CreateNewExamPaperAsync(studentExamSessionDto.ExamSessionSubjectId, studentCode);
             _logger.LogInformation("Cập nhật đề thi vào phiên thi trên redis và db");
             studentExamSessionDto.ShuffledExamPaperId = newExamPaper.ShuffledExamPaperId;
+            studentExamSessionDto.OriginalExamPaperId = newExamPaper.OriginalExamPaperId;
             studentExamSessionDto.StartTime = DateTimeHelper.GetVietnamTime();
             
             // Tính toán thời gian còn lại khi bắt đầu làm bài
@@ -161,6 +162,7 @@ public class ExamPaperHelper
                 StudentCode = studentCode,
                 StartTime = DateTimeHelper.GetVietnamTime(),
                 ShuffledExamPaperId = newExamPaper.ShuffledExamPaperId,
+                OriginalExamPaperId = newExamPaper.OriginalExamPaperId,
                 StudentAnswersString = emptyAnswers,
                 IsCompleted = false,
                 RemainingMinutes = studentExamSessionDto.RemainingMinutes
@@ -202,8 +204,71 @@ public class ExamPaperHelper
             _logger.LogInformation("Không lấy được đề thi từ Redis, chuyển sang lấy từ database");
             existingExamPaper = await GetExamFromDatabaseAsync(studentExamSessionDto.ShuffledExamPaperId.Value);
         }
+        if (!studentExamSessionDto.OriginalExamPaperId.HasValue && existingExamPaper != null)
+        {
+            studentExamSessionDto.OriginalExamPaperId = existingExamPaper.OriginalExamPaperId;
+            await _sessionCacheHelper.UpdateStudentExamSessionAsync(studentCode, studentExamSessionDto);
+        }
         var originalExamPapers = await GetOriginalExamPaperAsync(existingExamPaper.OriginalExamPaperId);
         return (studentExamSessionDto, existingExamPaper, originalExamPapers);
+    }
+    #endregion
+
+    #region GetStudentExamSessionAndOriginalPaperAsync
+    // Bắt đầu thi nhưng chỉ lấy đề gốc, không random đề hoán vị
+    public async Task<(StudentExamSessionCacheDto studentExamSessionDto, OriginalExamPaperDto? originalExamPaper)> GetStudentExamSessionAndOriginalPaperAsync(string studentCode, int studentExamSessionId)
+    {
+        var (redisAvailable, studentExamSessionDto) = await _sessionCacheHelper.GetStudentExamSessionAsync(studentCode, studentExamSessionId);
+
+        if (studentExamSessionDto == null)
+        {
+            _logger.LogWarning("Không tìm thấy phiên thi của sinh viên {StudentCode} với ID phiên thi {SessionId}", studentCode, studentExamSessionId);
+            return (null, null);
+        }
+
+   
+
+        // Kiểm tra thời gian bắt đầu thi
+        var currentTime = DateTimeHelper.GetVietnamTime();
+        var examStartTime = studentExamSessionDto.ExamSessionStartTime;
+        var timeDifference = currentTime - examStartTime;
+
+        if (currentTime < examStartTime)
+        {
+            var minutesEarly = Math.Abs(timeDifference.TotalMinutes);
+            _logger.LogWarning("Sinh viên {StudentCode} cố gắng thi sớm {Minutes} phút. Thời gian bắt đầu: {StartTime}, Thời gian hiện tại: {CurrentTime}", 
+                studentCode, minutesEarly, examStartTime, currentTime);
+            throw new InvalidOperationException($"Chưa đến thời gian làm bài. Ca thi bắt đầu lúc {examStartTime:HH:mm dd/MM/yyyy}");
+        }
+
+        if (!studentExamSessionDto.StartTime.HasValue)
+        {
+            // Không cho phép vào muộn quá 15 phút lần đầu
+            if (timeDifference.TotalMinutes > 15)
+            {
+                _logger.LogWarning("Sinh viên {StudentCode} cố gắng thi muộn {Minutes} phút. Thời gian bắt đầu: {StartTime}, Thời gian hiện tại: {CurrentTime}", 
+                    studentCode, timeDifference.TotalMinutes, examStartTime, currentTime);
+                throw new InvalidOperationException($"Đã quá thời gian cho phép bắt đầu làm bài. Ca thi bắt đầu lúc {examStartTime:HH:mm dd/MM/yyyy}, chỉ được muộn tối đa 15 phút");
+            }
+
+            studentExamSessionDto.StartTime = DateTimeHelper.GetVietnamTime();
+        }
+
+        // Cập nhật RemainingMinutes
+        var minutesPassed = (int)(DateTimeHelper.GetVietnamTime() - studentExamSessionDto.ExamSessionStartTime).TotalMinutes;
+        studentExamSessionDto.RemainingMinutes = (studentExamSessionDto.Duration + studentExamSessionDto.ExtraMinutes) - minutesPassed;
+        
+
+        await _sessionCacheHelper.UpdateStudentExamSessionAsync(studentCode, studentExamSessionDto);
+
+        // Lấy đề gốc
+        OriginalExamPaperDto? originalExamPaper = null;
+        if (studentExamSessionDto.OriginalExamPaperId.HasValue)
+        {
+            originalExamPaper = await GetOriginalExamPaperAsync(studentExamSessionDto.OriginalExamPaperId.Value);
+        }
+
+        return (studentExamSessionDto, originalExamPaper);
     }
     #endregion
     

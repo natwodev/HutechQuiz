@@ -37,6 +37,10 @@ public class OriginalExamPaper : BaseEntity
     // true: được phép xem tài liệu (open-book), false: không được phép xem tài liệu (closed-book)
     public bool AllowViewMaterials { get; set; }
     
+    // Xác định đề thi được tạo thủ công hay import từ file
+    // true: được tạo thủ công (manual), false: được import từ file XML (.epz)
+    public bool IsManualCreated { get; set; }
+    
     // Thời gian làm bài (tính bằng phút)
     public int DurationMinutes { get; set; }
     

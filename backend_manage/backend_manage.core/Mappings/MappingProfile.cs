@@ -63,9 +63,12 @@ public class MappingProfile : Profile
         CreateMap<StudentUpdateDto, Student>();
 
         // Subject
-        CreateMap<Subject, SubjectDto>();
-        CreateMap<SubjectCreateDto, Subject>();
-        CreateMap<SubjectUpdateDto, Subject>();
+        CreateMap<Subject, SubjectDto>()
+            .ForMember(dest => dest.SubjectCode, opt => opt.MapFrom(src => src.SubjectCore));
+        CreateMap<SubjectCreateDto, Subject>()
+            .ForMember(dest => dest.SubjectCore, opt => opt.MapFrom(src => src.SubjectCode));
+        CreateMap<SubjectUpdateDto, Subject>()
+            .ForMember(dest => dest.SubjectCore, opt => opt.MapFrom(src => src.SubjectCode));
 
         CreateMap<ExamBatchDetail, ExamBatchDetailDto>()
             .ForMember(dest => dest.ExamBatchName, opt => opt.MapFrom(src => src.ExamBatch != null ? src.ExamBatch.Name : null));
@@ -110,6 +113,7 @@ public class MappingProfile : Profile
         CreateMap<StudentExamSession, StudentExamSessionDto>()
             .ForMember(dest => dest.ExamSessionSubjectId, opt => opt.MapFrom(src => src.ExamSessionSubjectId))
             .ForMember(dest => dest.StudentExamSessionId, opt => opt.MapFrom(src => src.StudentExamSessionId))
+            .ForMember(dest => dest.OriginalExamPaperId, opt => opt.MapFrom(src => src.OriginalExamPaperId ?? src.ExamSessionSubject.OriginalExamPaperId))
             .ForMember(dest => dest.SubjectName, opt => opt.MapFrom(src => src.ExamSessionSubject.Subject.SubjectName))
             .ForMember(dest => dest.RoomName, opt => opt.MapFrom(src => src.ExamSessionSubject.ExamRoom.RoomName))
             .ForMember(dest => dest.ExamSessionName, opt => opt.MapFrom(src => src.ExamSessionSubject.ExamSession.Name))
@@ -121,6 +125,7 @@ public class MappingProfile : Profile
 
         // Mapping cho StudentExamSessionCacheDto
         CreateMap<StudentExamSession, StudentExamSessionCacheDto>()
+            .ForMember(dest => dest.OriginalExamPaperId, opt => opt.MapFrom(src => src.OriginalExamPaperId ?? src.ExamSessionSubject.OriginalExamPaperId))
             .ForMember(dest => dest.SubjectName, opt => opt.MapFrom(src => src.ExamSessionSubject.Subject.SubjectName))
             .ForMember(dest => dest.RoomName, opt => opt.MapFrom(src => src.ExamSessionSubject.ExamRoom.RoomName))
             .ForMember(dest => dest.ExamSessionName, opt => opt.MapFrom(src => src.ExamSessionSubject.ExamSession.Name))
@@ -131,6 +136,7 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.RemainingMinutes, opt => opt.MapFrom(src => src.RemainingMinutes));
 
         CreateMap<StudentExamSession, StudentExamSessionHistoryDto>() //lịch sử ca thi
+            .ForMember(dest => dest.OriginalExamPaperId, opt => opt.MapFrom(src => src.OriginalExamPaperId ?? src.ExamSessionSubject.OriginalExamPaperId))
             .ForMember(dest => dest.SubjectName, opt => opt.MapFrom(src => src.ExamSessionSubject.Subject.SubjectName))
             .ForMember(dest => dest.RoomName, opt => opt.MapFrom(src => src.ExamSessionSubject.ExamRoom.RoomName))
             .ForMember(dest => dest.ExamSessionName,opt => opt.MapFrom(src => src.ExamSessionSubject.ExamSession.Name));
@@ -185,7 +191,8 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.ExamSessionStartTime, opt => opt.MapFrom(src => src.StartTime))
             .ForMember(dest => dest.ExamSessionEndTime, opt => opt.MapFrom(src => src.EndTime))
             .ForMember(dest => dest.ExamSessionName, opt => opt.MapFrom(src => src.ExamSession.Name))
-            .ForMember(dest => dest.LecturerCode, opt => opt.MapFrom(src => src.Monitor.LecturerCode));
+            .ForMember(dest => dest.LecturerCode, opt => opt.MapFrom(src => src.Monitor.LecturerCode))
+            .ForMember(dest => dest.OriginalExamPaperCore, opt => opt.MapFrom(src => src.OriginalExamPaper != null ? src.OriginalExamPaper.OriginalExamPaperCore : null));
 
         // Lecturer
         CreateMap<LecturerCreateDto, Lecturer>();

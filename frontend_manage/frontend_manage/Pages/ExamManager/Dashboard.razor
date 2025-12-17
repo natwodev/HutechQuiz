@@ -1,6 +1,7 @@
 @page "/exammanager/dashboard"
 @using frontend_manage.Pages.ExamManager.Components
 @using MudBlazor
+@using Microsoft.AspNetCore.Components
 
 <PageTitle>Exam Manager Dashboard</PageTitle>
 
@@ -31,21 +32,29 @@
 
     <!-- Navigation -->
     <div class="monitor-nav">
-        <div class="nav-item active">
+        <div class="nav-item @(activeTab == 0 ? "active" : "")" @onclick="() => ActivateTab(0)">
+            <MudIcon Icon="@Icons.Material.Filled.Assignment" />
             <span>QUẢN LÝ ĐỀ THI</span>
+        </div>
+        <div class="nav-item @(activeTab == 1 ? "active" : "")" @onclick="() => ActivateTab(1)">
+            <MudIcon Icon="@Icons.Material.Filled.Edit" />
+            <span>NHẬP ĐỀ THỦ CÔNG</span>
         </div>
     </div>
 
     <!-- Content Area -->
     <div class="monitor-content">
-        <div class="tab-content-active">
-            <ExamImport />
-            <div style="height: 24px;"></div>
-            <ExamPermutation />
-            <div style="height: 24px;"></div>
-            <OriginalExamPaperList />
-            <div style="height: 24px;"></div>
-            <ShuffledExamPaperList />
+        <div class="@(activeTab == 0 ? "tab-content-active" : "tab-content-hidden")">
+            @if (activeTab == 0 || previousTab == 0)
+            {
+                <ExamManagementTab />
+            }
+        </div>
+        <div class="@(activeTab == 1 ? "tab-content-active" : "tab-content-hidden")">
+            @if (activeTab == 1 || previousTab == 1)
+            {
+                <PrepareExamQuestionsManuallyTab />
+            }
         </div>
     </div>
 

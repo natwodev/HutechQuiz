@@ -128,7 +128,103 @@ public class StudentService : IStudentService
 
         foreach (var session in studentExamSessions)
         {
-            var examSessionSubjectId = session.ExamSessionSubjectId;
+            // Nếu phiên thi này không gắn với ExamSessionSubject thì bỏ qua, không gửi signalR
+            if (!session.ExamSessionSubjectId.HasValue)
+            {
+                continue;
+            }
+
+            var examSessionSubjectId = session.ExamSessionSubjectId.Value;
+            
+            // Luôn gửi thông báo real-time dựa trên ExamSessionSubjectId
+            var (statusList, subjectInfo) = await GetStudentsByExamSessionSubjectAsync(examSessionSubjectId);
+
+            var groupName = $"lecturer_subject_{examSessionSubjectId}";
+            
+            await _hubContext.Clients
+                .Group(groupName)
+                .SendAsync("RoomStatusUpdated", new StudentListResponse { 
+                    Students = statusList.ToList(),
+                    Subject = subjectInfo
+                });
+
+        }
+        
+        // Sinh JWT token như cũ, nhưng không có username
+        var tokenHandler = new JwtSecurityTokenHandler();
+        var key = Encoding.ASCII.GetBytes(_configuration["JWT:key"] ?? "default_secret_key");
+        var tokenDescriptor = new SecurityTokenDescriptor
+        {
+            Subject = new ClaimsIdentity(new[]
+            {
+                new Claim("id", student.StudentId.ToString()),
+                new Claim("studentCode", student.StudentCode),
+                new Claim("role", "Student")
+            }),
+            Expires = DateTimeHelper.GetVietnamTime().AddDays(7),
+            Issuer = _configuration["JWT:Issuer"],
+            Audience = _configuration["JWT:Audience"],
+            SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+        };
+        var token = tokenHandler.CreateToken(tokenDescriptor);
+        var tokenString = tokenHandler.WriteToken(token);
+        return new StudentAuthResultDto
+        {
+            IsSuccess = true,
+            Token = tokenString,
+            Role = "Student"
+        };
+    }
+    #endregion
+
+    #region LoginMobile
+      public async Task<StudentAuthResultDto> LoginMobileAsync(string studentCode1, string studentCode2)
+    {
+        if (studentCode1 != studentCode2)
+        {
+            return new StudentAuthResultDto
+            {
+                IsSuccess = false,
+                ErrorMessage = "Mã sinh viên nhập không khớp."
+            };
+        }
+        
+        var student = await _studentCacheHelper.GetStudentFromRedisAsync(studentCode1);
+        
+        if (student == null)
+        {
+            return new StudentAuthResultDto
+            {
+                IsSuccess = false,
+                ErrorMessage = "Không tìm thấy sinh viên với mã này."
+            };
+        }
+        
+        
+        // Cập nhật trạng thái đăng nhập
+        student.IsLogin = true;
+        student.LastLoggedIn = DateTimeHelper.GetVietnamTime();
+        student.UpdatedAt = DateTimeHelper.GetVietnamTime();
+        
+        // Lưu vào database
+        await _repository.UpdateAsync(student);
+        
+        // Cập nhật cache nếu cần
+        await _studentCacheHelper.CacheStudent(student.StudentCode, student);
+       
+        var studentExamSessions = await _studentExamSessionRepository.GetQueryable()
+            .Where(x => x.StudentCode == studentCode1)
+            .ToListAsync();
+
+        foreach (var session in studentExamSessions)
+        {
+            // Nếu phiên thi này không gắn với ExamSessionSubject thì bỏ qua, không gửi signalR
+            if (!session.ExamSessionSubjectId.HasValue)
+            {
+                continue;
+            }
+
+            var examSessionSubjectId = session.ExamSessionSubjectId.Value;
             
             // Luôn gửi thông báo real-time dựa trên ExamSessionSubjectId
             var (statusList, subjectInfo) = await GetStudentsByExamSessionSubjectAsync(examSessionSubjectId);
@@ -170,7 +266,10 @@ public class StudentService : IStudentService
         };
     }
     #endregion  
-
+    
+    
+    
+    
     //không dùng tới nhiều nên chưa cải thiện
     #region GetAllAsync 
     public async Task<IEnumerable<Student>> GetAllAsync()
@@ -274,6 +373,7 @@ public class StudentService : IStudentService
                     StudentId = dbStudent.StudentId,
                     StudentCode = student.StudentCode,
                     ExamSessionSubjectId = examSessionSubject.ExamSessionSubjectId,
+                    OriginalExamPaperId = examSessionSubject.OriginalExamPaperId,
                     CreatedBy = userId,
                     CreatedAt = DateTimeHelper.GetVietnamTime(),
                     StudentAnswersString = "",
@@ -344,6 +444,77 @@ public class StudentService : IStudentService
         return await _importHelper.ImportFromExcelStreamAsync(stream, examSessionSubjectCore, userId);
     }
     #endregion
+      
+      #region CreateSessionWithOriginalPaperAsync
+      /// <summary>
+      /// Tạo một StudentExamSession mới dựa trên OriginalExamPaperId và studentCode,
+      /// cache vào Redis và trả về phiên thi + đề gốc.
+      /// </summary>
+      public async Task<(StudentExamSessionCacheDto studentExamSessionCacheDto, OriginalExamPaperDto? originalExamPaperDto)>
+          CreateSessionWithOriginalPaperAsync(string studentCode, int originalExamPaperId)
+      {
+          // Lấy sinh viên
+          var student = await _repository.GetQueryable()
+              .FirstOrDefaultAsync(x => x.StudentCode == studentCode);
+          if (student == null)
+          {
+              throw new InvalidOperationException("Không tìm thấy sinh viên với mã này.");
+          }
+
+          // Lấy thông tin đề gốc
+          var originalExamPaperDto = await _examPaperHelper.GetOriginalExamPaperAsync(originalExamPaperId);
+          if (originalExamPaperDto == null)
+          {
+              throw new InvalidOperationException("Không tìm thấy đề thi gốc.");
+          }
+
+          // Tạo một phiên thi đơn lẻ không gắn với ExamSessionSubject (ExamSessionSubjectId = null)
+          var now = DateTimeHelper.GetVietnamTime();
+
+          var sessionEntity = new StudentExamSession
+          {
+              StudentId = student.StudentId,
+              StudentCode = student.StudentCode,
+              ExamSessionSubjectId = null,
+              OriginalExamPaperId = originalExamPaperId,
+              CreatedBy = student.StudentCode,
+              CreatedAt = now,
+              StartTime = now, // bắt đầu ngay tại thời điểm tạo
+              IsCompleted = false,
+              Score = 0,
+              ExtraMinutes = 0,
+              ExamSessionStartTime = now,
+              ExamSessionEndTime = now.AddMinutes(originalExamPaperDto.DurationMinutes > 0 ? originalExamPaperDto.DurationMinutes : 60),
+              StudentAnswersString = originalExamPaperDto.KeyValueList != null
+                  ? "" // sẽ được build lại từ helper phía dưới
+                  : ""
+          };
+
+          // Lưu DB
+          sessionEntity = await _studentExamSessionRepository.AddAsync(sessionEntity);
+
+          // Map sang cache DTO và đảm bảo các trường cần thiết
+          var cacheDto = _mapper.Map<StudentExamSessionCacheDto>(sessionEntity);
+          cacheDto.StudentExamSessionId = sessionEntity.StudentExamSessionId;
+          cacheDto.OriginalExamPaperId = originalExamPaperId;
+          cacheDto.StudentCode = student.StudentCode;
+          cacheDto.StartTime = now;
+
+          // Nếu đề gốc có KeyValueList thì tạo chuỗi đáp án rỗng theo format đó
+          if (!string.IsNullOrWhiteSpace(originalExamPaperDto.KeyValueList))
+          {
+              // Tái sử dụng logic tạo chuỗi đáp án rỗng trong ExamPaperHelper
+              // thông qua việc gọi StartExam flow đơn giản: dùng KeyValueList như answer key
+              var emptyAnswers = originalExamPaperDto.KeyValueList;
+              cacheDto.StudentAnswersString = emptyAnswers;
+          }
+
+          // Cache vào Redis
+          await _sessionCacheHelper.UpdateStudentExamSessionAsync(studentCode, cacheDto);
+
+          return (cacheDto, originalExamPaperDto);
+      }
+      #endregion
     
     #region UpdateAsync
     public async Task<Student> UpdateAsync(string id, Student student)
@@ -367,6 +538,44 @@ public class StudentService : IStudentService
         var (studentExamSessionCacheDto, shuffledExamPaperDto, originalExamPaperDto) = await _examPaperHelper.GetStudentExamSessionAndExamPaperAsync(studentCode, studentExamSessionId);
 
         return (studentExamSessionCacheDto, shuffledExamPaperDto, originalExamPaperDto);
+    }
+    #endregion
+
+    #region StartExamWithOriginalPaperAsync
+    public async Task<(StudentExamSessionCacheDto studentExamSessionCacheDto, OriginalExamPaperDto? originalExamPaperDto)> StartExamWithOriginalPaperAsync(string studentCode, int studentExamSessionId)
+    {
+        _logger.LogInformation("Bắt đầu lấy đề gốc cho sinh viên {StudentCode}, phiên thi {StudentExamSessionId}", studentCode, studentExamSessionId);
+
+        var (studentExamSessionCacheDto, originalExamPaperDto) = await _examPaperHelper.GetStudentExamSessionAndOriginalPaperAsync(studentCode, studentExamSessionId);
+
+        // Lưu OriginalExamPaperId xuống DB nếu cần
+        if (studentExamSessionCacheDto?.OriginalExamPaperId.HasValue == true)
+        {
+            try
+            {
+                var entity = await _studentExamSessionRepository.GetQueryable()
+                    .FirstOrDefaultAsync(x => x.StudentExamSessionId == studentExamSessionCacheDto.StudentExamSessionId);
+                if (entity != null)
+                {
+                    if (entity.OriginalExamPaperId != studentExamSessionCacheDto.OriginalExamPaperId)
+                    {
+                        entity.OriginalExamPaperId = studentExamSessionCacheDto.OriginalExamPaperId;
+                    }
+                    if (!entity.StartTime.HasValue && studentExamSessionCacheDto.StartTime.HasValue)
+                    {
+                        entity.StartTime = studentExamSessionCacheDto.StartTime;
+                    }
+                    entity.UpdatedAt = DateTimeHelper.GetVietnamTime();
+                    await _studentExamSessionRepository.UpdateAsync(entity);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Không thể cập nhật OriginalExamPaperId xuống DB cho phiên thi {StudentExamSessionId}", studentExamSessionId);
+            }
+        }
+
+        return (studentExamSessionCacheDto, originalExamPaperDto);
     }
     #endregion
     
@@ -419,8 +628,14 @@ public class StudentService : IStudentService
     #endregion
     
     #region GetStudentsByExamSessionSubjectAsync
-    public async Task<(IEnumerable<StudentExamRoomStatusDto> Students, SubjectExamRoomStatusDto SubjectInfo)> GetStudentsByExamSessionSubjectAsync(int examSessionSubjectId)
+    public async Task<(IEnumerable<StudentExamRoomStatusDto> Students, SubjectExamRoomStatusDto SubjectInfo)> GetStudentsByExamSessionSubjectAsync(int? examSessionSubjectId)
     {
+        // Nếu không có ExamSessionSubjectId thì không thực hiện truy vấn, trả về rỗng
+        if (!examSessionSubjectId.HasValue)
+        {
+            return (Enumerable.Empty<StudentExamRoomStatusDto>(), new SubjectExamRoomStatusDto());
+        }
+
         var query = _studentExamSessionRepository.GetQueryable()
             .Where(ses => ses.ExamSessionSubjectId == examSessionSubjectId)
             .Include(ses => ses.Student)
@@ -428,6 +643,8 @@ public class StudentService : IStudentService
                 .ThenInclude(ess => ess.Subject)
             .Include(ses => ses.ExamSessionSubject)
                 .ThenInclude(ess => ess.ExamRoom)
+            .Include(ses => ses.ExamSessionSubject)
+                .ThenInclude(ess => ess.OriginalExamPaper)
             .AsSplitQuery();
 
         var sessions = await query.ToListAsync();
@@ -446,7 +663,8 @@ public class StudentService : IStudentService
                 RoomName = anySession.ExamSessionSubject.ExamRoom?.RoomName,
                 Duration = anySession.ExamSessionSubject.Duration,
                 ExamSessionStartTime = anySession.ExamSessionStartTime,
-                ExamSessionEndTime = anySession.ExamSessionEndTime
+                ExamSessionEndTime = anySession.ExamSessionEndTime,
+                OriginalExamPaperCore = anySession.ExamSessionSubject.OriginalExamPaper?.OriginalExamPaperCore
             };
         }
         else
@@ -454,6 +672,7 @@ public class StudentService : IStudentService
             // Fallback: query subject info directly
             var ess = await _examSessionSubjectRepository.GetQueryable()
                 .Include(x => x.Subject)
+                .Include(x => x.OriginalExamPaper)
                 .FirstOrDefaultAsync(x => x.ExamSessionSubjectId == examSessionSubjectId);
             subjectInfo = new SubjectExamRoomStatusDto
             {
@@ -463,7 +682,8 @@ public class StudentService : IStudentService
                 RoomName = null,
                 Duration = ess?.Duration ?? 0,
                 ExamSessionStartTime = ess?.StartTime ?? DateTimeHelper.GetVietnamTime(),
-                ExamSessionEndTime = ess?.EndTime ?? DateTimeHelper.GetVietnamTime()
+                ExamSessionEndTime = ess?.EndTime ?? DateTimeHelper.GetVietnamTime(),
+                OriginalExamPaperCore = ess?.OriginalExamPaper?.OriginalExamPaperCore
             };
         }
 
@@ -522,18 +742,22 @@ public class StudentService : IStudentService
                 await _studentExamSessionRepository.UpdateAsync(sessionEntity);
                 _logger.LogInformation("✅ Đã cập nhật database cho phiên thi {StudentExamSessionId} của sinh viên {StudentCode} với ExtraMinutes: {ExtraMinutes}", studentExamSessionId, studentCode, extraMinutes);
                 
-            
-                // Luôn gửi thông báo real-time dựa trên ExamSessionSubjectId
-                var (statusList, subjectInfo) = await GetStudentsByExamSessionSubjectAsync(sessionEntity.ExamSessionSubjectId);
+                // Chỉ gửi thông báo real-time nếu phiên thi có ExamSessionSubjectId
+                if (sessionEntity.ExamSessionSubjectId.HasValue)
+                {
+                    var essId = sessionEntity.ExamSessionSubjectId.Value;
 
-                var groupName = $"lecturer_subject_{sessionEntity.ExamSessionSubjectId}";
+                    var (statusList, subjectInfo) = await GetStudentsByExamSessionSubjectAsync(essId);
+
+                    var groupName = $"lecturer_subject_{essId}";
             
-                await _hubContext.Clients
-                    .Group(groupName)
-                    .SendAsync("RoomStatusUpdated", new StudentListResponse { 
-                        Students = statusList.ToList(),
-                        Subject = subjectInfo
-                    });
+                    await _hubContext.Clients
+                        .Group(groupName)
+                        .SendAsync("RoomStatusUpdated", new StudentListResponse { 
+                            Students = statusList.ToList(),
+                            Subject = subjectInfo
+                        });
+                }
                     
             }
         }
@@ -598,7 +822,13 @@ public class StudentService : IStudentService
 
         foreach (var session in studentExamSessions)
         {
-            var examSessionSubjectId = session.ExamSessionSubjectId;
+            // Nếu phiên thi này không gắn với ExamSessionSubject thì bỏ qua, không gửi signalR
+            if (!session.ExamSessionSubjectId.HasValue)
+            {
+                continue;
+            }
+
+            var examSessionSubjectId = session.ExamSessionSubjectId.Value;
             
             // Luôn gửi thông báo real-time dựa trên ExamSessionSubjectId
             var (statusList, subjectInfo) = await GetStudentsByExamSessionSubjectAsync(examSessionSubjectId);

@@ -41,6 +41,9 @@
                                 <div class="info-label">Mã môn:</div>
                                 <div class="info-value">@Subject.SubjectCode</div>
                                 
+                                <div class="info-label">Mã đề gốc:</div>
+                                <div class="info-value">@(string.IsNullOrWhiteSpace(Subject.OriginalExamPaperCore) ? "chưa thêm đề thi vào ca" : Subject.OriginalExamPaperCore)</div>
+                                
                                 <div class="info-label">Thời gian thi:</div>
                                 <div class="info-value">@Subject.Duration phút</div>
                                 

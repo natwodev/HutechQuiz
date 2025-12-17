@@ -10,6 +10,7 @@ namespace frontend_manage.DTOs
         public string SubjectName { get; set; } = string.Empty;
         public bool? IsApproved { get; set; }
         public bool AllowViewMaterials { get; set; }
+        public bool IsManualCreated { get; set; }
         public int DurationMinutes { get; set; }
         public int TotalQuestions { get; set; }
         public int TotalShuffledPapers { get; set; }

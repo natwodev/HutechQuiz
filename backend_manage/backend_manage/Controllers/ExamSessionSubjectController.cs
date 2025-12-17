@@ -207,6 +207,7 @@ namespace backend_manage.Controllers
         }
         
         [HttpPut("{examSessionSubjectId}/original-exam-paper")]
+        [Authorize(Policy = "StaffOnly")]
         public async Task<ActionResult> UpdateOriginalExamPaper(int examSessionSubjectId, [FromBody] int originalExamPaperId)
         {
             try

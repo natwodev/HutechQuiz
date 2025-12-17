@@ -10,6 +10,7 @@ namespace backend_manage.shared.DTOs
         public string StudentCode { get; set; }
         public int StudentId { get; set; }
         public int ExamSessionSubjectId { get; set; }
+        public int? OriginalExamPaperId { get; set; }
         public int? ShuffledExamPaperId { get; set; }
         public int ExtraMinutes { get; set; }
         public string? ReasonForExtra { get; set; }

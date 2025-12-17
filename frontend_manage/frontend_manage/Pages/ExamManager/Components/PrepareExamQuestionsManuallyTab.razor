@@ -1,0 +1,519 @@
+@using MudBlazor
+@using frontend_manage.Services.ExamManager
+@using frontend_manage.DTOs
+@using frontend_manage.DTOs.AcademicAffairs
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Components
+@using Microsoft.JSInterop
+@using System.Collections.Generic
+@using System.Linq
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pa-4">
+    <MudText Typo="Typo.h5" Class="mb-4">Nhập đề thi thủ công</MudText>
+
+    <!-- Danh sách đề thi thủ công -->
+    <MudPaper Class="pa-4 mb-4" Elevation="4">
+        <MudText Typo="Typo.h6" Class="mb-3">Danh sách đề thi thủ công</MudText>
+        
+        @if (isLoadingManualExams)
+        {
+            <MudProgressLinear Indeterminate="true" Class="mb-3" />
+            <MudText>Đang tải danh sách đề thi...</MudText>
+        }
+        else if (manualExamPapers == null || manualExamPapers.Count == 0)
+        {
+            <MudAlert Severity="Severity.Info">Chưa có đề thi thủ công nào trong hệ thống.</MudAlert>
+        }
+        else
+        {
+            <MudTable Items="@manualExamPapers" Hover="true" Dense="true" Striped="true" Bordered="true">
+                <HeaderContent>
+                    <MudTh>Mã đề</MudTh>
+                    <MudTh>Tiêu đề</MudTh>
+                    <MudTh>Môn học</MudTh>
+                    <MudTh>Số câu hỏi</MudTh>
+                    <MudTh>Thời gian (phút)</MudTh>
+                    <MudTh>Đề hoán vị</MudTh>
+                    <MudTh>Thao tác</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Mã đề">@context.OriginalExamPaperCore</MudTd>
+                    <MudTd DataLabel="Tiêu đề">@context.Title</MudTd>
+                    <MudTd DataLabel="Môn học">@(context.SubjectName ?? "N/A")</MudTd>
+                    <MudTd DataLabel="Số câu hỏi">@context.TotalQuestions</MudTd>
+                    <MudTd DataLabel="Thời gian">@context.DurationMinutes</MudTd>
+                    <MudTd DataLabel="Đề hoán vị">@context.TotalShuffledPapers</MudTd>
+                    <MudTd DataLabel="Thao tác">
+                        <MudButton 
+                            Size="Size.Small" 
+                            Variant="Variant.Text" 
+                            Color="Color.Primary"
+                            StartIcon="@Icons.Material.Filled.Edit"
+                            OnClick="() => EditExamPaper(context.OriginalExamPaperCore)">
+                            Chỉnh sửa
+                        </MudButton>
+                    </MudTd>
+                </RowTemplate>
+            </MudTable>
+        }
+    </MudPaper>
+
+    @if (createdExamPaper == null)
+    {
+        <!-- Form tạo đề thi gốc -->
+        <MudPaper Class="pa-4" Elevation="4">
+            <MudText Typo="Typo.h6" Class="mb-4">Thông tin đề thi</MudText>
+            
+            <EditForm Model="@createRequest" OnValidSubmit="CreateExamPaperAsync">
+                <DataAnnotationsValidator />
+                
+                <MudGrid>
+                    <MudItem xs="12" md="6">
+                        <MudTextField @bind-Value="createRequest.OriginalExamPaperCore" 
+                                      Label="Mã đề thi (OriginalExamPaperCore)" 
+                                      Variant="Variant.Outlined"
+                                      Required="true"
+                                      RequiredError="Mã đề thi là bắt buộc"
+                                      HelperText="Mã định danh duy nhất cho đề thi" />
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <MudButton Color="Color.Secondary" 
+                                   Variant="Variant.Outlined" 
+                                   StartIcon="@Icons.Material.Filled.AutoAwesome"
+                                   OnClick="GenerateAutoCode"
+                                   Size="Size.Small"
+                                   Class="mt-4">Tạo mã tự động</MudButton>
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudTextField @bind-Value="createRequest.Title" 
+                                      Label="Tiêu đề đề thi" 
+                                      Variant="Variant.Outlined"
+                                      Required="true"
+                                      RequiredError="Tiêu đề là bắt buộc" />
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudTextField @bind-Value="createRequest.Description" 
+                                      Label="Mô tả" 
+                                      Variant="Variant.Outlined"
+                                      Lines="3" />
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <MudSelect @bind-Value="createRequest.SubjectId" 
+                                   Label="Môn học" 
+                                   Variant="Variant.Outlined"
+                                   Required="true"
+                                   RequiredError="Vui lòng chọn môn học"
+                                   HelperText="Chọn môn học từ danh sách"
+                                   T="int">
+                            @if (subjects != null && subjects.Any())
+                            {
+                                @foreach (var subject in subjects)
+                                {
+                                    <MudSelectItem Value="@subject.SubjectId">
+                                        @subject.SubjectCode - @subject.SubjectName
+                                    </MudSelectItem>
+                                }
+                            }
+                            else if (isLoadingSubjects)
+                            {
+                                <MudSelectItem Value="0" Disabled="true">Đang tải...</MudSelectItem>
+                            }
+                            else
+                            {
+                                <MudSelectItem Value="0" Disabled="true">Không có môn học nào</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <MudNumericField @bind-Value="createRequest.DurationMinutes" 
+                                         Label="Thời gian làm bài (phút)" 
+                                         Variant="Variant.Outlined"
+                                         Required="true"
+                                         RequiredError="Thời gian là bắt buộc"
+                                         Min="1"
+                                         HelperText="Thời gian làm bài tính bằng phút" />
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudCheckBox @bind-Value="createRequest.AllowViewMaterials" 
+                                     Label="Cho phép xem tài liệu"
+                                     Color="Color.Primary" />
+                    </MudItem>
+                </MudGrid>
+
+                <div class="mt-4">
+                    <MudButton Color="Color.Primary" 
+                               Variant="Variant.Filled" 
+                               ButtonType="ButtonType.Submit"
+                               StartIcon="@Icons.Material.Filled.Save"
+                               Disabled="isCreating">
+                        @if (isCreating)
+                        {
+                            <MudProgressCircular Indeterminate="true" Size="Size.Small" Class="mr-2" />
+                        }
+                        Tạo đề thi
+                    </MudButton>
+                </div>
+            </EditForm>
+
+            @if (!string.IsNullOrEmpty(createMessage))
+            {
+                <MudAlert Severity="@(createMessage.StartsWith("Lỗi") ? Severity.Error : Severity.Success)" 
+                          Class="mt-4"
+                          Dismissible="true"
+                          OnClose="() => createMessage = string.Empty">
+                    @createMessage
+                </MudAlert>
+            }
+        </MudPaper>
+    }
+    else
+    {
+        <!-- Hiển thị thông tin đề thi đã tạo và form thêm câu hỏi -->
+        <MudPaper Class="pa-4 mb-4" Elevation="4">
+            <MudText Typo="Typo.h6" Class="mb-2">Đề thi đã tạo thành công</MudText>
+            <MudText>Mã đề: <strong>@createdExamPaper.OriginalExamPaperCore</strong></MudText>
+            <MudText>Tiêu đề: <strong>@createdExamPaper.Title</strong></MudText>
+            <MudText>ID đề thi: <strong>@createdExamPaper.OriginalExamPaperId</strong></MudText>
+            
+            <div class="mt-4">
+                <MudButton Color="Color.Secondary" 
+                           Variant="Variant.Outlined" 
+                           StartIcon="@Icons.Material.Filled.Add"
+                           OnClick="() => showAddQuestionForm = !showAddQuestionForm">
+                    @(showAddQuestionForm ? "Ẩn" : "Thêm") câu hỏi
+                </MudButton>
+                <MudButton Color="Color.Primary" 
+                           Variant="Variant.Outlined" 
+                           StartIcon="@Icons.Material.Filled.Visibility"
+                           OnClick="OpenPreviewInNewTab"
+                           Class="ml-2">
+                    Xem chi tiết đề thi
+                </MudButton>
+                <MudButton Color="Color.Default" 
+                           Variant="Variant.Outlined" 
+                           StartIcon="@Icons.Material.Filled.Refresh"
+                           OnClick="ResetForm"
+                           Class="ml-2">
+                    Tạo đề thi mới
+                </MudButton>
+            </div>
+        </MudPaper>
+
+        @if (showAddQuestionForm)
+        {
+            <MudPaper Class="pa-4" Elevation="4">
+                <MudText Typo="Typo.h6" Class="mb-4">Thêm câu hỏi mới</MudText>
+                
+                <EditForm Model="@questionRequest" OnValidSubmit="AddQuestionAsync">
+                    <DataAnnotationsValidator />
+                    
+                    <MudGrid>
+                        <MudItem xs="12" md="6">
+                            <MudNumericField @bind-Value="questionRequest.Order" 
+                                             Label="Thứ tự câu hỏi" 
+                                             Variant="Variant.Outlined"
+                                             Required="true"
+                                             RequiredError="Thứ tự là bắt buộc"
+                                             Min="1"
+                                             HelperText="Số thứ tự của câu hỏi trong đề thi" />
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <MudNumericField @bind-Value="questionRequest.CorrectAnswerIndex" 
+                                             Label="Đáp án đúng (chỉ số)" 
+                                             Variant="Variant.Outlined"
+                                             Min="1"
+                                             HelperText="Chỉ số của đáp án đúng (1, 2, 3, ...)" />
+                        </MudItem>
+                        <MudItem xs="12">
+                            <MudTextField @bind-Value="questionRequest.QuestionContent" 
+                                          Label="Nội dung câu hỏi" 
+                                          Variant="Variant.Outlined"
+                                          Lines="3"
+                                          HelperText="Nhập nội dung câu hỏi" />
+                        </MudItem>
+                        <MudItem xs="12">
+                            <MudCheckBox @bind-Value="questionRequest.CanShuffleQuestion" 
+                                         Label="Cho phép hoán vị câu hỏi"
+                                         Color="Color.Primary" />
+                        </MudItem>
+                    </MudGrid>
+
+                    <MudDivider Class="my-4" />
+
+                    <MudText Typo="Typo.subtitle1" Class="mb-3">Đáp án</MudText>
+                    
+                    @for (int i = 0; i < questionRequest.Answers.Count; i++)
+                    {
+                        var index = i;
+                        <MudPaper Class="pa-3 mb-3" Elevation="1">
+                            <MudGrid>
+                                <MudItem xs="12" md="1">
+                                    <MudText Typo="Typo.body1" Class="mt-2">
+                                        <strong>Đáp án @(index + 1):</strong>
+                                    </MudText>
+                                </MudItem>
+                                <MudItem xs="12" md="8">
+                                    <MudTextField @bind-Value="questionRequest.Answers[index].AnswerContent" 
+                                                  Label="Nội dung đáp án" 
+                                                  Variant="Variant.Outlined"
+                                                  Required="true"
+                                                  RequiredError="Nội dung đáp án là bắt buộc" />
+                                </MudItem>
+                                <MudItem xs="12" md="2">
+                                    <MudCheckBox @bind-Value="questionRequest.Answers[index].IsCorrect" 
+                                                 Label="Đáp án đúng"
+                                                 Color="Color.Success" />
+                                </MudItem>
+                                <MudItem xs="12" md="1">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Delete" 
+                                                   Color="Color.Error" 
+                                                   OnClick="() => RemoveAnswer(index)"
+                                                   Disabled="questionRequest.Answers.Count <= 2" />
+                                </MudItem>
+                            </MudGrid>
+                        </MudPaper>
+                    }
+
+                    <MudButton Color="Color.Secondary" 
+                               Variant="Variant.Outlined" 
+                               StartIcon="@Icons.Material.Filled.Add"
+                               OnClick="AddAnswer"
+                               Class="mb-4">
+                        Thêm đáp án
+                    </MudButton>
+
+                    <div class="mt-4">
+                        <MudButton Color="Color.Primary" 
+                                   Variant="Variant.Filled" 
+                                   ButtonType="ButtonType.Submit"
+                                   StartIcon="@Icons.Material.Filled.Save"
+                                   Disabled="isAddingQuestion">
+                            @if (isAddingQuestion)
+                            {
+                                <MudProgressCircular Indeterminate="true" Size="Size.Small" Class="mr-2" />
+                            }
+                            Thêm câu hỏi
+                        </MudButton>
+                    </div>
+                </EditForm>
+
+                @if (!string.IsNullOrEmpty(questionMessage))
+                {
+                    <MudAlert Severity="@(questionMessage.StartsWith("Lỗi") ? Severity.Error : Severity.Success)" 
+                              Class="mt-4"
+                              Dismissible="true"
+                              OnClose="() => questionMessage = string.Empty">
+                        @questionMessage
+                    </MudAlert>
+                }
+            </MudPaper>
+        }
+    }
+</MudContainer>
+
+@code {
+    [Inject] private ExamManagerService ExamManagerService { get; set; } = default!;
+    [Inject] private IJSRuntime JSRuntime { get; set; } = default!;
+
+    private CreateOriginalExamPaperRequest createRequest = new();
+    private CreateQuestionWithAnswersRequest questionRequest = new();
+    private OriginalExamPaperDto? createdExamPaper;
+    private bool isCreating = false;
+    private bool isAddingQuestion = false;
+    private string? createMessage;
+    private string? questionMessage;
+    private bool showAddQuestionForm = false;
+    private List<SubjectDto> subjects = new();
+    private bool isLoadingSubjects = false;
+    private List<OriginalExamPaperListItemDto> manualExamPapers = new();
+    private bool isLoadingManualExams = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Khởi tạo với ít nhất 2 đáp án
+        questionRequest.Answers = new List<CreateAnswerRequest>
+        {
+            new CreateAnswerRequest { Order = 1, AnswerContent = string.Empty, IsCorrect = false },
+            new CreateAnswerRequest { Order = 2, AnswerContent = string.Empty, IsCorrect = false }
+        };
+
+        // Load danh sách môn học và danh sách đề thi thủ công
+        await Task.WhenAll(LoadSubjectsAsync(), LoadManualExamPapersAsync());
+    }
+
+    private async Task LoadSubjectsAsync()
+    {
+        isLoadingSubjects = true;
+        try
+        {
+            subjects = await ExamManagerService.GetAllSubjectsAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Lỗi khi tải danh sách môn học: {ex.Message}");
+            subjects = new List<SubjectDto>();
+        }
+        finally
+        {
+            isLoadingSubjects = false;
+        }
+    }
+
+    private async Task LoadManualExamPapersAsync()
+    {
+        isLoadingManualExams = true;
+        try
+        {
+            manualExamPapers = await ExamManagerService.GetManualCreatedExamPapersAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Lỗi khi tải danh sách đề thi thủ công: {ex.Message}");
+            manualExamPapers = new List<OriginalExamPaperListItemDto>();
+        }
+        finally
+        {
+            isLoadingManualExams = false;
+        }
+    }
+
+    private async Task GenerateAutoCode()
+    {
+        try
+        {
+            createRequest.OriginalExamPaperCore = await ExamManagerService.GenerateRandomOriginalExamPaperCoreAsync();
+        }
+        catch (Exception ex)
+        {
+            createMessage = $"Lỗi khi tạo mã tự động: {ex.Message}";
+        }
+    }
+
+    private async Task CreateExamPaperAsync()
+    {
+        isCreating = true;
+        createMessage = null;
+        
+        try
+        {
+            createRequest.IsApproved = false; // Mặc định chưa duyệt
+            createdExamPaper = await ExamManagerService.CreateOriginalExamPaperAsync(createRequest);
+            
+            if (createdExamPaper != null)
+            {
+                createMessage = "Tạo đề thi thành công!";
+                // Khởi tạo form thêm câu hỏi
+                questionRequest.OriginalExamPaperId = createdExamPaper.OriginalExamPaperId;
+                questionRequest.Order = 1;
+                showAddQuestionForm = true;
+            }
+        }
+        catch (Exception ex)
+        {
+            createMessage = $"Lỗi: {ex.Message}";
+        }
+        finally
+        {
+            isCreating = false;
+        }
+    }
+
+    private void AddAnswer()
+    {
+        var newOrder = questionRequest.Answers.Count + 1;
+        questionRequest.Answers.Add(new CreateAnswerRequest 
+        { 
+            Order = newOrder, 
+            AnswerContent = string.Empty, 
+            IsCorrect = false,
+            CanShuffleAnswer = true
+        });
+    }
+
+    private void RemoveAnswer(int index)
+    {
+        if (questionRequest.Answers.Count > 2)
+        {
+            questionRequest.Answers.RemoveAt(index);
+            // Cập nhật lại Order
+            for (int i = 0; i < questionRequest.Answers.Count; i++)
+            {
+                questionRequest.Answers[i].Order = i + 1;
+            }
+        }
+    }
+
+    private async Task AddQuestionAsync()
+    {
+        // Đảm bảo Order của các đáp án được set đúng
+        for (int i = 0; i < questionRequest.Answers.Count; i++)
+        {
+            questionRequest.Answers[i].Order = i + 1;
+        }
+
+        isAddingQuestion = true;
+        questionMessage = null;
+
+        try
+        {
+            var result = await ExamManagerService.AddQuestionWithAnswersAsync(questionRequest);
+            
+            if (result != null)
+            {
+                questionMessage = "Thêm câu hỏi thành công!";
+                // Reset form để thêm câu hỏi tiếp theo
+                questionRequest.Order = questionRequest.Order + 1;
+                questionRequest.QuestionContent = string.Empty;
+                questionRequest.CorrectAnswerIndex = null;
+                questionRequest.Answers = new List<CreateAnswerRequest>
+                {
+                    new CreateAnswerRequest { Order = 1, AnswerContent = string.Empty, IsCorrect = false },
+                    new CreateAnswerRequest { Order = 2, AnswerContent = string.Empty, IsCorrect = false }
+                };
+            }
+        }
+        catch (Exception ex)
+        {
+            questionMessage = $"Lỗi: {ex.Message}";
+        }
+        finally
+        {
+            isAddingQuestion = false;
+        }
+    }
+
+    private void ResetForm()
+    {
+        createRequest = new CreateOriginalExamPaperRequest();
+        questionRequest = new CreateQuestionWithAnswersRequest();
+        createdExamPaper = null;
+        createMessage = null;
+        questionMessage = null;
+        showAddQuestionForm = false;
+        
+        // Khởi tạo lại đáp án
+        questionRequest.Answers = new List<CreateAnswerRequest>
+        {
+            new CreateAnswerRequest { Order = 1, AnswerContent = string.Empty, IsCorrect = false },
+            new CreateAnswerRequest { Order = 2, AnswerContent = string.Empty, IsCorrect = false }
+        };
+    }
+
+    private async Task OpenPreviewInNewTab()
+    {
+        if (createdExamPaper == null || string.IsNullOrWhiteSpace(createdExamPaper.OriginalExamPaperCore)) 
+            return;
+        
+        var uri = $"/exammanager/preview/original?core={Uri.EscapeDataString(createdExamPaper.OriginalExamPaperCore)}";
+        await JSRuntime.InvokeVoidAsync("open", uri, "_blank");
+    }
+
+    private async Task EditExamPaper(string originalExamPaperCore)
+    {
+        if (string.IsNullOrWhiteSpace(originalExamPaperCore)) 
+            return;
+        
+        var uri = $"/exammanager/preview/original?core={Uri.EscapeDataString(originalExamPaperCore)}";
+        await JSRuntime.InvokeVoidAsync("open", uri, "_blank");
+    }
+}

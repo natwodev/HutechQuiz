@@ -4,7 +4,6 @@ using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
 using frontend_manage.DTOs.AcademicAffairs;
-using Microsoft.Extensions.Configuration;
 
 namespace frontend_manage.Services.Admin
 {
@@ -13,18 +12,11 @@ namespace frontend_manage.Services.Admin
         private readonly HttpClient _httpClient;
         private readonly string _baseUrl;
 
-        public AdminExamSessionSubjectService(HttpClient httpClient, IConfiguration configuration)
+        public AdminExamSessionSubjectService(HttpClient httpClient)
         {
             _httpClient = httpClient;
-            var baseUrl = GetApiBaseUrl(configuration);
-            _baseUrl = $"{baseUrl}/api/ExamSessionSubject";
-        }
-
-        private static string GetApiBaseUrl(IConfiguration configuration)
-        {
-            var apiBaseUrl = configuration["ApiBaseUrl"] ?? throw new InvalidOperationException(
-                "ApiBaseUrl chưa được cấu hình trong appsettings.json");
-            return apiBaseUrl.TrimEnd('/');
+            // Đường dẫn tương đối, HttpClient.BaseAddress (từ ApiBaseUrl) sẽ được dùng làm gốc.
+            _baseUrl = "api/ExamSessionSubject";
         }
 
         public async Task<List<ExamSessionSubjectDto>> GetAllAsync()

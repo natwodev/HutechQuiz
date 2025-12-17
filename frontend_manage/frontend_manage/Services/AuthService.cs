@@ -24,13 +24,8 @@ public class AuthService
         _httpClient = httpClient;
         _navigationManager = navigationManager;
         _jsRuntime = jsRuntime;
-        
-        // BaseAddress đã được cấu hình trong Program.cs từ User Secrets hoặc appsettings.json
-        // Nếu BaseAddress chưa được set, sẽ throw exception để dễ debug
-        if (_httpClient.BaseAddress == null)
-        {
-            throw new InvalidOperationException("HttpClient BaseAddress chưa được cấu hình. Vui lòng kiểm tra User Secrets hoặc appsettings.json và đảm bảo ApiBaseUrl đã được thiết lập.");
-        }
+        // BaseAddress đã được cấu hình tập trung trong Program.cs thông qua ApiBaseUrl
+        // Không override lại tại đây để tránh bị fix cứng localhost.
     }
 
     // JWT Authentication (cho các trường hợp khác)
