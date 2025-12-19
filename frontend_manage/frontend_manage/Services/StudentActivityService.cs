@@ -113,5 +113,43 @@ public class StudentActivityService
             return false;
         }
     }
+
+    public async Task<int> GetMyViolationCountAsync(int examSessionSubjectId)
+    {
+        try
+        {
+            var url = $"api/StudentActivity/my-violation-count?examSessionSubjectId={examSessionSubjectId}";
+            Console.WriteLine($"[StudentActivityService] Getting violation count from: {url}");
+            
+            var response = await _httpClient.GetAsync(url);
+            
+            if (response.IsSuccessStatusCode)
+            {
+                var result = await response.Content.ReadFromJsonAsync<ViolationCountResponse>();
+                Console.WriteLine($"[StudentActivityService] Violation count: {result?.ViolationCount ?? 0}");
+                return result?.ViolationCount ?? 0;
+            }
+            else
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"[StudentActivityService] Error getting violation count: {response.StatusCode} - {errorContent}");
+                return 0;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[StudentActivityService] Exception getting violation count: {ex.Message}");
+            Console.WriteLine($"[StudentActivityService] StackTrace: {ex.StackTrace}");
+            return 0;
+        }
+    }
+
+    private class ViolationCountResponse
+    {
+        public string StudentCode { get; set; } = string.Empty;
+        public int ViolationCount { get; set; }
+        public int MaxViolations { get; set; }
+        public int TotalActivities { get; set; }
+    }
 }
 
