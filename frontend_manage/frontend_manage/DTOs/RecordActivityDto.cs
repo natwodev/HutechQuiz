@@ -9,3 +9,4 @@ public class RecordActivityDto
     public string? Metadata { get; set; } // JSON format
 }
 
+
