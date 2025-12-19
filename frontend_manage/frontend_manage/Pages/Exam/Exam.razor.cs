@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using frontend_manage.DTOs;
 using frontend_manage.Services;
 using Microsoft.AspNetCore.Components;
@@ -52,6 +53,7 @@ public partial class Exam : ComponentBase, IAsyncDisposable
     // Đếm số lần vi phạm để tự động nộp bài sau 3 lần
     private int _violationCount = 0;
     private const int MAX_VIOLATIONS = 3;
+    private bool _violationCountLoaded = false; // Flag để tránh load nhiều lần
     private readonly HashSet<string> _violationTypes = new()
     {
         "TabSwitch", "FullscreenExit", "Copy", "Paste", "RightClick", "DevTools", "Screenshot"
@@ -97,6 +99,9 @@ public partial class Exam : ComponentBase, IAsyncDisposable
                 StateHasChanged();
             }
         }
+        
+        // Không gọi LoadViolationCountFromBackend ở đây nữa vì đã gọi trong FetchExamAsync
+        // Điều này tránh gọi API nhiều lần và gây lỗi 429 (Too Many Requests)
     }
 
     [JSInvokable]
@@ -134,13 +139,16 @@ public partial class Exam : ComponentBase, IAsyncDisposable
         
         if (hidden)
         {
-            // Ghi nhận hoạt động chuyển tab (luôn ghi nhận để theo dõi)
-            await RecordActivityAsync("TabSwitch", "Rời khỏi tab thi");
-            
             // Chỉ cảnh báo và đếm vi phạm nếu không cho phép xem tài liệu
+            // HandleViolationAsync sẽ tự gọi RecordActivityAsync bên trong
             if (!allowViewMaterials)
         {
                 await HandleViolationAsync("TabSwitch", "Hệ thống ghi nhận bạn đã rời khỏi tab thi. Vui lòng tập trung vào bài làm.");
+            }
+            else
+            {
+                // Nếu cho phép xem tài liệu, chỉ ghi nhận để theo dõi (không đếm vi phạm)
+                await RecordActivityAsync("TabSwitch", "Rời khỏi tab thi");
             }
         }
         else
@@ -258,15 +266,24 @@ public partial class Exam : ComponentBase, IAsyncDisposable
                 // Khởi tạo lại map câu trả lời
                 _questionAnswers.Clear();
                 
-                // Reset bộ đếm vi phạm khi tải lại bài thi
-                _violationCount = 0;
-
+                // Reset flag khi load lại exam
+                _violationCountLoaded = false;
+                
                 // Nếu backend trả về chuỗi đáp án đã lưu, parse lại để hiển thị
                 var savedAnswersString = result.StudentSession?.StudentAnswersString;
                 if (!string.IsNullOrWhiteSpace(savedAnswersString))
                 {
                     RestoreAnswersFromString(savedAnswersString);
                 }
+                
+                // Load violation count từ backend (sau khi đã có _response và StudentSession)
+                // Chỉ load nếu chưa load trước đó
+                if (!_violationCountLoaded)
+                {
+                    _violationCountLoaded = true;
+                    await LoadViolationCountFromBackend();
+                }
+                await InvokeAsync(StateHasChanged);
             }
         }
         catch (Exception ex)
@@ -736,6 +753,62 @@ public partial class Exam : ComponentBase, IAsyncDisposable
             // Log chi tiết để debug
             Console.WriteLine($"[RecordActivity] Error recording activity: {ex.Message}");
             Console.WriteLine($"[RecordActivity] StackTrace: {ex.StackTrace}");
+        }
+    }
+
+    /// <summary>
+    /// Load violation count từ backend dựa trên các activities đã có
+    /// Sử dụng logic giống như monitor: lấy tất cả activities của exam session, sau đó filter theo studentCode
+    /// </summary>
+    private async Task LoadViolationCountFromBackend()
+    {
+        try
+        {
+            if (StudentSession == null || string.IsNullOrEmpty(StudentSession.StudentCode))
+            {
+                Console.WriteLine("[LoadViolationCount] Missing StudentSession or StudentCode");
+                _violationCount = 0;
+                return;
+            }
+
+            var studentCode = StudentSession.StudentCode;
+            
+            // Lấy ExamSessionSubjectId từ StudentSession (không nullable)
+            var examSessionSubjectId = StudentSession.ExamSessionSubjectId;
+
+            if (examSessionSubjectId <= 0)
+            {
+                Console.WriteLine("[LoadViolationCount] Invalid ExamSessionSubjectId");
+                Console.WriteLine($"[LoadViolationCount] StudentSession.ExamSessionSubjectId: {examSessionSubjectId}");
+                _violationCount = 0;
+                return;
+            }
+
+            Console.WriteLine($"[LoadViolationCount] Loading violations for StudentCode: {studentCode}, ExamSessionSubjectId: {examSessionSubjectId}");
+
+            // Sử dụng endpoint mới dành cho student (không cần quyền LecturerOrAdmin)
+            _violationCount = await StudentActivityService.GetMyViolationCountAsync(examSessionSubjectId);
+            
+            Console.WriteLine($"[LoadViolationCount] Loaded violation count: {_violationCount}/{MAX_VIOLATIONS}");
+            
+            // Nếu đã đạt ngưỡng, tự động nộp bài
+            if (_violationCount >= MAX_VIOLATIONS)
+            {
+                Console.WriteLine($"[LoadViolationCount] ⚠️ Violation count already at max ({_violationCount}/{MAX_VIOLATIONS}), auto-submitting...");
+                await Task.Delay(1000); // Đợi một chút để UI render
+                await SubmitExam();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[LoadViolationCount] ❌ Error loading violation count: {ex.Message}");
+            Console.WriteLine($"[LoadViolationCount] StackTrace: {ex.StackTrace}");
+            if (ex.InnerException != null)
+            {
+                Console.WriteLine($"[LoadViolationCount] InnerException: {ex.InnerException.Message}");
+            }
+            // Nếu có lỗi, reset về 0 để tránh hiển thị sai
+            _violationCount = 0;
         }
     }
 
