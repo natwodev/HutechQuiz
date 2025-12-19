@@ -25,6 +25,7 @@ builder.Services.AddScoped<StudentService>();
 
 builder.Services.AddScoped<MonitorService>();
 builder.Services.AddSingleton<NotificationService>();
+builder.Services.AddScoped<StudentActivityService>();
 
 // Exam Manager Services
 builder.Services.AddScoped<ExamManagerService>();

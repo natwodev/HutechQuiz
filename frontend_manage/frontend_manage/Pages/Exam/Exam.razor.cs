@@ -12,6 +12,7 @@ namespace frontend_manage.Pages.Exam;
 public partial class Exam : ComponentBase, IAsyncDisposable
 {
     [Inject] private StudentService StudentService { get; set; } = default!;
+    [Inject] private StudentActivityService StudentActivityService { get; set; } = default!;
     [Inject] private IJSRuntime JS { get; set; } = default!;
     [Inject] private ISnackbar Snackbar { get; set; } = default!;
 
@@ -46,6 +47,15 @@ public partial class Exam : ComponentBase, IAsyncDisposable
     private StudentExamSessionCacheDto? StudentSession => _response?.StudentSession;
     private bool _showTimer = true;
     private bool ShouldShowTimer => _response != null && StudentSession != null && _showTimer;
+    private bool _autoNext = false; // Tự động chuyển câu khi chọn đáp án
+    
+    // Đếm số lần vi phạm để tự động nộp bài sau 3 lần
+    private int _violationCount = 0;
+    private const int MAX_VIOLATIONS = 3;
+    private readonly HashSet<string> _violationTypes = new()
+    {
+        "TabSwitch", "FullscreenExit", "Copy", "Paste", "RightClick", "DevTools", "Screenshot"
+    };
 
     protected override async Task OnParametersSetAsync()
     {
@@ -90,31 +100,104 @@ public partial class Exam : ComponentBase, IAsyncDisposable
     }
 
     [JSInvokable]
-    public Task OnFullscreenStateChanged(bool isFullscreen)
+    public async Task OnFullscreenStateChanged(bool isFullscreen)
     {
+        var previousFullscreen = _isFullscreen;
         _isFullscreen = isFullscreen;
+        
         // Không cảnh báo nếu cho phép xem tài liệu
         var allowViewMaterials = _response?.ExamPaper?.AllowViewMaterials ?? true;
         if (!_isFullscreen && _autoFullscreenAttempted && !allowViewMaterials)
         {
-            Snackbar.Add("Bạn vừa thoát khỏi chế độ toàn màn hình. Vui lòng bật lại để tiếp tục làm bài thi.", Severity.Warning);
+            // Ghi nhận hoạt động thoát fullscreen
+            if (previousFullscreen && StudentExamSessionId.HasValue && StudentSession != null)
+            {
+                await HandleViolationAsync("FullscreenExit", "Bạn vừa thoát khỏi chế độ toàn màn hình. Vui lòng bật lại để tiếp tục làm bài thi.");
+            }
         }
 
         InvokeAsync(StateHasChanged);
-        return Task.CompletedTask;
     }
 
     [JSInvokable]
-    public Task OnVisibilityChanged(bool hidden)
+    public async Task OnVisibilityChanged(bool hidden)
     {
-        // Không cảnh báo nếu cho phép xem tài liệu
-        var allowViewMaterials = _response?.ExamPaper?.AllowViewMaterials ?? true;
-        if (hidden && !allowViewMaterials)
-        {
-            Snackbar.Add("Hệ thống ghi nhận bạn đã rời khỏi tab thi. Vui lòng tập trung vào bài làm.", Severity.Warning);
+        // Luôn ghi nhận hoạt động để theo dõi, không phụ thuộc vào allowViewMaterials
+        if (!StudentExamSessionId.HasValue || StudentSession == null)
+    {
+            Console.WriteLine($"[OnVisibilityChanged] Missing StudentExamSessionId or StudentSession. Hidden: {hidden}");
+            return;
         }
 
-        return Task.CompletedTask;
+        // Không cảnh báo nếu cho phép xem tài liệu
+        var allowViewMaterials = _response?.ExamPaper?.AllowViewMaterials ?? true;
+        
+        if (hidden)
+        {
+            // Ghi nhận hoạt động chuyển tab (luôn ghi nhận để theo dõi)
+            await RecordActivityAsync("TabSwitch", "Rời khỏi tab thi");
+            
+            // Chỉ cảnh báo và đếm vi phạm nếu không cho phép xem tài liệu
+            if (!allowViewMaterials)
+        {
+                await HandleViolationAsync("TabSwitch", "Hệ thống ghi nhận bạn đã rời khỏi tab thi. Vui lòng tập trung vào bài làm.");
+            }
+        }
+        else
+        {
+            // Ghi nhận khi quay lại tab (chỉ để theo dõi, không cảnh báo)
+            await RecordActivityAsync("TabReturn", "Quay lại tab thi");
+        }
+    }
+
+    [JSInvokable]
+    public async Task OnCopyDetected()
+    {
+        var allowViewMaterials = _response?.ExamPaper?.AllowViewMaterials ?? true;
+        if (!allowViewMaterials && StudentExamSessionId.HasValue && StudentSession != null)
+        {
+            await HandleViolationAsync("Copy", "Hệ thống phát hiện bạn đã sao chép nội dung. Vui lòng không sao chép trong lúc thi.");
+        }
+    }
+
+    [JSInvokable]
+    public async Task OnPasteDetected()
+    {
+        var allowViewMaterials = _response?.ExamPaper?.AllowViewMaterials ?? true;
+        if (!allowViewMaterials && StudentExamSessionId.HasValue && StudentSession != null)
+        {
+            await HandleViolationAsync("Paste", "Hệ thống phát hiện bạn đã dán nội dung. Vui lòng không dán trong lúc thi.");
+        }
+    }
+
+    [JSInvokable]
+    public async Task OnRightClickDetected()
+    {
+        var allowViewMaterials = _response?.ExamPaper?.AllowViewMaterials ?? true;
+        if (!allowViewMaterials && StudentExamSessionId.HasValue && StudentSession != null)
+        {
+            await HandleViolationAsync("RightClick", "Hệ thống phát hiện bạn đã click chuột phải. Vui lòng không sử dụng menu chuột phải trong lúc thi.");
+        }
+    }
+
+    [JSInvokable]
+    public async Task OnDevToolsDetected()
+    {
+        var allowViewMaterials = _response?.ExamPaper?.AllowViewMaterials ?? true;
+        if (!allowViewMaterials && StudentExamSessionId.HasValue && StudentSession != null)
+        {
+            await HandleViolationAsync("DevTools", "Hệ thống phát hiện bạn đã mở DevTools. Vui lòng đóng DevTools để tiếp tục làm bài thi.");
+        }
+    }
+
+    [JSInvokable]
+    public async Task OnScreenshotDetected(string key)
+    {
+        var allowViewMaterials = _response?.ExamPaper?.AllowViewMaterials ?? true;
+        if (!allowViewMaterials && StudentExamSessionId.HasValue && StudentSession != null)
+        {
+            await HandleViolationAsync("Screenshot", $"Hệ thống phát hiện bạn đã chụp màn hình. Vui lòng không chụp màn hình trong lúc thi.");
+        }
     }
 
     private async Task ReloadExamAsync()
@@ -174,6 +257,9 @@ public partial class Exam : ComponentBase, IAsyncDisposable
 
                 // Khởi tạo lại map câu trả lời
                 _questionAnswers.Clear();
+                
+                // Reset bộ đếm vi phạm khi tải lại bài thi
+                _violationCount = 0;
 
                 // Nếu backend trả về chuỗi đáp án đã lưu, parse lại để hiển thị
                 var savedAnswersString = result.StudentSession?.StudentAnswersString;
@@ -366,17 +452,27 @@ public partial class Exam : ComponentBase, IAsyncDisposable
         // Lưu trạng thái chọn đáp án trên UI
         _questionAnswers[payload.questionId] = payload.value;
 
-        // Nếu chưa có session id thì không gọi API
-        if (!StudentExamSessionId.HasValue)
-        {
-            return;
-        }
-
         // Giá trị từ UI: với câu hỏi 1 đáp án sẽ là int (answerId)
         int? answerId = null;
         if (payload.value is int intValue)
         {
             answerId = intValue;
+        }
+
+        // Tự động chuyển câu ngay khi chọn đáp án (nếu bật autoNext)
+        // Không cần đợi lưu thành công để trải nghiệm mượt mà hơn
+        if (_autoNext && answerId.HasValue && _activeQuestionIndex < _questionDisplayItems.Count - 1)
+        {
+            // Đợi một chút để người dùng thấy đáp án đã được chọn
+            await Task.Delay(300);
+            NextQuestion();
+            StateHasChanged();
+        }
+
+        // Nếu chưa có session id thì không gọi API
+        if (!StudentExamSessionId.HasValue)
+        {
+            return;
         }
 
         var request = new SaveAnswerDto
@@ -414,6 +510,12 @@ public partial class Exam : ComponentBase, IAsyncDisposable
                     Severity.Error);
             }
         }
+    }
+
+    private void ToggleAutoNext()
+    {
+        _autoNext = !_autoNext;
+        StateHasChanged();
     }
 
     private void GoToQuestion(int index)
@@ -482,6 +584,159 @@ public partial class Exam : ComponentBase, IAsyncDisposable
         }
 
         return false;
+    }
+
+    /// <summary>
+    /// Xử lý vi phạm: đếm số lần và tự động nộp bài sau 3 lần
+    /// </summary>
+    private async Task HandleViolationAsync(string activityType, string warningMessage)
+    {
+        Console.WriteLine($"[HandleViolation] Activity: {activityType}, Current count: {_violationCount}");
+        
+        // Ghi nhận hoạt động
+        await RecordActivityAsync(activityType, GetActivityDescription(activityType));
+        
+        // Chỉ đếm vi phạm nếu là hành động nghiêm trọng
+        if (_violationTypes.Contains(activityType))
+        {
+            _violationCount++;
+            Console.WriteLine($"[HandleViolation] Violation count increased to: {_violationCount}/{MAX_VIOLATIONS}");
+            
+            // Hiển thị cảnh báo với số lần vi phạm
+            var severity = _violationCount >= MAX_VIOLATIONS ? Severity.Error : Severity.Warning;
+            var message = $"{warningMessage}\n" +
+                         $"Vi phạm: {_violationCount}/{MAX_VIOLATIONS} lần. " +
+                         (_violationCount >= MAX_VIOLATIONS 
+                             ? "Bài thi sẽ tự động nộp!" 
+                             : $"Còn {MAX_VIOLATIONS - _violationCount} lần, bài thi sẽ tự động nộp!");
+            
+            Snackbar.Add(message, severity);
+            await InvokeAsync(StateHasChanged);
+            
+            // Cập nhật UI để hiển thị bộ đếm vi phạm
+            await InvokeAsync(StateHasChanged);
+            
+            // Tự động nộp bài sau 3 lần vi phạm
+            if (_violationCount >= MAX_VIOLATIONS)
+            {
+                Console.WriteLine($"[HandleViolation] ⚠️ MAX VIOLATIONS REACHED! Auto-submitting exam...");
+                
+                Snackbar.Add("Đã vi phạm 3 lần. Hệ thống sẽ tự động nộp bài trong giây lát...", Severity.Error);
+                await InvokeAsync(StateHasChanged);
+                
+                // Đợi một chút để người dùng thấy thông báo và bộ đếm
+                await Task.Delay(3000);
+                
+                // Gọi submit trực tiếp
+                try
+                {
+                    Console.WriteLine($"[HandleViolation] Calling SubmitExam()...");
+                    Console.WriteLine($"[HandleViolation] StudentExamSessionId: {StudentExamSessionId}, _isSubmitting: {_isSubmitting}");
+                    
+                    // Gọi JS để force submit như backup (chạy song song)
+                    _ = Task.Run(async () =>
+                    {
+                        try
+                        {
+                            await Task.Delay(100);
+                            await JS.InvokeVoidAsync("examFullscreen.forceSubmitExam");
+                            Console.WriteLine("[HandleViolation] ✅ JS force submit called");
+                        }
+                        catch (Exception jsEx)
+                        {
+                            Console.WriteLine($"[HandleViolation] ❌ JS force submit failed: {jsEx.Message}");
+                        }
+                    });
+                    
+                    // Gọi submit từ C# (chính) - đảm bảo không bị chặn bởi _isSubmitting
+                    if (_isSubmitting)
+                    {
+                        Console.WriteLine("[HandleViolation] ⚠️ Already submitting, skipping...");
+                        return;
+                    }
+                    
+                    await SubmitExam();
+                    Console.WriteLine("[HandleViolation] ✅ SubmitExam() completed");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[HandleViolation] ❌ Error auto-submitting: {ex.Message}");
+                    Console.WriteLine($"[HandleViolation] StackTrace: {ex.StackTrace}");
+                    await InvokeAsync(() =>
+                    {
+                        Snackbar.Add($"Lỗi khi tự động nộp bài: {ex.Message}. Vui lòng nộp bài thủ công.", Severity.Error);
+                    });
+                }
+            }
+        }
+        else
+        {
+            // Các hành động khác chỉ cảnh báo, không đếm vi phạm
+            Snackbar.Add(warningMessage, Severity.Warning);
+        }
+    }
+
+    /// <summary>
+    /// Method được gọi từ JS để force submit exam
+    /// </summary>
+    [JSInvokable]
+    public async Task ForceSubmitExam()
+    {
+        Console.WriteLine("[ForceSubmitExam] Called from JS");
+        await SubmitExam();
+    }
+
+    private string GetActivityDescription(string activityType)
+    {
+        return activityType switch
+        {
+            "TabSwitch" => "Rời khỏi tab thi",
+            "FullscreenExit" => "Thoát khỏi chế độ toàn màn hình",
+            "Copy" => "Phát hiện sao chép nội dung",
+            "Paste" => "Phát hiện dán nội dung",
+            "RightClick" => "Phát hiện click chuột phải",
+            "DevTools" => "Phát hiện mở DevTools",
+            "Screenshot" => "Phát hiện chụp màn hình",
+            _ => $"Phát hiện hành động: {activityType}"
+        };
+    }
+
+    private async Task RecordActivityAsync(string activityType, string description, string? metadata = null)
+    {
+        if (!StudentExamSessionId.HasValue || StudentSession == null)
+        {
+            Console.WriteLine($"[RecordActivity] Missing StudentExamSessionId or StudentSession. SessionId: {StudentExamSessionId}, Session: {StudentSession != null}");
+            return;
+        }
+
+        var studentCode = StudentSession.StudentCode ?? string.Empty;
+        if (string.IsNullOrEmpty(studentCode))
+        {
+            Console.WriteLine($"[RecordActivity] StudentCode is empty. StudentSession: {System.Text.Json.JsonSerializer.Serialize(StudentSession)}");
+            return;
+        }
+
+        try
+        {
+            var dto = new RecordActivityDto
+            {
+                StudentExamSessionId = StudentExamSessionId.Value,
+                StudentCode = studentCode,
+                ActivityType = activityType,
+                Description = description,
+                Metadata = metadata
+            };
+
+            Console.WriteLine($"[RecordActivity] Sending activity: Type={activityType}, StudentCode={studentCode}, SessionId={StudentExamSessionId.Value}");
+            var result = await StudentActivityService.RecordActivityAsync(dto);
+            Console.WriteLine($"[RecordActivity] Result: {result}");
+        }
+        catch (Exception ex)
+        {
+            // Log chi tiết để debug
+            Console.WriteLine($"[RecordActivity] Error recording activity: {ex.Message}");
+            Console.WriteLine($"[RecordActivity] StackTrace: {ex.StackTrace}");
+        }
     }
 
     private void ToggleTimerVisibility()

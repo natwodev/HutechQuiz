@@ -55,6 +55,7 @@ namespace backend_manage.core.Extensions
             services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer(configuration.GetConnectionString("DefaultConnection"), 
                     b => b.MigrationsAssembly("backend_manage.core")
+                          .EnableRetryOnFailure(5, TimeSpan.FromSeconds(10), null)
                           .UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery)));
 
             // Đăng ký CORS

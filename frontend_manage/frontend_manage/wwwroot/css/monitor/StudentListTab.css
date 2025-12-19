@@ -138,7 +138,7 @@
     border-collapse: collapse;
     position: relative;
     table-layout: auto; /* Let browser size columns based on content */
-    min-width: 1100px; /* Keep a reasonable minimum so columns don't squash */
+    min-width: 1300px; /* Keep a reasonable minimum so columns don't squash */
 }
 
 .student-table th, .student-table td {
@@ -150,6 +150,70 @@
 /* Giữ cột Họ tên căn trái để dễ đọc hơn */
 .student-table .col-name {
     text-align: left;
+}
+
+.student-table .col-violation {
+    width: 100px;
+    text-align: center;
+}
+
+.student-table .col-violation-status {
+    width: 140px;
+    text-align: center;
+}
+
+.student-table .col-details {
+    width: 80px;
+    text-align: center;
+}
+
+.violation-count {
+    font-weight: 600;
+    font-size: 0.9rem;
+    padding: 4px 8px;
+    border-radius: 4px;
+    display: inline-block;
+}
+
+.violation-count.violation-status-safe {
+    color: #4caf50;
+    background-color: #e8f5e9;
+}
+
+.violation-count.violation-status-warning {
+    color: #ff9800;
+    background-color: #fff3e0;
+}
+
+.violation-count.violation-status-danger {
+    color: #f44336;
+    background-color: #ffebee;
+    font-weight: bold;
+}
+
+.violation-status-badge {
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    display: inline-block;
+    white-space: nowrap;
+}
+
+.violation-status-badge.violation-status-safe {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+}
+
+.violation-status-badge.violation-status-warning {
+    background-color: #fff3e0;
+    color: #e65100;
+}
+
+.violation-status-badge.violation-status-danger {
+    background-color: #ffebee;
+    color: #c62828;
+    font-weight: bold;
 }
 
 .student-table thead {

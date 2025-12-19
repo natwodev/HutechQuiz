@@ -10,7 +10,7 @@ using DotNetEnv;
 
 
 // Load .env (ConnectionStrings__DefaultConnection, Redis, etc.)
-Env.TraversePath().Load();
+//Env.TraversePath().Load();
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -60,11 +60,13 @@ try
     
     var app = builder.Build();
 
+    /*
     using (var scope = app.Services.CreateScope())
     {
         var services = scope.ServiceProvider;
         await backend_manage.core.Data.SeedData.InitializeAsync(services);
     }
+    */
 
 
     // Health check Redis khi khởi động

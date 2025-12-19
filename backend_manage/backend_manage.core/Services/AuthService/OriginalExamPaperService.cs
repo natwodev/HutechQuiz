@@ -6,6 +6,7 @@ using AutoMapper;
 using backend_manage.core.Entities;
 using backend_manage.core.Hubs;
 using backend_manage.core.Repositories.Interfaces;
+using backend_manage.core.Services;
 using backend_manage.core.Services.Interfaces;
 using backend_manage.shared.DTOs;
 using backend_manage.shared.DTOs.EPZ;
@@ -545,7 +546,108 @@ namespace backend_manage.core.Services.AuthService
         
 
         #endregion
-        // Pass giải nén file XML
+
+        #region Import từ Word (.docx) với format CLO
+
+        public async Task ImportFromWordAsync(IFormFile file, string originalExamPaperCore, int subjectId)
+        {
+            if (file == null || file.Length == 0)
+                throw new ArgumentException("File không hợp lệ hoặc rỗng");
+
+            if (!file.FileName.EndsWith(".docx", StringComparison.OrdinalIgnoreCase))
+                throw new ArgumentException("File Word phải có đuôi .docx");
+
+            var exists = await _originalExamPaperRepository.GetQueryable()
+                .AnyAsync(x => x.OriginalExamPaperCore == originalExamPaperCore);
+            if (exists)
+                throw new Exception($"Đã tồn tại đề thi với mã '{originalExamPaperCore}' trong hệ thống.");
+
+            var userId = _httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+                throw new UnauthorizedAccessException("Không thể xác định người dùng tạo đề thi gốc.");
+
+            var now = DateTimeHelper.GetVietnamTime();
+
+            var subject = await _subjectRepository.GetQueryable()
+                .FirstOrDefaultAsync(s => s.SubjectId == subjectId);
+            if (subject == null)
+            {
+                throw new Exception($"Không tìm thấy môn học với ID '{subjectId}'.");
+            }
+
+            using var stream = new MemoryStream();
+            await file.CopyToAsync(stream);
+            stream.Position = 0;
+
+            var parsed = WordParserService.Parse(stream);
+            if (parsed.Count == 0)
+                throw new Exception("Không tìm thấy câu hỏi nào theo format CLO trong file Word.");
+
+            var originalExamPaper = new OriginalExamPaper
+            {
+                Title = Path.GetFileNameWithoutExtension(file.FileName),
+                Description = null,
+                SubjectId = subject.SubjectId,
+                CreatedBy = userId,
+                CreatedAt = now,
+                DurationMinutes = 0,
+                TotalQuestions = parsed.Count,
+                OriginalExamPaperCore = originalExamPaperCore,
+                IsApproved = true,
+                IsManualCreated = false,
+                TotalShuffledPapers = 0,
+                AllowViewMaterials = false
+            };
+
+            await _originalExamPaperRepository.AddAsync(originalExamPaper);
+
+            var details = new List<OriginalExamPaperDetail>();
+            var answers = new List<Answers>();
+
+            int qOrder = 1;
+
+            foreach (var q in parsed)
+            {
+                var detail = new OriginalExamPaperDetail
+                {
+                    OriginalExamPaperId = originalExamPaper.OriginalExamPaperId,
+                    Order = qOrder++,
+                    QuestionContent = q.Stem,
+                    CorrectAnswerIndex = q.CorrectAnswerLabel != null
+                        ? q.Answers.FindIndex(a => a.Label == q.CorrectAnswerLabel) + 1
+                        : null,
+                    CreatedAt = now,
+                    CreatedBy = userId
+                };
+
+                details.Add(detail);
+
+                int aOrder = 1;
+                foreach (var a in q.Answers)
+                {
+                    answers.Add(new Answers
+                    {
+                        OriginalExamPaperDetail = detail,
+                        Order = aOrder++,
+                        AnswerContent = a.Content,
+                        IsCorrect = q.CorrectAnswerLabel == a.Label,
+                        CreatedAt = now,
+                        CreatedBy = userId
+                    });
+                }
+            }
+
+            foreach (var detail in details)
+            {
+                await _originalExamPaperDetailRepository.AddAsync(detail);
+            }
+            foreach (var answer in answers)
+            {
+                await _answersRepository.AddAsync(answer);
+            }
+        }
+
+        #endregion
        
         public async Task<OriginalExamPaperDto> GetWithDetailsAsync(string originalExamPaperCore)
         {

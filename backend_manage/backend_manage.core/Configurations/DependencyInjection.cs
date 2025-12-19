@@ -38,6 +38,7 @@ namespace backend_manage.core.Configurations
             services.AddScoped<IShuffledExamPaperService, ShuffledExamPaperService>();
             services.AddScoped<ILecturerService, LecturerService>();
             services.AddScoped<ISubjectService, SubjectService>();
+            services.AddScoped<IStudentActivityService, StudentActivityService>();
             
             // Register Helper Classes
             services.AddScoped<StudentCacheHelper>();

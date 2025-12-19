@@ -16,6 +16,7 @@ public class NotificationService
     public event Action<object>? OnUserDisconnected;
     public event Action<object>? OnExamScoreReceived;
     public event Action<bool>? OnConnectionStateChanged;
+    public event Action<object>? OnStudentActivityDetected;
 
     private readonly HashSet<int> _joinedGroups = new(); // để rejoin khi reconnect
 
@@ -59,6 +60,10 @@ public class NotificationService
             OnExamScoreReceived?.Invoke(data);
         });
         
+        _hubConnection.On<object>("StudentActivityDetected", (data) =>
+        {
+            OnStudentActivityDetected?.Invoke(data);
+        });
         
         // Theo dõi trạng thái kết nối
         _hubConnection.Closed += async (error) =>

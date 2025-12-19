@@ -1,0 +1,457 @@
+@using MudBlazor
+@using frontend_manage.DTOs
+
+<MudDialog>
+    <DialogContent>
+        <div class="violation-details-container">
+            <!-- Header Section -->
+            <div class="violation-header-section">
+                <div class="student-info-card">
+                    <MudAvatar Size="Size.Large" Class="student-avatar">
+                        <MudIcon Icon="@Icons.Material.Filled.Person" Size="Size.Large" />
+                    </MudAvatar>
+                    <div class="student-info">
+                        <MudText Typo="Typo.h6" Class="student-code">@StudentCode</MudText>
+                        <MudText Typo="Typo.body1" Class="student-name">@StudentName</MudText>
+                    </div>
+                </div>
+                <div class="violation-summary-card">
+                    <MudChip T="string" Color="@GetSummaryColor()" Size="Size.Large" Variant="Variant.Filled" Class="summary-chip">
+                        <MudIcon Icon="@Icons.Material.Filled.Warning" Class="mr-2" />
+                        <MudText Typo="Typo.h6" Class="summary-text">
+                            @ViolationCount / @MaxViolations vi phạm
+                        </MudText>
+                    </MudChip>
+                    <MudText Typo="Typo.body2" Class="summary-status">
+                        @GetStatusText()
+                    </MudText>
+                </div>
+            </div>
+
+            <!-- Violations Timeline -->
+            @if (Violations != null && Violations.Any())
+            {
+                <div class="violations-timeline">
+                    <MudText Typo="Typo.subtitle1" Class="timeline-title">
+                        <MudIcon Icon="@Icons.Material.Filled.History" Class="mr-2" />
+                        Lịch sử vi phạm
+                    </MudText>
+                    <div class="timeline-container">
+                        @foreach (var violation in Violations)
+                        {
+                            var activityClass = GetActivityTypeClass(violation.ActivityType);
+                            <div class="@($"timeline-item {activityClass}")">
+                                <div class="@($"timeline-dot {activityClass}")">
+                                    <MudIcon Icon="@GetActivityIcon(violation.ActivityType)" Size="Size.Small" />
+                                </div>
+                                <div class="timeline-content">
+                                    <MudCard Elevation="2" Class="@($"violation-card {GetActivityTypeClass(violation.ActivityType)}")">
+                                        <MudCardContent>
+                                            <div class="violation-card-header">
+                                                <div class="violation-type-section">
+                                                    <MudChip T="string" Color="@GetActivityColor(violation.ActivityType)" Size="Size.Small" Variant="Variant.Filled">
+                                                        <MudIcon Icon="@GetActivityIcon(violation.ActivityType)" Size="Size.Small" Class="mr-1" />
+                                                        @GetActivityTypeDisplayName(violation.ActivityType)
+                                                    </MudChip>
+                                                </div>
+                                                <div class="violation-time-section">
+                                                    <MudIcon Icon="@Icons.Material.Filled.AccessTime" Size="Size.Small" Class="time-icon" />
+                                                    <MudText Typo="Typo.caption" Class="time-text">
+                                                        @violation.ActivityTime.ToString("dd/MM/yyyy HH:mm:ss")
+                                                    </MudText>
+                                                </div>
+                                            </div>
+                                            @if (!string.IsNullOrEmpty(violation.Description))
+                                            {
+                                                <div class="violation-description-section">
+                                                    <MudText Typo="Typo.body2" Class="description-text">
+                                                        @violation.Description
+                                                    </MudText>
+                                                </div>
+                                            }
+                                        </MudCardContent>
+                                    </MudCard>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="no-violations">
+                    <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Size="Size.Large" Color="Color.Success" Class="no-violations-icon" />
+                    <MudText Typo="Typo.h6" Class="no-violations-text">Chưa có vi phạm nào</MudText>
+                    <MudText Typo="Typo.body2" Class="no-violations-subtext">Sinh viên này chưa có vi phạm nào được ghi nhận</MudText>
+                </div>
+            }
+        </div>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Close">Đóng</MudButton>
+    </DialogActions>
+</MudDialog>
+
+<style>
+    .violation-details-container {
+        padding: 8px;
+        max-height: 70vh;
+        overflow-y: auto;
+    }
+
+    .violation-header-section {
+        display: flex;
+        gap: 20px;
+        margin-bottom: 24px;
+        padding: 16px;
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .student-info-card {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        flex: 1;
+    }
+
+    .student-avatar {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+
+    .student-info {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .student-code {
+        font-weight: 700;
+        color: #264488;
+    }
+
+    .student-name {
+        color: #555;
+    }
+
+    .violation-summary-card {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 12px 20px;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .summary-chip {
+        padding: 8px 16px;
+    }
+
+    .summary-text {
+        font-weight: 700;
+        color: white;
+    }
+
+    .summary-status {
+        color: #666;
+        font-weight: 500;
+    }
+
+    .violations-timeline {
+        margin-top: 24px;
+    }
+
+    .timeline-title {
+        display: flex;
+        align-items: center;
+        margin-bottom: 16px;
+        font-weight: 600;
+        color: #264488;
+    }
+
+    .timeline-container {
+        position: relative;
+        padding-left: 32px;
+    }
+
+    .timeline-container::before {
+        content: '';
+        position: absolute;
+        left: 15px;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: linear-gradient(to bottom, #e0e0e0, #f5f5f5);
+    }
+
+    .timeline-item {
+        position: relative;
+        margin-bottom: 20px;
+        animation: slideIn 0.3s ease-out;
+    }
+
+    @@keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateX(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    .timeline-dot {
+        position: absolute;
+        left: -24px;
+        top: 8px;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        z-index: 1;
+    }
+
+    .timeline-dot.activity-warning {
+        background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+    }
+
+    .timeline-dot.activity-danger {
+        background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+    }
+
+    .timeline-dot.activity-info {
+        background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);
+    }
+
+    .timeline-dot.activity-default {
+        background: linear-gradient(135deg, #9e9e9e 0%, #757575 100%);
+    }
+
+    .timeline-content {
+        margin-left: 0;
+    }
+
+    .violation-card {
+        border-left: 4px solid;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .violation-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+
+    .violation-card.activity-warning {
+        border-left-color: #ff9800;
+        background: linear-gradient(to right, #fff3e0 0%, #ffffff 100%);
+    }
+
+    .violation-card.activity-danger {
+        border-left-color: #f44336;
+        background: linear-gradient(to right, #ffebee 0%, #ffffff 100%);
+    }
+
+    .violation-card.activity-info {
+        border-left-color: #2196f3;
+        background: linear-gradient(to right, #e3f2fd 0%, #ffffff 100%);
+    }
+
+    .violation-card.activity-default {
+        border-left-color: #9e9e9e;
+        background: linear-gradient(to right, #f5f5f5 0%, #ffffff 100%);
+    }
+
+    .violation-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+    }
+
+    .violation-type-section {
+        flex: 1;
+    }
+
+    .violation-time-section {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        color: #757575;
+    }
+
+    .time-icon {
+        font-size: 16px;
+    }
+
+    .time-text {
+        font-weight: 500;
+    }
+
+    .violation-description-section {
+        margin-top: 12px;
+        padding-top: 12px;
+        border-top: 1px solid #e0e0e0;
+    }
+
+    .description-text {
+        color: #555;
+        line-height: 1.6;
+    }
+
+    .no-violations {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 60px 20px;
+        text-align: center;
+    }
+
+    .no-violations-icon {
+        margin-bottom: 16px;
+        font-size: 64px;
+    }
+
+    .no-violations-text {
+        color: #4caf50;
+        font-weight: 600;
+        margin-bottom: 8px;
+    }
+
+    .no-violations-subtext {
+        color: #757575;
+    }
+
+    @@media (max-width: 768px) {
+        .violation-header-section {
+            flex-direction: column;
+        }
+
+        .violation-card-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 8px;
+        }
+    }
+</style>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = default!;
+    
+    [Parameter] public string StudentCode { get; set; } = string.Empty;
+    [Parameter] public string StudentName { get; set; } = string.Empty;
+    [Parameter] public int ViolationCount { get; set; }
+    [Parameter] public int MaxViolations { get; set; } = 3;
+    [Parameter] public List<StudentActivityDto>? Violations { get; set; }
+
+    private void Close() => MudDialog.Close();
+
+    private Color GetSummaryColor()
+    {
+        if (ViolationCount >= MaxViolations)
+            return Color.Error;
+        if (ViolationCount > 0)
+            return Color.Warning;
+        return Color.Success;
+    }
+
+    private string GetStatusText()
+    {
+        if (ViolationCount >= MaxViolations)
+            return "🔴 Đạt ngưỡng";
+        if (ViolationCount > 0)
+            return "🟡 Cảnh báo";
+        return "🟢 Bình thường";
+    }
+
+    private string GetActivityTypeDisplayName(string activityType)
+    {
+        return activityType switch
+        {
+            "ScreenBlur" => "Thoát màn hình",
+            "Screenshot" => "Chụp màn hình",
+            "TabSwitch" => "Chuyển tab",
+            "Copy" => "Sao chép",
+            "Paste" => "Dán",
+            "RightClick" => "Click chuột phải",
+            "DevTools" => "Mở DevTools",
+            "FullscreenExit" => "Thoát toàn màn hình",
+            "AppBackground" => "Ứng dụng vào nền",
+            "AppForeground" => "Ứng dụng lên trước",
+            "AppSwitch" => "Chuyển ứng dụng",
+            "TabReturn" => "Quay lại tab thi",
+            _ => activityType
+        };
+    }
+
+    private string GetActivityIcon(string activityType)
+    {
+        return activityType switch
+        {
+            "ScreenBlur" => Icons.Material.Filled.VisibilityOff,
+            "Screenshot" => Icons.Material.Filled.CameraAlt,
+            "TabSwitch" => Icons.Material.Filled.Tab,
+            "Copy" => Icons.Material.Filled.ContentCopy,
+            "Paste" => Icons.Material.Filled.ContentPaste,
+            "RightClick" => Icons.Material.Filled.Mouse,
+            "DevTools" => Icons.Material.Filled.Code,
+            "FullscreenExit" => Icons.Material.Filled.FullscreenExit,
+            "AppBackground" => Icons.Material.Filled.PhoneAndroid,
+            "AppForeground" => Icons.Material.Filled.PhoneIphone,
+            "AppSwitch" => Icons.Material.Filled.SwapHoriz,
+            "TabReturn" => Icons.Material.Filled.KeyboardReturn,
+            _ => Icons.Material.Filled.Warning
+        };
+    }
+
+    private Color GetActivityColor(string activityType)
+    {
+        return activityType switch
+        {
+            "ScreenBlur" => Color.Warning,
+            "Screenshot" => Color.Error,
+            "TabSwitch" => Color.Warning,
+            "Copy" => Color.Error,
+            "Paste" => Color.Error,
+            "RightClick" => Color.Info,
+            "DevTools" => Color.Error,
+            "FullscreenExit" => Color.Warning,
+            "AppBackground" => Color.Error,
+            "AppForeground" => Color.Info,
+            "AppSwitch" => Color.Error,
+            "TabReturn" => Color.Info,
+            _ => Color.Default
+        };
+    }
+
+    private string GetActivityTypeClass(string activityType)
+    {
+        return activityType switch
+        {
+            "ScreenBlur" => "activity-warning",
+            "Screenshot" => "activity-danger",
+            "TabSwitch" => "activity-warning",
+            "Copy" => "activity-danger",
+            "Paste" => "activity-danger",
+            "RightClick" => "activity-info",
+            "DevTools" => "activity-danger",
+            "FullscreenExit" => "activity-warning",
+            "AppBackground" => "activity-danger",
+            "AppForeground" => "activity-info",
+            "AppSwitch" => "activity-danger",
+            "TabReturn" => "activity-info",
+            _ => "activity-default"
+        };
+    }
+}
+

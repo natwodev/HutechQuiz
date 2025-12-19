@@ -28,6 +28,7 @@ namespace backend_manage.core.Data
         public DbSet<Semester> Semesters { get; set; }
         public DbSet<Lecturer> Lecturers { get; set; }
         public DbSet<ExamRoom> ExamRooms { get; set; }
+        public DbSet<StudentActivity> StudentActivities { get; set; }
         
         
         protected override void OnModelCreating(ModelBuilder builder)
@@ -171,6 +172,22 @@ namespace backend_manage.core.Data
                 .WithMany(p => p.ChildQuestions)
                 .HasForeignKey(e => e.ParentQuestionId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            // StudentActivity → StudentExamSession
+            builder.Entity<StudentActivity>()
+                .HasOne(sa => sa.StudentExamSession)
+                .WithMany()
+                .HasForeignKey(sa => sa.StudentExamSessionId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Index cho StudentActivity để tối ưu query
+            builder.Entity<StudentActivity>()
+                .HasIndex(sa => new { sa.StudentExamSessionId, sa.ActivityTime })
+                .HasDatabaseName("IX_StudentActivity_SessionId_Time");
+
+            builder.Entity<StudentActivity>()
+                .HasIndex(sa => sa.StudentCode)
+                .HasDatabaseName("IX_StudentActivity_StudentCode");
 
         }
 

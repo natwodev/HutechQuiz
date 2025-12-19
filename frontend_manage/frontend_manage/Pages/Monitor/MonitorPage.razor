@@ -46,6 +46,10 @@
             <MudIcon Icon="@Icons.Material.Filled.Assignment" />
             <span>BÀI KIỂM TRA NHANH</span>
         </div>
+        <div class="nav-item @(activeTab == 3 ? "active" : "")" @onclick="() => ActivateTab(3)">
+            <MudIcon Icon="@Icons.Material.Filled.Security" />
+            <span>THEO DÕI HÀNH ĐỘNG</span>
+        </div>
     </div>
 
 
@@ -135,6 +139,12 @@
                     <QuickTestTab Subject="@examData.Subject" ExamSessionSubjectId="@ExamSessionSubjectId" />
                 }
             </div>
+            <div class="@(activeTab == 3 ? "tab-content-active" : "tab-content-hidden")">
+                @if (activeTab == 3 || previousTab == 3)
+                {
+                    <ActivityMonitorTab ExamSessionSubjectId="@ExamSessionSubjectId" />
+                }
+            </div>
         }
         else
         {
@@ -164,6 +174,16 @@
                     <div class="no-data-container">
                         <MudAlert Severity="Severity.Info" Variant="Variant.Filled">
                             Vui lòng chọn phòng thi để xem bài kiểm tra nhanh
+                        </MudAlert>
+                    </div>
+                }
+            </div>
+            <div class="@(activeTab == 3 ? "tab-content-active" : "tab-content-hidden")">
+                @if (activeTab == 3 || previousTab == 3)
+                {
+                    <div class="no-data-container">
+                        <MudAlert Severity="Severity.Info" Variant="Variant.Filled">
+                            Vui lòng chọn phòng thi để xem theo dõi hành động
                         </MudAlert>
                     </div>
                 }

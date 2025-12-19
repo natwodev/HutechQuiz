@@ -17,6 +17,8 @@ namespace frontend_manage.Pages.Monitor
         [Inject] private MonitorService MonitorService { get; set; }
         [Inject] private IJSRuntime JSRuntime { get; set; }
         [Inject] private NotificationService NotificationService { get; set; }
+        [Inject] private StudentActivityService StudentActivityService { get; set; }
+        [Inject] private AuthService AuthService { get; set; }
 
         // Không còn sử dụng query string parameters
         private int? ExamSessionSubjectId { get; set; }
@@ -39,6 +41,21 @@ namespace frontend_manage.Pages.Monitor
 
         protected override async Task OnInitializedAsync()
         {
+            // Kiểm tra authentication trước
+            if (!await AuthService.IsAuthenticated())
+            {
+                Navigation.NavigateTo("/monitor/login", true);
+                return;
+            }
+
+            var role = await AuthService.GetUserRoleFromToken();
+            if (role != "Lecturer")
+            {
+                await AuthService.Logout();
+                Navigation.NavigateTo("/monitor/login", true);
+                return;
+            }
+
             // Timer để tự động ẩn thông báo sau 5 giây
             notificationTimer = new Timer(_ =>
             {

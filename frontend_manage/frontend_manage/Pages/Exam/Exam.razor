@@ -22,6 +22,14 @@
             <div class="exam-content-wrapper">
                 @* Main Question Panel *@
                 <div class="exam-question-area">
+                    @* Auto Next Toggle Button *@
+                    <div class="auto-next-toggle-container">
+                        <MudSwitch T="bool" 
+                                   @bind-Checked="_autoNext" 
+                                   Label="Tự động chuyển câu khi chọn đáp án"
+                                   Color="Color.Primary"
+                                   Size="Size.Small" />
+                    </div>
                     <QuestionDisplayPanel ActiveQuestion="@ActiveQuestion?.Question"
                                           ShuffledExamPaperCore="@_response?.ExamPaper?.ShuffledExamPaperCore"
                                           CurrentIndex="@_activeQuestionIndex"
@@ -40,6 +48,14 @@
                     <ExamSessionInfo StudentSession="@StudentSession"
                                      AllowViewMaterialsShuffled="@(_response?.ExamPaper?.AllowViewMaterials ?? false)"
                                      AllowViewMaterialsOriginal="@(_response?.OriginalExamPaper?.AllowViewMaterials ?? false)" />
+                    
+                    @* Violation Counter *@
+                    @if (!(_response?.ExamPaper?.AllowViewMaterials ?? true))
+                    {
+                        <ViolationCounter ViolationCount="@_violationCount" 
+                                         MaxViolations="@MAX_VIOLATIONS" />
+                    }
+                    
                     <QuestionNavigation TotalQuestions="@_navigationItems.Count"
                                         QuestionIds="@_navigationItems.Select(n => n.QuestionId).ToList()"
                                         ParentIndices="@_navigationItems.Select(n => n.ParentIndex).ToList()"

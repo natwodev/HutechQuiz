@@ -9,7 +9,7 @@ namespace backend_manage.core.Services.Interfaces
         Task<OriginalExamPaperDto> CreateAsync(CreateOriginalExamPaperRequest request);
         Task<OriginalExamPaperDto> UpdateAsync(UpdateOriginalExamPaperRequest request);
         Task ImportFromXmlAsync(IFormFile file, string originalExamPaperCore);
-
+        Task ImportFromWordAsync(IFormFile file, string originalExamPaperCore, int subjectId);
         Task<OriginalExamPaperDto> GetWithDetailsAsync(string originalExamPaperCore);
         Task CreateShuffledExamPapersAsync(string originalExamPaperCore, int count);
         Task<List<OriginalExamDto>> GetAllAsync();

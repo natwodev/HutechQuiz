@@ -168,6 +168,36 @@ namespace backend_manage.Controllers
                 return StatusCode(500, new { message = $"Lỗi khi import đề thi: {ex.Message}" });
             }
         }
+
+        [HttpPost("import-word")]
+        [Authorize(Policy = "ExamManagement")]
+        public async Task<IActionResult> ImportWord(
+            [FromForm] IFormFile file,
+            [FromForm] string originalExamPaperCore,
+            [FromForm] int subjectId)
+        {
+            if (file == null || file.Length == 0)
+                return BadRequest("File không hợp lệ hoặc rỗng");
+
+            try
+            {
+                await _originalExamPaperService.ImportFromWordAsync(file, originalExamPaperCore, subjectId);
+                _logger.LogInformation("Import đề thi từ Word thành công với mã: {OriginalExamPaperCore}", originalExamPaperCore);
+                return Ok(new { message = "Import từ Word thành công." });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi import đề thi từ Word với mã: {OriginalExamPaperCore}. Lỗi: {ErrorMessage}",
+                    originalExamPaperCore, ex.Message);
+
+                if (ex.Message.Contains("Đã tồn tại đề thi"))
+                {
+                    return BadRequest(new { message = ex.Message });
+                }
+
+                return StatusCode(500, new { message = $"Lỗi khi import đề thi từ Word: {ex.Message}" });
+            }
+        }
         
         [HttpGet("{core}/with-details")]
         [Authorize(Policy = "StaffOnly")]
