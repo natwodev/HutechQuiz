@@ -140,10 +140,8 @@ public partial class ActivityMonitorTab : ComponentBase, IDisposable
 
                 InvokeAsync(StateHasChanged);
 
-                // Hiển thị thông báo
-                Snackbar.Add(
-                    $"Phát hiện hành động: {GetActivityTypeDisplayName(newActivity.ActivityType)} từ {newActivity.StudentCode}",
-                    Severity.Info);
+                // Không hiển thị thông báo để tránh nghẽn khi có quá nhiều activity
+                // Dữ liệu sẽ tự động cập nhật trong bảng
             }
         }
         catch (Exception ex)
