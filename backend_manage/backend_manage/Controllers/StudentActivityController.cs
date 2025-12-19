@@ -110,5 +110,52 @@ public class StudentActivityController : ControllerBase
             return StatusCode(500, new { message = $"Lỗi khi lấy thống kê: {ex.Message}" });
         }
     }
+
+    /// <summary>
+    /// Lấy violation count của student hiện tại (chỉ cho phép student xem của chính họ)
+    /// </summary>
+    [HttpGet("my-violation-count")]
+    [Authorize(Policy = "StudentOnly")]
+    public async Task<IActionResult> GetMyViolationCount([FromQuery] int examSessionSubjectId)
+    {
+        try
+        {
+            // Lấy studentCode từ claim
+            var studentCode = User.FindFirst("studentCode")?.Value 
+                ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
+            if (string.IsNullOrEmpty(studentCode))
+            {
+                return Unauthorized(new { message = "Không tìm thấy thông tin sinh viên" });
+            }
+
+            // Lấy activities của student này
+            var activities = await _studentActivityService.GetActivitiesByStudentCodeAsync(
+                studentCode, examSessionSubjectId);
+
+            // Định nghĩa các loại vi phạm nghiêm trọng (giống frontend)
+            var violationTypes = new HashSet<string>
+            {
+                "TabSwitch", "FullscreenExit", "Copy", "Paste", 
+                "RightClick", "DevTools", "Screenshot"
+            };
+
+            // Đếm số lượng vi phạm
+            var violationCount = activities.Count(a => violationTypes.Contains(a.ActivityType));
+
+            return Ok(new 
+            { 
+                studentCode = studentCode,
+                violationCount = violationCount,
+                maxViolations = 3,
+                totalActivities = activities.Count()
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Lỗi khi lấy violation count cho student");
+            return StatusCode(500, new { message = $"Lỗi khi lấy violation count: {ex.Message}" });
+        }
+    }
 }
 
