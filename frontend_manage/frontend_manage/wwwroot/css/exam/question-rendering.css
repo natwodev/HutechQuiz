@@ -1,0 +1,710 @@
+/* ============================================
+   Question Rendering Styles
+   Cải thiện giao diện cho LaTeX và các dạng câu hỏi
+   ============================================ */
+
+/* ============================================
+   1. LaTeX Content Styling
+   ============================================ */
+.katex-content {
+    font-size: 1.15rem;
+    line-height: 1.6;
+    color: #333;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+/* LaTeX inline và display */
+.katex-content .katex {
+    font-size: 1.1em;
+    line-height: 1.2;
+}
+
+.katex-content .katex-display {
+    margin: 1em 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+}
+
+/* LaTeX trong câu hỏi */
+.question-title .katex-content,
+.question-inline .katex-content {
+    display: inline;
+    font-size: 1.05em;
+}
+
+/* LaTeX trong đáp án */
+.answer-text .katex-content {
+    display: inline;
+    font-size: 1em;
+}
+
+/* ============================================
+   2. Question Item Styling
+   ============================================ */
+.question-item {
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    background: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    transition: box-shadow 0.2s ease;
+}
+
+.question-item:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Parent question styling */
+.question-item.group-parent {
+    background: #f8f9fa;
+    border-left: 4px solid #1976d2;
+    padding-left: 1.5rem;
+}
+
+/* Child question styling */
+.question-item.group-child {
+    background: #fafafa;
+    border-left: 3px solid #90caf9;
+    margin-left: 2rem;
+    padding-left: 1.5rem;
+}
+
+/* Question title */
+.question-title {
+    margin-bottom: 1.5rem;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1976d2;
+    line-height: 1.6;
+}
+
+.title-prefix {
+    font-weight: 700;
+    color: #1976d2;
+    margin-right: 0.5rem;
+}
+
+.question-title .katex-content {
+    color: #212121;
+    font-weight: 500;
+}
+
+/* ============================================
+   3. Answer Options Styling
+   ============================================ */
+.answers-group {
+    margin-top: 1rem;
+}
+
+.answer-row {
+    margin-bottom: 0.75rem;
+}
+
+.answer-option {
+    display: flex;
+    align-items: flex-start;
+    padding: 0.875rem 1rem;
+    margin-bottom: 0.5rem;
+    background: #ffffff;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-height: 3rem;
+}
+
+.answer-option:hover {
+    background: #f5f5f5;
+    border-color: #bdbdbd;
+    transform: translateX(4px);
+}
+
+.answer-option.selected {
+    background: #e3f2fd;
+    border-color: #1976d2;
+    box-shadow: 0 2px 8px rgba(25, 118, 210, 0.2);
+}
+
+.answer-option input[type="radio"] {
+    margin-right: 0.75rem;
+    margin-top: 0.25rem;
+    width: 1.25rem;
+    height: 1.25rem;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.answer-letter {
+    font-weight: 700;
+    color: #1976d2;
+    min-width: 1.5rem;
+    margin-right: 0.5rem;
+    font-size: 1.15rem;
+    flex-shrink: 0;
+    margin-top: 0.125rem;
+}
+
+.answer-text {
+    flex: 1;
+    line-height: 1.6;
+    color: #424242;
+    padding-top: 0.125rem;
+    font-size: 1.1rem;
+}
+
+.answer-text .katex-content {
+    display: inline;
+}
+
+/* ============================================
+   4. Matching Question Styling
+   ============================================ */
+.matching-root {
+    position: relative;
+    margin: 1.5rem 0;
+    padding: 1.5rem;
+    background: #ffffff;
+    border-radius: 12px;
+    border: 2px solid #e0e0e0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.matching-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #e0e0e0;
+}
+
+.side-title {
+    font-weight: 700;
+    color: #1976d2;
+    font-size: 1.2rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.legend {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.875rem;
+    color: #666;
+    font-weight: 500;
+}
+
+.legend .dot {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.legend .dot.left {
+    background: #1976d2;
+}
+
+.legend .dot.right {
+    background: #4caf50;
+}
+
+.matching-columns {
+    display: grid !important;
+    grid-template-columns: 1fr auto 1fr !important;
+    gap: 0 !important;
+    position: relative;
+    min-height: 200px;
+    width: 100%;
+    align-items: start;
+    flex-direction: row !important; /* Override any flex direction */
+}
+
+/* Divider giữa 2 cột */
+.col-divider {
+    width: 2px;
+    background: linear-gradient(to bottom, 
+        transparent 0%, 
+        #d0d0d0 5%, 
+        #d0d0d0 95%, 
+        transparent 100%);
+    margin: 0 1.5rem;
+    position: relative;
+    z-index: 1;
+}
+
+.matching-columns .col {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 1rem;
+    padding: 0.5rem 0;
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    min-width: 0; /* Cho phép flex item shrink */
+    grid-column: auto !important; /* Đảm bảo grid column được áp dụng */
+}
+
+.col-header {
+    margin-bottom: 0.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.col-label {
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.matching-columns .col.left .col-label {
+    color: #1976d2;
+}
+
+.matching-columns .col.right .col-label {
+    color: #4caf50;
+}
+
+.match-item {
+    position: relative;
+    padding: 1rem 1.25rem;
+    background: #ffffff;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-height: 4rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.match-item:hover {
+    background: #f8f9fa;
+    border-color: #bdbdbd;
+    transform: translateX(4px);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.match-item.active {
+    background: #e3f2fd;
+    border-color: #1976d2;
+    border-width: 2px;
+    box-shadow: 0 2px 8px rgba(25, 118, 210, 0.3);
+    transform: translateX(4px);
+}
+
+.matching-columns .col.right .match-item:hover {
+    transform: translateX(-4px);
+}
+
+.matching-columns .col.right .match-item.active {
+    transform: translateX(-4px);
+}
+
+.match-item .anchor {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    border: 2px solid #fff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    position: relative;
+    z-index: 10;
+}
+
+.match-item .anchor.left {
+    background: #1976d2;
+    margin-right: 0.5rem;
+}
+
+.match-item .anchor.right {
+    background: #4caf50;
+    margin-left: 0.5rem;
+    order: 2;
+}
+
+.match-number {
+    font-weight: 700;
+    color: #666;
+    min-width: 1.5rem;
+    flex-shrink: 0;
+    font-size: 1.05rem;
+}
+
+.matching-columns .col.left .match-number {
+    color: #1976d2;
+}
+
+.matching-columns .col.right .match-number {
+    color: #4caf50;
+}
+
+.match-text {
+    flex: 1;
+    line-height: 1.6;
+    color: #212121;
+    font-size: 1.1rem;
+}
+
+.match-text .katex-content {
+    display: inline;
+}
+
+.matching-lines {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 5;
+}
+
+/* Đảm bảo LeaderLine hiển thị trên cùng */
+.leader-line {
+    z-index: 10000 !important;
+    pointer-events: none !important;
+}
+
+/* Styling cho các đường nối đã được tạo */
+/* LeaderLine SVG được append vào body, nhưng cần đảm bảo nó scroll cùng với container */
+.matching-root {
+    position: relative;
+    overflow: visible; /* Cho phép SVG hiển thị ngoài container */
+}
+
+/* Đảm bảo SVG của LeaderLine có pointer-events none để không block clicks */
+body > svg[data-leader-line],
+body > svg.leader-line {
+    pointer-events: none !important;
+    z-index: 9999 !important;
+}
+
+/* ============================================
+   5. Media Content (Images & Audio)
+   ============================================ */
+.katex-content img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 1rem auto;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e0e0e0;
+}
+
+.katex-content audio {
+    width: 100%;
+    max-width: 600px;
+    margin: 1rem 0;
+    display: block;
+    border-radius: 8px;
+}
+
+.katex-content audio::-webkit-media-controls-panel {
+    background-color: #f5f5f5;
+}
+
+/* Ẩn thanh seek (progress bar) để ngăn tua ngược */
+.katex-content audio::-webkit-media-controls-timeline,
+.exam-audio-player::-webkit-media-controls-timeline {
+    display: none !important;
+}
+
+.katex-content audio::-webkit-media-controls-current-time-display,
+.exam-audio-player::-webkit-media-controls-current-time-display {
+    display: none !important;
+}
+
+.katex-content audio::-webkit-media-controls-time-remaining-display,
+.exam-audio-player::-webkit-media-controls-time-remaining-display {
+    display: none !important;
+}
+
+/* Ẩn seek bar trong audio controls */
+.katex-content audio::-webkit-media-controls-timeline-container,
+.exam-audio-player::-webkit-media-controls-timeline-container {
+    display: none !important;
+}
+
+/* Chỉ hiển thị play/pause button */
+.katex-content audio::-webkit-media-controls-play-button,
+.exam-audio-player::-webkit-media-controls-play-button {
+    display: flex !important;
+}
+
+.katex-content audio::-webkit-media-controls-mute-button,
+.exam-audio-player::-webkit-media-controls-mute-button {
+    display: flex !important;
+}
+
+.katex-content audio::-webkit-media-controls-volume-slider,
+.exam-audio-player::-webkit-media-controls-volume-slider {
+    display: flex !important;
+}
+
+/* Image trong câu hỏi */
+.question-title img,
+.question-inline img {
+    display: block;
+    margin: 1rem 0;
+    max-width: 100%;
+    height: auto;
+}
+
+/* Audio trong câu hỏi */
+.question-title audio,
+.question-inline audio {
+    margin: 1rem 0;
+}
+
+/* ============================================
+   6. Child Questions Container
+   ============================================ */
+.child-questions {
+    margin-top: 1.5rem;
+    padding-left: 1rem;
+    border-left: 3px solid #e0e0e0;
+}
+
+.child-questions .question-item {
+    margin-bottom: 1.5rem;
+}
+
+.child-questions .question-item:last-child {
+    margin-bottom: 0;
+}
+
+/* ============================================
+   7. Preview Page Specific Styles
+   ============================================ */
+.preview-page .katex-content {
+    font-size: 1rem;
+}
+
+.preview-page .question-item {
+    margin-bottom: 2rem;
+}
+
+.preview-page .answer-option {
+    background: #ffffff;
+}
+
+.preview-page .answer-option.selected {
+    background: #e8f5e9;
+    border-color: #4caf50;
+}
+
+/* ============================================
+   8. Responsive Design
+   ============================================ */
+@media (max-width: 768px) {
+    /* Font sizes */
+    .katex-content {
+        font-size: 1rem;
+    }
+
+    .question-title {
+        font-size: 1.1rem;
+    }
+
+    .answer-text {
+        font-size: 0.95rem;
+    }
+
+    .answer-letter {
+        font-size: 1rem;
+    }
+
+    .side-title {
+        font-size: 1rem;
+    }
+
+    .match-text {
+        font-size: 0.9rem;
+    }
+
+    .match-number {
+        font-size: 0.85rem;
+    }
+
+    /* Spacing */
+    .question-item {
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .question-item.group-child {
+        margin-left: 0.75rem;
+        padding: 0.75rem;
+    }
+
+    .answer-option {
+        padding: 0.625rem 0.75rem;
+        min-height: 2.25rem;
+        margin-bottom: 0.375rem;
+    }
+
+    .answer-option input[type="radio"] {
+        width: 1.1rem;
+        height: 1.1rem;
+        margin-right: 0.5rem;
+    }
+
+    /* Matching questions */
+    .matching-columns {
+        grid-template-columns: 1fr;
+        gap: 1.25rem;
+    }
+    
+    .col-divider {
+        display: none;
+    }
+    
+    .matching-columns .col.left,
+    .matching-columns .col.right {
+        padding: 0;
+    }
+
+    .matching-root {
+        padding: 1rem;
+        margin: 1rem 0;
+    }
+
+    .match-item {
+        min-height: 2.75rem;
+        padding: 0.625rem;
+    }
+
+    .matching-header {
+        margin-bottom: 1rem;
+        padding-bottom: 0.75rem;
+    }
+
+    /* Images */
+    .question-image,
+    .answer-image {
+        max-width: 100%;
+        height: auto;
+    }
+}
+
+/* Small Mobile */
+@media (max-width: 480px) {
+    .katex-content {
+        font-size: 0.95rem;
+    }
+
+    .question-title {
+        font-size: 1rem;
+    }
+
+    .answer-text {
+        font-size: 0.9rem;
+    }
+
+    .answer-letter {
+        font-size: 0.95rem;
+    }
+
+    .side-title {
+        font-size: 0.95rem;
+    }
+
+    .match-text {
+        font-size: 0.85rem;
+    }
+
+    .match-number {
+        font-size: 0.8rem;
+    }
+
+    .question-item {
+        padding: 0.75rem;
+        margin-bottom: 1rem;
+    }
+
+    .question-item.group-child {
+        margin-left: 0.5rem;
+        padding: 0.5rem;
+    }
+
+    .answer-option {
+        padding: 0.5rem 0.625rem;
+        min-height: 2rem;
+    }
+
+    .answer-option input[type="radio"] {
+        width: 1rem;
+        height: 1rem;
+    }
+
+    .matching-root {
+        padding: 0.75rem;
+    }
+
+    .match-item {
+        min-height: 2.5rem;
+        padding: 0.5rem;
+    }
+
+    .matching-header {
+        margin-bottom: 0.75rem;
+        padding-bottom: 0.5rem;
+    }
+}
+
+/* ============================================
+   9. Print Styles
+   ============================================ */
+@media print {
+    .question-item {
+        page-break-inside: avoid;
+        box-shadow: none;
+        border: 1px solid #ccc;
+    }
+
+    .answer-option {
+        border: 1px solid #ccc;
+        page-break-inside: avoid;
+    }
+
+    .matching-root {
+        page-break-inside: avoid;
+    }
+}
+
+/* ============================================
+   10. Accessibility Improvements
+   ============================================ */
+.answer-option:focus-within {
+    outline: 3px solid #1976d2;
+    outline-offset: 2px;
+}
+
+.match-item:focus {
+    outline: 3px solid #1976d2;
+    outline-offset: 2px;
+}
+
+/* Screen reader only */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+}
+
