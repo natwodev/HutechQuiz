@@ -117,27 +117,15 @@ namespace frontend_manage.Pages.ExamManager.Preview
             if (Exam?.Details == null || Exam.Details.Count == 0)
                 return new List<OriginalExamPaperDetailDto>();
 
-            // Sử dụng ExamRenderingService để flatten questions
-            var flatQuestions = ExamRenderingService.GetFlatQuestions(
-                Exam.Details,
-                q => q.ParentQuestionId,
-                q => q.ChildQuestions,
-                q => q.Order
-            );
-            
-            // Loại bỏ child questions của matching parent (chúng đã được render trong MatchingQuestion)
+            // Chỉ lấy các questions độc lập và parent questions (không bao gồm child questions)
             var filteredQuestions = new List<OriginalExamPaperDetailDto>();
-            foreach (var q in flatQuestions)
+            
+            foreach (var q in Exam.Details.OrderBy(q => q.Order))
             {
-                // Nếu là child question của matching parent, bỏ qua
+                // Bỏ qua child questions (sẽ được render trong parent question)
                 if (q.ParentQuestionId.HasValue)
                 {
-                    // Tìm parent question trong Exam.Details
-                    var parent = Exam.Details.FirstOrDefault(p => p.OriginalExamPaperDetailId == q.ParentQuestionId.Value);
-                    if (parent != null && IsMatchingParent(parent))
-                    {
-                        continue; // Bỏ qua child question của matching parent
-                    }
+                    continue;
                 }
                 
                 filteredQuestions.Add(q);
@@ -145,13 +133,158 @@ namespace frontend_manage.Pages.ExamManager.Preview
             
             return filteredQuestions;
         }
+        
+        /// <summary>
+        /// Lấy danh sách các parent questions không phải matching (câu hỏi nhóm)
+        /// </summary>
+        private List<OriginalExamPaperDetailDto> GetGroupParentQuestions()
+        {
+            if (Exam?.Details == null || Exam.Details.Count == 0)
+                return new List<OriginalExamPaperDetailDto>();
+
+            return Exam.Details
+                .Where(q => q.ParentQuestionId == null 
+                    && q.ChildQuestions != null 
+                    && q.ChildQuestions.Count > 0 
+                    && !IsMatchingParent(q))
+                .OrderBy(q => q.Order)
+                .ToList();
+        }
+        
+        /// <summary>
+        /// Trích xuất range từ nội dung group question (ví dụ: {<1>} — {<3>})
+        /// </summary>
+        private (int? start, int? end) ExtractGroupRange(string content)
+        {
+            if (string.IsNullOrWhiteSpace(content))
+                return (null, null);
+            
+            var match = System.Text.RegularExpressions.Regex.Match(content, @"\{<(\d+)>\}.*?\{<(\d+)>\}");
+            if (match.Success && match.Groups.Count >= 3)
+            {
+                if (int.TryParse(match.Groups[1].Value, out int start) && 
+                    int.TryParse(match.Groups[2].Value, out int end))
+                {
+                    return (start, end);
+                }
+            }
+            
+            return (null, null);
+        }
+        
+        /// <summary>
+        /// Lấy số thứ tự của parent question (group question được đếm như 1 câu hỏi)
+        /// </summary>
+        private int? GetGroupParentNumber(OriginalExamPaperDetailDto parent)
+        {
+            if (Exam?.Details == null || Exam.Details.Count == 0)
+                return null;
+            
+            var allQuestions = Exam.Details.OrderBy(q => q.Order).ToList();
+            int number = 1;
+            
+            foreach (var q in allQuestions)
+            {
+                if (q.OriginalExamPaperDetailId == parent.OriginalExamPaperDetailId)
+                {
+                    return number;
+                }
+                
+                var isMatching = IsMatchingParent(q);
+                var isGroupParent = q.ParentQuestionId == null && q.ChildQuestions != null && q.ChildQuestions.Count > 0 && !isMatching;
+                
+                if (isMatching)
+                {
+                    // Matching question: đếm như 1 câu hỏi
+                    number++;
+                }
+                else if (isGroupParent)
+                {
+                    // Group question: parent đếm như 1 câu hỏi, child questions đếm tiếp
+                    number++; // Đếm parent
+                    if (q.ChildQuestions != null)
+                    {
+                        number += q.ChildQuestions.Count; // Đếm các child
+                    }
+                }
+                else
+                {
+                    // Câu hỏi độc lập: đếm
+                    number++;
+                }
+            }
+            
+            return null;
+        }
+        
+        /// <summary>
+        /// Lấy số thứ tự đầu và cuối của child questions trong một nhóm
+        /// Parent được đếm như 1 câu hỏi, child questions đếm tiếp sau parent
+        /// </summary>
+        private (int start, int end) GetChildQuestionsRange(OriginalExamPaperDetailDto parent)
+        {
+            if (parent.ChildQuestions == null || parent.ChildQuestions.Count == 0)
+                return (0, 0);
+            
+            // Lấy số thứ tự của parent
+            var parentNumber = GetGroupParentNumber(parent);
+            if (!parentNumber.HasValue)
+                return (0, 0);
+            
+            // Child questions bắt đầu từ parentNumber + 1
+            int startNumber = parentNumber.Value + 1;
+            int endNumber = startNumber + parent.ChildQuestions.Count - 1;
+            
+            return (startNumber, endNumber);
+        }
+
+        /// <summary>
+        /// Kiểm tra xem đây có phải là group question (câu hỏi nhóm) không
+        /// Group question có pattern {<1>} — {<3>} trong nội dung
+        /// </summary>
+        private bool IsGroupQuestion(OriginalExamPaperDetailDto q)
+        {
+            if (q.ChildQuestions == null || q.ChildQuestions.Count == 0)
+                return false;
+
+            // Kiểm tra pattern {<...>} trong nội dung parent question
+            // Pattern có thể là: {<1>} — {<3>} hoặc {<1>} - {<3>} hoặc {<1>}—{<3>}
+            var stem = q.QuestionContent ?? string.Empty;
+            
+            // Kiểm tra nhiều pattern khác nhau cho group question
+            var patterns = new[]
+            {
+                @"\{<\d+>\}.*?\{<\d+>\}",  // {<1>} ... {<3>}
+                @"\{&lt;\d+&gt;\}.*?\{&lt;\d+&gt;\}",  // HTML encoded: {&lt;1&gt;} ... {&lt;3&gt;}
+                @"\{&lt;\d+&gt;\}.*?—.*?\{&lt;\d+&gt;\}",  // HTML encoded với dấu gạch ngang
+            };
+            
+            foreach (var pattern in patterns)
+            {
+                if (System.Text.RegularExpressions.Regex.IsMatch(stem, pattern, System.Text.RegularExpressions.RegexOptions.IgnoreCase))
+                {
+                    return true;
+                }
+            }
+            
+            return false;
+        }
 
         /// <summary>
         /// Kiểm tra xem đây có phải là matching question dạng parent-child không
+        /// Matching question có đặc điểm:
+        /// 1. Parent question không có answers (chỉ có stem)
+        /// 2. Tất cả child questions có cùng số lượng answers
+        /// 3. Parent question có từ khóa về matching (Nối cột, nối, match)
+        /// 4. KHÔNG có pattern {<...>} (đó là group question)
         /// </summary>
         private bool IsMatchingParent(OriginalExamPaperDetailDto q)
         {
             if (q.ChildQuestions == null || q.ChildQuestions.Count == 0)
+                return false;
+
+            // QUAN TRỌNG: Kiểm tra group question TRƯỚC - nếu có pattern {<...>} thì chắc chắn không phải matching
+            if (IsGroupQuestion(q))
                 return false;
 
             // Parent question không nên có answers (chỉ có stem)
@@ -159,8 +292,8 @@ namespace frontend_manage.Pages.ExamManager.Preview
                 return false;
 
             // Kiểm tra xem tất cả child questions có cùng số lượng answers không
-            var firstChild = q.ChildQuestions.First();
-            if (firstChild.Answers == null || firstChild.Answers.Count == 0)
+            var firstChild = q.ChildQuestions.FirstOrDefault();
+            if (firstChild == null || firstChild.Answers == null || firstChild.Answers.Count == 0)
                 return false;
 
             var answerCount = firstChild.Answers.Count;
@@ -175,9 +308,10 @@ namespace frontend_manage.Pages.ExamManager.Preview
                                      stem.Contains("nối", StringComparison.OrdinalIgnoreCase) ||
                                      stem.Contains("match", StringComparison.OrdinalIgnoreCase);
 
-            // Nếu có từ khóa matching hoặc pattern đặc biệt (số lượng child >= 2 và số lượng answers >= 2)
-            if (hasMatchingKeywords || (q.ChildQuestions.Count >= 2 && answerCount >= 2))
-                {
+            // CHỈ trả về true nếu CÓ từ khóa matching VÀ đáp ứng các điều kiện trên
+            // Không dựa vào pattern (số lượng child >= 2 và số lượng answers >= 2) vì group questions cũng có thể có pattern này
+            if (hasMatchingKeywords)
+            {
                 // Đảm bảo tất cả child questions đều là MCQ (có answers)
                 return q.ChildQuestions.All(child => 
                     child.Answers != null && 
@@ -296,29 +430,30 @@ namespace frontend_manage.Pages.ExamManager.Preview
                         return number;
                     }
                     // Nếu là parent question thông thường, không có số
-            if (question.ParentQuestionId == null && question.ChildQuestions != null && question.ChildQuestions.Count > 0)
-            {
-                return null;
-            }
+                    if (question.ParentQuestionId == null && question.ChildQuestions != null && question.ChildQuestions.Count > 0)
+                    {
+                        return null;
+                    }
                     // Câu hỏi độc lập: trả về số đã đếm
                     return number;
                 }
                 
                 // Đếm các câu hỏi trước câu hỏi hiện tại
                 var isMatching = IsMatchingParent(q);
-                var isNormalParent = q.ParentQuestionId == null && q.ChildQuestions != null && q.ChildQuestions.Count > 0 && !isMatching;
+                var isGroupParent = q.ParentQuestionId == null && q.ChildQuestions != null && q.ChildQuestions.Count > 0 && !isMatching;
                 
                 if (isMatching)
-            {
+                {
                     // Matching question: đếm như một câu hỏi độc lập
                     number++;
                 }
-                else if (isNormalParent)
+                else if (isGroupParent)
                 {
-                    // Parent question thông thường: không đếm parent, chỉ đếm child questions
+                    // Group question: parent đếm như 1 câu hỏi, child questions đếm tiếp
+                    number++; // Đếm parent
                     if (q.ChildQuestions != null)
                     {
-                        number += q.ChildQuestions.Count;
+                        number += q.ChildQuestions.Count; // Đếm các child
                     }
                 }
                 else
@@ -330,6 +465,31 @@ namespace frontend_manage.Pages.ExamManager.Preview
             
             // Nếu không tìm thấy trong allQuestions, trả về null
             return null;
+        }
+        
+        /// <summary>
+        /// Lấy số thứ tự của child question trong nhóm
+        /// Parent được đếm như 1 câu hỏi, child questions đếm tiếp sau parent
+        /// </summary>
+        private int? GetChildQuestionNumber(OriginalExamPaperDetailDto childQuestion, OriginalExamPaperDetailDto parent)
+        {
+            if (parent.ChildQuestions == null || parent.ChildQuestions.Count == 0)
+                return null;
+            
+            // Lấy số thứ tự của parent
+            var parentNumber = GetGroupParentNumber(parent);
+            if (!parentNumber.HasValue)
+                return null;
+            
+            // Tìm thứ tự của child trong parent
+            var orderedChildren = parent.ChildQuestions.OrderBy(c => c.Order).ToList();
+            int childIndex = orderedChildren.FindIndex(c => c.OriginalExamPaperDetailId == childQuestion.OriginalExamPaperDetailId);
+            
+            if (childIndex == -1)
+                return null;
+            
+            // Child questions bắt đầu từ parentNumber + 1
+            return parentNumber.Value + 1 + childIndex;
         }
 
         private int GetTotalQuestionsCount()
@@ -844,3 +1004,4 @@ namespace frontend_manage.Pages.ExamManager.Preview
         }
     }
 }
+
