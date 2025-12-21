@@ -1,0 +1,562 @@
+/* ============================================
+   Exam Manager Preview Page Styles
+   CSS riêng cho trang preview đề thi gốc và đề hoán vị
+   ============================================ */
+
+/* ============================================
+   1. Preview Page Container
+   ============================================ */
+.preview-page {
+    background: #f5f5f5;
+    min-height: 100vh;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.preview-page-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+    flex: 1;
+}
+
+/* Questions List Container */
+.preview-questions-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* ============================================
+   2. Preview Meta Information
+   ============================================ */
+/* Header sử dụng từ MonitorLayout, không cần CSS riêng */
+
+.preview-meta-card {
+    background: white;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.preview-meta-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.preview-meta-label {
+    font-weight: 600;
+    color: #555;
+    min-width: 140px;
+    font-size: 0.875rem;
+}
+
+.preview-meta-value {
+    color: #212121;
+    font-size: 0.875rem;
+    flex: 1;
+}
+
+/* ============================================
+   3. Question Preview Styles - Liền mạch
+   ============================================ */
+.preview-question-container {
+    background: white;
+    border-radius: 0;
+    padding: 0;
+    margin-bottom: 0;
+    box-shadow: none;
+    border-bottom: 1px solid #e0e0e0;
+    transition: background-color 0.2s ease;
+    position: relative;
+}
+
+.preview-question-container:last-child {
+    border-bottom: none;
+}
+
+.preview-question-container:hover {
+    background: #fafafa;
+}
+
+.preview-question-container.child-question {
+    background: #f8f9fa;
+    border-left: 4px solid #90caf9;
+    margin-left: 2rem;
+    padding-left: 1rem;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+/* Parent question container - không có border-left nhưng có thể có background khác */
+.preview-question-container:not(.child-question) {
+    background: white;
+}
+
+.preview-question-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0;
+    padding: 1rem 1.5rem;
+    padding-bottom: 0.75rem;
+    border-bottom: none;
+    background: transparent;
+}
+
+.preview-question-number {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.preview-question-number-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background: #1976d2;
+    color: white;
+    border-radius: 50%;
+    font-size: 0.875rem;
+    font-weight: 700;
+    flex-shrink: 0;
+    box-shadow: 0 2px 4px rgba(25, 118, 210, 0.3);
+}
+
+.preview-question-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #212121;
+    margin: 0;
+}
+
+.preview-question-subtitle {
+    font-size: 0.875rem;
+    color: #757575;
+    font-weight: normal;
+    margin-left: 0.5rem;
+}
+
+/* Question Content - Hoàn toàn độc lập với exam CSS - Liền mạch */
+.question-content-preview,
+.katex-content.question-content-preview {
+    line-height: 1.8;
+    font-size: 1.05rem;
+    padding: 0 1.5rem;
+    padding-bottom: 1rem;
+    background: transparent;
+    border-radius: 0;
+    margin-bottom: 0;
+    color: #212121;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.question-content-preview .katex,
+.katex-content.question-content-preview .katex {
+    font-size: 1.1em;
+    line-height: 1.2;
+}
+
+.question-content-preview .katex-display,
+.katex-content.question-content-preview .katex-display {
+    margin: 1em 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+}
+
+/* KaTeX inline và display trong preview */
+.katex-content {
+    font-size: 1.15rem;
+    line-height: 1.6;
+    color: #333;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+.katex-content .katex {
+    font-size: 1.1em;
+    line-height: 1.2;
+}
+
+.katex-content .katex-display {
+    margin: 1em 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+}
+
+/* ============================================
+   4. Answer Preview Styles - Liền mạch
+   ============================================ */
+.answers-preview {
+    margin: 0;
+    padding: 0.5rem 1.5rem 1rem 1.5rem;
+    background: transparent;
+}
+
+.answer-preview-item {
+    display: flex;
+    align-items: flex-start;
+    padding: 0.875rem 1rem;
+    margin-bottom: 0.5rem;
+    background: #ffffff;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    gap: 0.75rem;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.answer-preview-item:last-child {
+    margin-bottom: 0;
+}
+
+.answer-preview-item:hover {
+    background: #f8f9fa;
+    border-color: #bdbdbd;
+}
+
+.answer-preview-item.answer-correct {
+    background: #e8f5e9;
+    border-color: #4caf50;
+    border-width: 1px;
+    box-shadow: none;
+}
+
+.answer-letter-preview {
+    font-weight: 700;
+    color: #1976d2;
+    min-width: 1.5rem;
+    font-size: 1rem;
+    flex-shrink: 0;
+    line-height: 1.5;
+}
+
+.answer-text-preview {
+    flex: 1;
+    line-height: 1.6;
+    color: #424242;
+    font-size: 0.95rem;
+}
+
+.answer-text-preview .katex {
+    font-size: 1em;
+}
+
+.answer-correct-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.75rem;
+    padding: 4px 10px;
+    height: auto;
+    flex-shrink: 0;
+    background: #4caf50;
+    color: white;
+    border-radius: 4px;
+    font-weight: 600;
+    margin-left: auto;
+}
+
+.answer-correct-badge::before {
+    content: '✓';
+    font-weight: bold;
+    font-size: 0.875rem;
+}
+
+/* ============================================
+   5. Matching Question Preview Styles
+   ============================================ */
+.preview-matching-container {
+    width: 100%;
+    overflow-x: auto;
+    display: block !important;
+    margin: 1rem 0;
+}
+
+.preview-matching-container .matching-root {
+    width: 100% !important;
+    max-width: 100% !important;
+    display: block !important;
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.preview-matching-container .matching-columns {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 2rem !important;
+    flex-direction: row !important;
+    width: 100% !important;
+}
+
+.preview-matching-container .matching-columns .col.left {
+    grid-column: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+.preview-matching-container .matching-columns .col.right {
+    grid-column: 2 !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+/* ============================================
+   6. Group Questions Container (Parent-Child không phải matching)
+   ============================================ */
+.preview-group-question-container {
+    background: white;
+    border-radius: 0;
+    padding: 1.5rem;
+    margin-bottom: 0;
+    border-bottom: 2px solid #2196f3;
+    transition: background-color 0.2s ease;
+}
+
+.preview-group-question-container:hover {
+    background: #fafafa;
+}
+
+.preview-group-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid #e0e0e0;
+}
+
+.preview-group-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.preview-group-label {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #1976d2;
+}
+
+.preview-group-range {
+    font-size: 0.875rem;
+    color: #666;
+    font-weight: 500;
+}
+
+.preview-group-content {
+    margin-bottom: 1rem;
+    padding: 1rem;
+    background: #f5f5f5;
+    border-radius: 6px;
+    border-left: 4px solid #2196f3;
+}
+
+.preview-group-child-questions {
+    margin-top: 1rem;
+    padding-left: 2rem;
+    border-left: 3px solid #90caf9;
+}
+
+.preview-group-child-item {
+    background: white;
+    border-radius: 6px;
+    padding: 1rem;
+    margin-bottom: 0.75rem;
+    border: 1px solid #e0e0e0;
+    transition: all 0.2s ease;
+    margin-left: 1rem; /* Thụt vào một chút */
+}
+
+.preview-group-child-item:last-child {
+    margin-bottom: 0;
+}
+
+.preview-group-child-item:hover {
+    background: #fafafa;
+    border-color: #bdbdbd;
+}
+
+.preview-group-child-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #e8e8e8;
+}
+
+/* ============================================
+   7. Edit Mode Styles
+   ============================================ */
+.preview-edit-form {
+    background: #f9f9f9;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-top: 1rem;
+}
+
+.preview-edit-form-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #1976d2;
+    margin-bottom: 1rem;
+}
+
+/* ============================================
+   8. QR Code Display
+   ============================================ */
+.preview-qr-container {
+    background: white;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-top: 1rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.preview-qr-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    text-align: center;
+    margin-bottom: 1rem;
+    color: #212121;
+}
+
+.preview-qr-image {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.preview-qr-code-text {
+    text-align: center;
+    color: #666;
+    font-size: 0.875rem;
+    margin-top: 0.75rem;
+}
+
+/* ============================================
+   9. Loading & Empty States
+   ============================================ */
+.preview-loading-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+    gap: 1rem;
+}
+
+.preview-loading-text {
+    color: #666;
+    font-size: 1rem;
+}
+
+.preview-empty-container {
+    text-align: center;
+    padding: 40px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* ============================================
+   10. Action Buttons
+   ============================================ */
+.preview-action-buttons {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.preview-action-button {
+    min-width: 120px;
+}
+
+/* ============================================
+   11. Responsive Design
+   ============================================ */
+@media (max-width: 768px) {
+    .preview-page-container {
+        padding: 0 0.5rem;
+    }
+
+    .preview-header {
+        flex-direction: column;
+        text-align: center;
+        gap: 1rem;
+    }
+
+    .preview-meta-row {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .preview-meta-label {
+        min-width: auto;
+    }
+
+    .preview-question-container.child-question {
+        margin-left: 0.5rem;
+    }
+
+    .preview-matching-container .matching-columns {
+        grid-template-columns: 1fr !important;
+        gap: 1rem !important;
+    }
+
+    .preview-action-buttons {
+        flex-direction: column;
+    }
+
+    .preview-action-button {
+        width: 100%;
+    }
+}
+
+/* ============================================
+   12. Override MudStack for Matching Questions
+   ============================================ */
+.mud-stack:has(.matching-root) {
+    display: block !important;
+    flex-direction: column !important;
+}
+
+/* ============================================
+   13. Print Styles (Optional)
+   ============================================ */
+@media print {
+    .preview-page {
+        background: white;
+        padding: 0;
+    }
+
+    .preview-action-buttons,
+    .preview-question-header .mud-menu {
+        display: none;
+    }
+
+    .preview-question-container {
+        page-break-inside: avoid;
+        box-shadow: none;
+        border: 1px solid #ddd;
+    }
+}
+
