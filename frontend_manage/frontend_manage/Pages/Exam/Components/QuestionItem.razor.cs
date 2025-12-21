@@ -19,6 +19,8 @@ namespace frontend_manage.Pages.Exam.Components
         [Parameter] public int? SelectedAnswerId { get; set; }
         [Parameter] public Func<int, int?>? SelectedAnswerProvider { get; set; }
         [Parameter] public Func<int, string?>? LabelProvider { get; set; }
+        [Parameter] public int? StudentExamSessionId { get; set; }
+        [Parameter] public int? QuestionId { get; set; }
 
         [Inject] private IKaTeXService KaTeX { get; set; } = default!;
         [Inject] private IExamRenderingService ExamRenderingService { get; set; } = default!;
@@ -100,12 +102,52 @@ namespace frontend_manage.Pages.Exam.Components
         }
 
         /// <summary>
+        /// Kiểm tra xem đây có phải là group question (câu hỏi nhóm) không
+        /// Group question có pattern {<1>} — {<3>} trong nội dung
+        /// </summary>
+        protected bool IsGroupQuestion(QuestionStructureDto q)
+        {
+            if (q.ChildQuestions == null || q.ChildQuestions.Count == 0)
+                return false;
+
+            // Kiểm tra pattern {<...>} trong nội dung parent question
+            // Pattern có thể là: {<1>} — {<3>} hoặc {<1>} - {<3>} hoặc {<1>}—{<3>}
+            var stem = q.QuestionContent ?? string.Empty;
+            
+            // Kiểm tra nhiều pattern khác nhau cho group question
+            var patterns = new[]
+            {
+                @"\{<\d+>\}.*?\{<\d+>\}",  // {<1>} ... {<3>}
+                @"\{&lt;\d+&gt;\}.*?\{&lt;\d+&gt;\}",  // HTML encoded: {&lt;1&gt;} ... {&lt;3&gt;}
+                @"\{&lt;\d+&gt;\}.*?—.*?\{&lt;\d+&gt;\}",  // HTML encoded với dấu gạch ngang
+            };
+            
+            foreach (var pattern in patterns)
+            {
+                if (Regex.IsMatch(stem, pattern, RegexOptions.IgnoreCase))
+                {
+                    return true;
+                }
+            }
+            
+            return false;
+        }
+
+        /// <summary>
         /// Kiểm tra xem đây có phải là matching question dạng parent-child không
-        /// (parent có child questions và tất cả child đều có cùng số lượng answers)
+        /// Matching question có đặc điểm:
+        /// 1. Parent question không có answers (chỉ có stem)
+        /// 2. Tất cả child questions có cùng số lượng answers
+        /// 3. Parent question có từ khóa về matching (Nối cột, nối, match)
+        /// 4. KHÔNG có pattern {<...>} (đó là group question)
         /// </summary>
         protected bool IsMatchingParent(QuestionStructureDto q)
         {
             if (q.ChildQuestions == null || q.ChildQuestions.Count == 0)
+                return false;
+
+            // QUAN TRỌNG: Kiểm tra group question TRƯỚC - nếu có pattern {<...>} thì chắc chắn không phải matching
+            if (IsGroupQuestion(q))
                 return false;
 
             // Parent question không nên có answers (chỉ có stem)
@@ -113,8 +155,8 @@ namespace frontend_manage.Pages.Exam.Components
                 return false;
 
             // Kiểm tra xem tất cả child questions có cùng số lượng answers không
-            var firstChild = q.ChildQuestions.First();
-            if (firstChild.Answers == null || firstChild.Answers.Count == 0)
+            var firstChild = q.ChildQuestions.FirstOrDefault();
+            if (firstChild == null || firstChild.Answers == null || firstChild.Answers.Count == 0)
                 return false;
 
             var answerCount = firstChild.Answers.Count;
@@ -124,14 +166,14 @@ namespace frontend_manage.Pages.Exam.Components
                 return false;
 
             // Kiểm tra thêm: parent question có stem chứa từ khóa về matching không
-            // Hoặc tất cả child questions có cùng pattern (đều là MCQ với cùng số lượng answers)
             var stem = q.QuestionContent ?? string.Empty;
             var hasMatchingKeywords = stem.Contains("Nối cột", StringComparison.OrdinalIgnoreCase) ||
                                      stem.Contains("nối", StringComparison.OrdinalIgnoreCase) ||
                                      stem.Contains("match", StringComparison.OrdinalIgnoreCase);
 
-            // Nếu có từ khóa matching hoặc pattern đặc biệt (số lượng child >= 2 và số lượng answers >= 2)
-            if (hasMatchingKeywords || (q.ChildQuestions.Count >= 2 && answerCount >= 2))
+            // CHỈ trả về true nếu CÓ từ khóa matching VÀ đáp ứng các điều kiện trên
+            // Không dựa vào pattern (số lượng child >= 2 và số lượng answers >= 2) vì group questions cũng có thể có pattern này
+            if (hasMatchingKeywords)
             {
                 // Đảm bảo tất cả child questions đều là MCQ (có answers)
                 return q.ChildQuestions.All(child => 
