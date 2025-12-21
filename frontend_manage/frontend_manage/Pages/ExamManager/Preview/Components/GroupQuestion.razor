@@ -1,0 +1,108 @@
+@using frontend_manage.DTOs
+@using frontend_manage.Services
+@using Microsoft.AspNetCore.Components
+@inject IExamRenderingService ExamRenderingService
+
+<div class="preview-group-question-container">
+    <div class="preview-group-header">
+        <div class="preview-group-title">
+            @if (ParentNumber.HasValue)
+            {
+                <span class="preview-question-number-chip">@ParentNumber.Value</span>
+            }
+            <span class="preview-group-label">Nhóm câu hỏi</span>
+        </div>
+        @if (ShowMenu)
+        {
+            <MudMenu Icon="@Icons.Material.Filled.MoreVert" Size="Size.Small" Color="Color.Default">
+                <MudMenuItem OnClick="OnEdit">
+                    <MudIcon Icon="@Icons.Material.Filled.Edit" Size="Size.Small" Class="mr-2" />
+                    Sửa
+                </MudMenuItem>
+                <MudMenuItem OnClick="OnDelete" Disabled="true">
+                    <MudIcon Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Class="mr-2" />
+                    Xóa
+                </MudMenuItem>
+            </MudMenu>
+        }
+    </div>
+    
+    @* Nội dung nhóm (parent question content) *@
+    @if (!string.IsNullOrWhiteSpace(ParentContent))
+    {
+        <div class="preview-group-content">
+            <div class="katex-content question-content-preview">
+                @((MarkupString)RenderHtml(ParentContent))
+            </div>
+        </div>
+    }
+    
+    @* Child questions *@
+    @if (ChildQuestions != null && ChildQuestions.Count > 0)
+    {
+        <div class="preview-group-child-questions">
+            @foreach (var child in ChildQuestions.OrderBy(c => c.Order))
+            {
+                <div class="preview-group-child-item">
+                    <div class="preview-group-child-header">
+                        @if (GetChildNumber != null)
+                        {
+                            var childNumber = GetChildNumber(child);
+                            <span class="preview-question-number-chip">@(childNumber?.ToString() ?? child.Order.ToString())</span>
+                        }
+                        <span class="preview-question-title">Câu hỏi</span>
+                    </div>
+                    <div class="katex-content question-content-preview" style="padding: 0.75rem 0; margin-bottom: 0.75rem;">
+                        @((MarkupString)RenderHtml(child.QuestionContent))
+                    </div>
+                    @if (child.Answers != null && child.Answers.Count > 0)
+                    {
+                        <div class="answers-preview" style="margin: 0; padding: 0;">
+                            @foreach (var ans in child.Answers.OrderBy(a => a.Order))
+                            {
+                                <div class="answer-preview-item @(ans.IsCorrect ? "answer-correct" : "")">
+                                    <span class="answer-letter-preview">@GetLetter(ans.Order).</span>
+                                    <div class="katex-content answer-text-preview">
+                                        @((MarkupString)RenderHtml(ans.AnswerContent))
+                                    </div>
+                                    @if (ans.IsCorrect)
+                                    {
+                                        <span class="answer-correct-badge">Đúng</span>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public string? ParentContent { get; set; }
+    [Parameter] public List<OriginalExamPaperDetailDto>? ChildQuestions { get; set; }
+    [Parameter] public int? ParentNumber { get; set; }
+    [Parameter] public int? StartNumber { get; set; }
+    [Parameter] public int? EndNumber { get; set; }
+    [Parameter] public bool ShowMenu { get; set; } = true;
+    [Parameter] public EventCallback OnEdit { get; set; }
+    [Parameter] public EventCallback OnDelete { get; set; }
+    [Parameter] public Func<OriginalExamPaperDetailDto, int?>? GetChildNumber { get; set; }
+    [Parameter] public string? OriginalExamPaperCore { get; set; }
+    
+    private string RenderHtml(string? content)
+    {
+        if (string.IsNullOrWhiteSpace(content))
+            return string.Empty;
+        
+        // Sử dụng ExamRenderingService để render HTML với các markers như [image], [audio], [latex]
+        return ExamRenderingService.NormalizeAndRenderContent(content, null, OriginalExamPaperCore);
+    }
+    
+    private string GetLetter(int order)
+    {
+        return ((char)('A' + order - 1)).ToString();
+    }
+}
+
