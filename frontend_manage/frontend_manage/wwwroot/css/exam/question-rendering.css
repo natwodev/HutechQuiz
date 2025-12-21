@@ -110,20 +110,54 @@
     border: 2px solid #e0e0e0;
     border-radius: 8px;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     min-height: 3rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.answer-option::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(25, 118, 210, 0.1), transparent);
+    transition: left 0.5s ease;
 }
 
 .answer-option:hover {
     background: #f5f5f5;
-    border-color: #bdbdbd;
+    border: none;
     transform: translateX(4px);
+}
+
+.answer-option:hover::before {
+    left: 100%;
 }
 
 .answer-option.selected {
     background: #e3f2fd;
-    border-color: #1976d2;
-    box-shadow: 0 2px 8px rgba(25, 118, 210, 0.2);
+    border-color: #e0e0e0;
+    box-shadow: 0 4px 12px rgba(25, 118, 210, 0.15);
+    transform: scale(1.02);
+    animation: selectPulse 0.4s ease-out;
+}
+
+@keyframes selectPulse {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 2px 4px rgba(25, 118, 210, 0.1);
+    }
+    50% {
+        transform: scale(1.03);
+        box-shadow: 0 6px 16px rgba(25, 118, 210, 0.25);
+    }
+    100% {
+        transform: scale(1.02);
+        box-shadow: 0 4px 12px rgba(25, 118, 210, 0.15);
+    }
 }
 
 .answer-option input[type="radio"] {
@@ -162,9 +196,10 @@
    ============================================ */
 .matching-root {
     position: relative;
-    padding: 8px;
+    padding: 16px;
     background: #ffffff;
-    border-radius: 8px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .matching-lines {
@@ -182,67 +217,97 @@
     z-index: 1;
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 32px;
-    padding: 12px;
-    border: 1px dashed #cbd5e1;
+    gap: 40px;
+    padding: 20px;
+    border: 2px dashed #cbd5e1;
     border-radius: 12px;
-    min-height: 200px;
-    background: #f8fafc;
+    min-height: 250px;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
 }
 
 .matching-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 8px;
-    color: #334155;
+    margin-bottom: 16px;
+    padding: 12px 16px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 8px;
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 500;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.matching-header .side-title {
+    flex: 1;
+}
+
+.matching-header .legend {
+    display: flex;
+    align-items: center;
+    gap: 8px;
     font-size: 12px;
 }
 
 .dot {
     display: inline-block;
-    width: 8px;
-    height: 8px;
+    width: 10px;
+    height: 10px;
     border-radius: 50%;
-    background: #1976d2;
+    background: #ffffff;
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3);
+}
+
+.dot.left {
+    background: #60a5fa;
 }
 
 .dot.right {
-    background: #ef4444;
+    background: #f87171;
 }
 
 .match-item {
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 10px 12px;
+    padding: 14px 16px;
     border-radius: 10px;
     cursor: pointer;
     background: #ffffff;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
-    border: 1px solid #e5e7eb;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+    border: 2px solid #e5e7eb;
     margin-bottom: 12px;
-    width: 85%;
+    width: 90%;
     margin-left: auto;
     margin-right: auto;
+    transition: all 0.2s ease;
+    user-select: none;
 }
 
 .match-item:hover {
-    background: #f5f7fb;
+    background: #f8fafc;
+    border-color: #cbd5e1;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
+    transform: translateY(-2px);
 }
 
 .match-item.active {
-    outline: 2px solid #1976d2;
-    background: #e8f1fd;
+    outline: 3px solid #3b82f6;
+    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+    border-color: #3b82f6;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    transform: translateY(-2px);
 }
 
 .anchor {
-    width: 14px;
-    height: 14px;
-    border: 2px solid #1976d2;
+    width: 16px;
+    height: 16px;
+    border: 3px solid #3b82f6;
     background: #dbeafe;
     border-radius: 50%;
-    box-shadow: 0 0 0 2px #ffffff inset;
+    box-shadow: 0 0 0 2px #ffffff inset, 0 2px 4px rgba(0, 0, 0, 0.1);
+    flex-shrink: 0;
 }
 
 .anchor.right {
@@ -251,9 +316,13 @@
 }
 
 .match-text {
-    white-space: nowrap;
-    font-size: 16px;
+    flex: 1;
+    white-space: normal;
+    word-wrap: break-word;
+    font-size: 15px;
     color: #111827;
+    line-height: 1.5;
+    font-weight: 500;
 }
 
 .pairs-bar {
@@ -324,29 +393,29 @@ body > svg.leader-line {
     background-color: #f5f5f5;
 }
 
-/* Ẩn thanh seek (progress bar) để ngăn tua ngược */
+/* Hiển thị timeline và thời gian - chỉ chặn tua ngược bằng JavaScript */
 .katex-content audio::-webkit-media-controls-timeline,
 .exam-audio-player::-webkit-media-controls-timeline {
-    display: none !important;
+    display: flex !important;
 }
 
 .katex-content audio::-webkit-media-controls-current-time-display,
 .exam-audio-player::-webkit-media-controls-current-time-display {
-    display: none !important;
+    display: flex !important;
 }
 
 .katex-content audio::-webkit-media-controls-time-remaining-display,
 .exam-audio-player::-webkit-media-controls-time-remaining-display {
-    display: none !important;
+    display: flex !important;
 }
 
-/* Ẩn seek bar trong audio controls */
+/* Hiển thị seek bar trong audio controls */
 .katex-content audio::-webkit-media-controls-timeline-container,
 .exam-audio-player::-webkit-media-controls-timeline-container {
-    display: none !important;
+    display: flex !important;
 }
 
-/* Chỉ hiển thị play/pause button */
+/* Chỉ hiển thị play/pause button và volume */
 .katex-content audio::-webkit-media-controls-play-button,
 .exam-audio-player::-webkit-media-controls-play-button {
     display: flex !important;
@@ -361,6 +430,30 @@ body > svg.leader-line {
 .exam-audio-player::-webkit-media-controls-volume-slider {
     display: flex !important;
 }
+
+/* Ẩn nút 3 chấm dọc (overflow menu) */
+.katex-content audio::-webkit-media-controls-overlay-enclosure,
+.exam-audio-player::-webkit-media-controls-overlay-enclosure {
+    display: none !important;
+}
+
+.katex-content audio::-webkit-media-controls-overlay-play-button,
+.exam-audio-player::-webkit-media-controls-overlay-play-button {
+    display: none !important;
+}
+
+/* Ẩn download button nếu có */
+.katex-content audio::-webkit-media-controls-download-button,
+.exam-audio-player::-webkit-media-controls-download-button {
+    display: none !important;
+}
+
+/* Ẩn fullscreen button nếu có */
+.katex-content audio::-webkit-media-controls-fullscreen-button,
+.exam-audio-player::-webkit-media-controls-fullscreen-button {
+    display: none !important;
+}
+
 
 /* Image trong câu hỏi */
 .question-title img,
