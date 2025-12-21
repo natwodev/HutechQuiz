@@ -48,7 +48,6 @@ public partial class Exam : ComponentBase, IAsyncDisposable
     private StudentExamSessionCacheDto? StudentSession => _response?.StudentSession;
     private bool _showTimer = true;
     private bool ShouldShowTimer => _response != null && StudentSession != null && _showTimer;
-    private bool _autoNext = false; // Tự động chuyển câu khi chọn đáp án
     
     // Đếm số lần vi phạm để tự động nộp bài sau 3 lần
     private int _violationCount = 0;
@@ -84,6 +83,26 @@ public partial class Exam : ComponentBase, IAsyncDisposable
             _dotNetRef = DotNetObjectReference.Create(this);
             await JS.InvokeVoidAsync("examFullscreen.registerExamEvents", _dotNetRef);
             _jsEventsRegistered = true;
+            
+            // Load audio play counts from localStorage (sẽ persist qua refresh)
+            if (StudentExamSessionId.HasValue)
+            {
+                try
+                {
+                    await JS.InvokeVoidAsync("loadAudioPlayCounts", StudentExamSessionId.Value);
+                    
+                    // Initialize audio players sau khi load counts
+                    await Task.Delay(300);
+                    if (ActiveQuestion != null)
+                    {
+                        await JS.InvokeVoidAsync("initializeAudioPlayers", StudentExamSessionId.Value, ActiveQuestion.Question.OriginalExamPaperDetailId);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Error loading audio play counts: {ex.Message}");
+                }
+            }
         }
 
         // Tự động bật fullscreen một lần, sau khi:
@@ -109,6 +128,17 @@ public partial class Exam : ComponentBase, IAsyncDisposable
     {
         var previousFullscreen = _isFullscreen;
         _isFullscreen = isFullscreen;
+        
+        // Cập nhật lại LeaderLines khi fullscreen thay đổi
+        try
+        {
+            await Task.Delay(150); // Đợi fullscreen hoàn tất
+            await JS.InvokeVoidAsync("matchingHelpers.redrawAllLeaderLines");
+        }
+        catch
+        {
+            // Ignore errors
+        }
         
         // Không cảnh báo nếu cho phép xem tài liệu
         var allowViewMaterials = _response?.ExamPaper?.AllowViewMaterials ?? true;
@@ -268,7 +298,7 @@ public partial class Exam : ComponentBase, IAsyncDisposable
                 
                 // Reset flag khi load lại exam
                 _violationCountLoaded = false;
-                
+
                 // Nếu backend trả về chuỗi đáp án đã lưu, parse lại để hiển thị
                 var savedAnswersString = result.StudentSession?.StudentAnswersString;
                 if (!string.IsNullOrWhiteSpace(savedAnswersString))
@@ -328,8 +358,29 @@ public partial class Exam : ComponentBase, IAsyncDisposable
 
     private void CollectNavigationLeaves(QuestionStructureDto question, int parentIndex, List<NavigationItem> items, ref int counter)
     {
+        // Kiểm tra xem có phải matching parent không
+        bool isMatchingParent = IsMatchingParent(question);
+        
+        if (isMatchingParent)
+        {
+            // Matching question được đánh số như một câu hỏi độc lập
+            var label = counter.ToString();
+            _questionLabelMap[question.OriginalExamPaperDetailId] = label;
+            counter++;
+
+            items.Add(new NavigationItem
+            {
+                QuestionId = question.OriginalExamPaperDetailId,
+                ParentIndex = parentIndex
+            });
+            
+            // Không đếm child questions của matching parent (chúng là phần của matching question)
+            return;
+        }
+        
         if (question.ChildQuestions?.Any() == true)
         {
+            // Câu hỏi nhóm thông thường: chỉ đếm child questions, không đếm parent
             foreach (var child in question.ChildQuestions.OrderBy(q => q.Order))
             {
                 CollectNavigationLeaves(child, parentIndex, items, ref counter);
@@ -338,8 +389,9 @@ public partial class Exam : ComponentBase, IAsyncDisposable
             return;
         }
 
-        var label = counter.ToString();
-        _questionLabelMap[question.OriginalExamPaperDetailId] = label;
+        // Câu hỏi độc lập: đếm như bình thường
+        var label2 = counter.ToString();
+        _questionLabelMap[question.OriginalExamPaperDetailId] = label2;
         counter++;
 
         items.Add(new NavigationItem
@@ -347,6 +399,49 @@ public partial class Exam : ComponentBase, IAsyncDisposable
             QuestionId = question.OriginalExamPaperDetailId,
             ParentIndex = parentIndex
         });
+    }
+    
+    /// <summary>
+    /// Kiểm tra xem đây có phải là matching question dạng parent-child không
+    /// (giống logic trong QuestionItem.razor.cs)
+    /// </summary>
+    private bool IsMatchingParent(QuestionStructureDto q)
+    {
+        if (q.ChildQuestions == null || q.ChildQuestions.Count == 0)
+            return false;
+
+        // Parent question không nên có answers (chỉ có stem)
+        if (q.Answers != null && q.Answers.Count > 0)
+            return false;
+
+        // Kiểm tra xem tất cả child questions có cùng số lượng answers không
+        var firstChild = q.ChildQuestions.First();
+        if (firstChild.Answers == null || firstChild.Answers.Count == 0)
+            return false;
+
+        var answerCount = firstChild.Answers.Count;
+        
+        // Tất cả child questions phải có cùng số lượng answers
+        if (q.ChildQuestions.Any(child => child.Answers == null || child.Answers.Count != answerCount))
+            return false;
+
+        // Kiểm tra thêm: parent question có stem chứa từ khóa về matching không
+        var stem = q.QuestionContent ?? string.Empty;
+        var hasMatchingKeywords = stem.Contains("Nối cột", StringComparison.OrdinalIgnoreCase) ||
+                                 stem.Contains("nối", StringComparison.OrdinalIgnoreCase) ||
+                                 stem.Contains("match", StringComparison.OrdinalIgnoreCase);
+
+        // Nếu có từ khóa matching hoặc pattern đặc biệt (số lượng child >= 2 và số lượng answers >= 2)
+        if (hasMatchingKeywords || (q.ChildQuestions.Count >= 2 && answerCount >= 2))
+        {
+            // Đảm bảo tất cả child questions đều là MCQ (có answers)
+            return q.ChildQuestions.All(child => 
+                child.Answers != null && 
+                child.Answers.Count > 0 &&
+                child.Answers.Count == answerCount);
+        }
+
+        return false;
     }
 
     private bool _isSubmitting = false;
@@ -469,26 +564,65 @@ public partial class Exam : ComponentBase, IAsyncDisposable
         // Lưu trạng thái chọn đáp án trên UI
         _questionAnswers[payload.questionId] = payload.value;
 
+        // Trigger StateHasChanged để navigation cập nhật
+        await InvokeAsync(StateHasChanged);
+
+        // Nếu chưa có session id thì không gọi API
+        if (!StudentExamSessionId.HasValue)
+        {
+            System.Diagnostics.Debug.WriteLine($"[HandleQuestionAnswered] No StudentExamSessionId, skipping API call for question {payload.questionId}");
+            return;
+        }
+
         // Giá trị từ UI: với câu hỏi 1 đáp án sẽ là int (answerId)
+        // Với matching question sẽ là object { left = leftAnswerId, right = rightAnswerId }
         int? answerId = null;
         if (payload.value is int intValue)
         {
             answerId = intValue;
         }
-
-        // Tự động chuyển câu ngay khi chọn đáp án (nếu bật autoNext)
-        // Không cần đợi lưu thành công để trải nghiệm mượt mà hơn
-        if (_autoNext && answerId.HasValue && _activeQuestionIndex < _questionDisplayItems.Count - 1)
+        else if (payload.value != null)
         {
-            // Đợi một chút để người dùng thấy đáp án đã được chọn
-            await Task.Delay(300);
-            NextQuestion();
-            StateHasChanged();
+            // Xử lý matching question: object với left và right
+            // Với matching question, có thể lưu rightAnswerId hoặc serialize toàn bộ object
+            try
+            {
+                var valueStr = payload.value.ToString();
+                if (!string.IsNullOrEmpty(valueStr) && int.TryParse(valueStr, out var parsedId))
+                {
+                    answerId = parsedId;
+                }
+                else
+                {
+                    // Nếu không parse được, thử lấy từ object properties
+                    var type = payload.value.GetType();
+                    var rightProp = type.GetProperty("right");
+                    if (rightProp != null)
+                    {
+                        var rightValue = rightProp.GetValue(payload.value);
+                        if (rightValue != null && int.TryParse(rightValue.ToString(), out var rightId))
+                        {
+                            answerId = rightId;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[HandleQuestionAnswered] Error parsing value for question {payload.questionId}: {ex.Message}");
+                // Nếu không parse được, vẫn lưu vào _questionAnswers để navigation biết đã trả lời
+                // Nhưng không gọi API để tránh xóa đáp án
+                return;
+            }
         }
 
-        // Nếu chưa có session id thì không gọi API
-        if (!StudentExamSessionId.HasValue)
+        // Nếu answerId vẫn là null và value cũng là null, có thể là bỏ chọn
+        // Nhưng nếu value không null mà answerId null, có thể là lỗi parse
+        // Trong trường hợp này, không gọi API để tránh xóa đáp án đã có
+        if (answerId == null && payload.value != null)
         {
+            System.Diagnostics.Debug.WriteLine($"[HandleQuestionAnswered] Warning: Could not parse answerId for question {payload.questionId}, value: {payload.value}");
+            // Không gọi API để tránh xóa đáp án
             return;
         }
 
@@ -501,60 +635,239 @@ public partial class Exam : ComponentBase, IAsyncDisposable
             value = answerId
         };
 
-        var result = await StudentService.SaveAnswerAsync(request);
+        System.Diagnostics.Debug.WriteLine($"[HandleQuestionAnswered] Calling SaveAnswerAsync for question {payload.questionId}, answerId: {answerId}");
 
-        if (result == null)
+        try
         {
-            Snackbar.Add("Không thể lưu câu trả lời. Vui lòng kiểm tra kết nối.", Severity.Error);
-            return;
-        }
+            var result = await StudentService.SaveAnswerAsync(request);
 
-        if (!result.Success)
-        {
-            if (result.IsRateLimited)
+            if (result == null)
             {
-                Snackbar.Add(result.Message, Severity.Warning);
+                Snackbar.Add("Không thể lưu câu trả lời. Vui lòng kiểm tra kết nối.", Severity.Error);
+                System.Diagnostics.Debug.WriteLine($"[HandleQuestionAnswered] SaveAnswerAsync returned null for question {payload.questionId}");
+                return;
             }
-            else if (result.IsUnauthorized)
+
+            if (!result.Success)
             {
-                Snackbar.Add(result.Message, Severity.Error);
+                if (result.IsRateLimited)
+                {
+                    Snackbar.Add(result.Message, Severity.Warning);
+                }
+                else if (result.IsUnauthorized)
+                {
+                    Snackbar.Add(result.Message, Severity.Error);
+                }
+                else
+                {
+                    Snackbar.Add(string.IsNullOrWhiteSpace(result.Message)
+                            ? "Lưu câu trả lời thất bại."
+                            : result.Message,
+                        Severity.Error);
+                }
+                System.Diagnostics.Debug.WriteLine($"[HandleQuestionAnswered] SaveAnswerAsync failed for question {payload.questionId}: {result.Message}");
             }
             else
             {
-                Snackbar.Add(string.IsNullOrWhiteSpace(result.Message)
-                        ? "Lưu câu trả lời thất bại."
-                        : result.Message,
-                    Severity.Error);
+                System.Diagnostics.Debug.WriteLine($"[HandleQuestionAnswered] Successfully saved answer for question {payload.questionId}");
             }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[HandleQuestionAnswered] Exception calling SaveAnswerAsync for question {payload.questionId}: {ex.Message}");
+            Snackbar.Add("Lỗi khi lưu câu trả lời. Vui lòng thử lại.", Severity.Error);
         }
     }
 
-    private void ToggleAutoNext()
+    private async Task GoToQuestion(int index)
     {
-        _autoNext = !_autoNext;
-        StateHasChanged();
-    }
+        try
+        {
+            if (_questionDisplayItems == null || _questionDisplayItems.Count == 0)
+            {
+                System.Diagnostics.Debug.WriteLine("QuestionDisplayItems is null or empty");
+                return;
+            }
 
-    private void GoToQuestion(int index)
-    {
         if (index < 0 || index >= _questionDisplayItems.Count)
         {
+                System.Diagnostics.Debug.WriteLine($"Invalid index: {index}, questionDisplayItems count: {_questionDisplayItems.Count}");
             return;
         }
 
         _activeQuestionIndex = index;
+            
+            // Scroll đến câu hỏi được chọn trong container
+            var questionItem = _questionDisplayItems[index];
+            var questionId = $"question-{questionItem.Question.OriginalExamPaperDetailId}";
+            
+            try
+            {
+                if (JS != null)
+                {
+                    await JS.InvokeVoidAsync("eval", $@"
+                        (function() {{
+                            var element = document.getElementById('{questionId}');
+                            var container = element ? element.closest('.exam-question-area') : null;
+                            
+                            if (element && container) {{
+                                // Scroll trong container, không scroll window
+                                var containerRect = container.getBoundingClientRect();
+                                var elementRect = element.getBoundingClientRect();
+                                
+                                // Tính toán vị trí scroll trong container
+                                var scrollTop = container.scrollTop + (elementRect.top - containerRect.top) - 100; // 100px offset từ top
+                                
+                                // Scroll container
+                                container.scrollTo({{
+                                    top: Math.max(0, scrollTop),
+                                    behavior: 'smooth'
+                                }});
+                            }} else if (element) {{
+                                // Fallback: nếu không tìm thấy container, dùng scrollIntoView với block: 'nearest'
+                                element.scrollIntoView({{ behavior: 'smooth', block: 'nearest' }});
+                            }}
+                        }})()
+                    ");
+                }
+            }
+            catch (JSDisconnectedException)
+            {
+                // JS runtime đã disconnect, bỏ qua
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error scrolling to question: {ex.Message}");
+            }
+            
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error in GoToQuestion: {ex.Message}");
+        }
     }
 
-    private void NextQuestion() => GoToQuestion(_activeQuestionIndex + 1);
-    private void PreviousQuestion() => GoToQuestion(_activeQuestionIndex - 1);
-    private void NavigateToEntry(int entryIndex)
+    private async Task NextQuestion() => await GoToQuestion(_activeQuestionIndex + 1);
+    private async Task PreviousQuestion() => await GoToQuestion(_activeQuestionIndex - 1);
+    private bool _isNavigatingToEntry = false;
+
+    private async void NavigateToEntry(int entryIndex)
     {
-        if (entryIndex < 0 || entryIndex >= _navigationItems.Count)
+        // Tránh multiple navigations đồng thời
+        if (_isNavigatingToEntry)
         {
+            System.Diagnostics.Debug.WriteLine("Navigation to entry already in progress");
             return;
         }
 
-        GoToQuestion(_navigationItems[entryIndex].ParentIndex);
+        try
+        {
+            _isNavigatingToEntry = true;
+            
+            // Clear tất cả LeaderLines khi điều hướng sang câu hỏi khác
+            // Đợi một chút để đảm bảo UI đã update
+            try
+            {
+                if (JS != null)
+                {
+                    // Clear ngay lập tức
+                    await JS.InvokeVoidAsync("matchingHelpers.clearAllLeaderLines");
+                    
+                    // Clear lại sau một chút để đảm bảo không có line nào sót lại
+                    await Task.Delay(100);
+                    await JS.InvokeVoidAsync("matchingHelpers.clearAllLeaderLines");
+                }
+            }
+            catch (JSDisconnectedException)
+            {
+                // JS runtime đã disconnect, bỏ qua
+            }
+            catch (ObjectDisposedException)
+            {
+                // Component đã bị dispose, bỏ qua
+            }
+            catch (InvalidOperationException)
+            {
+                // JS interop có thể fail, bỏ qua
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error clearing all lines on navigation: {ex.Message}");
+            }
+
+            // Kiểm tra state trước khi navigate
+            if (_navigationItems == null || _navigationItems.Count == 0)
+            {
+                System.Diagnostics.Debug.WriteLine("NavigationItems is null or empty");
+                return;
+            }
+
+        if (entryIndex < 0 || entryIndex >= _navigationItems.Count)
+        {
+                System.Diagnostics.Debug.WriteLine($"Invalid entryIndex: {entryIndex}, navigationItems count: {_navigationItems.Count}");
+                return;
+            }
+
+            var navigationItem = _navigationItems[entryIndex];
+            if (navigationItem == null)
+            {
+                System.Diagnostics.Debug.WriteLine($"NavigationItem at index {entryIndex} is null");
+                return;
+            }
+
+            // Kiểm tra xem parentIndex có hợp lệ không
+            if (_questionDisplayItems == null || _questionDisplayItems.Count == 0)
+            {
+                System.Diagnostics.Debug.WriteLine("QuestionDisplayItems is null or empty");
+                return;
+            }
+
+            if (navigationItem.ParentIndex < 0 || navigationItem.ParentIndex >= _questionDisplayItems.Count)
+            {
+                System.Diagnostics.Debug.WriteLine($"Invalid parentIndex: {navigationItem.ParentIndex}, questionDisplayItems count: {_questionDisplayItems.Count}");
+            return;
+        }
+
+            // Sử dụng InvokeAsync để đảm bảo thread-safe
+            _ = InvokeAsync(async () =>
+            {
+                try
+                {
+                    await GoToQuestion(navigationItem.ParentIndex);
+                    
+                    // Đợi một chút để đảm bảo navigation hoàn tất
+                    await Task.Delay(200);
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Error in NavigateToEntry InvokeAsync: {ex.Message}");
+                }
+                finally
+                {
+                    // Reset flag sau khi navigation hoàn tất
+                    _isNavigatingToEntry = false;
+                }
+            });
+        }
+        catch (ObjectDisposedException)
+        {
+            // Component đã bị dispose, bỏ qua
+            System.Diagnostics.Debug.WriteLine("Component disposed during navigation");
+            _isNavigatingToEntry = false;
+        }
+        catch (InvalidOperationException)
+        {
+            // Component đang được dispose hoặc re-render, bỏ qua
+            System.Diagnostics.Debug.WriteLine("Component is being disposed or re-rendered");
+            _isNavigatingToEntry = false;
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error in NavigateToEntry: {ex.Message}");
+            _isNavigatingToEntry = false;
+            // Không hiển thị snackbar để tránh lỗi khi component đang dispose
+        }
     }
 
     private async Task ToggleFullscreenAsync()

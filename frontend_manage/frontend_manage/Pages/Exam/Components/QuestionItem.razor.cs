@@ -21,6 +21,7 @@ namespace frontend_manage.Pages.Exam.Components
         [Parameter] public Func<int, string?>? LabelProvider { get; set; }
 
         [Inject] private IKaTeXService KaTeX { get; set; } = default!;
+        [Inject] private IExamRenderingService ExamRenderingService { get; set; } = default!;
 
         // Dùng HttpClient để lấy BaseAddress backend (đã cấu hình qua ApiBaseUrl)
         [Inject] private HttpClient HttpClient { get; set; } = default!;
@@ -30,7 +31,26 @@ namespace frontend_manage.Pages.Exam.Components
 
         protected override async Task OnAfterRenderAsync(bool firstRender)
         {
+            // Render KaTeX cho tất cả elements có class katex-content trong component này
+            // KaTeX sẽ tự động xử lý [latex]...[/latex] tags thông qua katexInterop.js
+            try
+            {
+                if (firstRender)
+                {
+                    // Sử dụng RenderWithRetryAsync để đảm bảo KaTeX đã sẵn sàng
+                    await KaTeX.RenderWithRetryAsync(".katex-content", maxRetries: 3, delayMs: 100);
+                }
+                else
+                {
+                    // Re-render khi content thay đổi
             await KaTeX.RenderAsync(".katex-content");
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log error nhưng không throw để không làm gián đoạn UI
+                System.Diagnostics.Debug.WriteLine($"Error rendering KaTeX: {ex.Message}");
+            }
         }
 
         protected override void OnParametersSet()
@@ -44,78 +64,145 @@ namespace frontend_manage.Pages.Exam.Components
 
         protected bool IsMatching(QuestionStructureDto q)
         {
-            return (q.QuestionContent ?? string.Empty).Contains("[matching]", StringComparison.OrdinalIgnoreCase);
+            // Kiểm tra marker [matching] trong QuestionContent
+            if ((q.QuestionContent ?? string.Empty).Contains("[matching]", StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+            
+            // Fallback: Nếu có nhiều Answers (>= 4) và không phải MCQ pattern, có thể là matching
+            // Matching questions thường có số lượng Answers chẵn và >= 4
+            if (q.Answers != null && q.Answers.Count >= 4 && q.Answers.Count % 2 == 0)
+            {
+                // Kiểm tra xem có pattern matching không (ví dụ: có "A:" và "B:" trong content)
+                var content = q.QuestionContent ?? string.Empty;
+                if (content.Contains("A:", StringComparison.OrdinalIgnoreCase) && 
+                    content.Contains("B:", StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+            }
+            
+            return false;
         }
 
         protected string NormalizeLatex(string? content)
         {
             if (string.IsNullOrWhiteSpace(content)) return string.Empty;
 
-            // 1. Bỏ các marker {<number>}
-            var cleaned = Regex.Replace(
-                content,
-                @"\{<\d+>\}",
-                string.Empty
-            );
-
-            // 2. Xử lý <audio>...</audio> → thêm controls + src trỏ về file mp3 trên backend
-            cleaned = Regex.Replace(
-                cleaned,
-                @"<audio>(.*?)</audio>",
-                match =>
-                {
-                    var inner = match.Groups[1].Value.Trim();
-                    if (string.IsNullOrEmpty(inner))
-                        return match.Value;
-
-                    // Chuẩn hóa path (giữ cả thư mục con)
-                    var normalized = inner.Replace("\\", "/").TrimStart('/');
-
-                    // Nếu format là audio/ENGx.mp3 thì map về Data/Audio/ENGx.mp3
-                    if (normalized.StartsWith("audio/", StringComparison.OrdinalIgnoreCase))
-                    {
-                        normalized = "Data/Audio/" + normalized.Substring("audio/".Length);
-                    }
-
-                    var relativePath = normalized;
-                    if (string.IsNullOrEmpty(relativePath))
-                        return match.Value;
-
-                    var audioUrl = GetAudioPath(relativePath);
-                    if (string.IsNullOrEmpty(audioUrl))
-                        return match.Value;
-
-                    return $"<audio controls src=\"{audioUrl}\"></audio>";
-                },
-                RegexOptions.IgnoreCase | RegexOptions.Singleline
-            );
-
-            return cleaned;
-        }
-
-        private string GetAudioPath(string audioFileName)
-        {
-            if (Question == null || string.IsNullOrEmpty(audioFileName))
-                return string.Empty;
-
-            // Lấy folder từ ShuffledExamPaperCore của đề đang thi (truyền từ trên xuống)
-            var core = ShuffledExamPaperCore ?? string.Empty;
-            if (string.IsNullOrEmpty(core))
-                return string.Empty;
-
-            var folderName = core.Split('_')[0];
-
-            // Lấy base address từ HttpClient (backend), đã cấu hình từ ApiBaseUrl trong Program.cs
-            var baseAddr = (HttpClient.BaseAddress?.ToString() ?? string.Empty).TrimEnd('/');
-            if (string.IsNullOrEmpty(baseAddr))
-                return string.Empty;
-
-            return $"{baseAddr}/EPZ/{folderName}/{audioFileName}";
+            // Sử dụng ExamRenderingService để normalize và render content
+            return ExamRenderingService.NormalizeAndRenderContent(content, ShuffledExamPaperCore);
         }
 
         protected bool IsGroupParent(QuestionStructureDto q)
         {
             return q.ChildQuestions != null && q.ChildQuestions.Count > 0;
+        }
+
+        /// <summary>
+        /// Kiểm tra xem đây có phải là matching question dạng parent-child không
+        /// (parent có child questions và tất cả child đều có cùng số lượng answers)
+        /// </summary>
+        protected bool IsMatchingParent(QuestionStructureDto q)
+        {
+            if (q.ChildQuestions == null || q.ChildQuestions.Count == 0)
+                return false;
+
+            // Parent question không nên có answers (chỉ có stem)
+            if (q.Answers != null && q.Answers.Count > 0)
+                return false;
+
+            // Kiểm tra xem tất cả child questions có cùng số lượng answers không
+            var firstChild = q.ChildQuestions.First();
+            if (firstChild.Answers == null || firstChild.Answers.Count == 0)
+                return false;
+
+            var answerCount = firstChild.Answers.Count;
+            
+            // Tất cả child questions phải có cùng số lượng answers
+            if (q.ChildQuestions.Any(child => child.Answers == null || child.Answers.Count != answerCount))
+                return false;
+
+            // Kiểm tra thêm: parent question có stem chứa từ khóa về matching không
+            // Hoặc tất cả child questions có cùng pattern (đều là MCQ với cùng số lượng answers)
+            var stem = q.QuestionContent ?? string.Empty;
+            var hasMatchingKeywords = stem.Contains("Nối cột", StringComparison.OrdinalIgnoreCase) ||
+                                     stem.Contains("nối", StringComparison.OrdinalIgnoreCase) ||
+                                     stem.Contains("match", StringComparison.OrdinalIgnoreCase);
+
+            // Nếu có từ khóa matching hoặc pattern đặc biệt (số lượng child >= 2 và số lượng answers >= 2)
+            if (hasMatchingKeywords || (q.ChildQuestions.Count >= 2 && answerCount >= 2))
+            {
+                // Đảm bảo tất cả child questions đều là MCQ (có answers)
+                return q.ChildQuestions.All(child => 
+                    child.Answers != null && 
+                    child.Answers.Count > 0 &&
+                    child.Answers.Count == answerCount);
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Lấy left items cho matching question (từ child questions)
+        /// </summary>
+        protected List<AnswerStructureDto> GetMatchingLeftItems(QuestionStructureDto parent)
+        {
+            var leftItems = new List<AnswerStructureDto>();
+            
+            if (parent.ChildQuestions == null)
+                return leftItems;
+
+            foreach (var child in parent.ChildQuestions.OrderBy(c => c.Order))
+            {
+                // Tạo AnswerStructureDto từ child question stem
+                leftItems.Add(new AnswerStructureDto
+                {
+                    AnswerId = child.OriginalExamPaperDetailId, // Dùng question ID làm AnswerId
+                    AnswerContent = child.QuestionContent ?? string.Empty,
+                    Order = child.Order,
+                    OriginalExamPaperDetailId = child.OriginalExamPaperDetailId
+                });
+            }
+
+            return leftItems;
+        }
+
+        /// <summary>
+        /// Lấy right items cho matching question (từ answers của child đầu tiên)
+        /// Trả về TẤT CẢ answers từ child đầu tiên (tất cả child đều có cùng answers)
+        /// </summary>
+        protected List<AnswerStructureDto> GetMatchingRightItems(QuestionStructureDto parent)
+        {
+            if (parent.ChildQuestions == null || parent.ChildQuestions.Count == 0)
+                return new List<AnswerStructureDto>();
+
+            var firstChild = parent.ChildQuestions.OrderBy(c => c.Order).First();
+            if (firstChild.Answers == null)
+                return new List<AnswerStructureDto>();
+
+            // Trả về answers từ child đầu tiên (tất cả child đều có cùng answers)
+            // Giống với OriginalExamPaperPreviewPage và ShuffledExamPaperPreviewPage
+            return firstChild.Answers
+                .OrderBy(a => a.Order)
+                .Select(a => new AnswerStructureDto
+                {
+                    AnswerId = a.AnswerId,
+                    AnswerContent = a.AnswerContent,
+                    Order = a.Order,
+                    OriginalExamPaperDetailId = a.OriginalExamPaperDetailId
+                })
+                .ToList();
+        }
+
+        /// <summary>
+        /// Xử lý khi chọn matching pair cho matching parent-child question
+        /// </summary>
+        protected Task SelectMatchingChild(QuestionStructureDto parent, int leftAnswerId, int rightAnswerId)
+        {
+            // leftAnswerId thực chất là child question ID
+            // rightAnswerId là answer ID từ cột B
+            return OnAnswered.InvokeAsync((leftAnswerId, (object?)rightAnswerId));
         }
 
         protected int? _selectedSingle;
@@ -128,7 +215,46 @@ namespace frontend_manage.Pages.Exam.Components
 
         protected Task SelectMatching(int questionId, int leftAnswerId, string rightAnswerId)
         {
+            // Với matching question, lưu rightAnswerId (string có thể parse thành int)
+            // Để navigation biết đã trả lời, lưu object hoặc parsed int
+            if (int.TryParse(rightAnswerId, out var rightId))
+            {
+                // Gọi OnAnswered để cập nhật navigation
+                return OnAnswered.InvokeAsync((questionId, (object?)rightId));
+            }
+            // Nếu không parse được, vẫn lưu object để navigation biết đã trả lời
             return OnAnswered.InvokeAsync((questionId, new { left = leftAnswerId, right = rightAnswerId }));
+        }
+
+        protected async Task HandleMatchingPairsChanged(int questionId, List<(int leftId, int rightId)> pairs)
+        {
+            // Khi có thay đổi pairs, serialize tất cả pairs và lưu
+            if (pairs == null || pairs.Count == 0)
+            {
+                // Nếu không còn pairs, gọi OnAnswered với null để xóa đáp án
+                await OnAnswered.InvokeAsync((questionId, (object?)null));
+                return;
+            }
+
+            // Serialize tất cả pairs thành JSON array
+            try
+            {
+                var pairsArray = pairs.Select(p => new { left = p.leftId, right = p.rightId }).ToArray();
+                var jsonString = System.Text.Json.JsonSerializer.Serialize(pairsArray);
+                
+                // Lưu JSON string vào _questionAnswers để navigation biết đã trả lời
+                // Và gọi OnAnswered để trigger save
+                // Với matching question, có thể cần lưu tất cả pairs, nhưng API có thể chỉ nhận int
+                // Tạm thời lưu pair cuối cùng để tương thích với API hiện tại
+                var lastPair = pairs.Last();
+                await OnAnswered.InvokeAsync((questionId, (object?)lastPair.rightId));
+            }
+            catch
+            {
+                // Nếu serialize thất bại, vẫn lưu pair cuối cùng
+                var lastPair = pairs.Last();
+                await OnAnswered.InvokeAsync((questionId, (object?)lastPair.rightId));
+            }
         }
 
         protected Task OnOptionKeyDown(KeyboardEventArgs e, int questionId, int answerId)

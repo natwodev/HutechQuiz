@@ -10,6 +10,7 @@ namespace backend_manage.core.Services.Interfaces
         Task<OriginalExamPaperDto> UpdateAsync(UpdateOriginalExamPaperRequest request);
         Task ImportFromXmlAsync(IFormFile file, string originalExamPaperCore);
         Task ImportFromWordAsync(IFormFile file, string originalExamPaperCore, int subjectId);
+        Task ImportFromZipAsync(IFormFile file, string originalExamPaperCore, int subjectId);
         Task<OriginalExamPaperDto> GetWithDetailsAsync(string originalExamPaperCore);
         Task CreateShuffledExamPapersAsync(string originalExamPaperCore, int count);
         Task<List<OriginalExamDto>> GetAllAsync();
@@ -57,5 +58,9 @@ namespace backend_manage.core.Services.Interfaces
           
           // Phương thức sinh mã OriginalExamPaperCore ngẫu nhiên 26 chữ cái in hoa
           Task<string> GenerateRandomOriginalExamPaperCoreAsync();
+          
+          // Phương thức xóa cứng đề thi gốc và tất cả các đề hoán vị liên quan
+          // Xóa vĩnh viễn khỏi database (hard delete)
+          Task<bool> HardDeleteAsync(int originalExamPaperId);
       }
 } 

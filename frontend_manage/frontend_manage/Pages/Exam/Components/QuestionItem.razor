@@ -1,24 +1,39 @@
 @using frontend_manage.DTOs
 @using frontend_manage.Services
 
-<div class="question-item @(IsGroupParent(Question) ? "group-parent" : (Question.ParentQuestionId != null ? "group-child" : string.Empty))" @ref="_root">
+<div class="question-item @(IsMatchingParent(Question) ? "matching-parent" : (IsGroupParent(Question) ? "group-parent" : (Question.ParentQuestionId != null ? "group-child" : string.Empty)))" @ref="_root">
     <MudStack Spacing="2">
         <div class="question-title" @onclick:preventDefault="true">
             @if (!string.IsNullOrWhiteSpace(DisplayNumber))
             {
+                @* Matching question được đánh số như một câu hỏi độc lập *@
                 <span class="title-prefix">Câu @DisplayNumber: </span>
             }
-            <span class="katex-content question-inline">@((MarkupString)NormalizeLatex(Question.QuestionContent))</span>
+            <div class="katex-content question-inline">@((MarkupString)NormalizeLatex(Question.QuestionContent))</div>
         </div>
 
-        @if (IsMatching(Question))
+        @if (IsMatchingParent(Question))
+        {
+            @* Matching question dạng parent-child: render tất cả child questions cùng nhau *@
+            var leftItems = GetMatchingLeftItems(Question);
+            var rightItems = GetMatchingRightItems(Question);
+            <MatchingQuestion LeftItems="@leftItems" 
+                            RightItems="@rightItems" 
+                            OnPair="@(pair=>SelectMatchingChild(Question, pair.leftId, pair.rightId))"
+                            ShuffledExamPaperCore="@ShuffledExamPaperCore" />
+        }
+        else if (IsMatching(Question))
         {
             var mid = (int)Math.Ceiling(Question.Answers.Count/2.0);
             var left = Question.Answers.OrderBy(a=>a.Order).Take(mid).ToList();
             var right = Question.Answers.OrderBy(a=>a.Order).Skip(mid).ToList();
-            <MatchingQuestion LeftItems="@left" RightItems="@right" OnPair="@(pair=>SelectMatching(Question.OriginalExamPaperDetailId, pair.leftId, pair.rightId.ToString()))" />
+            <MatchingQuestion LeftItems="@left" 
+                            RightItems="@right" 
+                            OnPair="@(pair=>SelectMatching(Question.OriginalExamPaperDetailId, pair.leftId, pair.rightId.ToString()))"
+                            OnPairsChanged="@(pairs=>HandleMatchingPairsChanged(Question.OriginalExamPaperDetailId, pairs))"
+                            ShuffledExamPaperCore="@ShuffledExamPaperCore" />
         }
-        else
+        else if (Question.Answers?.Any() == true)
         {
             <MudRadioGroup T="int" Class="answers-group" Row="false" SelectedOption="@_selectedSingle" SelectedOptionChanged="@((int v)=>SelectSingle(Question.OriginalExamPaperDetailId, v))">
                 <div class="answers">
@@ -26,7 +41,11 @@
                     {
                         var letter = (char)('A' + (ans.Order - 1));
                         <div class="answer-row">
-                            <AnswerOption Answer="@ans" Letter="@letter" SelectedAnswerId="@(_selectedSingle ?? -1)" OnSelect="@(id => SelectSingle(Question.OriginalExamPaperDetailId, id))" />
+                            <AnswerOption Answer="@ans" 
+                                         Letter="@letter" 
+                                         SelectedAnswerId="@(_selectedSingle ?? -1)" 
+                                         OnSelect="@(id => SelectSingle(Question.OriginalExamPaperDetailId, id))"
+                                         ShuffledExamPaperCore="@ShuffledExamPaperCore" />
                         </div>
                     }
                 </div>
@@ -35,7 +54,8 @@
     </MudStack>
 </div>
 
-@if (Question.ChildQuestions?.Any() == true)
+@* Chỉ render child questions nếu không phải matching parent (matching parent đã render child trong MatchingQuestion) *@
+@if (Question.ChildQuestions?.Any() == true && !IsMatchingParent(Question))
 {
     <div class="child-questions mt-3">
         @foreach (var child in Question.ChildQuestions.OrderBy(c => c.Order))

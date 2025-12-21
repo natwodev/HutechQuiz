@@ -50,7 +50,23 @@ namespace frontend_manage.Services.Admin
         {
             try
             {
-                var response = await _httpClient.PostAsJsonAsync(_baseUrl, payload);
+                // Backend expect ExamSessionId, nhưng frontend DTO có ExamSessionDepartmentId
+                // Map ExamSessionDepartmentId -> ExamSessionId cho backend
+                var backendPayload = new
+                {
+                    ExamSessionId = payload.ExamSessionDepartmentId, // Map từ ExamSessionDepartmentId sang ExamSessionId
+                    payload.SubjectId,
+                    payload.Duration,
+                    payload.OriginalExamPaperId,
+                    payload.IsCompleted,
+                    payload.StartTime,
+                    payload.EndTime,
+                    payload.ExamSessionSubjectCore,
+                    ExamRoomId = (int?)null, // Backend DTO có ExamRoomId nhưng frontend không có
+                    payload.MonitorId
+                };
+                
+                var response = await _httpClient.PostAsJsonAsync(_baseUrl, backendPayload);
                 response.EnsureSuccessStatusCode();
                 return await response.Content.ReadFromJsonAsync<ExamSessionSubjectDto>();
             }

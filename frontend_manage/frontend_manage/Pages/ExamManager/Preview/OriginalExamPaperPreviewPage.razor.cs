@@ -22,6 +22,9 @@ namespace frontend_manage.Pages.ExamManager.Preview
         [Inject]
         private IQrCodeService QRCodeService { get; set; } = null!;
 
+        [Inject]
+        private IExamRenderingService ExamRenderingService { get; set; } = null!;
+
         private OriginalExamPaperDto? Exam;
         private bool isLoading = true;
         private bool isUpdating = false;
@@ -69,15 +72,32 @@ namespace frontend_manage.Pages.ExamManager.Preview
                 finally
                 {
                     isLoading = false;
+                    StateHasChanged(); // Trigger re-render để KaTeX có thể render content mới
                 }
             }
         }
 
         protected override async Task OnAfterRenderAsync(bool firstRender)
         {
+            // Render KaTeX mỗi lần component render để đảm bảo các elements mới được xử lý
+            // Đặc biệt quan trọng khi data được load async sau khi component đã render
+            try
+        {
             if (firstRender)
             {
+                    // Sử dụng RenderWithRetryAsync cho first render để đảm bảo KaTeX đã sẵn sàng
+                    await KaTeX.RenderWithRetryAsync(".katex-content", maxRetries: 3, delayMs: 100);
+                }
+                else
+                {
+                    // Re-render khi content thay đổi (ví dụ: sau khi load data, thêm/sửa câu hỏi)
                 await KaTeX.RenderAsync(".katex-content");
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log error nhưng không throw để không làm gián đoạn UI
+                System.Diagnostics.Debug.WriteLine($"Error rendering KaTeX in preview: {ex.Message}");
             }
         }
 
@@ -86,12 +106,8 @@ namespace frontend_manage.Pages.ExamManager.Preview
             if (string.IsNullOrEmpty(content))
                 return string.Empty;
             
-            // Loại bỏ các ký tự {<number>} khỏi nội dung
-            return System.Text.RegularExpressions.Regex.Replace(
-                content, 
-                @"\{<\d+>\}", 
-                string.Empty
-            );
+            // Sử dụng ExamRenderingService để normalize và render content
+            return ExamRenderingService.NormalizeAndRenderContent(content, null, Exam?.OriginalExamPaperCore);
         }
         
         private char GetLetter(int order) => (char)('A' + Math.Max(0, order - 1));
@@ -101,55 +117,219 @@ namespace frontend_manage.Pages.ExamManager.Preview
             if (Exam?.Details == null || Exam.Details.Count == 0)
                 return new List<OriginalExamPaperDetailDto>();
 
-            var flatQuestions = new List<OriginalExamPaperDetailDto>();
-            var parentQuestions = Exam.Details.Where(d => d.ParentQuestionId == null).OrderBy(d => d.Order).ToList();
+            // Sử dụng ExamRenderingService để flatten questions
+            var flatQuestions = ExamRenderingService.GetFlatQuestions(
+                Exam.Details,
+                q => q.ParentQuestionId,
+                q => q.ChildQuestions,
+                q => q.Order
+            );
             
-            foreach (var parentQ in parentQuestions)
+            // Loại bỏ child questions của matching parent (chúng đã được render trong MatchingQuestion)
+            var filteredQuestions = new List<OriginalExamPaperDetailDto>();
+            foreach (var q in flatQuestions)
             {
-                // Nếu là câu hỏi cha (có child questions)
-                if (parentQ.ChildQuestions != null && parentQ.ChildQuestions.Count > 0)
+                // Nếu là child question của matching parent, bỏ qua
+                if (q.ParentQuestionId.HasValue)
                 {
-                    flatQuestions.Add(parentQ); // Thêm câu hỏi cha
-                    // Thêm các câu hỏi con
-                    foreach (var child in parentQ.ChildQuestions.OrderBy(c => c.Order))
+                    // Tìm parent question trong Exam.Details
+                    var parent = Exam.Details.FirstOrDefault(p => p.OriginalExamPaperDetailId == q.ParentQuestionId.Value);
+                    if (parent != null && IsMatchingParent(parent))
                     {
-                        flatQuestions.Add(child);
+                        continue; // Bỏ qua child question của matching parent
                     }
                 }
-                // Nếu là câu hỏi độc lập (không có child)
-                else
+                
+                filteredQuestions.Add(q);
+            }
+            
+            return filteredQuestions;
+        }
+
+        /// <summary>
+        /// Kiểm tra xem đây có phải là matching question dạng parent-child không
+        /// </summary>
+        private bool IsMatchingParent(OriginalExamPaperDetailDto q)
+        {
+            if (q.ChildQuestions == null || q.ChildQuestions.Count == 0)
+                return false;
+
+            // Parent question không nên có answers (chỉ có stem)
+            if (q.Answers != null && q.Answers.Count > 0)
+                return false;
+
+            // Kiểm tra xem tất cả child questions có cùng số lượng answers không
+            var firstChild = q.ChildQuestions.First();
+            if (firstChild.Answers == null || firstChild.Answers.Count == 0)
+                return false;
+
+            var answerCount = firstChild.Answers.Count;
+            
+            // Tất cả child questions phải có cùng số lượng answers
+            if (q.ChildQuestions.Any(child => child.Answers == null || child.Answers.Count != answerCount))
+                return false;
+
+            // Kiểm tra thêm: parent question có stem chứa từ khóa về matching không
+            var stem = q.QuestionContent ?? string.Empty;
+            var hasMatchingKeywords = stem.Contains("Nối cột", StringComparison.OrdinalIgnoreCase) ||
+                                     stem.Contains("nối", StringComparison.OrdinalIgnoreCase) ||
+                                     stem.Contains("match", StringComparison.OrdinalIgnoreCase);
+
+            // Nếu có từ khóa matching hoặc pattern đặc biệt (số lượng child >= 2 và số lượng answers >= 2)
+            if (hasMatchingKeywords || (q.ChildQuestions.Count >= 2 && answerCount >= 2))
                 {
-                    flatQuestions.Add(parentQ);
+                // Đảm bảo tất cả child questions đều là MCQ (có answers)
+                return q.ChildQuestions.All(child => 
+                    child.Answers != null && 
+                    child.Answers.Count > 0 &&
+                    child.Answers.Count == answerCount);
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Lấy left items cho matching question (từ child questions)
+        /// </summary>
+        private List<AnswerStructureDto> GetMatchingLeftItems(OriginalExamPaperDetailDto parent)
+        {
+            var leftItems = new List<AnswerStructureDto>();
+            
+            if (parent.ChildQuestions == null)
+                return leftItems;
+
+            foreach (var child in parent.ChildQuestions.OrderBy(c => c.Order))
+                    {
+                // Tạo AnswerStructureDto từ child question stem
+                leftItems.Add(new AnswerStructureDto
+                {
+                    AnswerId = child.OriginalExamPaperDetailId, // Dùng question ID làm AnswerId
+                    AnswerContent = child.QuestionContent ?? string.Empty,
+                    Order = child.Order,
+                    OriginalExamPaperDetailId = child.OriginalExamPaperDetailId
+                });
+                    }
+
+            return leftItems;
+        }
+
+        /// <summary>
+        /// Lấy right items cho matching question (từ answers của child đầu tiên)
+        /// </summary>
+        private List<AnswerStructureDto> GetMatchingRightItems(OriginalExamPaperDetailDto parent)
+        {
+            if (parent.ChildQuestions == null || parent.ChildQuestions.Count == 0)
+                return new List<AnswerStructureDto>();
+
+            var firstChild = parent.ChildQuestions.OrderBy(c => c.Order).First();
+            if (firstChild.Answers == null)
+                return new List<AnswerStructureDto>();
+
+            // Trả về answers từ child đầu tiên (tất cả child đều có cùng answers)
+            return firstChild.Answers
+                .OrderBy(a => a.Order)
+                .Select(a => new AnswerStructureDto
+                {
+                    AnswerId = a.AnswerId,
+                    AnswerContent = a.AnswerContent,
+                    Order = a.Order,
+                    OriginalExamPaperDetailId = a.OriginalExamPaperDetailId
+                })
+                .ToList();
+        }
+
+        /// <summary>
+        /// Lấy đáp án đúng cho matching question (Dictionary<leftQuestionId, rightAnswerId>)
+        /// </summary>
+        private Dictionary<int, int> GetMatchingCorrectPairs(OriginalExamPaperDetailDto parent)
+        {
+            var correctPairs = new Dictionary<int, int>();
+            
+            if (parent.ChildQuestions == null || parent.ChildQuestions.Count == 0)
+                return correctPairs;
+
+            var firstChild = parent.ChildQuestions.OrderBy(c => c.Order).First();
+            if (firstChild.Answers == null || firstChild.Answers.Count == 0)
+                return correctPairs;
+
+            // Lấy danh sách answers từ child đầu tiên (tất cả child đều có cùng answers)
+            var rightAnswers = firstChild.Answers.OrderBy(a => a.Order).ToList();
+
+            // Duyệt qua từng child question để lấy đáp án đúng
+            foreach (var child in parent.ChildQuestions.OrderBy(c => c.Order))
+            {
+                if (child.CorrectAnswerIndex.HasValue && child.CorrectAnswerIndex.Value > 0)
+                {
+                    // CorrectAnswerIndex là 1-based, chuyển sang 0-based
+                    var answerIndex = child.CorrectAnswerIndex.Value - 1;
+                    
+                    if (answerIndex >= 0 && answerIndex < rightAnswers.Count)
+                    {
+                        var correctAnswer = rightAnswers[answerIndex];
+                        // leftQuestionId = child.OriginalExamPaperDetailId, rightAnswerId = correctAnswer.AnswerId
+                        correctPairs[child.OriginalExamPaperDetailId] = correctAnswer.AnswerId;
+                    }
                 }
             }
 
-            return flatQuestions;
+            return correctPairs;
         }
 
         private int? GetQuestionNumber(OriginalExamPaperDetailDto question, int indexInFlatList)
         {
-            // Nếu là parent question (có child questions), không đánh số
+            if (Exam?.Details == null || Exam.Details.Count == 0)
+                return null;
+            
+            // Đếm số thứ tự dựa trên thứ tự gốc trong Exam.Details (theo Order)
+            // Sắp xếp tất cả questions theo Order
+            var allQuestions = Exam.Details.OrderBy(q => q.Order).ToList();
+            
+            int number = 1;
+            foreach (var q in allQuestions)
+            {
+                // Nếu đã đến câu hỏi hiện tại, dừng lại
+                if (q.OriginalExamPaperDetailId == question.OriginalExamPaperDetailId)
+                {
+                    // Nếu là matching parent, trả về số đã đếm
+                    if (IsMatchingParent(question))
+                    {
+                        return number;
+                    }
+                    // Nếu là parent question thông thường, không có số
             if (question.ParentQuestionId == null && question.ChildQuestions != null && question.ChildQuestions.Count > 0)
             {
                 return null;
             }
-
-            // Tính số thứ tự dựa trên các câu hỏi trước đó
-            int number = 1;
-            var flatQuestions = GetFlatQuestions();
-            
-            for (int i = 0; i < indexInFlatList; i++)
+                    // Câu hỏi độc lập: trả về số đã đếm
+                    return number;
+                }
+                
+                // Đếm các câu hỏi trước câu hỏi hiện tại
+                var isMatching = IsMatchingParent(q);
+                var isNormalParent = q.ParentQuestionId == null && q.ChildQuestions != null && q.ChildQuestions.Count > 0 && !isMatching;
+                
+                if (isMatching)
             {
-                var q = flatQuestions[i];
-                // Chỉ đếm các câu hỏi không phải parent question
-                var isParent = q.ParentQuestionId == null && q.ChildQuestions != null && q.ChildQuestions.Count > 0;
-                if (!isParent)
+                    // Matching question: đếm như một câu hỏi độc lập
+                    number++;
+                }
+                else if (isNormalParent)
                 {
+                    // Parent question thông thường: không đếm parent, chỉ đếm child questions
+                    if (q.ChildQuestions != null)
+                    {
+                        number += q.ChildQuestions.Count;
+                    }
+                }
+                else
+                {
+                    // Câu hỏi độc lập: đếm
                     number++;
                 }
             }
             
-            return number;
+            // Nếu không tìm thấy trong allQuestions, trả về null
+            return null;
         }
 
         private int GetTotalQuestionsCount()
@@ -157,26 +337,12 @@ namespace frontend_manage.Pages.ExamManager.Preview
             if (Exam?.Details == null || Exam.Details.Count == 0)
                 return 0;
 
-            int count = 0;
-            foreach (var q in Exam.Details.Where(d => d.ParentQuestionId == null))
-            {
-                var isParentQuestion = q.ChildQuestions != null && q.ChildQuestions.Count > 0;
-                
-                if (isParentQuestion)
-                {
-                    // Câu hỏi cha: chỉ đếm các câu hỏi con
-                    if (q.ChildQuestions != null && q.ChildQuestions.Count > 0)
-                    {
-                        count += q.ChildQuestions.Count;
-                    }
-                }
-                else
-                {
-                    // Câu hỏi độc lập: đếm chính nó
-                    count++;
-                }
-            }
-            return count;
+            // Sử dụng ExamRenderingService để đếm tổng số câu hỏi
+            return ExamRenderingService.GetTotalQuestionsCount(
+                Exam.Details,
+                q => q.ParentQuestionId,
+                q => q.ChildQuestions
+            );
         }
 
         private async Task HandleToggleAllowViewMaterials(bool newValue)
@@ -451,7 +617,8 @@ namespace frontend_manage.Pages.ExamManager.Preview
                     if (!string.IsNullOrWhiteSpace(core))
                     {
                         Exam = await ExamManagerService.GetOriginalExamWithDetailsAsync(core);
-                        await KaTeX.RenderAsync(".katex-content");
+                        StateHasChanged(); // Trigger re-render
+                        // KaTeX sẽ được render trong OnAfterRenderAsync
                     }
                     
                     // Đóng form sau 1 giây
@@ -600,7 +767,8 @@ namespace frontend_manage.Pages.ExamManager.Preview
                     if (!string.IsNullOrWhiteSpace(core))
                     {
                         Exam = await ExamManagerService.GetOriginalExamWithDetailsAsync(core);
-                        await KaTeX.RenderAsync(".katex-content");
+                        StateHasChanged(); // Trigger re-render
+                        // KaTeX sẽ được render trong OnAfterRenderAsync
                     }
 
                     // Đóng form sau 1 giây

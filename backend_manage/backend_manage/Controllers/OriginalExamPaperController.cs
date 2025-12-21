@@ -179,15 +179,23 @@ namespace backend_manage.Controllers
             if (file == null || file.Length == 0)
                 return BadRequest("File không hợp lệ hoặc rỗng");
 
+            // Chấp nhận cả .docx và .zip
+            bool isZip = file.FileName.EndsWith(".zip", StringComparison.OrdinalIgnoreCase);
+            bool isDocx = file.FileName.EndsWith(".docx", StringComparison.OrdinalIgnoreCase);
+
+            if (!isZip && !isDocx)
+                return BadRequest("File phải có đuôi .docx hoặc .zip");
+
             try
             {
                 await _originalExamPaperService.ImportFromWordAsync(file, originalExamPaperCore, subjectId);
-                _logger.LogInformation("Import đề thi từ Word thành công với mã: {OriginalExamPaperCore}", originalExamPaperCore);
-                return Ok(new { message = "Import từ Word thành công." });
+                var fileType = isZip ? "ZIP" : "Word";
+                _logger.LogInformation("Import đề thi từ {FileType} thành công với mã: {OriginalExamPaperCore}", fileType, originalExamPaperCore);
+                return Ok(new { message = $"Import từ {fileType} thành công." });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Lỗi khi import đề thi từ Word với mã: {OriginalExamPaperCore}. Lỗi: {ErrorMessage}",
+                _logger.LogError(ex, "Lỗi khi import đề thi từ Word/ZIP với mã: {OriginalExamPaperCore}. Lỗi: {ErrorMessage}",
                     originalExamPaperCore, ex.Message);
 
                 if (ex.Message.Contains("Đã tồn tại đề thi"))
@@ -195,7 +203,40 @@ namespace backend_manage.Controllers
                     return BadRequest(new { message = ex.Message });
                 }
 
-                return StatusCode(500, new { message = $"Lỗi khi import đề thi từ Word: {ex.Message}" });
+                return StatusCode(500, new { message = $"Lỗi khi import đề thi: {ex.Message}" });
+            }
+        }
+
+        [HttpPost("import-zip")]
+        [Authorize(Policy = "ExamManagement")]
+        public async Task<IActionResult> ImportZip(
+            [FromForm] IFormFile file,
+            [FromForm] string originalExamPaperCore,
+            [FromForm] int subjectId)
+        {
+            if (file == null || file.Length == 0)
+                return BadRequest("File không hợp lệ hoặc rỗng");
+
+            if (!file.FileName.EndsWith(".zip", StringComparison.OrdinalIgnoreCase))
+                return BadRequest("File phải có đuôi .zip");
+
+            try
+            {
+                await _originalExamPaperService.ImportFromZipAsync(file, originalExamPaperCore, subjectId);
+                _logger.LogInformation("Import đề thi từ ZIP thành công với mã: {OriginalExamPaperCore}", originalExamPaperCore);
+                return Ok(new { message = "Import từ ZIP thành công." });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi import đề thi từ ZIP với mã: {OriginalExamPaperCore}. Lỗi: {ErrorMessage}",
+                    originalExamPaperCore, ex.Message);
+
+                if (ex.Message.Contains("Đã tồn tại đề thi"))
+                {
+                    return BadRequest(new { message = ex.Message });
+                }
+
+                return StatusCode(500, new { message = $"Lỗi khi import đề thi từ ZIP: {ex.Message}" });
             }
         }
         
@@ -286,6 +327,43 @@ namespace backend_manage.Controllers
             {
                 _logger.LogError(ex, "Lỗi khi sinh mã OriginalExamPaperCore ngẫu nhiên");
                 return StatusCode(500, new { message = $"Lỗi khi sinh mã OriginalExamPaperCore: {ex.Message}" });
+            }
+        }
+
+        /// <summary>
+        /// Xóa cứng đề thi gốc và tất cả các đề hoán vị liên quan
+        /// Xóa vĩnh viễn khỏi database (hard delete)
+        /// </summary>
+        /// <param name="originalExamPaperId">ID của đề thi gốc cần xóa</param>
+        /// <returns>Kết quả xóa</returns>
+        [HttpDelete("hard-delete/{originalExamPaperId}")]
+        [Authorize(Policy = "ExamManagement")]
+        public async Task<IActionResult> HardDelete(int originalExamPaperId)
+        {
+            if (originalExamPaperId <= 0)
+            {
+                return BadRequest(new { message = "ID đề thi gốc không hợp lệ" });
+            }
+
+            try
+            {
+                var result = await _originalExamPaperService.HardDeleteAsync(originalExamPaperId);
+                
+                if (result)
+                {
+                    _logger.LogInformation("✅ Đã xóa cứng đề thi gốc ID {OriginalExamPaperId} và tất cả các đề hoán vị liên quan", originalExamPaperId);
+                    return Ok(new { message = "Đã xóa cứng đề thi gốc và tất cả các đề hoán vị liên quan thành công" });
+                }
+                else
+                {
+                    _logger.LogWarning("⚠️ Không tìm thấy đề thi gốc ID {OriginalExamPaperId} để xóa", originalExamPaperId);
+                    return NotFound(new { message = "Không tìm thấy đề thi gốc để xóa" });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Lỗi khi xóa cứng đề thi gốc ID {OriginalExamPaperId}", originalExamPaperId);
+                return StatusCode(500, new { message = $"Lỗi khi xóa cứng đề thi gốc: {ex.Message}" });
             }
         }
         

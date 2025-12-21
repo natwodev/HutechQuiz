@@ -3,6 +3,7 @@ using backend_manage.core.Authentication.Services;
 using backend_manage.core.Messages.RabbitMQ;
 using backend_manage.core.Repositories.AuthRepository;
 using backend_manage.core.Repositories.Interfaces;
+using backend_manage.core.Services;
 using backend_manage.core.Services.AuthService;
 using backend_manage.core.Services.AuthService.Helpers;
 using backend_manage.core.Services.Interfaces;
@@ -34,6 +35,7 @@ namespace backend_manage.core.Configurations
             services.AddScoped<IExamSessionService, ExamSessionService>();
             services.AddScoped<IExamSessionSubjectService, ExamSessionSubjectService>();
             services.AddScoped<IExamRoomService, ExamRoomService>();
+            services.AddScoped<ExamZipImportService>();
             services.AddScoped<IOriginalExamPaperService, OriginalExamPaperService>();
             services.AddScoped<IShuffledExamPaperService, ShuffledExamPaperService>();
             services.AddScoped<ILecturerService, LecturerService>();

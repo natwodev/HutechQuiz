@@ -1,5 +1,6 @@
 using frontend_manage.DTOs.AcademicAffairs;
 using frontend_manage.Services;
+using frontend_manage.Services.Admin;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using MudBlazor;
@@ -15,9 +16,11 @@ public partial class ExamSessionSubjectTab : ComponentBase
     public EventCallback OnExamSessionSubjectUpdated { get; set; }
     
     [Inject] private ISnackbar Snackbar { get; set; } = default!;
+    [Inject] private IDialogService DialogService { get; set; } = default!;
     [Inject] private NavigationManager NavigationManager { get; set; } = default!;
     [Inject] private IJSRuntime JSRuntime { get; set; } = default!;
     [Inject] private AuthService AuthService { get; set; } = default!;
+    [Inject] private AdminExamSessionSubjectService ExamSessionSubjectService { get; set; } = default!;
     
     private string searchString = "";
 
@@ -28,6 +31,26 @@ public partial class ExamSessionSubjectTab : ComponentBase
         
         return subject.SubjectName.Contains(searchString, StringComparison.OrdinalIgnoreCase) ||
                subject.ExamSessionSubjectCore.Contains(searchString, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private async Task CreateExamSessionSubject()
+    {
+        var parameters = new DialogParameters
+        {
+            ["OnCreated"] = EventCallback.Factory.Create<ExamSessionSubjectDto>(this, async (created) =>
+            {
+                await OnExamSessionSubjectUpdated.InvokeAsync();
+                Snackbar.Add("Tạo ca thi môn học thành công!", Severity.Success);
+            })
+        };
+
+        var dialog = await DialogService.ShowAsync<CreateExamSessionSubjectDialog>("Tạo mới Ca thi môn học", parameters);
+        var result = await dialog.Result;
+        
+        if (!result.Canceled)
+        {
+            await OnExamSessionSubjectUpdated.InvokeAsync();
+        }
     }
 
     private async Task EditExamSessionSubject(ExamSessionSubjectDto subject)

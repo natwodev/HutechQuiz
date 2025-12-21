@@ -162,200 +162,9 @@
    ============================================ */
 .matching-root {
     position: relative;
-    margin: 1.5rem 0;
-    padding: 1.5rem;
+    padding: 8px;
     background: #ffffff;
-    border-radius: 12px;
-    border: 2px solid #e0e0e0;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-}
-
-.matching-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1.5rem;
-    padding-bottom: 1rem;
-    border-bottom: 2px solid #e0e0e0;
-}
-
-.side-title {
-    font-weight: 700;
-    color: #1976d2;
-    font-size: 1.2rem;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.legend {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    font-size: 0.875rem;
-    color: #666;
-    font-weight: 500;
-}
-
-.legend .dot {
-    display: inline-block;
-    width: 14px;
-    height: 14px;
-    border-radius: 50%;
-    border: 2px solid #fff;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-}
-
-.legend .dot.left {
-    background: #1976d2;
-}
-
-.legend .dot.right {
-    background: #4caf50;
-}
-
-.matching-columns {
-    display: grid !important;
-    grid-template-columns: 1fr auto 1fr !important;
-    gap: 0 !important;
-    position: relative;
-    min-height: 200px;
-    width: 100%;
-    align-items: start;
-    flex-direction: row !important; /* Override any flex direction */
-}
-
-/* Divider giữa 2 cột */
-.col-divider {
-    width: 2px;
-    background: linear-gradient(to bottom, 
-        transparent 0%, 
-        #d0d0d0 5%, 
-        #d0d0d0 95%, 
-        transparent 100%);
-    margin: 0 1.5rem;
-    position: relative;
-    z-index: 1;
-}
-
-.matching-columns .col {
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 1rem;
-    padding: 0.5rem 0;
-    position: relative;
-    z-index: 2;
-    width: 100%;
-    min-width: 0; /* Cho phép flex item shrink */
-    grid-column: auto !important; /* Đảm bảo grid column được áp dụng */
-}
-
-.col-header {
-    margin-bottom: 0.5rem;
-    padding-bottom: 0.5rem;
-    border-bottom: 1px solid #e0e0e0;
-}
-
-.col-label {
-    font-weight: 700;
-    font-size: 0.9rem;
-    color: #666;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-}
-
-.matching-columns .col.left .col-label {
-    color: #1976d2;
-}
-
-.matching-columns .col.right .col-label {
-    color: #4caf50;
-}
-
-.match-item {
-    position: relative;
-    padding: 1rem 1.25rem;
-    background: #ffffff;
-    border: 2px solid #e0e0e0;
     border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    min-height: 4rem;
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-}
-
-.match-item:hover {
-    background: #f8f9fa;
-    border-color: #bdbdbd;
-    transform: translateX(4px);
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-}
-
-.match-item.active {
-    background: #e3f2fd;
-    border-color: #1976d2;
-    border-width: 2px;
-    box-shadow: 0 2px 8px rgba(25, 118, 210, 0.3);
-    transform: translateX(4px);
-}
-
-.matching-columns .col.right .match-item:hover {
-    transform: translateX(-4px);
-}
-
-.matching-columns .col.right .match-item.active {
-    transform: translateX(-4px);
-}
-
-.match-item .anchor {
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    flex-shrink: 0;
-    border: 2px solid #fff;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-    position: relative;
-    z-index: 10;
-}
-
-.match-item .anchor.left {
-    background: #1976d2;
-    margin-right: 0.5rem;
-}
-
-.match-item .anchor.right {
-    background: #4caf50;
-    margin-left: 0.5rem;
-    order: 2;
-}
-
-.match-number {
-    font-weight: 700;
-    color: #666;
-    min-width: 1.5rem;
-    flex-shrink: 0;
-    font-size: 1.05rem;
-}
-
-.matching-columns .col.left .match-number {
-    color: #1976d2;
-}
-
-.matching-columns .col.right .match-number {
-    color: #4caf50;
-}
-
-.match-text {
-    flex: 1;
-    line-height: 1.6;
-    color: #212121;
-    font-size: 1.1rem;
-}
-
-.match-text .katex-content {
-    display: inline;
 }
 
 .matching-lines {
@@ -365,28 +174,130 @@
     width: 100%;
     height: 100%;
     pointer-events: none;
-    z-index: 5;
+    z-index: 2;
+}
+
+.matching-columns {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+    padding: 12px;
+    border: 1px dashed #cbd5e1;
+    border-radius: 12px;
+    min-height: 200px;
+    background: #f8fafc;
+}
+
+.matching-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    color: #334155;
+    font-size: 12px;
+}
+
+.dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #1976d2;
+}
+
+.dot.right {
+    background: #ef4444;
+}
+
+.match-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    cursor: pointer;
+    background: #ffffff;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+    border: 1px solid #e5e7eb;
+    margin-bottom: 12px;
+    width: 85%;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.match-item:hover {
+    background: #f5f7fb;
+}
+
+.match-item.active {
+    outline: 2px solid #1976d2;
+    background: #e8f1fd;
+}
+
+.anchor {
+    width: 14px;
+    height: 14px;
+    border: 2px solid #1976d2;
+    background: #dbeafe;
+    border-radius: 50%;
+    box-shadow: 0 0 0 2px #ffffff inset;
+}
+
+.anchor.right {
+    border-color: #ef4444;
+    background: #fee2e2;
+}
+
+.match-text {
+    white-space: nowrap;
+    font-size: 16px;
+    color: #111827;
+}
+
+.pairs-bar {
+    margin-top: 8px;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.pair-chip {
+    background: #f3f4f6;
+    border-radius: 9999px;
+    padding: 2px 8px;
+    font-size: 12px;
 }
 
 /* Đảm bảo LeaderLine hiển thị trên cùng */
-.leader-line {
-    z-index: 10000 !important;
-    pointer-events: none !important;
-}
-
-/* Styling cho các đường nối đã được tạo */
-/* LeaderLine SVG được append vào body, nhưng cần đảm bảo nó scroll cùng với container */
-.matching-root {
-    position: relative;
-    overflow: visible; /* Cho phép SVG hiển thị ngoài container */
-}
-
-/* Đảm bảo SVG của LeaderLine có pointer-events none để không block clicks */
 body > svg[data-leader-line],
+body > svg[data-container-id],
 body > svg.leader-line {
     pointer-events: none !important;
-    z-index: 9999 !important;
+    z-index: 99999 !important;
 }
+
+/* Đảm bảo LeaderLine hiển thị trong fullscreen mode */
+:fullscreen body > svg[data-leader-line],
+:fullscreen body > svg[data-container-id],
+:fullscreen body > svg.leader-line,
+:-webkit-full-screen body > svg[data-leader-line],
+:-webkit-full-screen body > svg[data-container-id],
+:-webkit-full-screen body > svg.leader-line,
+:-moz-full-screen body > svg[data-leader-line],
+:-moz-full-screen body > svg[data-container-id],
+:-moz-full-screen body > svg.leader-line,
+:-ms-fullscreen body > svg[data-leader-line],
+:-ms-fullscreen body > svg[data-container-id],
+:-ms-fullscreen body > svg.leader-line {
+    pointer-events: none !important;
+    z-index: 99999 !important;
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
 
 /* ============================================
    5. Media Content (Images & Audio)

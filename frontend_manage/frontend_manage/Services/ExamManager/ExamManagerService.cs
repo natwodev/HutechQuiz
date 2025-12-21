@@ -68,7 +68,13 @@ namespace frontend_manage.Services.ExamManager
                 using var content = new MultipartFormDataContent();
 
                 var streamContent = new StreamContent(fileStream);
-                streamContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/octet-stream");
+                
+                // Xác định ContentType dựa trên extension của file
+                string contentType = fileName.EndsWith(".zip", StringComparison.OrdinalIgnoreCase)
+                    ? "application/zip"
+                    : "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+                
+                streamContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(contentType);
                 content.Add(streamContent, "file", fileName);
 
                 content.Add(new StringContent(originalExamPaperCore), "originalExamPaperCore");
@@ -84,12 +90,44 @@ namespace frontend_manage.Services.ExamManager
                 else
                 {
                     var errorContent = await response.Content.ReadAsStringAsync();
-                    throw new Exception($"Lỗi khi import đề thi từ Word: {errorContent}");
+                    throw new Exception($"Lỗi khi import đề thi từ Word/ZIP: {errorContent}");
                 }
             }
             catch (Exception ex)
             {
-                throw new Exception($"Lỗi khi import đề thi từ Word: {ex.Message}", ex);
+                throw new Exception($"Lỗi khi import đề thi từ Word/ZIP: {ex.Message}", ex);
+            }
+        }
+
+        public async Task<ImportResultDto?> ImportOriginalExamZipAsync(Stream fileStream, string fileName, string originalExamPaperCore, int subjectId)
+        {
+            try
+            {
+                using var content = new MultipartFormDataContent();
+
+                var streamContent = new StreamContent(fileStream);
+                streamContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/zip");
+                content.Add(streamContent, "file", fileName);
+
+                content.Add(new StringContent(originalExamPaperCore), "originalExamPaperCore");
+                content.Add(new StringContent(subjectId.ToString()), "subjectId");
+
+                var response = await _httpClient.PostAsync($"{_baseUrl}/import-zip", content);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var result = await response.Content.ReadFromJsonAsync<ImportResultDto>();
+                    return result;
+                }
+                else
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    throw new Exception($"Lỗi khi import đề thi từ ZIP: {errorContent}");
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Lỗi khi import đề thi từ ZIP: {ex.Message}", ex);
             }
         }
 
@@ -387,6 +425,34 @@ namespace frontend_manage.Services.ExamManager
             catch (Exception ex)
             {
                 throw new Exception($"Lỗi khi sinh mã OriginalExamPaperCore: {ex.Message}", ex);
+            }
+        }
+
+        /// <summary>
+        /// Xóa cứng đề thi gốc và tất cả các đề hoán vị liên quan
+        /// Xóa vĩnh viễn khỏi database (hard delete)
+        /// </summary>
+        /// <param name="originalExamPaperId">ID của đề thi gốc cần xóa</param>
+        /// <returns>True nếu xóa thành công</returns>
+        public async Task<bool> HardDeleteOriginalExamPaperAsync(int originalExamPaperId)
+        {
+            try
+            {
+                var response = await _httpClient.DeleteAsync($"{_baseUrl}/hard-delete/{originalExamPaperId}");
+                
+                if (response.IsSuccessStatusCode)
+                {
+                    return true;
+                }
+                else
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    throw new Exception($"Lỗi khi xóa cứng đề thi gốc: {errorContent}");
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Lỗi khi xóa cứng đề thi gốc: {ex.Message}", ex);
             }
         }
     }

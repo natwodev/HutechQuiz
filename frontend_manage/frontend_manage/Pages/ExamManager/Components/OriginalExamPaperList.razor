@@ -5,6 +5,8 @@
 @inject ExamManagerService ExamManagerService
 @inject IJSRuntime JSRuntime
 @inject AuthService AuthService
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
 
 <MudPaper Class="pa-4" Elevation="4">
     <MudText Typo="Typo.h6" Class="mb-3">Danh sách đề thi gốc</MudText>
@@ -43,14 +45,24 @@
                 <MudTd DataLabel="Thời gian">@context.DurationMinutes</MudTd>
                 <MudTd DataLabel="Đề hoán vị">@context.TotalShuffledPapers</MudTd>
                 <MudTd DataLabel="Thao tác">
-                    <MudButton 
-                        Size="Size.Small" 
-                        Variant="Variant.Text" 
-                        Color="Color.Primary"
-                        StartIcon="@Icons.Material.Filled.Visibility"
-                        OnClick="() => ViewDetails(context.OriginalExamPaperCore)">
-                        Xem chi tiết
-                    </MudButton>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <MudButton 
+                            Size="Size.Small" 
+                            Variant="Variant.Text" 
+                            Color="Color.Primary"
+                            StartIcon="@Icons.Material.Filled.Visibility"
+                            OnClick="() => ViewDetails(context.OriginalExamPaperCore)">
+                            Xem chi tiết
+                        </MudButton>
+                        <MudButton 
+                            Size="Size.Small" 
+                            Variant="Variant.Text" 
+                            Color="Color.Error"
+                            StartIcon="@Icons.Material.Filled.Delete"
+                            OnClick="() => ConfirmDelete(context.OriginalExamPaperId, context.OriginalExamPaperCore, context.TotalShuffledPapers)">
+                            Xóa cứng
+                        </MudButton>
+                    </div>
                 </MudTd>
             </RowTemplate>
         </MudTable>
@@ -103,6 +115,72 @@
     {
         var uri = $"/exammanager/preview/original?core={Uri.EscapeDataString(core)}";
         await JSRuntime.InvokeVoidAsync("open", uri, "_blank");
+    }
+
+    /// <summary>
+    /// Hiển thị dialog xác nhận xóa cứng đề thi gốc và các đề hoán vị liên quan
+    /// </summary>
+    /// <param name="originalExamPaperId">ID của đề thi gốc</param>
+    /// <param name="originalExamPaperCore">Mã đề thi gốc</param>
+    /// <param name="totalShuffledPapers">Số lượng đề hoán vị sẽ bị xóa</param>
+    private async Task ConfirmDelete(int originalExamPaperId, string originalExamPaperCore, int totalShuffledPapers)
+    {
+        var parameters = new DialogParameters
+        {
+            ["OriginalExamPaperId"] = originalExamPaperId,
+            ["OriginalExamPaperCore"] = originalExamPaperCore,
+            ["TotalShuffledPapers"] = totalShuffledPapers
+        };
+
+        var options = new DialogOptions
+        {
+            CloseOnEscapeKey = true,
+            MaxWidth = MaxWidth.Small,
+            FullWidth = true
+        };
+
+        var dialog = await DialogService.ShowAsync<DeleteOriginalExamPaperDialog>(
+            "Xác nhận xóa cứng đề thi gốc",
+            parameters,
+            options);
+
+        var result = await dialog.Result;
+        
+        if (!result.Canceled && result.Data is bool deleteConfirmed && deleteConfirmed)
+        {
+            await DeleteOriginalExamPaper(originalExamPaperId);
+        }
+    }
+
+    /// <summary>
+    /// Xóa cứng đề thi gốc và tất cả các đề hoán vị liên quan
+    /// </summary>
+    /// <param name="originalExamPaperId">ID của đề thi gốc cần xóa</param>
+    private async Task DeleteOriginalExamPaper(int originalExamPaperId)
+    {
+        try
+        {
+            isLoading = true;
+            errorMessage = null;
+            StateHasChanged();
+
+            await ExamManagerService.HardDeleteOriginalExamPaperAsync(originalExamPaperId);
+            
+            Snackbar.Add("Đã xóa cứng đề thi gốc và tất cả các đề hoán vị liên quan thành công", Severity.Success);
+            
+            // Reload danh sách đề thi
+            await LoadExamPapers();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Lỗi khi xóa cứng đề thi gốc: {ex.Message}";
+            Snackbar.Add(errorMessage, Severity.Error);
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
     }
 }
 

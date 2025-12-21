@@ -99,14 +99,14 @@ namespace frontend_manage.Pages.ExamManager.Components
             if (selectedFile == null || string.IsNullOrWhiteSpace(originalExamPaperCore)) return;
             if (selectedImportType == "word" && selectedSubjectId <= 0)
             {
-                importMessage = "Vui lòng chọn môn học trước khi import từ Word.";
+                importMessage = "Vui lòng chọn môn học trước khi import.";
                 return;
             }
             isUploading = true;
             importMessage = null;
             try
             {
-                using var stream = selectedFile.OpenReadStream(20 * 1024 * 1024); // Tăng giới hạn lên 20MB
+                using var stream = selectedFile.OpenReadStream(50 * 1024 * 1024); // Tăng giới hạn lên 50MB cho ZIP
                 ImportResultDto? result;
                 if (selectedImportType == "xml")
                 {
@@ -115,15 +115,30 @@ namespace frontend_manage.Pages.ExamManager.Components
                         selectedFileName ?? "exam.epz",
                         originalExamPaperCore);
                 }
-                else
+                else // selectedImportType == "word"
                 {
-                    result = await ExamManagerService.ImportOriginalExamWordAsync(
-                        stream,
-                        selectedFileName ?? "exam.docx",
-                        originalExamPaperCore,
-                        selectedSubjectId);
+                    // Tự động phát hiện file .zip hoặc .docx
+                    var fileName = selectedFileName ?? "exam.docx";
+                    if (fileName.EndsWith(".zip", StringComparison.OrdinalIgnoreCase))
+                    {
+                        // ZIP format mới: Word + Audio + Image
+                        result = await ExamManagerService.ImportOriginalExamZipAsync(
+                            stream,
+                            fileName,
+                            originalExamPaperCore,
+                            selectedSubjectId);
+                    }
+                    else
+                    {
+                        // Word CLO format: chỉ .docx
+                        result = await ExamManagerService.ImportOriginalExamWordAsync(
+                            stream,
+                            fileName,
+                            originalExamPaperCore,
+                            selectedSubjectId);
+                    }
                 }
-                importMessage = result?.Message;
+                importMessage = result?.Message ?? "Import thành công!";
             }
             catch (Exception ex)
             {
@@ -134,6 +149,16 @@ namespace frontend_manage.Pages.ExamManager.Components
                 isUploading = false;
                 StateHasChanged();
             }
+        }
+
+        private string GetAcceptString()
+        {
+            return selectedImportType switch
+            {
+                "xml" => ".epz",
+                "word" => ".docx,.zip", // Chấp nhận cả .docx và .zip
+                _ => "*"
+            };
         }
 
         private async Task OpenPreviewInNewTab()

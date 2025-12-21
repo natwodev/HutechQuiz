@@ -1,8 +1,10 @@
 @page "/exammanager/preview/shuffled"
 @using frontend_manage.DTOs
 @using System.Linq
+@using frontend_manage.Pages.Exam.Components
 
 <link href="css/monitor/MonitorPage.css" rel="stylesheet" />
+<link href="css/exam/question-rendering.css" rel="stylesheet" />
 
 <div class="shuffled-preview-page">
     <div class="exam-paper">
@@ -39,63 +41,208 @@
         <div class="preview-body">
             @if (Exam?.QuestionStructures != null && Exam.QuestionStructures.Count > 0)
             {
-                var idx = 1;
-                @foreach (var q in GetFlatQuestions())
+                var flatQuestions = GetFlatQuestions();
+                @for (int i = 0; i < flatQuestions.Count; i++)
                 {
-                    var isParentQuestion = q.ParentQuestionId == null && q.ChildQuestions != null && q.ChildQuestions.Count > 0;
-                    <div class="question-item @(q.ParentQuestionId != null ? "child-question" : "") @(isParentQuestion ? "parent-question" : "")">
-                        <div class="q-number">
-                            @if (!isParentQuestion)
-                            {
-                                <span class="q-chip">@idx</span> 
-                            }
-                            Câu hỏi
-                            @if (q.ParentQuestionId != null)
-                            {
-                                <span class="child-badge">(Câu hỏi con)</span>
-                            }
-                        </div>
-                        <div class="q-content katex-content">
-                            @if (string.IsNullOrEmpty(q.QuestionContent))
-                            {
-                                <span style="color: #999; font-style: italic;">Đang tải nội dung câu hỏi...</span>
-                            }
-                            else
-                            {
-                                @((MarkupString)RenderHtml(q.QuestionContent))
-                            }
-                        </div>
-                        @if (q.Answers != null && q.Answers.Count > 0)
+                    var q = flatQuestions[i];
+                    // Xác định xem có phải là matching question không
+                    var isMatchingParent = IsMatchingParent(q);
+                    // Xác định xem có phải là parent question không (có child questions nhưng không phải matching)
+                    var isParentQuestion = q.ParentQuestionId == null && q.ChildQuestions != null && q.ChildQuestions.Count > 0 && !isMatchingParent;
+                    // Xác định xem có phải là child question không (và không phải child của matching question)
+                    // Tìm parent question trong Exam.QuestionStructures để kiểm tra xem có phải matching question không
+                    var parentQuestion = Exam?.QuestionStructures?.FirstOrDefault(p => p.OriginalExamPaperDetailId == q.ParentQuestionId);
+                    var isChildQuestion = q.ParentQuestionId != null && !(parentQuestion != null && IsMatchingParent(parentQuestion));
+                    // Lấy số thứ tự của câu hỏi
+                    var questionNumber = GetQuestionNumber(q, i);
+                    
+                    <div class="question-item @(isChildQuestion ? "child-question" : "") @(isParentQuestion ? "parent-question" : "") @(isMatchingParent ? "matching-parent" : "")">
+                        @if (isMatchingParent)
                         {
-                            <ul class="q-answers">
-                                @foreach (var ans in q.Answers.OrderBy(a => a.Order))
+                            <!-- Matching Question -->
+                            <div class="q-number">
+                                @if (questionNumber.HasValue)
                                 {
-                                    var isCorrect = IsCorrectAnswer(ans.AnswerId);
-                                    <li class="answer-item @(isCorrect ? "correct-answer" : "")">
-                                        <span class="ans-label">@GetLetter(ans.Order).</span>
-                                        <span class="ans-content katex-content">
-                                            @if (string.IsNullOrEmpty(ans.AnswerContent))
+                                    <span class="q-chip">@questionNumber.Value</span>
+                                }
+                                Câu hỏi
+                            </div>
+                            <div class="q-content katex-content">
+                                @if (string.IsNullOrEmpty(q.QuestionContent))
+                                {
+                                    <span style="color: #999; font-style: italic;">Đang tải nội dung câu hỏi...</span>
+                                }
+                                else
+                                {
+                                    @((MarkupString)RenderHtml(q.QuestionContent))
+                                }
+                            </div>
+                            @* Render matching question với 2 cột và đường nối *@
+                            
+                                var matchingLeftItems = GetMatchingLeftItems(q);
+                                var matchingRightItems = GetMatchingRightItems(q);
+                                var matchingCorrectPairs = GetMatchingCorrectPairs(q);
+                                var matchingContainerId = $"match-{q.OriginalExamPaperDetailId}";
+                            
+                            <div class="matching-root" id="@matchingContainerId" style="width: 100%; overflow-x: auto;">
+                                <div class="matching-header">
+                                    <div class="side-title">Kéo để nối</div>
+                                    <div class="legend">
+                                        <span class="dot left"></span> Trái ↔ <span class="dot right"></span> Phải
+                                    </div>
+                                </div>
+                                <svg class="matching-lines" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none"></svg>
+                                <div class="matching-columns">
+                                    <div class="col left">
+                                        <div class="col-header">
+                                            <span class="col-label">Cột A</span>
+                                        </div>
+                                        @for (int idx = 0; idx < matchingLeftItems.Count; idx++)
+                                        {
+                                            var left = matchingLeftItems[idx];
+                                            var leftId = $"left-{left.AnswerId}";
+                                            var number = idx + 1;
+                                            <div id="@leftId" class="match-item preview-mode">
+                                                <span class="anchor left" aria-hidden="true"></span>
+                                                <span class="match-number">@number.</span>
+                                                <span class="match-text katex-content">@((MarkupString)NormalizeMatchingContent(left.AnswerContent))</span>
+                                            </div>
+                                        }
+                                    </div>
+                                    <div class="col-divider" aria-hidden="true"></div>
+                                    <div class="col right">
+                                        <div class="col-header">
+                                            <span class="col-label">Cột B</span>
+                                        </div>
+                                        @{
+                                            // Với matching questions, answers được chia thành 2 phần: nửa đầu là Column A, nửa sau là Column B
+                                            // Chỉ hiển thị nửa sau (Column B) trong right column
+                                            var totalRightAnswers = matchingRightItems.OrderBy(a => a.Order).ToList();
+                                            var leftCount = totalRightAnswers.Count / 2;
+                                            var rightColumnItems = totalRightAnswers.Skip(leftCount).ToList();
+                                        }
+                                        @for (int idx = 0; idx < rightColumnItems.Count; idx++)
+                                        {
+                                            var right = rightColumnItems[idx];
+                                            var rightId = $"right-{right.AnswerId}";
+                                            var letter = (char)('a' + idx);
+                                            <div id="@rightId" class="match-item preview-mode">
+                                                <span class="match-number">@letter.</span>
+                                                <span class="match-text katex-content">@((MarkupString)NormalizeMatchingContent(right.AnswerContent))</span>
+                                                <span class="anchor right" aria-hidden="true"></span>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                        else
+                        {
+                            <!-- Regular Question -->
+                            <div class="q-number">
+                                @if (questionNumber.HasValue)
+                                {
+                                    <span class="q-chip">@questionNumber.Value</span>
+                                }
+                                Câu hỏi
+                                @if (isChildQuestion)
+                                {
+                                    <span class="child-badge">(Câu hỏi con)</span>
+                                }
+                            </div>
+                            <div class="q-content katex-content">
+                                @if (string.IsNullOrEmpty(q.QuestionContent))
+                                {
+                                    <span style="color: #999; font-style: italic;">Đang tải nội dung câu hỏi...</span>
+                                }
+                                else
+                                {
+                                    @((MarkupString)RenderHtml(q.QuestionContent))
+                                }
+                            </div>
+                            @if (q.Answers != null && q.Answers.Count > 0)
+                            {
+                                <ul class="q-answers">
+                                    @foreach (var ans in q.Answers.OrderBy(a => a.Order))
+                                    {
+                                        var isCorrect = IsCorrectAnswer(ans.AnswerId);
+                                        <li class="answer-item @(isCorrect ? "correct-answer" : "")">
+                                            <span class="ans-label">@GetLetter(ans.Order).</span>
+                                            <span class="ans-content katex-content">
+                                                @if (string.IsNullOrEmpty(ans.AnswerContent))
+                                                {
+                                                    <span style="color: #999; font-style: italic;">Đang tải nội dung đáp án...</span>
+                                                }
+                                                else
+                                                {
+                                                    @((MarkupString)RenderHtml(ans.AnswerContent))
+                                                }
+                                            </span>
+                                            @if (isCorrect)
                                             {
-                                                <span style="color: #999; font-style: italic;">Đang tải nội dung đáp án...</span>
+                                                <span class="correct-badge">✓ Đúng</span>
+                                            }
+                                        </li>
+                                    }
+                                </ul>
+                            }
+                            <!-- Render child questions nếu là parent question thông thường -->
+                            @if (isParentQuestion && q.ChildQuestions != null && q.ChildQuestions.Count > 0)
+                            {
+                                @foreach (var child in q.ChildQuestions.OrderBy(c => c.Order))
+                                {
+                                    var childIndex = flatQuestions.IndexOf(child);
+                                    var childQuestionNumber = childIndex >= 0 ? GetQuestionNumber(child, childIndex) : null;
+                                    <div class="question-item child-question" style="margin-top: 16px; margin-left: 24px;">
+                                        <div class="q-number">
+                                            @if (childQuestionNumber.HasValue)
+                                            {
+                                                <span class="q-chip">@childQuestionNumber.Value</span>
+                                            }
+                                            Câu hỏi
+                                            <span class="child-badge">(Câu hỏi con)</span>
+                                        </div>
+                                        <div class="q-content katex-content">
+                                            @if (string.IsNullOrEmpty(child.QuestionContent))
+                                            {
+                                                <span style="color: #999; font-style: italic;">Đang tải nội dung câu hỏi...</span>
                                             }
                                             else
                                             {
-                                                @((MarkupString)RenderHtml(ans.AnswerContent))
+                                                @((MarkupString)RenderHtml(child.QuestionContent))
                                             }
-                                        </span>
-                                        @if (isCorrect)
+                                        </div>
+                                        @if (child.Answers != null && child.Answers.Count > 0)
                                         {
-                                            <span class="correct-badge">✓ Đúng</span>
+                                            <ul class="q-answers">
+                                                @foreach (var ans in child.Answers.OrderBy(a => a.Order))
+                                                {
+                                                    var isCorrect = IsCorrectAnswer(ans.AnswerId);
+                                                    <li class="answer-item @(isCorrect ? "correct-answer" : "")">
+                                                        <span class="ans-label">@GetLetter(ans.Order).</span>
+                                                        <span class="ans-content katex-content">
+                                                            @if (string.IsNullOrEmpty(ans.AnswerContent))
+                                                            {
+                                                                <span style="color: #999; font-style: italic;">Đang tải nội dung đáp án...</span>
+                                                            }
+                                                            else
+                                                            {
+                                                                @((MarkupString)RenderHtml(ans.AnswerContent))
+                                                            }
+                                                        </span>
+                                                        @if (isCorrect)
+                                                        {
+                                                            <span class="correct-badge">✓ Đúng</span>
+                                                        }
+                                                    </li>
+                                                }
+                                            </ul>
                                         }
-                                    </li>
+                                    </div>
                                 }
-                            </ul>
+                            }
                         }
                     </div>
-                    @if (!isParentQuestion)
-                    {
-                        idx++;
-                    }
                 }
             }
             else if (isLoading)

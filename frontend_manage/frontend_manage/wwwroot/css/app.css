@@ -212,7 +212,7 @@ h1:focus {
     bottom: 0;
     left: 0;
     right: 0;
-    z-index: 1000;
+    z-index: 100000; /* Cao hơn LeaderLine để footer nằm trên line */
     margin: 0;
     padding: 0;
     width: 100%;
@@ -234,8 +234,8 @@ h1:focus {
 
 .exam-content-wrapper {
     display: flex;
-    gap: 16px;
-    max-width: 1400px;
+    gap: 12px;
+    max-width: 1600px;
     margin: 0 auto;
     height: 100%;
 }
@@ -243,18 +243,17 @@ h1:focus {
 /* Layout đã chuyển sang MudGrid, không cần CSS grid nữa */
 
 .exam-sidebar-right {
-    width: 320px;
+    width: 280px;
     flex-shrink: 0;
     background: white;
     border-radius: 8px;
-    padding: 16px;
+    padding: 10px;
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
-    overflow-y: auto;
     display: flex;
     flex-direction: column;
-    gap: 16px;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
+    gap: 8px;
+    max-height: calc(100vh - 112px); /* 56px header + 56px footer */
+    overflow: hidden;
 }
 
 .exam-sidebar-right::-webkit-scrollbar {
@@ -267,10 +266,13 @@ h1:focus {
     border-radius: 8px;
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
     overflow-y: auto;
+    overflow-x: visible; /* Cho phép line vượt ra ngoài */
     scrollbar-width: none;
     -ms-overflow-style: none;
     display: flex;
     flex-direction: column;
+    position: relative; /* Tạo stacking context */
+    z-index: 0; /* Thấp để không che line */
 }
 
 .exam-question-area::-webkit-scrollbar {
@@ -323,27 +325,46 @@ h1:focus {
 }
 
 .question-navigation-container {
-    max-height: 400px;
+    flex: 1;
+    min-height: 0;
     overflow-y: auto;
     overflow-x: hidden;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
+    scrollbar-width: thin;
+    -ms-overflow-style: auto;
 }
 
 .question-navigation-container::-webkit-scrollbar {
-    display: none;
+    width: 6px;
+}
+
+.question-navigation-container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.question-navigation-container::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 3px;
+}
+
+.question-navigation-container::-webkit-scrollbar-thumb:hover {
+    background: #555;
 }
 
 .question-navigation-grid {
     display: grid;
-    grid-template-columns: repeat(6, minmax(40px, 1fr));
-    gap: 6px;
+    grid-template-columns: repeat(7, minmax(32px, 1fr));
+    gap: 3px;
     justify-content: stretch;
 }
 
 @media (max-width: 900px) {
+    .exam-sidebar-right {
+        width: 260px;
+    }
+    
     .question-navigation-grid {
-        grid-template-columns: repeat(4, minmax(36px, 1fr));
+        grid-template-columns: repeat(6, minmax(32px, 1fr));
     }
 }
 
@@ -351,6 +372,14 @@ h1:focus {
     .question-navigation-grid {
         grid-template-columns: repeat(3, minmax(32px, 1fr));
     }
+}
+
+/* Tối ưu kích thước nút navigation */
+.question-navigation-grid button,
+.question-navigation-grid .mud-button {
+    min-height: 32px;
+    font-size: 0.8rem;
+    padding: 2px 4px;
 }
 
 /* Touch targets cho mobile */
@@ -418,8 +447,13 @@ h1:focus {
         max-height: none;
     }
 
+    .exam-sidebar-right {
+        max-height: calc(100vh - 104px);
+    }
+
     .question-navigation-container {
-        max-height: 300px;
+        flex: 1;
+        min-height: 0;
     }
 }
 
@@ -463,9 +497,9 @@ h1:focus {
 
     .exam-sidebar-right {
         width: 100%;
-        max-height: none;
+        max-height: calc(100vh - 96px);
         padding: 12px;
-        gap: 12px;
+        gap: 10px;
         order: 2; /* Sidebar xuống dưới trên mobile */
         flex-shrink: 0;
     }
@@ -490,12 +524,17 @@ h1:focus {
 
     /* Navigation buttons nhỏ hơn */
     .question-navigation-grid {
-        grid-template-columns: repeat(5, minmax(36px, 1fr));
-        gap: 4px;
+        grid-template-columns: repeat(6, minmax(32px, 1fr));
+        gap: 3px;
+    }
+    
+    .exam-sidebar-right {
+        width: 100%;
     }
 
     .question-navigation-container {
-        max-height: 250px;
+        flex: 1;
+        min-height: 0;
         overflow-y: auto;
     }
 }
@@ -529,12 +568,13 @@ h1:focus {
     }
 
     .question-navigation-grid {
-        grid-template-columns: repeat(4, minmax(32px, 1fr));
+        grid-template-columns: repeat(5, minmax(32px, 1fr));
         gap: 3px;
     }
 
     .question-navigation-container {
-        max-height: 200px;
+        flex: 1;
+        min-height: 0;
     }
 
     .exam-footer .monitor-footer {

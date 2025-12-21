@@ -37,9 +37,10 @@ else
                 <MudGrid>
                     <MudItem xs="12" sm="6">
                         <MudText Typo="Typo.subtitle2">Điểm</MudText>
-                        @if (_submission?.Score.HasValue == true)
+                        @if (_submission != null && _submission.Score.HasValue)
                         {
                             <img src="@ScoreSvgDataUri" alt="Điểm số" style="max-width: 100%; height: auto;" />
+                            <MudText Typo="Typo.h6" Class="mt-2">@($"{_submission.Score.Value:F2}")</MudText>
                         }
                         else
                         {

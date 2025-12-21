@@ -1,0 +1,41 @@
+@using MudBlazor
+@using Microsoft.AspNetCore.Components
+
+<MudDialog>
+    <DialogContent>
+        <MudText Typo="Typo.h6" Class="mb-4">⚠️ Xác nhận xóa cứng đề thi gốc</MudText>
+        
+        <MudAlert Severity="Severity.Warning" Class="mb-4">
+            <strong>Hành động này không thể hoàn tác!</strong>
+            <br />
+            Bạn có chắc chắn muốn xóa cứng đề thi gốc <strong>@OriginalExamPaperCore</strong>?
+            <br />
+            <br />
+            Tất cả các đề hoán vị liên quan (@TotalShuffledPapers đề) cũng sẽ bị xóa vĩnh viễn.
+        </MudAlert>
+
+        <MudText Typo="Typo.body2" Color="Color.Error" Class="mb-4">
+            ⚠️ Lưu ý: Dữ liệu sẽ bị xóa vĩnh viễn khỏi database và không thể khôi phục.
+        </MudText>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel" Color="Color.Default">Hủy</MudButton>
+        <MudButton OnClick="Confirm" Color="Color.Error" Variant="Variant.Filled">Xóa cứng</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] IMudDialogInstance? MudDialog { get; set; }
+    
+    [Parameter] public int OriginalExamPaperId { get; set; }
+    [Parameter] public string OriginalExamPaperCore { get; set; } = string.Empty;
+    [Parameter] public int TotalShuffledPapers { get; set; }
+
+    private void Cancel() => MudDialog?.Cancel();
+
+    private void Confirm()
+    {
+        MudDialog?.Close(DialogResult.Ok(true));
+    }
+}
+

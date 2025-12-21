@@ -1,9 +1,9 @@
 @using MudBlazor
 
-<MudPaper Elevation="2" Class="violation-counter-paper" Style="margin-bottom: 16px;">
-    <MudStack Spacing="2">
+<MudPaper Elevation="2" Class="violation-counter-paper" Style="margin-bottom: 10px; flex-shrink: 0;">
+    <MudStack Spacing="1">
         <div style="display: flex; justify-content: space-between; align-items: center;">
-            <MudText Typo="Typo.subtitle2" Style="font-weight: 600;">
+            <MudText Typo="Typo.subtitle2" Style="font-weight: 600; font-size: 0.875rem;">
                 <MudIcon Icon="@Icons.Material.Filled.Warning" Size="Size.Small" Style="vertical-align: middle; margin-right: 4px;" />
                 Cảnh báo vi phạm
             </MudText>
@@ -11,7 +11,7 @@
         
         <div class="violation-counter-content">
             <div class="violation-counter-display">
-                <MudText Typo="Typo.h4" Style="text-align: center; font-weight: bold; margin: 8px 0;">
+                <MudText Typo="Typo.h5" Style="text-align: center; font-weight: bold; margin: 4px 0;">
                     <span class="@GetViolationCountClass()">@ViolationCount</span>
                     <MudText Typo="Typo.body2" Style="color: #666; font-weight: normal;">/ @MaxViolations</MudText>
                 </MudText>
@@ -20,28 +20,28 @@
             <MudProgressLinear Value="@GetViolationPercentage()" 
                               Color="@GetViolationColor()" 
                               Variant="Variant.Filled"
-                              Style="height: 8px; border-radius: 4px; margin: 8px 0;" />
+                              Style="height: 6px; border-radius: 4px; margin: 4px 0;" />
             
             @if (ViolationCount >= MaxViolations)
             {
-                <MudAlert Severity="Severity.Error" Variant="Variant.Filled" Style="margin-top: 8px;">
-                    <MudText Typo="Typo.body2" Style="font-weight: bold;">
+                <MudAlert Severity="Severity.Error" Variant="Variant.Filled" Dense="true" Style="margin-top: 4px; padding: 6px;">
+                    <MudText Typo="Typo.body2" Style="font-weight: bold; font-size: 0.75rem;">
                         Đã vi phạm @MaxViolations lần! Bài thi sẽ tự động nộp...
                     </MudText>
                 </MudAlert>
             }
             else if (ViolationCount > 0)
             {
-                <MudAlert Severity="@GetAlertSeverity()" Variant="Variant.Filled" Style="margin-top: 8px;">
-                    <MudText Typo="Typo.body2">
+                <MudAlert Severity="@GetAlertSeverity()" Variant="Variant.Filled" Dense="true" Style="margin-top: 4px; padding: 6px;">
+                    <MudText Typo="Typo.body2" Style="font-size: 0.75rem;">
                         Còn @(MaxViolations - ViolationCount) lần vi phạm, bài thi sẽ tự động nộp!
                     </MudText>
                 </MudAlert>
             }
             else
             {
-                <MudAlert Severity="Severity.Success" Variant="Variant.Filled" Style="margin-top: 8px;">
-                    <MudText Typo="Typo.body2">
+                <MudAlert Severity="Severity.Success" Variant="Variant.Filled" Dense="true" Style="margin-top: 4px; padding: 6px;">
+                    <MudText Typo="Typo.body2" Style="font-size: 0.75rem;">
                         Chưa có vi phạm nào
                     </MudText>
                 </MudAlert>
@@ -52,22 +52,22 @@
 
 <style>
     .violation-counter-paper {
-        padding: 16px;
+        padding: 10px;
         border-radius: 8px;
         background: linear-gradient(135deg, #fff 0%, #f8f9fa 100%);
         border: 2px solid #e0e0e0;
     }
     
     .violation-counter-content {
-        padding: 8px 0;
+        padding: 4px 0;
     }
     
     .violation-counter-display {
         text-align: center;
-        padding: 12px;
+        padding: 8px;
         background: #f5f5f5;
-        border-radius: 8px;
-        margin-bottom: 8px;
+        border-radius: 6px;
+        margin-bottom: 4px;
     }
     
     .violation-count-safe {
