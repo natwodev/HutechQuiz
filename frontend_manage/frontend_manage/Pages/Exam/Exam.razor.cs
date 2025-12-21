@@ -30,14 +30,9 @@ public partial class Exam : ComponentBase, IAsyncDisposable
     private readonly Dictionary<int, object?> _questionAnswers = new();
     private readonly List<NavigationItem> _navigationItems = new();
     private int _activeQuestionIndex;
-    private bool _isFullscreen;
-    private bool _autoFullscreenAttempted;
     private bool _jsEventsRegistered;
     private readonly Dictionary<int, string> _questionLabelMap = new();
     private DotNetObjectReference<Exam>? _dotNetRef;
-
-    // Fullscreen chỉ được bật khi AllowViewMaterialsShuffled == false
-    private bool IsFullscreenEnabled => !(_response?.ExamPaper?.AllowViewMaterials ?? true);
 
     private bool _canTriggerFetch => StudentExamSessionId.HasValue && !_isLoading;
     private string _fetchButtonLabel => _isLoading ? "Đang khởi tạo..." : "Tải lại dữ liệu";
@@ -48,6 +43,7 @@ public partial class Exam : ComponentBase, IAsyncDisposable
     private StudentExamSessionCacheDto? StudentSession => _response?.StudentSession;
     private bool _showTimer = true;
     private bool ShouldShowTimer => _response != null && StudentSession != null && _showTimer;
+
     
     // Đếm số lần vi phạm để tự động nộp bài sau 3 lần
     private int _violationCount = 0;
@@ -55,7 +51,7 @@ public partial class Exam : ComponentBase, IAsyncDisposable
     private bool _violationCountLoaded = false; // Flag để tránh load nhiều lần
     private readonly HashSet<string> _violationTypes = new()
     {
-        "TabSwitch", "FullscreenExit", "Copy", "Paste", "RightClick", "DevTools", "Screenshot"
+        "TabSwitch", "Copy", "Paste", "RightClick", "DevTools", "Screenshot"
     };
 
     protected override async Task OnParametersSetAsync()
@@ -92,10 +88,22 @@ public partial class Exam : ComponentBase, IAsyncDisposable
                     await JS.InvokeVoidAsync("loadAudioPlayCounts", StudentExamSessionId.Value);
                     
                     // Initialize audio players sau khi load counts
-                    await Task.Delay(300);
+                    await Task.Delay(500); // Tăng delay để đảm bảo DOM render xong
                     if (ActiveQuestion != null)
                     {
                         await JS.InvokeVoidAsync("initializeAudioPlayers", StudentExamSessionId.Value, ActiveQuestion.Question.OriginalExamPaperDetailId);
+                        
+                        // Replace audio tags với custom controls
+                        await Task.Delay(200);
+                        await JS.InvokeVoidAsync("replaceAudioWithCustomControls");
+                    }
+                    
+                    // Update lại sau khi render xong
+                    await Task.Delay(200);
+                    if (ActiveQuestion != null)
+                    {
+                        await JS.InvokeVoidAsync("initializeAudioPlayers", StudentExamSessionId.Value, ActiveQuestion.Question.OriginalExamPaperDetailId);
+                        await JS.InvokeVoidAsync("replaceAudioWithCustomControls");
                     }
                 }
                 catch (Exception ex)
@@ -105,54 +113,10 @@ public partial class Exam : ComponentBase, IAsyncDisposable
             }
         }
 
-        // Tự động bật fullscreen một lần, sau khi:
-        // - JS events đã đăng ký
-        // - Dữ liệu đề thi (_response) đã load
-        // - AllowViewMaterialsShuffled == false (IsFullscreenEnabled == true)
-        if (!_autoFullscreenAttempted && _jsEventsRegistered && IsFullscreenEnabled)
-        {
-            _autoFullscreenAttempted = true;
-            var entered = await TryEnterFullscreenAsync();
-            if (entered)
-            {
-                StateHasChanged();
-            }
-        }
-        
         // Không gọi LoadViolationCountFromBackend ở đây nữa vì đã gọi trong FetchExamAsync
         // Điều này tránh gọi API nhiều lần và gây lỗi 429 (Too Many Requests)
     }
 
-    [JSInvokable]
-    public async Task OnFullscreenStateChanged(bool isFullscreen)
-    {
-        var previousFullscreen = _isFullscreen;
-        _isFullscreen = isFullscreen;
-        
-        // Cập nhật lại LeaderLines khi fullscreen thay đổi
-        try
-        {
-            await Task.Delay(150); // Đợi fullscreen hoàn tất
-            await JS.InvokeVoidAsync("matchingHelpers.redrawAllLeaderLines");
-        }
-        catch
-        {
-            // Ignore errors
-        }
-        
-        // Không cảnh báo nếu cho phép xem tài liệu
-        var allowViewMaterials = _response?.ExamPaper?.AllowViewMaterials ?? true;
-        if (!_isFullscreen && _autoFullscreenAttempted && !allowViewMaterials)
-        {
-            // Ghi nhận hoạt động thoát fullscreen
-            if (previousFullscreen && StudentExamSessionId.HasValue && StudentSession != null)
-            {
-                await HandleViolationAsync("FullscreenExit", "Bạn vừa thoát khỏi chế độ toàn màn hình. Vui lòng bật lại để tiếp tục làm bài thi.");
-            }
-        }
-
-        InvokeAsync(StateHasChanged);
-    }
 
     [JSInvokable]
     public async Task OnVisibilityChanged(bool hidden)
@@ -249,11 +213,10 @@ public partial class Exam : ComponentBase, IAsyncDisposable
         await FetchExamAsync(StudentExamSessionId.Value, true);
     }
 
-    private Task HandleExamTimerExpired()
+    private async Task HandleExamTimerExpired()
     {
         Snackbar.Add("Thời gian làm bài đã kết thúc.", Severity.Error);
         StateHasChanged();
-        return Task.CompletedTask;
     }
 
     private async Task FetchExamAsync(int studentExamSessionId, bool force)
@@ -404,10 +367,52 @@ public partial class Exam : ComponentBase, IAsyncDisposable
     /// <summary>
     /// Kiểm tra xem đây có phải là matching question dạng parent-child không
     /// (giống logic trong QuestionItem.razor.cs)
+    /// <summary>
+    /// Kiểm tra xem đây có phải là group question (câu hỏi nhóm) không
+    /// Group question có pattern {<1>} — {<3>} trong nội dung
+    /// </summary>
+    private bool IsGroupQuestion(QuestionStructureDto q)
+    {
+        if (q.ChildQuestions == null || q.ChildQuestions.Count == 0)
+            return false;
+
+        // Kiểm tra pattern {<...>} trong nội dung parent question
+        var stem = q.QuestionContent ?? string.Empty;
+        
+        // Kiểm tra nhiều pattern khác nhau cho group question
+        var patterns = new[]
+        {
+            @"\{<\d+>\}.*?\{<\d+>\}",  // {<1>} ... {<3>}
+            @"\{&lt;\d+&gt;\}.*?\{&lt;\d+&gt;\}",  // HTML encoded: {&lt;1&gt;} ... {&lt;3&gt;}
+            @"\{&lt;\d+&gt;\}.*?—.*?\{&lt;\d+&gt;\}",  // HTML encoded với dấu gạch ngang
+        };
+        
+        foreach (var pattern in patterns)
+        {
+            if (System.Text.RegularExpressions.Regex.IsMatch(stem, pattern, System.Text.RegularExpressions.RegexOptions.IgnoreCase))
+            {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+
+    /// <summary>
+    /// Kiểm tra xem đây có phải là matching question dạng parent-child không
+    /// Matching question có đặc điểm:
+    /// 1. Parent question không có answers (chỉ có stem)
+    /// 2. Tất cả child questions có cùng số lượng answers
+    /// 3. Parent question có từ khóa về matching (Nối cột, nối, match)
+    /// 4. KHÔNG có pattern {<...>} (đó là group question)
     /// </summary>
     private bool IsMatchingParent(QuestionStructureDto q)
     {
         if (q.ChildQuestions == null || q.ChildQuestions.Count == 0)
+            return false;
+
+        // QUAN TRỌNG: Kiểm tra group question TRƯỚC - nếu có pattern {<...>} thì chắc chắn không phải matching
+        if (IsGroupQuestion(q))
             return false;
 
         // Parent question không nên có answers (chỉ có stem)
@@ -415,8 +420,8 @@ public partial class Exam : ComponentBase, IAsyncDisposable
             return false;
 
         // Kiểm tra xem tất cả child questions có cùng số lượng answers không
-        var firstChild = q.ChildQuestions.First();
-        if (firstChild.Answers == null || firstChild.Answers.Count == 0)
+        var firstChild = q.ChildQuestions.FirstOrDefault();
+        if (firstChild == null || firstChild.Answers == null || firstChild.Answers.Count == 0)
             return false;
 
         var answerCount = firstChild.Answers.Count;
@@ -431,8 +436,9 @@ public partial class Exam : ComponentBase, IAsyncDisposable
                                  stem.Contains("nối", StringComparison.OrdinalIgnoreCase) ||
                                  stem.Contains("match", StringComparison.OrdinalIgnoreCase);
 
-        // Nếu có từ khóa matching hoặc pattern đặc biệt (số lượng child >= 2 và số lượng answers >= 2)
-        if (hasMatchingKeywords || (q.ChildQuestions.Count >= 2 && answerCount >= 2))
+        // CHỈ trả về true nếu CÓ từ khóa matching VÀ đáp ứng các điều kiện trên
+        // Không dựa vào pattern (số lượng child >= 2 và số lượng answers >= 2) vì group questions cũng có thể có pattern này
+        if (hasMatchingKeywords)
         {
             // Đảm bảo tất cả child questions đều là MCQ (có answers)
             return q.ChildQuestions.All(child => 
@@ -701,6 +707,29 @@ public partial class Exam : ComponentBase, IAsyncDisposable
             var questionItem = _questionDisplayItems[index];
             var questionId = $"question-{questionItem.Question.OriginalExamPaperDetailId}";
             
+            // Khởi tạo lại audio players cho câu hỏi mới
+            if (StudentExamSessionId.HasValue && JS != null)
+            {
+                try
+                {
+                    await Task.Delay(300); // Đợi DOM render xong
+                    await JS.InvokeVoidAsync("initializeAudioPlayers", StudentExamSessionId.Value, questionItem.Question.OriginalExamPaperDetailId);
+                    
+                    // Replace audio tags với custom controls
+                    await Task.Delay(200);
+                    await JS.InvokeVoidAsync("replaceAudioWithCustomControls");
+                    
+                    // Update lại sau khi render xong để đảm bảo badge hiển thị
+                    await Task.Delay(200);
+                    await JS.InvokeVoidAsync("initializeAudioPlayers", StudentExamSessionId.Value, questionItem.Question.OriginalExamPaperDetailId);
+                    await JS.InvokeVoidAsync("replaceAudioWithCustomControls");
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Error initializing audio players: {ex.Message}");
+                }
+            }
+            
             try
             {
                 if (JS != null)
@@ -870,51 +899,6 @@ public partial class Exam : ComponentBase, IAsyncDisposable
         }
     }
 
-    private async Task ToggleFullscreenAsync()
-    {
-        // Không cho bật fullscreen nếu AllowViewMaterialsShuffled != false
-        if (!IsFullscreenEnabled)
-        {
-            return;
-        }
-
-        try
-        {
-            var isActive = await JS.InvokeAsync<bool>("examFullscreen.isActive");
-            if (!isActive)
-            {
-                await TryEnterFullscreenAsync();
-            }
-            else
-            {
-                await JS.InvokeVoidAsync("examFullscreen.exit");
-                _isFullscreen = false;
-            }
-        }
-        catch
-        {
-            _isFullscreen = false;
-        }
-    }
-
-    private async Task<bool> TryEnterFullscreenAsync()
-    {
-        try
-        {
-            var entered = await JS.InvokeAsync<bool>("examFullscreen.enter", "#exam-shell");
-            if (entered)
-            {
-                _isFullscreen = true;
-                return true;
-            }
-        }
-        catch
-        {
-            _isFullscreen = false;
-        }
-
-        return false;
-    }
 
     /// <summary>
     /// Xử lý vi phạm: đếm số lần và tự động nộp bài sau 3 lần
@@ -1021,7 +1005,6 @@ public partial class Exam : ComponentBase, IAsyncDisposable
         return activityType switch
         {
             "TabSwitch" => "Rời khỏi tab thi",
-            "FullscreenExit" => "Thoát khỏi chế độ toàn màn hình",
             "Copy" => "Phát hiện sao chép nội dung",
             "Paste" => "Phát hiện dán nội dung",
             "RightClick" => "Phát hiện click chuột phải",
