@@ -5,6 +5,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UserSecretsId>frontend-manage-secrets</UserSecretsId>
+    <DisableStaticWebAssetsCompression>true</DisableStaticWebAssetsCompression>
   </PropertyGroup>
 
   <ItemGroup>
