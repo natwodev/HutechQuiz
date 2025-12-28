@@ -25,6 +25,7 @@ builder.Services.AddScoped<StudentService>();
 
 builder.Services.AddScoped<MonitorService>();
 builder.Services.AddSingleton<NotificationService>();
+builder.Services.AddScoped<StudentActivityService>();
 
 // Exam Manager Services
 builder.Services.AddScoped<ExamManagerService>();
@@ -48,8 +49,8 @@ builder.Services.AddScoped<IKaTeXService, KaTeXService>();
 // Đăng ký QRCode service
 builder.Services.AddScoped<IQrCodeService, QrCodeService>();
 
-// Mock exam service
-builder.Services.AddSingleton<ExamMockService>();
+// Đăng ký ExamRenderingService để xử lý render đề thi
+builder.Services.AddScoped<IExamRenderingService, ExamRenderingService>();
 
 // Đăng ký AuthHeaderHandler
 builder.Services.AddScoped<AuthHeaderHandler>();

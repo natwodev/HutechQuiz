@@ -201,7 +201,16 @@ public class StudentService
             return;
         }
 
-        var mappedQuestions = QuestionMapping.MapToQuestionStructureList(response.OriginalExamPaper.Details);
-        response.ExamPaper.QuestionStructures = mappedQuestions;
+        // Nếu đã có QuestionStructures từ backend (đã hoán vị), hãy bổ sung nội dung từ OriginalExamPaper.Details
+        if (response.ExamPaper.QuestionStructures != null && response.ExamPaper.QuestionStructures.Count > 0)
+        {
+            QuestionMapping.EnrichQuestionStructuresWithContent(response.ExamPaper.QuestionStructures, response.OriginalExamPaper.Details);
+        }
+        else
+        {
+            // Fallback nếu backend không trả về QuestionStructures
+            var mappedQuestions = QuestionMapping.MapToQuestionStructureList(response.OriginalExamPaper.Details);
+            response.ExamPaper.QuestionStructures = mappedQuestions;
+        }
     }
 }

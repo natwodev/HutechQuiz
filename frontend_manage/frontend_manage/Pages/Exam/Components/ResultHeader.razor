@@ -1,5 +1,5 @@
-@using MudBlazor
 @inject NavigationManager Navigation
+@inject frontend_manage.Services.AuthService AuthService
 
 <header class="result-header" style="background: #264488 !important;">
     <div class="result-header-left">
@@ -20,20 +20,17 @@
     </div>
     
     <div class="result-header-right">
-        <MudButton Variant="Variant.Text"
-                   Color="Color.Inherit"
-                   StartIcon="@Icons.Material.Filled.ArrowBack"
-                   OnClick="NavigateToDashboard"
-                   Class="result-back-button">
-            Quay lại
-        </MudButton>
+        <button type="button" class="home-button" title="Đăng xuất" @onclick="HandleLogout">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+            </svg>
+        </button>
     </div>
 </header>
 
 @code {
-    private void NavigateToDashboard()
+    private async Task HandleLogout()
     {
-        Navigation.NavigateTo("/student-dashboard");
+        await AuthService.Logout();
     }
 }
-

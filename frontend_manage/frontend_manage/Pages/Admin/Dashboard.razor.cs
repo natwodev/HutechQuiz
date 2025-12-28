@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using MudBlazor;
 using System.Net.Http.Json;
+using Microsoft.Extensions.Configuration;
 
 namespace frontend_manage.Pages.Admin;
 
@@ -25,6 +26,7 @@ public partial class Dashboard : ComponentBase
     [Inject] private ISnackbar Snackbar { get; set; } = default!;
     [Inject] private IJSRuntime JSRuntime { get; set; } = default!;
     [Inject] private NavigationManager NavigationManager { get; set; } = default!;
+    [Inject] private IConfiguration Configuration { get; set; } = default!;
 
     private bool _loading = true;
     

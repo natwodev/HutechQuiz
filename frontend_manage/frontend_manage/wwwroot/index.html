@@ -8,11 +8,11 @@
     <link href="/bootstrap/css/bootstrap.min.css" rel="stylesheet">
     <script src="/jquery/jquery.min.js"></script>
     <script src="/bootstrap/js/bootstrap.bundle.min.js"></script>
-    <!-- Load thư viện canvas ảnh cho điểm thí sinh -->
-    <script src="_content/Blazor.Extensions.Canvas/blazor.extensions.canvas.js"></script>
     <!-- Removed MathJax; using KaTeX auto-render instead -->
     <link href="css/app.css" rel="stylesheet" />
     <link href="css/result-page.css" rel="stylesheet" />
+    <link href="css/exam/question-rendering.css" rel="stylesheet" />
+    <link href="css/toast.css" rel="stylesheet" />
     <!--Tải MudBlazor-->
     <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" rel="stylesheet" />
     <link href="_content/MudBlazor/MudBlazor.min.css" rel="stylesheet" />
@@ -29,9 +29,12 @@
 <body class="warm-filter">
     <div id="app">
         <div class="progress" style="height: 5px;">
-            <div class="progress-bar" role="progressbar" style="width: var(--blazor-load-percentage, 0%); background-color: rgb(0,107,179)" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100"></div>
+            <div class="progress-bar" role="progressbar"
+                style="width: var(--blazor-load-percentage, 0%); background-color: rgb(0,107,179)" aria-valuenow="25"
+                aria-valuemin="0" aria-valuemax="100"></div>
         </div>
-        <div class="vh-100 d-flex align-items-center justify-content-center gap-3" style="font-family: Segoe UI-Bold, Helvetica;">
+        <div class="vh-100 d-flex align-items-center justify-content-center gap-3"
+            style="font-family: Segoe UI-Bold, Helvetica;">
             <div class="h5 spinner-border"></div>
             <div class="h2">Vui lòng chờ</div>
         </div>
@@ -45,15 +48,11 @@
     <script src="_framework/blazor.webassembly.js"></script>
     <script src="_content/MudBlazor/MudBlazor.min.js"></script>
     <script src="js/katexInterop.js"></script>
-    <script src="js/matching.js"></script>
     <script src="js/examSecurity.js"></script>
     <script src="js/examFullscreen.js"></script>
-    <!-- LeaderLine for matching connections -->
-    <script src="https://cdn.jsdelivr.net/npm/leader-line@1.0.7/leader-line.min.js"></script>
-    <style>
-        /* Ensure leader lines are visible above all */
-        .leader-line { z-index: 100000 !important; pointer-events: none; }
-    </style>
+    <script src="js/exam-audio.js"></script>
+    <script src="js/custom-audio-player.js"></script>
+    <script src="js/toast.js"></script>
     <script src="js/scroll.js"></script>
     <script src="js/lecturer.js"></script>
     <script>
@@ -74,7 +73,7 @@
                 }
                 const byteArray = new Uint8Array(byteNumbers);
                 const blob = new Blob([byteArray], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-                
+
                 const url = window.URL.createObjectURL(blob);
                 const link = document.createElement('a');
                 link.href = url;

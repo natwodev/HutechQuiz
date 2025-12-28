@@ -1,25 +1,46 @@
-<MudStack>
-    <div style="display:flex; justify-content:space-between; align-items:center;">
-        <MudText Typo="Typo.subtitle2">Điều hướng câu hỏi</MudText>
-        <MudText Typo="Typo.subtitle2">Số câu hỏi: @(TotalQuestions)</MudText>
+<MudStack Style="height: 100%; display: flex; flex-direction: column;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 6px;">
+        <MudText Typo="Typo.subtitle2" Style="font-size: 0.8rem; font-weight: 600;">Câu hỏi</MudText>
+        <MudText Typo="Typo.subtitle2" Style="font-size: 0.8rem;">@(TotalQuestions)</MudText>
     </div>
-    <MudPaper Elevation="0" Class="pa-2 question-navigation-container" Style="background:#fafafa; border-radius:8px;">
+    <MudPaper Elevation="0" Class="pa-1 question-navigation-container" Style="background:#fafafa; border-radius:6px; flex: 1; min-height: 0;">
         <div class="question-navigation-grid">
-            @for (int display = 1; display <= TotalQuestions; display++)
+            @if (QuestionIds != null && ParentIndices != null && QuestionIds.Count > 0 && ParentIndices.Count > 0)
             {
-                var number = display; // avoid closure capture issues
-                var idx = number - 1;
-                var answered = AnsweredMap.ContainsKey(QuestionIds[idx]);
-                var isActive = ActiveQuestionIndex.HasValue && ParentIndices.Count > idx && ParentIndices[idx] == ActiveQuestionIndex.Value;
-                <MudButton Style="width:100%; min-width:40px;" 
-                          Size="Size.Small" 
-                          Variant="@((answered) ? Variant.Filled : Variant.Outlined)" 
-                          Color="@(answered? Color.Success: Color.Default)" 
-                          Class="@(isActive ? "active-question-nav" : "")"
-                          OnClick="@(()=>OnNavigate.InvokeAsync(idx))">@number</MudButton>
+                @for (int display = 1; display <= TotalQuestions; display++)
+                {
+                    var number = display; // avoid closure capture issues
+                    var idx = number - 1;
+                    
+                    // Kiểm tra bounds để tránh index out of range
+                    if (idx >= 0 && idx < QuestionIds.Count && idx < ParentIndices.Count)
+                    {
+                        var questionId = QuestionIds[idx];
+                        var answered = AnsweredMap != null && AnsweredMap.ContainsKey(questionId);
+                        var isActive = ActiveQuestionIndex.HasValue && idx < ParentIndices.Count && ParentIndices[idx] == ActiveQuestionIndex.Value;
+                        <MudButton @key="@($"nav-btn-{idx}")"
+                                  Style="width:100%; min-width:32px; padding: 2px 4px; font-size: 0.8rem;" 
+                                  Size="Size.Small" 
+                                  Variant="@((answered) ? Variant.Filled : Variant.Outlined)" 
+                                  Color="@(answered? Color.Success: Color.Default)" 
+                                  Class="@(isActive ? "active-question-nav" : "")"
+                                  Disabled="@_isNavigating"
+                                  OnClick="@(() => HandleNavigate(idx))">@number</MudButton>
+                    }
+                }
             }
         </div>
     </MudPaper>
+    
+    @* Nút Nộp bài *@
+    <MudButton Variant="Variant.Filled"
+               Color="Color.Primary"
+               FullWidth="true"
+               Size="Size.Small"
+               Style="margin-top: 6px; flex-shrink: 0; padding: 6px; font-size: 0.875rem;"
+               OnClick="SubmitExam">
+        Nộp bài
+    </MudButton>
 </MudStack>
 @code {
     [Parameter] public int TotalQuestions { get; set; }
@@ -28,6 +49,81 @@
     [Parameter] public List<int> QuestionIds { get; set; } = new();
     [Parameter] public int? ActiveQuestionIndex { get; set; }
     [Parameter] public List<int> ParentIndices { get; set; } = new();
+    [Parameter] public EventCallback SubmitExam { get; set; }
+
+    private bool _isNavigating = false;
+    private DateTime _lastNavigateTime = DateTime.MinValue;
+    private const int NAVIGATE_DEBOUNCE_MS = 300; // Debounce 300ms
+
+    private async Task HandleNavigate(int index)
+    {
+        // Debounce: Tránh multiple clicks quá nhanh
+        var now = DateTime.Now;
+        var timeSinceLastNavigate = (now - _lastNavigateTime).TotalMilliseconds;
+        if (timeSinceLastNavigate < NAVIGATE_DEBOUNCE_MS)
+        {
+            System.Diagnostics.Debug.WriteLine($"Navigation debounced: {timeSinceLastNavigate}ms since last navigate");
+            return;
+        }
+
+        // Tránh multiple clicks trong khi đang navigate
+        if (_isNavigating)
+        {
+            System.Diagnostics.Debug.WriteLine("Navigation already in progress");
+            return;
+        }
+
+        try
+        {
+            _isNavigating = true;
+            _lastNavigateTime = now;
+            
+            // Trigger StateHasChanged để disable buttons ngay lập tức
+            StateHasChanged();
+            
+            // Kiểm tra bounds trước khi navigate
+            if (index >= 0 && 
+                QuestionIds != null && index < QuestionIds.Count && 
+                ParentIndices != null && index < ParentIndices.Count)
+            {
+                // Kiểm tra xem OnNavigate có được set không
+                if (OnNavigate.HasDelegate)
+                {
+                    await OnNavigate.InvokeAsync(index);
+                }
+            }
+            
+            // Đợi một chút để đảm bảo navigation hoàn tất
+            await Task.Delay(100);
+        }
+        catch (ObjectDisposedException)
+        {
+            // Component đã bị dispose, bỏ qua
+            System.Diagnostics.Debug.WriteLine("Component disposed during navigation");
+        }
+        catch (InvalidOperationException)
+        {
+            // Component đang được dispose hoặc re-render, bỏ qua
+            System.Diagnostics.Debug.WriteLine("Component is being disposed or re-rendered");
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error in HandleNavigate: {ex.Message}");
+        }
+        finally
+        {
+            _isNavigating = false;
+            // Trigger StateHasChanged để enable buttons lại
+            try
+            {
+                StateHasChanged();
+            }
+            catch
+            {
+                // Ignore nếu component đã bị dispose
+            }
+        }
+    }
 }
 
 

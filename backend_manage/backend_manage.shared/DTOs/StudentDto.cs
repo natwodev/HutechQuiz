@@ -66,4 +66,34 @@ namespace backend_manage.shared.DTOs
         public DateTime ExamSessionEndTime { get; set; }
     }
 
-} 
+    public class RankedStudentDto
+    {
+        public int Rank { get; set; }
+        public string StudentCode { get; set; }
+        public string FullName { get; set; }
+        public double Score { get; set; }
+    }
+
+    public class SubjectRankingDto
+    {
+        public int ExamSessionSubjectId { get; set; }
+        public string SubjectName { get; set; } = "";
+
+        public List<RankedStudentDto> Top5 { get; set; } = new();
+        public RankedStudentDto? MyRank { get; set; }
+    }
+
+    public class AllSubjectRankingResponseDto
+    {
+        public List<SubjectRankingDto> Subjects { get; set; } = new();
+    }
+
+
+    public class CompletedSubjectDto
+    {
+        public int ExamSessionSubjectId { get; set; }
+        public string SubjectName { get; set; } = "";
+    }
+
+
+}

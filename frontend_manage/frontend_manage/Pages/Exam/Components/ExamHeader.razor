@@ -42,11 +42,6 @@
                        Color="Color.Inherit"
                        OnClick="ToggleTimerVisibility"
                        Title="@(IsTimerVisible ? "Ẩn đồng hồ" : "Hiện đồng hồ")" />
-        <MudIconButton Icon="@(IsFullscreen ? Icons.Material.Filled.FullscreenExit : Icons.Material.Filled.Fullscreen)"
-                       Size="Size.Small"
-                       Color="Color.Inherit"
-                       OnClick="ToggleFullscreen"
-                       Title="@(IsFullscreen ? "Thoát toàn màn hình" : "Toàn màn hình")" />
     </div>
 </header>
 
@@ -54,9 +49,7 @@
     [Parameter] public StudentExamSessionCacheDto? StudentSession { get; set; }
     [Parameter] public bool ShouldShowTimer { get; set; }
     [Parameter] public bool IsTimerVisible { get; set; }
-    [Parameter] public bool IsFullscreen { get; set; }
     [Parameter] public EventCallback ToggleTimerVisibility { get; set; }
-    [Parameter] public EventCallback ToggleFullscreen { get; set; }
     [Parameter] public EventCallback OnExamTimerExpired { get; set; }
 }
 

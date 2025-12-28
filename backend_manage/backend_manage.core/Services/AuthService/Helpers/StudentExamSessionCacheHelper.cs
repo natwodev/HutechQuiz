@@ -765,4 +765,28 @@ public class StudentExamSessionCacheHelper
             return await UpdateStudentAnswersInDatabaseAsync(studentCode, shuffledExamPaperId, newAnswersString);
         }
     }
+    public async Task ClearAllStudentSessionsCacheAsync(string studentCode)
+    {
+        try
+        {
+            // Xóa hash chứa danh sách các phiên thi
+            string redisHashKey = $"student_exam_sessions:{studentCode}";
+            await _redisService.KeyDeleteAsync(redisHashKey);
+
+            // Xóa các key lẻ của từng phiên thi (nếu có, theo pattern cũ/khác)
+            string pattern = $"student_exam_session:{studentCode}:*";
+            var server = _redisService.GetServer();
+            var keys = server.Keys(pattern: pattern).ToArray();
+            if (keys.Any())
+            {
+                await _redisService.KeyDeleteAsync(keys.Select(k => k.ToString()));
+            }
+
+            _logger.LogInformation("Đã xóa toàn bộ cache phiên thi của sinh viên {StudentCode}", studentCode);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Lỗi khi xóa toàn bộ cache phiên thi của sinh viên {StudentCode}", studentCode);
+        }
+    }
 } 

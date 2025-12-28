@@ -5,6 +5,8 @@
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
         <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+        <DisableStaticWebAssetsCompression>true</DisableStaticWebAssetsCompression>
+        <ErrorOnDuplicatePublishOutputFiles>false</ErrorOnDuplicatePublishOutputFiles>
     </PropertyGroup>
 
     <ItemGroup>
@@ -19,7 +21,7 @@
         <PackageReference Include="Microsoft.AspNetCore.Authorization" Version="9.0.3" />
         <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="9.0.3" />
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.4" />
-        <PackageReference Include="Microsoft.AspNetCore.ResponseCompression" Version="2.3.0" />
+
         <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.2.0" />
         <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.3" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.3">
@@ -46,6 +48,8 @@
     </ItemGroup>
 
     <ItemGroup>
+      <Content Remove="wwwroot\EPZ_DL\**" />
+      <None Include="wwwroot\EPZ_DL\**" />
       <_ContentIncludedByDefault Remove="wwwroot\audio\helloim-going-to-talk-about-b1672025838.mp3" />
       <_ContentIncludedByDefault Remove="wwwroot\audio\What_are_you_going_to_do.mp3" />
       <_ContentIncludedByDefault Remove="wwwroot\css\admin\ManageExam.css" />

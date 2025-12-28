@@ -1,28 +1,35 @@
 @page "/exammanager/preview/original"
 @using frontend_manage.DTOs
 @using frontend_manage.Pages.ExamManager.Components
+@using frontend_manage.Pages.ExamManager.Preview.Components
+@using frontend_manage.Components.MonitorLayout
 @using System.Linq
 @using MudBlazor
 @using Microsoft.AspNetCore.Components.Forms
 
-<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pa-4">
-    <MudPaper Elevation="4" Class="pa-6">
-        <!-- Header -->
-        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="3" Class="mb-4">
-            <img src="/images/logo-dai-hoc-hutech_012634748.png" alt="HUTECH" style="height: 64px; width: auto;" />
-            <MudStack>
-                <MudText Typo="Typo.body1" Class="font-weight-bold">TRƯỜNG ĐẠI HỌC CÔNG NGHỆ TP.HCM (HUTECH)</MudText>
-                <MudText Typo="Typo.body2" Color="Color.Primary" Class="font-weight-bold">EXAM SUITE - ORIGINAL EXAM PREVIEW</MudText>
-            </MudStack>
-        </MudStack>
+<link href="css/exammanager/preview-page.css" rel="stylesheet" />
+<link href="css/monitor/MonitorPage.css" rel="stylesheet" />
+<link href="css/exam/custom-audio-player.css" rel="stylesheet" />
+
+<div class="preview-page">
+    <!-- Header -->
+    <Header
+        Subtitle="EXAM SUITE - ORIGINAL EXAM PREVIEW"
+        EditionTag="Professional Edition"
+        Description="Hệ thống xem trước đề thi gốc"
+        ModeTag="Preview Mode">
+    </Header>
+
+    <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pa-4 preview-page-container">
+        <MudPaper Elevation="4" Class="pa-6">
 
         <!-- Exam Meta Information -->
-        <MudPaper Elevation="1" Class="pa-4 mb-4">
-            <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Start" Spacing="3">
-                <MudStack Spacing="1" Style="flex: 1;">
-                    <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center">
-                        <MudText Typo="Typo.body2" Class="font-weight-bold" Style="color: #555;">Mã đề gốc:</MudText>
-                        <MudText Typo="Typo.body2">@Exam?.OriginalExamPaperCore</MudText>
+                    <div class="preview-meta-card">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 1.5rem; flex-wrap: wrap;">
+                        <div style="flex: 1; min-width: 300px;">
+                            <div class="preview-meta-row">
+                                <span class="preview-meta-label">Mã đề gốc:</span>
+                                <span class="preview-meta-value">@Exam?.OriginalExamPaperCore</span>
                         @if (!string.IsNullOrWhiteSpace(Exam?.OriginalExamPaperCore))
                         {
                             <MudIconButton 
@@ -32,36 +39,36 @@
                                 OnClick="ToggleQRCodeDisplay"
                                 Title="Hiển thị/Ẩn QR Code" />
                         }
-                    </MudStack>
-                    <MudStack Row="true" Spacing="2">
-                        <MudText Typo="Typo.body2" Class="font-weight-bold" Style="color: #555;">Tiêu đề:</MudText>
-                        <MudText Typo="Typo.body2">@Exam?.Title</MudText>
-                    </MudStack>
-                    @if (!string.IsNullOrWhiteSpace(Exam?.Description))
-                    {
-                        <MudStack Row="true" Spacing="2">
-                            <MudText Typo="Typo.body2" Class="font-weight-bold" Style="color: #555;">Mô tả:</MudText>
-                            <MudText Typo="Typo.body2">@Exam?.Description</MudText>
-                        </MudStack>
-                    }
-                    <MudStack Row="true" Spacing="2">
-                        <MudText Typo="Typo.body2" Class="font-weight-bold" Style="color: #555;">Môn học:</MudText>
-                        <MudText Typo="Typo.body2">@GetSubjectName(Exam?.SubjectId ?? 0)</MudText>
-                    </MudStack>
-                    <MudStack Row="true" Spacing="2">
-                        <MudText Typo="Typo.body2" Class="font-weight-bold" Style="color: #555;">Thời gian làm bài:</MudText>
-                        <MudText Typo="Typo.body2">@(Exam?.DurationMinutes ?? 0) phút</MudText>
-                    </MudStack>
-                    <MudStack Row="true" Spacing="2">
-                        <MudText Typo="Typo.body2" Class="font-weight-bold" Style="color: #555;">Tổng số câu:</MudText>
-                        <MudText Typo="Typo.body2">@(GetTotalQuestionsCount())</MudText>
-                    </MudStack>
-                    <MudStack Row="true" Spacing="2">
-                        <MudText Typo="Typo.body2" Class="font-weight-bold" Style="color: #555;">Loại đề thi:</MudText>
-                        <MudText Typo="Typo.body2">@(Exam?.IsManualCreated == true ? "Tạo thủ công" : "Import từ file")</MudText>
-                    </MudStack>
-                </MudStack>
-                <MudStack Row="true" Spacing="2">
+                            </div>
+                            <div class="preview-meta-row">
+                                <span class="preview-meta-label">Tiêu đề:</span>
+                                <span class="preview-meta-value">@Exam?.Title</span>
+                            </div>
+                            @if (!string.IsNullOrWhiteSpace(Exam?.Description))
+                            {
+                                <div class="preview-meta-row">
+                                    <span class="preview-meta-label">Mô tả:</span>
+                                    <span class="preview-meta-value">@Exam?.Description</span>
+                                </div>
+                            }
+                            <div class="preview-meta-row">
+                                <span class="preview-meta-label">Môn học:</span>
+                                <span class="preview-meta-value">@GetSubjectName(Exam?.SubjectId ?? 0)</span>
+                            </div>
+                            <div class="preview-meta-row">
+                                <span class="preview-meta-label">Thời gian làm bài:</span>
+                                <span class="preview-meta-value">@(Exam?.DurationMinutes ?? 0) phút</span>
+                            </div>
+                            <div class="preview-meta-row">
+                                <span class="preview-meta-label">Tổng số câu:</span>
+                                <span class="preview-meta-value">@(GetTotalQuestionsCount())</span>
+                            </div>
+                            <div class="preview-meta-row">
+                                <span class="preview-meta-label">Loại đề thi:</span>
+                                <span class="preview-meta-value">@(Exam?.IsManualCreated == true ? "Tạo thủ công" : "Import từ file")</span>
+                            </div>
+                        </div>
+                        <div class="preview-action-buttons">
                     <MudButton 
                         Color="Color.Success" 
                         Variant="Variant.Filled"
@@ -77,23 +84,16 @@
                         Disabled="@(isUpdating || isAddQuestionMode || editingQuestionId.HasValue)">
                         @(isEditMode ? "Hủy" : "Chỉnh sửa")
                     </MudButton>
-                </MudStack>
-            </MudStack>
+                        </div>
+                    </div>
 
             @if (showQRCode && !string.IsNullOrEmpty(qrCodeBase64))
             {
-                <MudDivider Class="my-4" />
-                <MudPaper Elevation="2" Class="pa-4" Style="background: white;">
-                    <MudStack Spacing="3" AlignItems="AlignItems.Center">
-                        <MudText Typo="Typo.h6" Class="font-weight-bold">Mã QR Code - Mã đề gốc</MudText>
-                        <MudPaper Elevation="2" Class="pa-4" Style="background: white; max-width: 100%;">
-                            <MudStack Spacing="2" AlignItems="AlignItems.Center">
-                                <img src="data:image/png;base64,@qrCodeBase64" alt="QR Code" style="max-width: 100%; height: auto; display: block;" />
-                            </MudStack>
-                        </MudPaper>
-                        <MudText Typo="Typo.body2" Style="color: #666;">Mã đề: @Exam?.OriginalExamPaperCore</MudText>
-                    </MudStack>
-                </MudPaper>
+                <div class="preview-qr-container">
+                    <div class="preview-qr-title">Mã QR Code - Mã đề gốc</div>
+                    <img src="data:image/png;base64,@qrCodeBase64" alt="QR Code" class="preview-qr-image" />
+                    <div class="preview-qr-code-text">Mã đề: @Exam?.OriginalExamPaperCore</div>
+                </div>
             }
 
             @if (isEditMode)
@@ -269,26 +269,31 @@
                     </MudStack>
                 </MudPaper>
             }
-        </MudPaper>
+                    </div>
 
         <MudDivider Class="my-4" />
 
         <!-- Questions Preview -->
-        <MudStack Spacing="3">
+        <div class="preview-questions-list">
             @if (Exam?.Details != null && Exam.Details.Count > 0)
             {
                 var flatQuestions = GetFlatQuestions();
+                var groupParents = GetGroupParentQuestions();
+                
                 @for (int i = 0; i < flatQuestions.Count; i++)
                 {
                     var q = flatQuestions[i];
                     // Xác định xem có phải là parent question không (có child questions)
                     var isParentQuestion = q.ParentQuestionId == null && q.ChildQuestions != null && q.ChildQuestions.Count > 0;
-                    // Xác định xem có phải là child question không
-                    var isChildQuestion = q.ParentQuestionId != null;
+                    // Bỏ qua parent question ở đây (sẽ render riêng ở section group questions)
+                    if (isParentQuestion)
+                    {
+                        continue;
+                    }
                     // Lấy số thứ tự của câu hỏi
                     var questionNumber = GetQuestionNumber(q, i);
                     
-                    <MudPaper Elevation="1" Class="pa-4" Style="@(isChildQuestion ? "background: #fafafa;" : "")">
+                    <div class="preview-question-container">
                         @if (editingQuestionId == q.OriginalExamPaperDetailId)
                         {
                             <!-- Form chỉnh sửa câu hỏi -->
@@ -403,20 +408,16 @@
                         {
                             <!-- Hiển thị câu hỏi -->
                             <MudStack Spacing="2">
-                                <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Spacing="2">
-                                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                <div class="preview-question-header">
+                                    <div class="preview-question-number">
+                                        <span class="preview-question-title">
+                                            Câu hỏi
+                                        </span>
                                         @if (questionNumber.HasValue)
                                         {
-                                            <MudChip T="int" Color="Color.Primary" Size="Size.Small" Variant="Variant.Filled">@questionNumber.Value</MudChip>
+                                            <span class="preview-question-number-chip">@questionNumber.Value</span>
                                         }
-                                        <MudText Typo="Typo.h6" Color="Color.Primary" Class="font-weight-bold">
-                                            Câu hỏi
-                                            @if (isChildQuestion)
-                                            {
-                                                <MudText Typo="Typo.body2" Style="color: #666; font-weight: normal;">(Câu hỏi con)</MudText>
-                                            }
-                                        </MudText>
-                                    </MudStack>
+                                    </div>
                                     <MudMenu Icon="@Icons.Material.Filled.MoreVert" Size="Size.Small" Color="Color.Default">
                                         <MudMenuItem OnClick="() => OpenEditQuestion(q.OriginalExamPaperDetailId)">
                                             <MudIcon Icon="@Icons.Material.Filled.Edit" Size="Size.Small" Class="mr-2" />
@@ -427,64 +428,85 @@
                                             Xóa
                                         </MudMenuItem>
                                     </MudMenu>
-                                </MudStack>
-                                <MudPaper Elevation="0" Class="pa-3 katex-content" Style="background: white;">
+                                </div>
+                                <div class="katex-content question-content-preview">
                                     @((MarkupString)RenderHtml(q.QuestionContent))
-                                </MudPaper>
+                                </div>
+                                
                                 @if (q.Answers != null && q.Answers.Count > 0)
                                 {
-                                    <MudList T="object" Dense="true" Style="margin-left: 24px;">
+                                    <div class="answers-preview">
                                         @foreach (var ans in q.Answers.OrderBy(a => a.Order))
                                         {
-                                            <MudListItem T="object"
-                                                Style="@(ans.IsCorrect ? "background: #f1f8f4; border: 1px solid #4caf50; border-radius: 6px; margin-bottom: 8px;" : "background: white; border: 1px solid #e0e0e0; border-radius: 6px; margin-bottom: 8px;")">
-                                                <MudStack Row="true" AlignItems="AlignItems.Start" Spacing="2" Style="width: 100%;">
-                                                    <MudText Typo="Typo.body2" Class="font-weight-bold" Style="min-width: 24px; color: #555;">@GetLetter(ans.Order).</MudText>
-                                                    <MudText Typo="Typo.body2" Class="katex-content" Style="flex: 1;">
-                                                        @((MarkupString)RenderHtml(ans.AnswerContent))
-                                                    </MudText>
-                                                    @if (ans.IsCorrect)
-                                                    {
-                                                        <MudChip T="string" Color="Color.Success" Size="Size.Small" Variant="Variant.Filled" Style="font-size: 0.7rem; padding: 2px 8px; height: auto;">
-                                                            ✓ Đúng
-                                                        </MudChip>
-                                                    }
-                                                </MudStack>
-                                            </MudListItem>
+                                            <div class="answer-preview-item @(ans.IsCorrect ? "answer-correct" : "")">
+                                                <span class="answer-letter-preview">@GetLetter(ans.Order).</span>
+                                                <div class="katex-content answer-text-preview">
+                                                    @((MarkupString)RenderHtml(ans.AnswerContent))
+                                                </div>
+                                                @if (ans.IsCorrect)
+                                                {
+                                                    <span class="answer-correct-badge">Đúng</span>
+                                                }
+                                            </div>
                                         }
-                                    </MudList>
+                                    </div>
                                 }
                             </MudStack>
                         }
-                    </MudPaper>
+                    </div>
+                }
+                
+                @* Render Group Questions (Parent-Child Questions) *@
+                @foreach (var groupParent in groupParents)
+                {
+                    var parentNumber = GetGroupParentNumber(groupParent);
+                    var childRange = GetChildQuestionsRange(groupParent);
+                    var startNumber = childRange.start;
+                    var endNumber = childRange.end;
+                    
+                    // Thử trích xuất range từ nội dung nếu có pattern {<...>}
+                    var extractedRange = ExtractGroupRange(groupParent.QuestionContent ?? string.Empty);
+                    if (extractedRange.start.HasValue && extractedRange.end.HasValue)
+                    {
+                        startNumber = extractedRange.start.Value;
+                        endNumber = extractedRange.end.Value;
+                    }
+                    
+                    <GroupQuestion ParentContent="@groupParent.QuestionContent"
+                                   ChildQuestions="@groupParent.ChildQuestions"
+                                   ParentNumber="@parentNumber"
+                                   StartNumber="@startNumber"
+                                   EndNumber="@endNumber"
+                                   ShowMenu="true"
+                                   OnEdit="@(() => OpenEditQuestion(groupParent.OriginalExamPaperDetailId))"
+                                   OnDelete="@(() => DeleteQuestion(groupParent.OriginalExamPaperDetailId))"
+                                   GetChildNumber="@((child) => GetChildQuestionNumber(child, groupParent))"
+                                   OriginalExamPaperCore="@Exam?.OriginalExamPaperCore" />
                 }
             }
             else if (isLoading)
             {
-                <MudStack AlignItems="AlignItems.Center" Justify="Justify.Center" Spacing="3" Style="padding: 40px;">
+                <div class="preview-loading-container">
                     <MudProgressCircular Indeterminate="true" />
-                    <MudText Typo="Typo.body1" Style="color: #666;">Đang tải chi tiết đề...</MudText>
-                </MudStack>
+                    <div class="preview-loading-text">Đang tải chi tiết đề...</div>
+                </div>
             }
             else
             {
-                <MudAlert Severity="Severity.Info" Class="text-center" Style="padding: 40px;">
-                    Không có dữ liệu câu hỏi cho đề này.
-                </MudAlert>
+                <div class="preview-empty-container">
+                    <MudAlert Severity="Severity.Info" Class="text-center">
+                        Không có dữ liệu câu hỏi cho đề này.
+                    </MudAlert>
+                </div>
             }
-        </MudStack>
-    </MudPaper>
-</MudContainer>
+        </div>
+        </MudPaper>
+    </MudContainer>
 
-<style>
-    .katex-content img {
-        max-width: 100%;
-        height: auto;
-        display: inline-block;
-        margin: 4px 0;
-    }
-    .katex-content audio {
-        width: 100%;
-        margin-top: 8px;
-    }
-</style>
+    <!-- Footer -->
+    <Footer
+        ModeLabel="Exam Preview System"
+        Version="1.0.1"
+        DevelopedBy="Developed by Natwodev & Juo"
+        ShowClock="true" />
+</div>

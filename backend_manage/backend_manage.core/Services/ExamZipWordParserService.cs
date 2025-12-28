@@ -1,0 +1,340 @@
+using System.Text;
+using System.Text.RegularExpressions;
+using DocumentFormat.OpenXml.Packaging;
+using DocumentFormat.OpenXml.Wordprocessing;
+
+namespace backend_manage.core.Services;
+
+/// <summary>
+/// Parser cho format đề thi mới với [question id="Q1"], [image], [audio], [latex], [answer], [exam permute=true]
+/// </summary>
+public sealed class ExamZipParsedParent
+{
+    public string ParentId { get; set; } = string.Empty; // P1, P2, ...
+    public string Stem { get; set; } = string.Empty;
+    public bool CanShuffle { get; set; } = true; // Từ permute attribute
+}
+
+public sealed class ExamZipParsedQuestion
+{
+    public string QuestionId { get; set; } = string.Empty; // Q1, Q2, ...
+    public string? ParentId { get; set; } // P1, P2, ... nếu thuộc parent
+    public string QuestionType { get; set; } = "mcq"; // mcq, short
+    public string Stem { get; set; } = string.Empty;
+    public string? LatexContent { get; set; }
+    public bool HasImage { get; set; }
+    public bool HasAudio { get; set; }
+    public char? CorrectAnswerLabel { get; set; } // A, B, C, D cho MCQ
+    public string? CorrectAnswerText { get; set; } // Cho SHORT answer
+    public bool CanShuffle { get; set; } = true; // Từ exam permute attribute trong question tag
+    public List<ExamZipParsedAnswer> Answers { get; set; } = new();
+}
+
+public sealed class ExamZipParsedAnswer
+{
+    public char Label { get; set; } // A, B, C, D
+    public string Content { get; set; } = string.Empty;
+}
+
+public static class ExamZipWordParserService
+{
+    /// <summary>
+    /// Parse Word document với format mới: [question id="Q1"], [answer], [image], [audio], [latex], [parent]
+    /// </summary>
+    public static (List<ExamZipParsedParent> Parents, List<ExamZipParsedQuestion> Questions, bool PermuteEnabled) Parse(Stream stream)
+    {
+        var blocks = ReadBlocks(stream);
+        return ParseQuestions(blocks);
+    }
+
+    // =========================
+    // READ WORD BLOCKS
+    // =========================
+    private static List<string> ReadBlocks(Stream stream)
+    {
+        stream.Position = 0;
+        using var mem = new MemoryStream();
+        stream.CopyTo(mem);
+        mem.Position = 0;
+
+        using var doc = WordprocessingDocument.Open(mem, false);
+        var body = doc.MainDocumentPart?.Document?.Body;
+        var blocks = new List<string>();
+
+        if (body == null) return blocks;
+
+        foreach (var p in body.Elements<Paragraph>())
+        {
+            var sb = new StringBuilder();
+
+            foreach (var run in p.Elements<Run>())
+            {
+                if (run.Descendants<Drawing>().Any())
+                {
+                    sb.Append(" [[IMAGE]] ");
+                }
+                else
+                {
+                    sb.Append(run.InnerText);
+                }
+            }
+
+            var line = sb.ToString().Trim();
+            if (!string.IsNullOrWhiteSpace(line))
+            {
+                blocks.Add(line);
+            }
+        }
+
+        return blocks;
+    }
+
+    // =========================
+    // PARSE QUESTIONS
+    // =========================
+    private static (List<ExamZipParsedParent> Parents, List<ExamZipParsedQuestion> Questions, bool PermuteEnabled) ParseQuestions(List<string> lines)
+    {
+        var parents = new List<ExamZipParsedParent>();
+        var questions = new List<ExamZipParsedQuestion>();
+        // Mặc định cho phép hoán vị (giống logic EPZ) trừ khi user set false
+        bool permuteEnabled = true;
+
+        ExamZipParsedParent? currentParent = null;
+        ExamZipParsedQuestion? current = null;
+        ExamZipParsedAnswer? currentAnswer = null;
+
+        // Regex patterns
+        // Format: [question id="Q1", exam permute=true] hoặc [question id="Q1"]
+        // Cần parse cả id, type, và exam permute attribute (có thể có dấu phẩy hoặc không)
+        var examRegex = new Regex(@"\[exam\s+permute\s*=\s*['""]?(true|false)['""]?\]", RegexOptions.IgnoreCase);
+        var parentRegex = new Regex(@"\[parent\s+id\s*=\s*""([^""]+)""(?:\s+permute\s*=\s*(true|false))?\s*\]", RegexOptions.IgnoreCase);
+        var parentEndRegex = new Regex(@"\[/parent\]", RegexOptions.IgnoreCase);
+        
+        // Groups: 1 = id, 2 = exam permute (nếu có dấu phẩy trước), 3 = type, 4 = exam permute (nếu không có dấu phẩy, đứng sau type)
+        var questionRegex = new Regex(@"\[question\s+id\s*=\s*""([^""]+)""(?:\s*,\s*exam\s+permute\s*=\s*['""]?(true|false)['""]?)?(?:\s+type\s*=\s*""([^""]+)"")?(?:\s+exam\s+permute\s*=\s*['""]?(true|false)['""]?)?\s*\]", RegexOptions.IgnoreCase);
+        var questionEndRegex = new Regex(@"\[/question\]", RegexOptions.IgnoreCase);
+        var answerRegex = new Regex(@"\[answer\](.*?)\[/answer\]", RegexOptions.Singleline | RegexOptions.IgnoreCase);
+        var imageRegex = new Regex(@"\[image\]", RegexOptions.IgnoreCase);
+        var audioRegex = new Regex(@"\[audio\]", RegexOptions.IgnoreCase);
+        var latexRegex = new Regex(@"\[latex\](.*?)\[/latex\]", RegexOptions.Singleline | RegexOptions.IgnoreCase);
+        var answerOptionRegex = new Regex(@"^([A-Z])[\.\)]\s*(.*)$");
+
+        foreach (var raw in lines)
+        {
+            var line = raw.Trim();
+
+            // ===== EXAM PERMUTE =====
+            var examMatch = examRegex.Match(line);
+            if (examMatch.Success)
+            {
+                if (examMatch.Groups.Count > 1)
+                {
+                    permuteEnabled = examMatch.Groups[1].Value.Equals("true", StringComparison.OrdinalIgnoreCase);
+                }
+                continue;
+            }
+
+            // ===== PARENT START =====
+            var parentMatch = parentRegex.Match(line);
+            if (parentMatch.Success)
+            {
+                // Flush previous parent nếu có
+                if (currentParent != null)
+                {
+                    parents.Add(currentParent);
+                }
+
+                currentParent = new ExamZipParsedParent
+                {
+                    ParentId = parentMatch.Groups[1].Value.Trim(),
+                    CanShuffle = parentMatch.Groups.Count > 2 && 
+                                 parentMatch.Groups[2].Value.Equals("true", StringComparison.OrdinalIgnoreCase)
+                };
+                continue;
+            }
+
+            // ===== PARENT END =====
+            if (parentEndRegex.IsMatch(line))
+            {
+                if (currentParent != null)
+                {
+                    parents.Add(currentParent);
+                    currentParent = null;
+                }
+                continue;
+            }
+
+            // ===== QUESTION START =====
+            var questionMatch = questionRegex.Match(line);
+            if (questionMatch.Success)
+            {
+                // Flush previous question
+                if (current != null)
+                {
+                    if (currentAnswer != null)
+                        current.Answers.Add(currentAnswer);
+                    
+                    questions.Add(current);
+                }
+
+                // Parse question attributes
+                // Groups: 1 = id, 2 = exam permute (nếu có dấu phẩy), 3 = type, 4 = exam permute (nếu không có dấu phẩy)
+                var questionId = questionMatch.Groups[1].Value.Trim();
+                
+                // Lấy exam permute từ group 2 (có dấu phẩy) hoặc group 4 (không có dấu phẩy)
+                var examPermuteValue = permuteEnabled; // Mặc định dùng giá trị global
+                if (questionMatch.Groups.Count > 2 && !string.IsNullOrEmpty(questionMatch.Groups[2].Value))
+                {
+                    examPermuteValue = questionMatch.Groups[2].Value.Trim().Equals("true", StringComparison.OrdinalIgnoreCase);
+                }
+                else if (questionMatch.Groups.Count > 4 && !string.IsNullOrEmpty(questionMatch.Groups[4].Value))
+                {
+                    examPermuteValue = questionMatch.Groups[4].Value.Trim().Equals("true", StringComparison.OrdinalIgnoreCase);
+                }
+                
+                // Lấy type từ group 3
+                var questionType = questionMatch.Groups.Count > 3 && !string.IsNullOrEmpty(questionMatch.Groups[3].Value)
+                    ? questionMatch.Groups[3].Value.Trim().ToLower()
+                    : "mcq";
+
+                // Chỉ hỗ trợ mcq và short
+                if (questionType == "match") questionType = "mcq";
+
+                current = new ExamZipParsedQuestion
+                {
+                    QuestionId = questionId,
+                    ParentId = currentParent?.ParentId, // Gán parentId nếu đang trong parent
+                    QuestionType = questionType,
+                    Stem = string.Empty,
+                    Answers = new List<ExamZipParsedAnswer>(),
+                    CanShuffle = examPermuteValue // Lưu giá trị permute từ question tag
+                };
+                
+                // Cập nhật permuteEnabled nếu question có exam permute=true
+                if (examPermuteValue)
+                {
+                    permuteEnabled = true;
+                }
+                
+                currentAnswer = null;
+                continue;
+            }
+
+            // ===== QUESTION END =====
+            if (questionEndRegex.IsMatch(line))
+            {
+                if (current != null)
+                {
+                    if (currentAnswer != null)
+                        current.Answers.Add(currentAnswer);
+                    
+                    questions.Add(current);
+                    
+                    current = null;
+                    currentAnswer = null;
+                }
+                continue;
+            }
+
+            // ===== PARENT CONTENT =====
+            if (currentParent != null && current == null)
+            {
+                // Đang trong parent nhưng chưa có question nào, đây là nội dung của parent
+                currentParent.Stem += (string.IsNullOrEmpty(currentParent.Stem) ? "" : " ") + line;
+                continue;
+            }
+
+            if (current == null) continue;
+
+            // ===== ANSWER TAG (correct answer) =====
+            var answerMatch = answerRegex.Match(line);
+            if (answerMatch.Success)
+            {
+                var answerContent = answerMatch.Groups[1].Value.Trim();
+                
+                if (current.QuestionType == "short")
+                {
+                    current.CorrectAnswerText = answerContent;
+                }
+                else
+                {
+                    // MCQ: answer là một chữ cái A, B, C, D
+                    if (answerContent.Length == 1 && char.IsLetter(answerContent[0]))
+                    {
+                        current.CorrectAnswerLabel = char.ToUpper(answerContent[0]);
+                    }
+                }
+                continue;
+            }
+
+            // ===== IMAGE TAG =====
+            if (imageRegex.IsMatch(line))
+            {
+                current.HasImage = true;
+                // Image sẽ được lưu với tên = QuestionId trong folder Images
+                // Không continue để tag [image] được thêm vào Stem/Content làm placeholder
+            }
+
+            // ===== AUDIO TAG =====
+            if (audioRegex.IsMatch(line))
+            {
+                current.HasAudio = true;
+                // Audio sẽ được lưu với tên = QuestionId
+                continue;
+            }
+
+            // ===== LATEX TAG =====
+            var latexMatch = latexRegex.Match(line);
+            if (latexMatch.Success)
+            {
+                current.LatexContent = (current.LatexContent ?? "") + " " + latexMatch.Groups[1].Value.Trim();
+                continue;
+            }
+
+            // ===== ANSWER OPTIONS (A. B. C. D.) =====
+            var ansOptionMatch = answerOptionRegex.Match(line);
+            if (ansOptionMatch.Success && current.QuestionType == "mcq")
+            {
+                if (currentAnswer != null)
+                    current.Answers.Add(currentAnswer);
+
+                currentAnswer = new ExamZipParsedAnswer
+                {
+                    Label = ansOptionMatch.Groups[1].Value[0],
+                    Content = ansOptionMatch.Groups[2].Value.Trim()
+                };
+                continue;
+            }
+
+            // ===== MULTI-LINE CONTENT =====
+            if (currentAnswer != null)
+            {
+                // Tiếp tục nội dung đáp án
+                currentAnswer.Content += " " + line;
+            }
+            else
+            {
+                // Tiếp tục nội dung câu hỏi (stem)
+                current.Stem += (string.IsNullOrEmpty(current.Stem) ? "" : " ") + line;
+            }
+        }
+
+        // Flush last question
+        if (current != null)
+        {
+            if (currentAnswer != null)
+                current.Answers.Add(currentAnswer);
+            
+            questions.Add(current);
+        }
+
+        // Flush last parent
+        if (currentParent != null)
+        {
+            parents.Add(currentParent);
+        }
+
+        return (parents, questions, permuteEnabled);
+    }
+}
+

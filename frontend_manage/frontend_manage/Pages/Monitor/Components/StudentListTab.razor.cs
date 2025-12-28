@@ -260,53 +260,10 @@ namespace frontend_manage.Pages.Monitor.Components
         protected override void OnParametersSet()
         {
             // Khi parent truyền Students mới → ép re-render lại UI
-            SeedFakeCheatingWarnings(); // Dữ liệu ảo demo UI cảnh báo gian lận
             StateHasChanged();
         }
 
-        /// <summary>
-        /// TẠM THỜI: sinh dữ liệu ảo cho cột cảnh báo gian lận để demo UI.
-        /// Khi backend có dữ liệu thật thì xoá/hủy hàm này.
-        /// </summary>
-        private void SeedFakeCheatingWarnings()
-        {
-            if (Students == null || !Students.Any())
-                return;
 
-            // Nếu đã có dữ liệu thật (được map từ backend) thì không đụng vào
-            if (Students.Any(s => s.CheatingWarningCount > 0 || 
-                                  (s.CheatingWarningDetails != null && s.CheatingWarningDetails.Any())))
-                return;
-
-            var random = new Random();
-
-            foreach (var student in Students)
-            {
-                // Xác suất nhỏ để tránh quá nhiều cảnh báo ảo
-                var roll = random.Next(0, 100);
-                if (roll < 15) // 15% sinh viên có cảnh báo
-                {
-                    var count = random.Next(1, 4); // 1–3 cảnh báo
-                    student.CheatingWarningCount = count;
-                    student.CheatingWarningDetails ??= new();
-                    student.CheatingWarningDetails.Clear();
-
-                    for (int i = 0; i < count; i++)
-                    {
-                        var reasonIndex = random.Next(0, 3);
-                        string reason = reasonIndex switch
-                        {
-                            0 => "Rời khỏi tab thi (trình duyệt bị ẩn / chuyển tab).",
-                            1 => "Thoát chế độ toàn màn hình trong khi đang làm bài.",
-                            2 => "Chuyển sang ứng dụng khác trong lúc thi.",
-                            _ => "Hệ thống ghi nhận hành vi bất thường khi làm bài."
-                        };
-
-                        student.CheatingWarningDetails.Add(reason);
-                    }
-                }
-            }
-        }
 
         private async Task RefreshStudentData()
         {

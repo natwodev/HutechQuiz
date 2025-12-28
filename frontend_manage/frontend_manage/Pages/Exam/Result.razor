@@ -2,127 +2,145 @@
 
 <PageTitle>Kết quả bài thi</PageTitle>
 
+<link href="css/result-page.css" rel="stylesheet" />
+
 <ResultHeader />
 
-<div style="position:fixed; inset:0; width:100vw; height:100vh; z-index:-1; background: url('/images/Home_Page2.jpg') no-repeat center center fixed; background-size: cover;"></div>
+<div class="result-bg" style="background: url('/images/Home_Page2.jpg') no-repeat center center fixed; background-size: cover;"></div>
 
 @if (_isLoading)
 {
-    <div class="d-flex justify-center my-10">
-        <MudProgressCircular Size="Size.Large" Indeterminate="true" Style="width:80px;height:80px;" />
+    <div class="result-loading">
+        <div class="loader"></div>
+        <p>Đang tải kết quả...</p>
     </div>
 }
 else if (!string.IsNullOrEmpty(_errorMessage))
 {
-    <MudAlert Severity="Severity.Error" Class="mt-6">
-        @_errorMessage
-    </MudAlert>
+    <div class="result-page">
+        <div class="alert alert-error">
+            <span class="alert-icon">⚠️</span>
+            <span>@_errorMessage</span>
+        </div>
+    </div>
 }
 else if (_submission is null)
 {
-    <MudAlert Severity="Severity.Info" Class="mt-6">
-        Không có dữ liệu kết quả để hiển thị. Vui lòng quay lại và thử lại.
-    </MudAlert>
+    <div class="result-page">
+        <div class="alert alert-info">
+            <span class="alert-icon">ℹ️</span>
+            <span>Không có dữ liệu kết quả để hiển thị. Vui lòng quay lại và thử lại.</span>
+        </div>
+    </div>
 }
 else
 {
-    <MudGrid Class="mt-6">
-        <MudItem xs="12" md="6">
-            <MudPaper Class="pa-6">
-                <MudText Typo="Typo.h5">Thông tin bài thi</MudText>
-                <MudDivider Class="my-4" />
-                <MudText Typo="Typo.subtitle2" Color="Color.Secondary">
-                    @(_submission?.StudentCode is null ? "Không xác định sinh viên" : $"Mã sinh viên: {_submission.StudentCode}")
-                </MudText>
-                <MudGrid>
-                    <MudItem xs="12" sm="6">
-                        <MudText Typo="Typo.subtitle2">Điểm</MudText>
-                        @if (_submission?.Score.HasValue == true)
-                        {
-                            <img src="@ScoreSvgDataUri" alt="Điểm số" style="max-width: 100%; height: auto;" />
-                        }
-                        else
-                        {
-                            <MudText Typo="Typo.h6">Chưa có điểm</MudText>
-                        }
-                    </MudItem>
-                    <MudItem xs="12" sm="6">
-                        <MudText Typo="Typo.subtitle2">Số câu đúng</MudText>
-                        <MudText Typo="Typo.h6">
-                            @(_submission.CorrectAnswers?.ToString() ?? "Chưa có")
-                            / @(_submission.TotalQuestions?.ToString() ?? "?")
-                        </MudText>
-                    </MudItem>
-                    <MudItem xs="12" sm="6">
-                        <MudText Typo="Typo.subtitle2">Bắt đầu</MudText>
-                        <MudText>@FormatDate(_submission.StartTime)</MudText>
-                    </MudItem>
-                    <MudItem xs="12" sm="6">
-                        <MudText Typo="Typo.subtitle2">Nộp bài</MudText>
-                        <MudText>@FormatDate(_submission.EndTime)</MudText>
-                    </MudItem>
-                    <MudItem xs="12" sm="6">
-                        <MudText Typo="Typo.subtitle2">Thời lượng làm bài</MudText>
-                        <MudText>@FormatDuration(_submission.StartTime, _submission.EndTime)</MudText>
-                    </MudItem>
-                </MudGrid>
-            </MudPaper>
-        </MudItem>
-        <MudItem xs="12" md="6">
-            <MudPaper Class="pa-6">
-                <MudText Typo="Typo.h5">Thống kê</MudText>
-                <MudDivider Class="my-4" />
-                <div style="display:flex; gap:32px; align-items:center; justify-content:space-between;">
-
-                    <div style="display:flex; align-items:center; gap:8px;">
-                        <MudText Color="Color.Success" Typo="Typo.subtitle1">Câu trả lời đúng</MudText>
-                        <MudChip T="int" Color="Color.Success" Variant="Variant.Filled" Style="min-width:48px;justify-content:center;">
-                            @_correctCount
-                        </MudChip>
+    <div class="result-page">
+        <div class="result-content">
+            @* Left Section - Score & Student Info *@
+            <div class="result-left">
+                @* Score Card *@
+                <div class="score-card @GetScoreClass()">
+                    <div class="score-ring">
+                        <svg viewBox="0 0 100 100">
+                            <circle class="score-ring-bg" cx="50" cy="50" r="45"></circle>
+                            <circle class="score-ring-progress" cx="50" cy="50" r="45" 
+                                    style="stroke-dasharray: @GetScoreProgress() 283;"></circle>
+                        </svg>
+                        <div class="score-text">
+                            @if (_submission.Score.HasValue)
+                            {
+                                <span class="score-num">@($"{_submission.Score.Value:F1}")</span>
+                                <span class="score-max">/10</span>
+                            }
+                            else
+                            {
+                                <span class="score-num">--</span>
+                            }
+                        </div>
                     </div>
+                    <h2 class="result-title">@GetResultMessage()</h2>
+                    <p class="student-code">@(_submission?.StudentCode ?? "Sinh viên")</p>
+                </div>
 
-                    <div style="display:flex; align-items:center; gap:8px;">
-                        <MudText Color="Color.Error" Typo="Typo.subtitle1">Câu trả lời sai</MudText>
-                        <MudChip T="int" Color="Color.Error" Variant="Variant.Filled" Style="min-width:48px;justify-content:center;">
-                            @_incorrectCount
-                        </MudChip>
+                @* Quick Stats *@
+                <div class="quick-stats">
+                    <div class="stat correct">
+                        <span class="stat-num">@_correctCount</span>
+                        <span class="stat-label">Đúng</span>
                     </div>
+                    <div class="stat incorrect">
+                        <span class="stat-num">@_incorrectCount</span>
+                        <span class="stat-label">Sai</span>
+                    </div>
+                    <div class="stat skipped">
+                        <span class="stat-num">@_unansweredCount</span>
+                        <span class="stat-label">Bỏ qua</span>
+                    </div>
+                </div>
+            </div>
 
-                    <div style="display:flex; align-items:center; gap:8px;">
-                        <MudText Color="Color.Warning" Typo="Typo.subtitle1">Chưa trả lời</MudText>
-                        <MudChip T="int" Color="Color.Warning" Variant="Variant.Filled" Style="min-width:48px;justify-content:center;">
-                            @_unansweredCount
-                        </MudChip>
+            @* Right Section - Details *@
+            <div class="result-right">
+                @* Time Info *@
+                <div class="info-card">
+                    <h3 class="card-title">
+                        <span class="icon">⏱️</span>
+                        Thời gian làm bài
+                    </h3>
+                    <div class="time-grid">
+                        <div class="time-item">
+                            <span class="time-icon start">▶</span>
+                            <div>
+                                <span class="time-label">Bắt đầu</span>
+                                <span class="time-value">@FormatDate(_submission.StartTime)</span>
+                            </div>
+                        </div>
+                        <div class="time-item">
+                            <span class="time-icon end">⏹</span>
+                            <div>
+                                <span class="time-label">Nộp bài</span>
+                                <span class="time-value">@FormatDate(_submission.EndTime)</span>
+                            </div>
+                        </div>
+                        <div class="time-item duration">
+                            <span class="time-icon timer">⏰</span>
+                            <div>
+                                <span class="time-label">Thời lượng</span>
+                                <span class="time-value highlight">@FormatDuration(_submission.StartTime, _submission.EndTime)</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <MudDivider Class="my-4" />
-
-                @if (_answerComparisons is { Count: > 0 })
-                {
-                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(42px, 1fr)); gap: 8px;">
-                        @foreach (var (answer, index) in _answerComparisons.Select((answer, index) => (answer, index)))
-                        {
-                            var stt = index + 1;
-                            <MudTooltip Text="@($"Câu {answer.QuestionId}")">
-                                <MudChip T="int"
-                                         Style="width:42px;height:42px;border-radius:50%;justify-content:center;margin:0 auto;"
-                                         Color="@GetStateColor(answer.State)"
-                                         Variant="Variant.Filled"
-                                         Size="Size.Medium">
-                                    @stt
-                                </MudChip>
-                            </MudTooltip>
-                        }
-                    </div>
-                }
-                else
-                {
-                    <MudText Color="Color.Secondary">Không có dữ liệu chi tiết câu trả lời.</MudText>
-                }
-            </MudPaper>
-        </MudItem>
-    </MudGrid>
-    
-   
+                @* Answer Details *@
+                <div class="info-card answers-card">
+                    <h3 class="card-title">
+                        <span class="icon">📊</span>
+                        Chi tiết câu trả lời
+                    </h3>
+                    @if (_answerComparisons is { Count: > 0 })
+                    {
+                        <div class="answers-grid">
+                            @foreach (var (answer, index) in _answerComparisons.Select((a, i) => (a, i)))
+                            {
+                                <div @key="@answer.QuestionId" class="answer-dot @GetAnswerClass(answer.State)" title="Câu @(index + 1): @GetStateLabel(answer.State)">
+                                    @(index + 1)
+                                </div>
+                            }
+                        </div>
+                        <div class="answers-legend">
+                            <span><span class="dot correct"></span> Đúng</span>
+                            <span><span class="dot incorrect"></span> Sai</span>
+                            <span><span class="dot skipped"></span> Bỏ qua</span>
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="no-data">Không có dữ liệu chi tiết câu trả lời.</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
 }

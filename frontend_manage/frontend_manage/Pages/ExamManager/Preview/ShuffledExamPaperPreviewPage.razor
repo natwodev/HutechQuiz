@@ -3,6 +3,8 @@
 @using System.Linq
 
 <link href="css/monitor/MonitorPage.css" rel="stylesheet" />
+<link href="css/exam/question-rendering.css" rel="stylesheet" />
+<link href="css/exam/custom-audio-player.css" rel="stylesheet" />
 
 <div class="shuffled-preview-page">
     <div class="exam-paper">
@@ -39,18 +41,26 @@
         <div class="preview-body">
             @if (Exam?.QuestionStructures != null && Exam.QuestionStructures.Count > 0)
             {
-                var idx = 1;
-                @foreach (var q in GetFlatQuestions())
+                var flatQuestions = GetFlatQuestions();
+                @for (int i = 0; i < flatQuestions.Count; i++)
                 {
+                    var q = flatQuestions[i];
+                    // Xác định xem có phải là parent question không (có child questions)
                     var isParentQuestion = q.ParentQuestionId == null && q.ChildQuestions != null && q.ChildQuestions.Count > 0;
-                    <div class="question-item @(q.ParentQuestionId != null ? "child-question" : "") @(isParentQuestion ? "parent-question" : "")">
+                    // Xác định xem có phải là child question không
+                    var isChildQuestion = q.ParentQuestionId != null;
+                    // Lấy số thứ tự của câu hỏi
+                    var questionNumber = GetQuestionNumber(q, i);
+                    
+                    <div class="question-item @(isChildQuestion ? "child-question" : "") @(isParentQuestion ? "parent-question" : "")">
+                        <!-- Regular Question -->
                         <div class="q-number">
-                            @if (!isParentQuestion)
-                            {
-                                <span class="q-chip">@idx</span> 
-                            }
                             Câu hỏi
-                            @if (q.ParentQuestionId != null)
+                            @if (questionNumber.HasValue)
+                            {
+                                <span class="q-chip">@questionNumber.Value</span>
+                            }
+                            @if (isChildQuestion)
                             {
                                 <span class="child-badge">(Câu hỏi con)</span>
                             }
@@ -91,11 +101,62 @@
                                 }
                             </ul>
                         }
+                        <!-- Render child questions nếu là parent question -->
+                        @if (isParentQuestion && q.ChildQuestions != null && q.ChildQuestions.Count > 0)
+                        {
+                            @foreach (var child in q.ChildQuestions.OrderBy(c => c.Order))
+                            {
+                                var childIndex = flatQuestions.IndexOf(child);
+                                var childQuestionNumber = childIndex >= 0 ? GetQuestionNumber(child, childIndex) : null;
+                                <div class="question-item child-question" style="margin-top: 16px; margin-left: 24px;">
+                                    <div class="q-number">
+                                        Câu hỏi
+                                        @if (childQuestionNumber.HasValue)
+                                        {
+                                            <span class="q-chip">@childQuestionNumber.Value</span>
+                                        }
+                                        <span class="child-badge">(Câu hỏi con)</span>
+                                    </div>
+                                    <div class="q-content katex-content">
+                                        @if (string.IsNullOrEmpty(child.QuestionContent))
+                                        {
+                                            <span style="color: #999; font-style: italic;">Đang tải nội dung câu hỏi...</span>
+                                        }
+                                        else
+                                        {
+                                            @((MarkupString)RenderHtml(child.QuestionContent))
+                                        }
+                                    </div>
+                                    @if (child.Answers != null && child.Answers.Count > 0)
+                                    {
+                                        <ul class="q-answers">
+                                            @foreach (var ans in child.Answers.OrderBy(a => a.Order))
+                                            {
+                                                var isCorrect = IsCorrectAnswer(ans.AnswerId);
+                                                <li class="answer-item @(isCorrect ? "correct-answer" : "")">
+                                                    <span class="ans-label">@GetLetter(ans.Order).</span>
+                                                    <span class="ans-content katex-content">
+                                                        @if (string.IsNullOrEmpty(ans.AnswerContent))
+                                                        {
+                                                            <span style="color: #999; font-style: italic;">Đang tải nội dung đáp án...</span>
+                                                        }
+                                                        else
+                                                        {
+                                                            @((MarkupString)RenderHtml(ans.AnswerContent))
+                                                        }
+                                                    </span>
+                                                    @if (isCorrect)
+                                                    {
+                                                        <span class="correct-badge">✓ Đúng</span>
+                                                    }
+                                                </li>
+                                            }
+                                        </ul>
+                                    }
+                                </div>
+                            }
+                        }
                     </div>
-                    @if (!isParentQuestion)
-                    {
-                        idx++;
-                    }
                 }
             }
             else if (isLoading)
@@ -137,7 +198,7 @@
 .exam-paper { background: #fff; border: 1px solid #e0e0e0; border-radius: 10px; padding: 24px; box-shadow: 0 2px 10px rgba(0,0,0,0.04); }
 .question-item { margin-bottom: 24px; padding: 16px; border: 1px solid #f0f0f0; border-radius: 8px; background: #fafafa; }
 .q-number { font-weight: 700; color: #1976d2; margin-bottom: 8px; }
-.q-chip { display: inline-flex; width: 32px; height: 32px; align-items: center; justify-content: center; border-radius: 50%; background: #e3f2fd; color: #1976d2; font-weight: 700; margin-right: 8px; }
+.q-chip { display: inline-flex; width: 32px; height: 32px; align-items: center; justify-content: center; border-radius: 50%; background: #e3f2fd; color: #1976d2; font-weight: 700; margin-left: 8px; }
 .child-badge { font-size: 0.85rem; color: #666; font-weight: normal; margin-left: 8px; }
 .q-content { margin: 8px 0; font-size: 1rem; line-height: 1.6; }
 .q-answers { margin: 12px 0 0 24px; padding: 0; list-style: none; }

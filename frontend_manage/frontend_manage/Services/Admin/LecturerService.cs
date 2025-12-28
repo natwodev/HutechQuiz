@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using frontend_manage.DTOs;
 using frontend_manage.Services;
 using Microsoft.JSInterop;
+using Microsoft.Extensions.Configuration;
 
 namespace frontend_manage.Services.Admin
 {
@@ -21,6 +22,13 @@ namespace frontend_manage.Services.Admin
             // Đường dẫn tương đối, HttpClient.BaseAddress (từ ApiBaseUrl) sẽ được dùng làm gốc.
             _baseUrl = "api/Lecturer";
             _authService = authService;
+        }
+
+        private static string GetApiBaseUrl(IConfiguration configuration)
+        {
+            var apiBaseUrl = configuration["ApiBaseUrl"] ?? throw new InvalidOperationException(
+                "ApiBaseUrl chưa được cấu hình trong appsettings.json");
+            return apiBaseUrl.TrimEnd('/');
         }
 
         public async Task<List<LecturerDto>> GetAllLecturersAsync()

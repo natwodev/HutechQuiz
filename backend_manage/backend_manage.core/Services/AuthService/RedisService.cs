@@ -162,6 +162,29 @@ namespace backend_manage.core.Services.AuthService
             }
         }
 
+        public async Task<long> KeyDeleteAsync(IEnumerable<string> keys)
+        {
+            try
+            {
+                if (!IsConnected || keys == null || !keys.Any())
+                {
+                    return 0;
+                }
+
+                var db = _redis.GetDatabase();
+                var redisKeys = keys.Select(k => (RedisKey)k).ToArray();
+                var result = await db.KeyDeleteAsync(redisKeys);
+                
+                _hasRecentFailure = false;
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi delete nhiều keys");
+                return 0;
+            }
+        }
+
         public async Task<bool> KeyExistsAsync(string key)
         {
             try
@@ -192,6 +215,12 @@ namespace backend_manage.core.Services.AuthService
                 _logger.LogError(ex, "Lỗi khi check key: {Key}", key);
                 return false;
             }
+        }
+
+        public IServer GetServer()
+        {
+            var endpoints = _redis.GetEndPoints();
+            return _redis.GetServer(endpoints[0]);
         }
 
         // Hash operations

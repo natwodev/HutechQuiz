@@ -1,0 +1,109 @@
+@using frontend_manage.Services
+@using frontend_manage.DTOs
+@using Microsoft.AspNetCore.Components
+@using MudBlazor
+@using System.Collections.Generic
+@using System.Linq
+
+<link href="css/monitor/ActivityMonitorTab.css" rel="stylesheet" />
+
+<div class="activity-monitor-tab">
+    <div class="activity-header">
+        <div class="title-area">
+            <h2>THEO DÕI HÀNH ĐỘNG SINH VIÊN</h2>
+            @if (FilteredStudents != null && FilteredStudents.Any())
+            {
+                <div class="activity-info">
+                    Ca thi: <strong>@(ExamSessionSubjectId?.ToString() ?? "N/A")</strong> | 
+                    Tổng số sinh viên: <strong>@FilteredStudents.Count</strong> | 
+                    Tổng số vi phạm: <strong>@FilteredStudents.Sum(s => s.ViolationCount)</strong>
+                </div>
+            }
+        </div>
+        <div class="search-area">
+            <div class="search-input-wrapper">
+                <MudIcon Icon="@Icons.Material.Filled.Search" Class="search-icon" Size="Size.Small"/>
+                <input type="text" class="search-input" placeholder="Tìm kiếm theo mã SV hoặc họ tên..." @bind="searchText" @bind:event="oninput"/>
+            </div>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="search-button" Size="Size.Small" OnClick="PerformSearch">Tìm kiếm</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" OnClick="RefreshActivities">
+                <MudIcon Icon="@Icons.Material.Filled.Refresh" Class="mr-1" />
+                Làm mới
+            </MudButton>
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="loading-container">
+            <div class="loading-spinner"></div>
+            <div class="loading-text">Đang tải dữ liệu...</div>
+        </div>
+    }
+    else if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <MudAlert Severity="Severity.Error" Variant="Variant.Filled">
+            @errorMessage
+        </MudAlert>
+    }
+    else if (FilteredStudents == null || !FilteredStudents.Any())
+    {
+        <div class="no-data">
+            <MudAlert Severity="Severity.Info" Variant="Variant.Filled">
+                Chưa có sinh viên nào có hoạt động được ghi nhận
+            </MudAlert>
+        </div>
+    }
+    else
+    {
+        <div class="activity-table-container">
+            <table class="activity-table">
+                <thead>
+                    <tr>
+                        <th class="col-stt">STT</th>
+                        <th class="col-student-code">Mã SV</th>
+                        <th class="col-name">Họ tên</th>
+                        <th class="col-violation">Vi phạm</th>
+                        <th class="col-violation-status">Trạng thái</th>
+                        <th class="col-details">Chi tiết</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var student in FilteredStudents)
+                    {
+                        var index = FilteredStudents.IndexOf(student) + 1;
+                        <tr>
+                            <td class="col-stt">@index</td>
+                            <td class="col-student-code">@($"#{student.StudentCode}")</td>
+                            <td class="col-name">@student.StudentName</td>
+                            <td class="col-violation">
+                                <span class="violation-count @GetViolationStatusClass(student.StudentCode)">
+                                    @student.ViolationCount / @MAX_VIOLATIONS
+                                </span>
+                            </td>
+                            <td class="col-violation-status">
+                                <span class="violation-status-badge @GetViolationStatusClass(student.StudentCode)">
+                                    @GetViolationStatusEmoji(student.StudentCode) @GetViolationStatus(student.StudentCode)
+                                </span>
+                            </td>
+                            <td class="col-details">
+                                <MudIconButton Icon="@Icons.Material.Filled.Visibility" 
+                                              Size="Size.Small" 
+                                              Color="Color.Info" 
+                                              OnClick="() => ViewViolationDetails(student.StudentCode, student.StudentName)"
+                                              Title="Xem chi tiết vi phạm" />
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+
+            @if (!FilteredStudents.Any())
+            {
+                <div class="no-data">
+                    Không tìm thấy sinh viên nào phù hợp với bộ lọc
+                </div>
+            }
+        </div>
+    }
+</div>

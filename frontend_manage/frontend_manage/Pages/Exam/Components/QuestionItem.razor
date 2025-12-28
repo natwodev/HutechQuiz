@@ -8,25 +8,22 @@
             {
                 <span class="title-prefix">Câu @DisplayNumber: </span>
             }
-            <span class="katex-content question-inline">@((MarkupString)NormalizeLatex(Question.QuestionContent))</span>
+            <div class="katex-content question-inline">@((MarkupString)NormalizeLatex(Question.QuestionContent))</div>
         </div>
 
-        @if (IsMatching(Question))
-        {
-            var mid = (int)Math.Ceiling(Question.Answers.Count/2.0);
-            var left = Question.Answers.OrderBy(a=>a.Order).Take(mid).ToList();
-            var right = Question.Answers.OrderBy(a=>a.Order).Skip(mid).ToList();
-            <MatchingQuestion LeftItems="@left" RightItems="@right" OnPair="@(pair=>SelectMatching(Question.OriginalExamPaperDetailId, pair.leftId, pair.rightId.ToString()))" />
-        }
-        else
+        @if (Question.Answers?.Any() == true)
         {
             <MudRadioGroup T="int" Class="answers-group" Row="false" SelectedOption="@_selectedSingle" SelectedOptionChanged="@((int v)=>SelectSingle(Question.OriginalExamPaperDetailId, v))">
                 <div class="answers">
                     @foreach (var ans in Question.Answers.OrderBy(a=>a.Order))
                     {
                         var letter = (char)('A' + (ans.Order - 1));
-                        <div class="answer-row">
-                            <AnswerOption Answer="@ans" Letter="@letter" SelectedAnswerId="@(_selectedSingle ?? -1)" OnSelect="@(id => SelectSingle(Question.OriginalExamPaperDetailId, id))" />
+                        <div @key="@ans.AnswerId" class="answer-row">
+                            <AnswerOption Answer="@ans" 
+                                         Letter="@letter" 
+                                         SelectedAnswerId="@(_selectedSingle ?? -1)" 
+                                         OnSelect="@(id => SelectSingle(Question.OriginalExamPaperDetailId, id))"
+                                         ShuffledExamPaperCore="@ShuffledExamPaperCore" />
                         </div>
                     }
                 </div>
@@ -41,12 +38,15 @@
         @foreach (var child in Question.ChildQuestions.OrderBy(c => c.Order))
         {
             var childLabel = LabelProvider?.Invoke(child.OriginalExamPaperDetailId) ?? string.Empty;
-            <QuestionItem Question="@child"
+            <QuestionItem @key="@child.OriginalExamPaperDetailId"
+                          Question="@child"
                           ShuffledExamPaperCore="@ShuffledExamPaperCore"
                           DisplayNumber="@childLabel"
                           LabelProvider="LabelProvider"
                           SelectedAnswerProvider="SelectedAnswerProvider"
-                          OnAnswered="OnAnswered" />
+                          OnAnswered="OnAnswered"
+                          StudentExamSessionId="@StudentExamSessionId"
+                          QuestionId="@child.OriginalExamPaperDetailId" />
         }
     </div>
 }

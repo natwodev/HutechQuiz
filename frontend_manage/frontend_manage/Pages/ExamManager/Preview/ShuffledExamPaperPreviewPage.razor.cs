@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Components;
+using Microsoft.JSInterop;
 using frontend_manage.DTOs;
 using frontend_manage.DTOs.Mapp;
 using frontend_manage.Services.ExamManager;
@@ -6,6 +7,7 @@ using frontend_manage.Services;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Net.Http;
+using Microsoft.Extensions.Configuration;
 namespace frontend_manage.Pages.ExamManager.Preview
 {
     public partial class ShuffledExamPaperPreviewPage : ComponentBase
@@ -20,9 +22,17 @@ namespace frontend_manage.Pages.ExamManager.Preview
         [Inject]
         private IKaTeXService KaTeX { get; set; } = null!;
 
+        [Inject]
+        private IExamRenderingService ExamRenderingService { get; set; } = null!;
+
+        [Inject]
+        private IJSRuntime JS { get; set; } = null!;
+
         // Dùng HttpClient để lấy BaseAddress của backend (đã cấu hình qua ApiBaseUrl)
         [Inject]
         private HttpClient HttpClient { get; set; } = null!;
+        [Inject]
+        private IConfiguration Configuration { get; set; } = null!;
 
         private ShuffledExamPaperDto? Exam;
         private OriginalExamPaperDto? OriginalExam;
@@ -46,8 +56,16 @@ namespace frontend_manage.Pages.ExamManager.Preview
                         
                         if (OriginalExam.Details != null)
                         {
-                            // Sử dụng QuestionMapping để map từ OriginalExamPaperDetailDto sang QuestionStructureDto
-                            Exam.QuestionStructures = QuestionMapping.MapToQuestionStructureList(OriginalExam.Details);
+                            // Nếu đã có QuestionStructures từ backend (đã hoán vị), hãy bổ sung nội dung từ OriginalExam.Details
+                            if (Exam.QuestionStructures != null && Exam.QuestionStructures.Count > 0)
+                            {
+                                QuestionMapping.EnrichQuestionStructuresWithContent(Exam.QuestionStructures, OriginalExam.Details);
+                            }
+                            else
+                            {
+                                // Fallback nếu backend không trả về QuestionStructures
+                                Exam.QuestionStructures = QuestionMapping.MapToQuestionStructureList(OriginalExam.Details);
+                            }
                             
                             // Tạo map để xác định đáp án đúng
                             BuildCorrectAnswersMap();
@@ -70,9 +88,27 @@ namespace frontend_manage.Pages.ExamManager.Preview
 
         protected override async Task OnAfterRenderAsync(bool firstRender)
         {
-            if (firstRender)
+            // Render KaTeX mỗi lần component render để đảm bảo các elements mới được xử lý
+            try
             {
-                await KaTeX.RenderAsync(".shuffled-preview-page");
+                if (firstRender)
+                {
+                    // Sử dụng RenderWithRetryAsync cho first render để đảm bảo KaTeX đã sẵn sàng
+                    await KaTeX.RenderWithRetryAsync(".katex-content", maxRetries: 3, delayMs: 100);
+                }
+                else
+                {
+                    // Re-render khi content thay đổi
+                    await KaTeX.RenderAsync(".katex-content");
+                }
+
+                // Thay thế audio tags bằng custom controls
+                await JS.InvokeVoidAsync("replaceAudioWithCustomControls");
+            }
+            catch (Exception ex)
+            {
+                // Log error nhưng không throw để không làm gián đoạn UI
+                System.Diagnostics.Debug.WriteLine($"Error rendering KaTeX in shuffled preview: {ex.Message}");
             }
         }
 
@@ -81,62 +117,16 @@ namespace frontend_manage.Pages.ExamManager.Preview
             if (string.IsNullOrEmpty(content))
                 return string.Empty;
 
-            // 1. Loại bỏ các ký tự {<number>} khỏi nội dung
-            var cleaned = Regex.Replace(
-                content,
-                @"\{<\d+>\}",
-                string.Empty
-            );
-
-            // 2. Xử lý thẻ <audio>...</audio> → chuẩn hóa path + thêm controls/src
-            cleaned = Regex.Replace(
-                cleaned,
-                @"<audio>(.*?)</audio>",
-                match =>
-                {
-                    var inner = match.Groups[1].Value.Trim();
-                    if (string.IsNullOrEmpty(inner))
-                        return match.Value;
-
-                    // Chuẩn hóa path (giữ cả thư mục con)
-                    var normalized = inner.Replace("\\", "/").TrimStart('/');
-
-                    // Một số nội dung cũ dùng "audio/ENG3.mp3" → map về "Data/Audio/ENG3.mp3"
-                    if (normalized.StartsWith("audio/", StringComparison.OrdinalIgnoreCase))
-                    {
-                        normalized = "Data/Audio/" + normalized.Substring("audio/".Length);
-                    }
-
-                    var relativePath = normalized;
-                    if (string.IsNullOrEmpty(relativePath))
-                        return match.Value;
-
-                    var audioUrl = GetAudioPath(relativePath);
-                    if (string.IsNullOrEmpty(audioUrl))
-                        return match.Value;
-
-                    // Trả về thẻ audio có nút bật/tắt (controls)
-                    return $"<audio controls src=\"{audioUrl}\"></audio>";
-                },
-                RegexOptions.IgnoreCase | RegexOptions.Singleline
-            );
-
-            return cleaned;
-        }
-
-        private string GetAudioPath(string audioFileName)
-        {
-            if (Exam == null || string.IsNullOrEmpty(Exam.ShuffledExamPaperCore) || string.IsNullOrEmpty(audioFileName))
-                return string.Empty;
+            // Sử dụng ExamRenderingService để normalize và render content
+            if (Exam == null || string.IsNullOrEmpty(Exam.ShuffledExamPaperCore))
+                return content;
 
             var folderName = Exam.ShuffledExamPaperCore.Split('_')[0];
-
-            // Lấy base address từ HttpClient (backend), đã cấu hình từ ApiBaseUrl trong Program.cs
-            var baseAddr = (HttpClient.BaseAddress?.ToString() ?? string.Empty).TrimEnd('/');
-            if (string.IsNullOrEmpty(baseAddr))
-                return string.Empty;
-
-            return $"{baseAddr}/EPZ/{folderName}/{audioFileName}";
+            return ExamRenderingService.NormalizeAndRenderContent(
+                content,
+                shuffledExamPaperCore: Exam.ShuffledExamPaperCore,
+                originalExamPaperCore: null
+            );
         }
         
         private char GetLetter(int order) => (char)('A' + Math.Max(0, order - 1));
@@ -192,29 +182,13 @@ namespace frontend_manage.Pages.ExamManager.Preview
             if (Exam?.QuestionStructures == null || Exam.QuestionStructures.Count == 0)
                 return new List<QuestionStructureDto>();
 
-            var flatQuestions = new List<QuestionStructureDto>();
-            var parentQuestions = Exam.QuestionStructures.Where(d => d.ParentQuestionId == null).OrderBy(d => d.Order).ToList();
-            
-            foreach (var parentQ in parentQuestions)
-            {
-                // Nếu là câu hỏi cha (có child questions)
-                if (parentQ.ChildQuestions != null && parentQ.ChildQuestions.Count > 0)
-                {
-                    flatQuestions.Add(parentQ); // Thêm câu hỏi cha
-                    // Thêm các câu hỏi con
-                    foreach (var child in parentQ.ChildQuestions.OrderBy(c => c.Order))
-                    {
-                        flatQuestions.Add(child);
-                    }
-                }
-                // Nếu là câu hỏi độc lập (không có child)
-                else
-                {
-                    flatQuestions.Add(parentQ);
-                }
-            }
-
-            return flatQuestions;
+            // Sử dụng ExamRenderingService để flatten questions
+            return ExamRenderingService.GetFlatQuestions(
+                Exam.QuestionStructures,
+                q => q.ParentQuestionId,
+                q => q.ChildQuestions,
+                q => q.Order
+            );
         }
 
         private int GetTotalQuestionsCount()
@@ -222,26 +196,58 @@ namespace frontend_manage.Pages.ExamManager.Preview
             if (Exam?.QuestionStructures == null || Exam.QuestionStructures.Count == 0)
                 return 0;
 
-            int count = 0;
-            foreach (var q in Exam.QuestionStructures)
+            // Sử dụng ExamRenderingService để đếm tổng số câu hỏi
+            return ExamRenderingService.GetTotalQuestionsCount(
+                Exam.QuestionStructures,
+                q => q.ParentQuestionId,
+                q => q.ChildQuestions
+            );
+        }
+
+        private int? GetQuestionNumber(QuestionStructureDto question, int indexInFlatList)
+        {
+            if (Exam?.QuestionStructures == null || Exam.QuestionStructures.Count == 0)
+                return null;
+            
+            // Đếm số thứ tự dựa trên thứ tự gốc trong Exam.QuestionStructures (theo Order)
+            // Sắp xếp tất cả questions theo Order
+            var allQuestions = Exam.QuestionStructures.OrderBy(q => q.Order).ToList();
+            
+            int number = 1;
+            foreach (var q in allQuestions)
             {
-                var isParentQuestion = q.ParentQuestionId == null && q.ChildQuestions != null && q.ChildQuestions.Count > 0;
-                
-                if (isParentQuestion)
+                // Nếu đã đến câu hỏi hiện tại, dừng lại
+                if (q.OriginalExamPaperDetailId == question.OriginalExamPaperDetailId)
                 {
-                    // Câu hỏi cha: chỉ đếm các câu hỏi con
-                    if (q.ChildQuestions != null && q.ChildQuestions.Count > 0)
+                    // Nếu là parent question, không có số
+                    if (question.ParentQuestionId == null && question.ChildQuestions != null && question.ChildQuestions.Count > 0)
                     {
-                        count += q.ChildQuestions.Count;
+                        return null;
+                    }
+                    // Câu hỏi độc lập: trả về số đã đếm
+                    return number;
+                }
+                
+                // Đếm các câu hỏi trước câu hỏi hiện tại
+                var isNormalParent = q.ParentQuestionId == null && q.ChildQuestions != null && q.ChildQuestions.Count > 0;
+                
+                if (isNormalParent)
+                {
+                    // Parent question: không đếm parent, chỉ đếm child questions
+                    if (q.ChildQuestions != null)
+                    {
+                        number += q.ChildQuestions.Count;
                     }
                 }
                 else
                 {
-                    // Câu hỏi độc lập: đếm chính nó
-                    count++;
+                    // Câu hỏi độc lập: đếm
+                    number++;
                 }
             }
-            return count;
+            
+            // Nếu không tìm thấy trong allQuestions, trả về null
+            return null;
         }
 
         private async Task HandleToggleAllowViewMaterials(ChangeEventArgs e)
@@ -276,4 +282,3 @@ namespace frontend_manage.Pages.ExamManager.Preview
         }
     }
 }
-

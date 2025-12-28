@@ -1,5 +1,6 @@
 using frontend_manage.DTOs.AcademicAffairs;
 using System.Net.Http.Json;
+using Microsoft.Extensions.Configuration;
 
 namespace frontend_manage.Services.Admin
 {

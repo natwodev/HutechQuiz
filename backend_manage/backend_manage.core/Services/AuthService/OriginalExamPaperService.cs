@@ -6,10 +6,12 @@ using AutoMapper;
 using backend_manage.core.Entities;
 using backend_manage.core.Hubs;
 using backend_manage.core.Repositories.Interfaces;
+using backend_manage.core.Services;
 using backend_manage.core.Services.Interfaces;
 using backend_manage.shared.DTOs;
 using backend_manage.shared.DTOs.EPZ;
 using ICSharpCode.SharpZipLib.Zip;
+using System.IO.Compression;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
@@ -27,6 +29,7 @@ namespace backend_manage.core.Services.AuthService
         private readonly IRepository<ExamSessionSubject> _examSessionSubjectRepository;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IMapper _mapper;
+        private readonly ExamZipImportService _examZipImportService;
 
         public OriginalExamPaperService(
             IRepository<Subject> subjectRepository,
@@ -37,7 +40,8 @@ namespace backend_manage.core.Services.AuthService
             IHttpContextAccessor httpContextAccessor,
             IRepository<ShuffledExamPaper> shuffledExamPaperRepository,
             IRepository<ExamSessionSubject> examSessionSubjectRepository,
-            IMapper mapper)
+            IMapper mapper,
+            ExamZipImportService examZipImportService)
         {
             _subjectRepository = subjectRepository;
             _originalExamPaperRepository = originalExamPaperRepository;
@@ -48,6 +52,7 @@ namespace backend_manage.core.Services.AuthService
             _shuffledExamPaperRepository = shuffledExamPaperRepository;
             _examSessionSubjectRepository = examSessionSubjectRepository;
             _mapper = mapper;
+            _examZipImportService = examZipImportService;
         }
 
         public async Task<OriginalExamPaperDto> CreateAsync(CreateOriginalExamPaperRequest request)
@@ -188,7 +193,7 @@ namespace backend_manage.core.Services.AuthService
             var extractFolder = Path.Combine(epzFolder, originalExamPaperCore);
             if (!Directory.Exists(extractFolder)) Directory.CreateDirectory(extractFolder);
             using (var zipStream = new FileStream(zipFilePath, FileMode.Open, FileAccess.Read))
-                using (var zipFile = new ZipFile(zipStream))
+                using (var zipFile = new ICSharpCode.SharpZipLib.Zip.ZipFile(zipStream))
                 {
                 zipFile.Password = ExtractPassword;
                     foreach (ZipEntry entry in zipFile)
@@ -545,7 +550,193 @@ namespace backend_manage.core.Services.AuthService
         
 
         #endregion
-        // Pass giải nén file XML
+
+        #region Import từ Word (.docx) với format CLO
+
+        public async Task ImportFromWordAsync(IFormFile file, string originalExamPaperCore, int subjectId)
+        {
+            if (file == null || file.Length == 0)
+                throw new ArgumentException("File không hợp lệ hoặc rỗng");
+
+            // Kiểm tra file là .docx hay .zip
+            bool isZip = file.FileName.EndsWith(".zip", StringComparison.OrdinalIgnoreCase);
+            bool isDocx = file.FileName.EndsWith(".docx", StringComparison.OrdinalIgnoreCase);
+
+            if (!isZip && !isDocx)
+                throw new ArgumentException("File phải có đuôi .docx hoặc .zip");
+
+            var exists = await _originalExamPaperRepository.GetQueryable()
+                .AnyAsync(x => x.OriginalExamPaperCore == originalExamPaperCore);
+            if (exists)
+                throw new Exception($"Đã tồn tại đề thi với mã '{originalExamPaperCore}' trong hệ thống.");
+
+            var userId = _httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+                throw new UnauthorizedAccessException("Không thể xác định người dùng tạo đề thi gốc.");
+
+            var now = DateTimeHelper.GetVietnamTime();
+
+            var subject = await _subjectRepository.GetQueryable()
+                .FirstOrDefaultAsync(s => s.SubjectId == subjectId);
+            if (subject == null)
+            {
+                throw new Exception($"Không tìm thấy môn học với ID '{subjectId}'.");
+            }
+
+            Stream wordStream;
+
+            // Nếu là ZIP, extract file Word từ trong đó
+            if (isZip)
+            {
+                var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+                Directory.CreateDirectory(tempDir);
+
+                try
+                {
+                    // Extract ZIP file - sử dụng System.IO.Compression cho phần mới
+                    using (var zipStream = file.OpenReadStream())
+                    using (var archive = new System.IO.Compression.ZipArchive(zipStream, System.IO.Compression.ZipArchiveMode.Read))
+                    {
+                        // Xóa thư mục nếu đã tồn tại để tránh conflict
+                        if (Directory.Exists(tempDir))
+                        {
+                            Directory.Delete(tempDir, recursive: true);
+                        }
+                        Directory.CreateDirectory(tempDir);
+                        
+                        archive.ExtractToDirectory(tempDir);
+                    }
+
+                    // Tìm file .docx trong ZIP (tìm tất cả file .docx, không chỉ exam.docx)
+                    var docxFiles = Directory.GetFiles(tempDir, "*.docx", SearchOption.AllDirectories);
+                    
+                    if (docxFiles.Length == 0)
+                    {
+                        // Liệt kê tất cả các file trong thư mục để debug
+                        var allFiles = Directory.GetFiles(tempDir, "*.*", SearchOption.AllDirectories);
+                        var fileList = string.Join(", ", allFiles.Select(f => Path.GetFileName(f)));
+                        throw new Exception($"Không tìm thấy file Word (.docx) trong ZIP file. Các file có trong ZIP: {fileList}");
+                    }
+
+                    // Ưu tiên file exam.docx, nếu không có thì lấy file .docx đầu tiên
+                    var examDocxPath = docxFiles.FirstOrDefault(f => 
+                        Path.GetFileName(f).Equals("exam.docx", StringComparison.OrdinalIgnoreCase));
+                    
+                    if (examDocxPath == null)
+                    {
+                        examDocxPath = docxFiles[0];
+                    }
+
+                    // Đọc file Word vào MemoryStream
+                    wordStream = new MemoryStream();
+                    using (var fileStream = File.OpenRead(examDocxPath))
+                    {
+                        await fileStream.CopyToAsync(wordStream);
+                    }
+                    wordStream.Position = 0;
+                }
+                finally
+                {
+                    // Xóa thư mục tạm
+                    if (Directory.Exists(tempDir))
+                    {
+                        try
+                        {
+                            Directory.Delete(tempDir, recursive: true);
+                        }
+                        catch
+                        {
+                            // Ignore cleanup errors
+                        }
+                    }
+                }
+            }
+            else
+            {
+                // Nếu là .docx trực tiếp, đọc vào stream
+                wordStream = new MemoryStream();
+                await file.CopyToAsync(wordStream);
+                wordStream.Position = 0;
+            }
+
+            // Parse Word document với format CLO
+            using (wordStream)
+            {
+                var parsed = WordParserService.Parse(wordStream);
+                if (parsed.Count == 0)
+                    throw new Exception("Không tìm thấy câu hỏi nào theo format CLO trong file Word.");
+
+                var originalExamPaper = new OriginalExamPaper
+                {
+                    Title = Path.GetFileNameWithoutExtension(file.FileName),
+                    Description = null,
+                    SubjectId = subject.SubjectId,
+                    CreatedBy = userId,
+                    CreatedAt = now,
+                    DurationMinutes = 0,
+                    TotalQuestions = parsed.Count,
+                    OriginalExamPaperCore = originalExamPaperCore,
+                    IsApproved = true,
+                    IsManualCreated = false,
+                    TotalShuffledPapers = 0,
+                    AllowViewMaterials = false
+                };
+
+                await _originalExamPaperRepository.AddAsync(originalExamPaper);
+
+                var details = new List<OriginalExamPaperDetail>();
+                var answers = new List<Answers>();
+
+                int qOrder = 1;
+
+                foreach (var q in parsed)
+                {
+                    var detail = new OriginalExamPaperDetail
+                    {
+                        OriginalExamPaperId = originalExamPaper.OriginalExamPaperId,
+                        Order = qOrder++,
+                        QuestionContent = q.Stem,
+                        CorrectAnswerIndex = q.CorrectAnswerLabel != null
+                            ? q.Answers.FindIndex(a => a.Label == q.CorrectAnswerLabel) + 1
+                            : null,
+                        CreatedAt = now,
+                        CreatedBy = userId
+                    };
+
+                    details.Add(detail);
+
+                    int aOrder = 1;
+                    foreach (var a in q.Answers)
+                    {
+                        answers.Add(new Answers
+                        {
+                            OriginalExamPaperDetail = detail,
+                            Order = aOrder++,
+                            AnswerContent = a.Content,
+                            IsCorrect = q.CorrectAnswerLabel == a.Label,
+                            CreatedAt = now,
+                            CreatedBy = userId
+                        });
+                    }
+                }
+
+                foreach (var detail in details)
+                {
+                    await _originalExamPaperDetailRepository.AddAsync(detail);
+                }
+                foreach (var answer in answers)
+                {
+                    await _answersRepository.AddAsync(answer);
+                }
+            }
+        }
+
+        public async Task ImportFromZipAsync(IFormFile file, string originalExamPaperCore, int subjectId)
+        {
+            await _examZipImportService.ImportFromZipAsync(file, originalExamPaperCore, subjectId);
+        }
+
+        #endregion
        
         public async Task<OriginalExamPaperDto> GetWithDetailsAsync(string originalExamPaperCore)
         {
@@ -1437,6 +1628,49 @@ namespace backend_manage.core.Services.AuthService
                     throw new Exception("Không thể tạo mã OriginalExamPaperCore duy nhất sau nhiều lần thử. Vui lòng thử lại.");
                 }
             } while (true);
+        }
+
+        /// <summary>
+        /// Xóa cứng đề thi gốc và tất cả các đề hoán vị liên quan
+        /// Xóa vĩnh viễn khỏi database (hard delete)
+        /// </summary>
+        /// <param name="originalExamPaperId">ID của đề thi gốc cần xóa</param>
+        /// <returns>True nếu xóa thành công, False nếu không tìm thấy đề thi</returns>
+        public async Task<bool> HardDeleteAsync(int originalExamPaperId)
+        {
+            try
+            {
+                // Lấy đề thi gốc từ database, bao gồm các đề hoán vị liên quan
+                var originalExamPaper = await _originalExamPaperRepository.GetQueryable()
+                    .Include(oep => oep.ShuffledExamPapers)
+                    .FirstOrDefaultAsync(oep => oep.OriginalExamPaperId == originalExamPaperId);
+
+                if (originalExamPaper == null)
+                {
+                    return false; // Không tìm thấy đề thi gốc
+                }
+
+                // Xóa tất cả các đề hoán vị liên quan trước
+                // Lấy danh sách tất cả ShuffledExamPaper có OriginalExamPaperId = originalExamPaperId
+                var shuffledPapers = await _shuffledExamPaperRepository.GetQueryable()
+                    .Where(sep => sep.OriginalExamPaperId == originalExamPaperId)
+                    .ToListAsync();
+
+                foreach (var shuffledPaper in shuffledPapers)
+                {
+                    // Xóa cứng đề hoán vị (hard delete)
+                    await _shuffledExamPaperRepository.DeleteAsync(shuffledPaper.ShuffledExamPaperId);
+                }
+
+                // Xóa cứng đề thi gốc (hard delete)
+                await _originalExamPaperRepository.DeleteAsync(originalExamPaperId);
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Lỗi khi xóa cứng đề thi gốc ID {originalExamPaperId}: {ex.Message}", ex);
+            }
         }
 
         

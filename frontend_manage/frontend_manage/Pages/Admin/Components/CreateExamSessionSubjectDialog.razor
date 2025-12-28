@@ -1,0 +1,282 @@
+@using frontend_manage.DTOs
+@using frontend_manage.DTOs.AcademicAffairs
+@using frontend_manage.Services.Admin
+@using frontend_manage.Services.ExamManager
+@using MudBlazor
+
+<MudDialog>
+    <DialogContent>
+        <EditForm Model="_createDto" OnValidSubmit="@HandleSubmit">
+            <DataAnnotationsValidator />
+            <MudGrid>
+                <MudItem xs="12" md="6">
+                    <MudSelect T="int" @bind-Value="_selectedExamSessionId" 
+                           Label="Ca thi - Khoa" 
+                           Variant="Variant.Outlined"
+                           Required="true"
+                           RequiredError="Ca thi - Khoa không được để trống"
+                           HelperText="Chọn ca thi - khoa"
+                           Disabled="@_loadingExamSessions">
+                        <MudSelectItem T="int" Value="0">-- Chọn ca thi - khoa --</MudSelectItem>
+                        @if (_loadingExamSessions)
+                        {
+                            <MudSelectItem T="int" Disabled="true">Đang tải...</MudSelectItem>
+                        }
+                        else
+                        {
+                            @foreach (var examSession in _examSessions)
+                            {
+                                <MudSelectItem T="int" Value="@examSession.ExamSessionId">
+                                    @examSession.Name
+                                </MudSelectItem>
+                            }
+                        }
+                    </MudSelect>
+                </MudItem>
+
+                <MudItem xs="12" md="6">
+                    <MudSelect T="int" @bind-Value="_createDto.SubjectId" 
+                           Label="Môn học" 
+                           Variant="Variant.Outlined"
+                           Required="true"
+                           RequiredError="Môn học không được để trống"
+                           HelperText="Chọn môn học"
+                           Disabled="@_loadingSubjects">
+                        <MudSelectItem T="int" Value="0">-- Chọn môn học --</MudSelectItem>
+                        @if (_loadingSubjects)
+                        {
+                            <MudSelectItem T="int" Disabled="true">Đang tải...</MudSelectItem>
+                        }
+                        else
+                        {
+                            @foreach (var subject in _subjects)
+                            {
+                                <MudSelectItem T="int" Value="@subject.SubjectId">
+                                    @subject.SubjectCode - @subject.SubjectName
+                                </MudSelectItem>
+                            }
+                        }
+                    </MudSelect>
+                </MudItem>
+
+                <MudItem xs="12" md="6">
+                    <MudNumericField T="int" @bind-Value="_createDto.Duration" 
+                                 Label="Thời lượng (phút)" 
+                                 Variant="Variant.Outlined"
+                                 Required="true"
+                                 RequiredError="Thời lượng không được để trống"
+                                 Min="1"
+                                 HelperText="Thời gian làm bài tính bằng phút" />
+                </MudItem>
+
+                <MudItem xs="12" md="6">
+                    <MudSelect T="int?" @bind-Value="_createDto.OriginalExamPaperId" 
+                           Label="Đề gốc" 
+                           Variant="Variant.Outlined"
+                           HelperText="Chọn đề gốc (tùy chọn)"
+                           Disabled="@_loadingExamPapers">
+                        <MudSelectItem T="int?" Value="@((int?)null)">-- Không chọn --</MudSelectItem>
+                        @if (_loadingExamPapers)
+                        {
+                            <MudSelectItem T="int?" Disabled="true">Đang tải...</MudSelectItem>
+                        }
+                        else
+                        {
+                            @foreach (var examPaper in _examPapers)
+                            {
+                                <MudSelectItem T="int?" Value="@examPaper.OriginalExamPaperId">
+                                    @examPaper.OriginalExamPaperCore - @examPaper.Title
+                                </MudSelectItem>
+                            }
+                        }
+                    </MudSelect>
+                </MudItem>
+
+                <MudItem xs="12" md="6">
+                    <MudDatePicker @bind-Date="_startDate" 
+                              Label="Thời gian bắt đầu" 
+                              Variant="Variant.Outlined"
+                              Required="true"
+                              RequiredError="Thời gian bắt đầu không được để trống" />
+                </MudItem>
+
+                <MudItem xs="12" md="6">
+                    <MudTimePicker @bind-Time="_startTime" 
+                               Label="Giờ bắt đầu" 
+                               Variant="Variant.Outlined"
+                               Required="true"
+                               RequiredError="Giờ bắt đầu không được để trống" />
+                </MudItem>
+
+                <MudItem xs="12" md="6">
+                    <MudDatePicker @bind-Date="_endDate" 
+                              Label="Thời gian kết thúc" 
+                              Variant="Variant.Outlined" />
+                </MudItem>
+
+                <MudItem xs="12" md="6">
+                    <MudTimePicker @bind-Time="_endTime" 
+                               Label="Giờ kết thúc" 
+                               Variant="Variant.Outlined" />
+                </MudItem>
+
+                <MudItem xs="12">
+                    <MudTextField @bind-Value="_createDto.ExamSessionSubjectCore" 
+                              Label="Mã ca thi" 
+                              Variant="Variant.Outlined"
+                              HelperText="Mã ca thi (tùy chọn, sẽ tự động tạo nếu để trống)" />
+                </MudItem>
+            </MudGrid>
+        </EditForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Hủy</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="HandleSubmit" Disabled="@_isSubmitting">
+            @if (_isSubmitting)
+            {
+                <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                <MudText Class="ms-2">Đang tạo...</MudText>
+            }
+            else
+            {
+                <span>Tạo mới</span>
+            }
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] IMudDialogInstance? MudDialog { get; set; }
+    [Parameter] public EventCallback<ExamSessionSubjectDto> OnCreated { get; set; }
+
+    [Inject] private AdminExamSessionSubjectService ExamSessionSubjectService { get; set; } = default!;
+    [Inject] private AdminExamSessionService ExamSessionService { get; set; } = default!;
+    [Inject] private ExamManagerService ExamManagerService { get; set; } = default!;
+    [Inject] private ISnackbar Snackbar { get; set; } = default!;
+
+    private ExamSessionSubjectCreateDto _createDto = new();
+    private List<ExamSessionDto> _examSessions = new();
+    private List<SubjectDto> _subjects = new();
+    private List<OriginalExamPaperListItemDto> _examPapers = new();
+    
+    private int _selectedExamSessionId = 0; // Tạm thời lưu ExamSessionId, sẽ map sang ExamSessionDepartmentId khi submit
+    
+    private bool _loadingExamSessions = true;
+    private bool _loadingSubjects = true;
+    private bool _loadingExamPapers = true;
+    private bool _isSubmitting = false;
+
+    private DateTime? _startDate = DateTime.Now.Date;
+    private TimeSpan? _startTime = DateTime.Now.TimeOfDay;
+    private DateTime? _endDate;
+    private TimeSpan? _endTime;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadExamSessionsAsync();
+        await LoadSubjectsAsync();
+        await LoadExamPapersAsync();
+    }
+
+    private async Task LoadExamSessionsAsync()
+    {
+        try
+        {
+            _loadingExamSessions = true;
+            _examSessions = await ExamSessionService.GetAllAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Lỗi khi tải danh sách ca thi: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loadingExamSessions = false;
+        }
+    }
+
+    private async Task LoadSubjectsAsync()
+    {
+        try
+        {
+            _loadingSubjects = true;
+            _subjects = await ExamManagerService.GetAllSubjectsAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Lỗi khi tải danh sách môn học: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loadingSubjects = false;
+        }
+    }
+
+    private async Task LoadExamPapersAsync()
+    {
+        try
+        {
+            _loadingExamPapers = true;
+            _examPapers = await ExamManagerService.GetAllOriginalExamPapersAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Lỗi khi tải danh sách đề gốc: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loadingExamPapers = false;
+        }
+    }
+
+    private async Task HandleSubmit()
+    {
+        if (_isSubmitting) return;
+
+        try
+        {
+            _isSubmitting = true;
+
+            // Map ExamSessionId từ dropdown sang ExamSessionDepartmentId trong DTO
+            // Backend expect ExamSessionId nhưng frontend DTO có ExamSessionDepartmentId
+            // Tạm thời map ExamSessionId -> ExamSessionDepartmentId
+            _createDto.ExamSessionDepartmentId = _selectedExamSessionId;
+
+            // Combine date and time
+            if (_startDate.HasValue && _startTime.HasValue)
+            {
+                _createDto.StartTime = _startDate.Value.Date.Add(_startTime.Value);
+            }
+            else
+            {
+                // Set default nếu chưa có
+                _createDto.StartTime = DateTime.Now;
+            }
+
+            if (_endDate.HasValue && _endTime.HasValue)
+            {
+                _createDto.EndTime = _endDate.Value.Date.Add(_endTime.Value);
+            }
+
+            var created = await ExamSessionSubjectService.CreateAsync(_createDto);
+            
+            Snackbar.Add("Tạo ca thi môn học thành công!", Severity.Success);
+            await OnCreated.InvokeAsync(created);
+            MudDialog?.Close(DialogResult.Ok(created));
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Lỗi khi tạo ca thi môn học: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isSubmitting = false;
+        }
+    }
+
+    private void Cancel()
+    {
+        MudDialog?.Cancel();
+    }
+}
+

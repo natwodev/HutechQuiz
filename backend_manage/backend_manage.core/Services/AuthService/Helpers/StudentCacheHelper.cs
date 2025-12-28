@@ -222,4 +222,17 @@ public class StudentCacheHelper
             return (false, $"Lỗi khi tải sinh viên lên Redis cache: {ex.Message}", 0);
         }
     }
+    public async Task RemoveStudentFromCacheAsync(string studentCode)
+    {
+        try
+        {
+            string key = $"student:{studentCode}";
+            await _redisService.KeyDeleteAsync(key);
+            _logger.LogInformation("Đã xóa cache sinh viên {Key} khỏi Redis", studentCode);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Lỗi khi xóa cache sinh viên {StudentCode}", studentCode);
+        }
+    }
 } 

@@ -4,7 +4,15 @@
 @using frontend_manage.DTOs
 
 <MudPaper Class="pa-4" Elevation="4">
-    <MudText Typo="Typo.h6" Class="mb-2">Nhập đề thi (.epz)</MudText>
+    <MudText Typo="Typo.h6" Class="mb-2">Nhập đề thi</MudText>
+
+    <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center" Class="mb-2">
+        <MudRadioGroup T="string" @bind-Value="selectedImportType" Row="true">
+            <MudRadio T="string" Value="@("xml")" Color="Color.Primary" Label=".epz (XML từ EPZ)" />
+            <MudRadio T="string" Value="@("word")" Color="Color.Primary" Label=".docx/.zip (Word + Audio + Image)" />
+        </MudRadioGroup>
+    </MudStack>
+
     <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center">
         <MudTextField @bind-Value="originalExamPaperCore" 
                       Label="Mã đề gốc (OriginalExamPaperCore)" 
@@ -16,8 +24,38 @@
                    StartIcon="@Icons.Material.Filled.AutoAwesome"
                    OnClick="GenerateAutoCode"
                    Size="Size.Small">Tạo mã tự động</MudButton>
-        <InputFile OnChange="OnInputFileChange" accept=".epz" />
-        <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.CloudUpload" OnClick="UploadAsync" Disabled="isUploading || selectedFileStream == null || string.IsNullOrWhiteSpace(originalExamPaperCore)">Upload</MudButton>
+    </MudStack>
+
+    @if (selectedImportType == "word")
+    {
+        <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center" Class="mt-2">
+            <MudSelect T="int" @bind-Value="selectedSubjectId" Label="Môn học" Variant="Variant.Outlined" Style="min-width: 260px;">
+                @if (subjects != null && subjects.Any())
+                {
+                    @foreach (var subject in subjects)
+                    {
+                        <MudSelectItem Value="@subject.SubjectId">
+                            @subject.SubjectCode - @subject.SubjectName
+                        </MudSelectItem>
+                    }
+                }
+                else
+                {
+                    <MudSelectItem Value="0" Disabled="true">Vui lòng tải lại danh sách môn học</MudSelectItem>
+                }
+            </MudSelect>
+        </MudStack>
+    }
+
+    <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center" Class="mt-2">
+        <InputFile OnChange="OnInputFileChange" accept="@GetAcceptString()" />
+        <MudButton Color="Color.Primary"
+                   Variant="Variant.Filled"
+                   StartIcon="@Icons.Material.Filled.CloudUpload"
+                   OnClick="UploadAsync"
+                   Disabled="@IsUploadDisabled">
+            Upload
+        </MudButton>
         @if (isUploading)
         {
             <MudProgressCircular Indeterminate="true" Size="Size.Small" />

@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using System.Collections.Generic;
+using System.Linq;
 using backend_manage.core.Services.Interfaces;
 using backend_manage.shared.DTOs;
 using System.Security.Claims;
@@ -9,6 +10,8 @@ using backend_manage.core.Entities;
 using backend_manage.core.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using backend_manage.core.Hubs;
+using backend_manage.core.Data;
+using backend_manage.core.Services.AuthService.Helpers;
 
 namespace backend_manage.Controllers
 {
@@ -20,17 +23,32 @@ namespace backend_manage.Controllers
         private readonly IStudentService _studentService;
         private readonly IRepository<StudentExamSession> _studentExamSessionRepository;
         private readonly IRepository<ExamSessionSubject> _examSessionSubjectRepository;
+        private readonly IRepository<StudentActivity> _studentActivityRepository;
+        private readonly IRepository<Student> _studentRepository;
+        private readonly StudentCacheHelper _studentCacheHelper;
+        private readonly StudentExamSessionCacheHelper _studentExamSessionCacheHelper;
+        private readonly ApplicationDbContext _context;
 
         public LecturerController(
             ILecturerService lecturerService,
             IStudentService studentService,
             IRepository<StudentExamSession> studentExamSessionRepository,
-            IRepository<ExamSessionSubject> examSessionSubjectRepository)
+            IRepository<ExamSessionSubject> examSessionSubjectRepository,
+            IRepository<StudentActivity> studentActivityRepository,
+            IRepository<Student> studentRepository,
+            StudentCacheHelper studentCacheHelper,
+            StudentExamSessionCacheHelper studentExamSessionCacheHelper,
+            ApplicationDbContext context)
         {
             _lecturerService = lecturerService;
             _studentService = studentService;
             _studentExamSessionRepository = studentExamSessionRepository;
             _examSessionSubjectRepository = examSessionSubjectRepository;
+            _studentActivityRepository = studentActivityRepository;
+            _studentRepository = studentRepository;
+            _studentCacheHelper = studentCacheHelper;
+            _studentExamSessionCacheHelper = studentExamSessionCacheHelper;
+            _context = context;
         }
 
         [HttpPost]
@@ -119,19 +137,55 @@ namespace backend_manage.Controllers
             var now = DateTimeHelper.GetVietnamTime();
             var userId = User?.FindFirstValue(ClaimTypes.NameIdentifier);
 
+            // Xóa tất cả activity logs
+            var allActivities = await _studentActivityRepository
+                .GetQueryable()
+                .ToListAsync();
+            
+            int activitiesDeleted = 0;
+            if (allActivities.Any())
+            {
+                _context.StudentActivities.RemoveRange(allActivities);
+                await _context.SaveChangesAsync();
+                activitiesDeleted = allActivities.Count;
+            }
+
             var sessions = await _studentExamSessionRepository
                 .GetQueryable()
                 .ToListAsync();
 
+            var redisTasks = new List<Task>();
+
             foreach (var session in sessions)
             {
                 session.ExamSessionStartTime = now;
+                session.Score = 0;
+                session.IsCompleted = false;
+                session.StartTime = null;
+                session.EndTime = null;
+                session.CorrectAnswers = null;
+                session.TotalQuestions = null;
+                session.StudentAnswersString = string.Empty;
                 session.UpdatedAt = now;
                 session.UpdatedBy = userId;
-                await _studentExamSessionRepository.UpdateAsync(session);
-            }
 
-            // Reset thêm ExamSessionSubject: đặt StartTime = now, EndTime = now + Duration
+                if (!string.IsNullOrEmpty(session.StudentCode))
+                {
+                    redisTasks.Add(_studentExamSessionCacheHelper.ClearAllStudentSessionsCacheAsync(session.StudentCode));
+                }
+            }
+            _context.StudentExamSessions.UpdateRange(sessions);
+
+            var students = await _studentRepository.GetQueryable().ToListAsync();
+            foreach (var student in students)
+            {
+                student.IsLogin = false;
+                student.UpdatedAt = now;
+                student.UpdatedBy = userId;
+                redisTasks.Add(_studentCacheHelper.RemoveStudentFromCacheAsync(student.StudentCode));
+            }
+            _context.Students.UpdateRange(students);
+
             var subjects = await _examSessionSubjectRepository
                 .GetQueryable()
                 .ToListAsync();
@@ -142,10 +196,23 @@ namespace backend_manage.Controllers
                 subject.EndTime = subject.Duration > 0 ? now.AddMinutes(subject.Duration) : now;
                 subject.UpdatedAt = now;
                 subject.UpdatedBy = userId;
-                await _examSessionSubjectRepository.UpdateAsync(subject);
             }
+            _context.ExamSessionSubjects.UpdateRange(subjects);
 
-            return Ok(new { message = "Đã reset ExamSessionStartTime và ExamSessionSubject thời gian", studentExamSessionsUpdated = sessions.Count, examSessionSubjectsUpdated = subjects.Count, time = now });
+            // Lưu tất cả thay đổi DB một lần duy nhất
+            await _context.SaveChangesAsync();
+
+            // Đợi tất cả tác vụ Redis hoàn thành
+            await Task.WhenAll(redisTasks);
+
+            return Ok(new { 
+                message = "Đã reset thời gian, điểm số, trạng thái login/đã thi và xóa tất cả cache Redis", 
+                activitiesDeleted = activitiesDeleted,
+                studentExamSessionsUpdated = sessions.Count, 
+                examSessionSubjectsUpdated = subjects.Count,
+                studentsReset = students.Count,
+                time = now 
+            });
         }
 
         [HttpPost("import-excel")]

@@ -1,0 +1,433 @@
+/* ============================================
+   Question Rendering Styles
+   Cải thiện giao diện cho LaTeX và các dạng câu hỏi
+   ============================================ */
+
+/* ============================================
+   1. LaTeX Content Styling
+   ============================================ */
+.katex-content {
+    font-size: 1rem;
+    line-height: 1.5;
+    color: #333;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+/* LaTeX inline và display */
+.katex-content .katex {
+    font-size: 1.1em;
+    line-height: 1.2;
+}
+
+.katex-content .katex-display {
+    margin: 1em 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+}
+
+/* LaTeX trong câu hỏi */
+.question-title .katex-content,
+.question-inline .katex-content {
+    display: inline;
+    font-size: 1.05em;
+}
+
+/* LaTeX trong đáp án */
+.answer-text .katex-content {
+    display: inline;
+    font-size: 1em;
+}
+
+/* ============================================
+   2. Question Item Styling
+   ============================================ */
+.question-item {
+    margin-bottom: 1rem;
+    padding: 0.75rem 1rem;
+    background: #ffffff;
+    border-radius: 6px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+/* Parent question styling */
+.question-item.group-parent {
+    background: #f8f9fa;
+    border-left: 4px solid #1976d2;
+    padding-left: 1.5rem;
+}
+
+/* Child question styling */
+.question-item.group-child {
+    background: #fafafa;
+    border-left: 3px solid #90caf9;
+    margin-left: 2rem;
+    padding-left: 1.5rem;
+}
+
+/* Question title */
+.question-title {
+    margin-bottom: 0.75rem;
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: #1976d2;
+    line-height: 1.5;
+}
+
+.title-prefix {
+    font-weight: 700;
+    color: #1976d2;
+    margin-right: 0.5rem;
+}
+
+.question-title .katex-content {
+    color: #212121;
+    font-weight: 500;
+}
+
+/* ============================================
+   3. Answer Options Styling
+   ============================================ */
+.answers-group {
+    margin-top: 1rem;
+}
+
+.answer-row {
+    margin-bottom: 0.75rem;
+}
+
+.answer-option {
+    display: flex;
+    align-items: flex-start;
+    padding: 0.5rem 0.75rem;
+    margin-bottom: 0.375rem;
+    background: #ffffff;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    cursor: pointer;
+    min-height: 2.25rem;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Explicitly disable all hover effects to ensure UI stability */
+.answer-option:hover {
+    background: #ffffff !important;
+    transform: none !important;
+    box-shadow: none !important;
+    border-color: #e0e0e0 !important;
+}
+
+.answer-option.selected:hover {
+    background: #e3f2fd !important;
+    border-color: #1976d2 !important;
+}
+
+.answer-option,
+.answer-option * {
+    transition: none !important;
+    animation: none !important;
+}
+
+.answer-option.selected {
+    background: #e3f2fd;
+    border-color: #1976d2;
+    box-shadow: 0 2px 8px rgba(25, 118, 210, 0.1);
+}
+
+.answer-option input[type="radio"] {
+    margin-right: 0.75rem;
+    margin-top: 0.25rem;
+    width: 1.25rem;
+    height: 1.25rem;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.answer-letter {
+    font-weight: 700;
+    color: #1976d2;
+    min-width: 1.25rem;
+    margin-right: 0.375rem;
+    font-size: 0.95rem;
+    flex-shrink: 0;
+}
+
+.answer-text {
+    flex: 1;
+    line-height: 1.5;
+    color: #424242;
+    font-size: 0.95rem;
+}
+
+.answer-text .katex-content {
+    display: inline;
+}
+
+/* ============================================
+   4. Media Content (Images & Audio)
+   ============================================ */
+.katex-content img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 1rem auto;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e0e0e0;
+}
+
+.katex-content audio {
+    width: 100%;
+    max-width: 600px;
+    margin: 1rem 0;
+    display: block;
+    border-radius: 8px;
+}
+
+.katex-content audio::-webkit-media-controls-panel {
+    background-color: #f5f5f5;
+}
+
+/* Hiển thị timeline và thời gian - chỉ chặn tua ngược bằng JavaScript */
+.katex-content audio::-webkit-media-controls-timeline,
+.exam-audio-player::-webkit-media-controls-timeline {
+    display: flex !important;
+}
+
+.katex-content audio::-webkit-media-controls-current-time-display,
+.exam-audio-player::-webkit-media-controls-current-time-display {
+    display: flex !important;
+}
+
+.katex-content audio::-webkit-media-controls-time-remaining-display,
+.exam-audio-player::-webkit-media-controls-time-remaining-display {
+    display: flex !important;
+}
+
+/* Hiển thị seek bar trong audio controls */
+.katex-content audio::-webkit-media-controls-timeline-container,
+.exam-audio-player::-webkit-media-controls-timeline-container {
+    display: flex !important;
+}
+
+/* Chỉ hiển thị play/pause button và volume */
+.katex-content audio::-webkit-media-controls-play-button,
+.exam-audio-player::-webkit-media-controls-play-button {
+    display: flex !important;
+}
+
+.katex-content audio::-webkit-media-controls-mute-button,
+.exam-audio-player::-webkit-media-controls-mute-button {
+    display: flex !important;
+}
+
+.katex-content audio::-webkit-media-controls-volume-slider,
+.exam-audio-player::-webkit-media-controls-volume-slider {
+    display: flex !important;
+}
+
+/* Ẩn nút 3 chấm dọc (overflow menu) */
+.katex-content audio::-webkit-media-controls-overlay-enclosure,
+.exam-audio-player::-webkit-media-controls-overlay-enclosure {
+    display: none !important;
+}
+
+.katex-content audio::-webkit-media-controls-overlay-play-button,
+.exam-audio-player::-webkit-media-controls-overlay-play-button {
+    display: none !important;
+}
+
+/* Ẩn download button nếu có */
+.katex-content audio::-webkit-media-controls-download-button,
+.exam-audio-player::-webkit-media-controls-download-button {
+    display: none !important;
+}
+
+/* Ẩn fullscreen button nếu có */
+.katex-content audio::-webkit-media-controls-fullscreen-button,
+.exam-audio-player::-webkit-media-controls-fullscreen-button {
+    display: none !important;
+}
+
+
+/* Image trong câu hỏi */
+.question-title img,
+.question-inline img {
+    display: block;
+    margin: 1rem 0;
+    max-width: 100%;
+    height: auto;
+}
+
+/* Audio trong câu hỏi */
+.question-title audio,
+.question-inline audio {
+    margin: 1rem 0;
+}
+
+/* ============================================
+   5. Child Questions Container
+   ============================================ */
+.child-questions {
+    margin-top: 1.5rem;
+    padding-left: 1rem;
+    border-left: 3px solid #e0e0e0;
+}
+
+.child-questions .question-item {
+    margin-bottom: 1.5rem;
+}
+
+.child-questions .question-item:last-child {
+    margin-bottom: 0;
+}
+
+/* ============================================
+   6. Preview Page Specific Styles
+   ============================================ */
+.preview-page .katex-content {
+    font-size: 1rem;
+}
+
+.preview-page .question-item {
+    margin-bottom: 2rem;
+}
+
+.preview-page .answer-option {
+    background: #ffffff;
+}
+
+.preview-page .answer-option.selected {
+    background: #e8f5e9;
+    border-color: #4caf50;
+}
+
+/* ============================================
+   7. Responsive Design
+   ============================================ */
+@media (max-width: 768px) {
+
+    /* Font sizes */
+    .katex-content {
+        font-size: 1rem;
+    }
+
+    .question-title {
+        font-size: 1.1rem;
+    }
+
+    .answer-text {
+        font-size: 0.95rem;
+    }
+
+    .answer-letter {
+        font-size: 1rem;
+    }
+
+    /* Spacing */
+    .question-item {
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .question-item.group-child {
+        margin-left: 0.75rem;
+        padding: 0.75rem;
+    }
+
+    .answer-option {
+        padding: 0.625rem 0.75rem;
+        min-height: 2.25rem;
+        margin-bottom: 0.375rem;
+    }
+
+    .answer-option input[type="radio"] {
+        width: 1.1rem;
+        height: 1.1rem;
+        margin-right: 0.5rem;
+    }
+
+    /* Images */
+    .question-image,
+    .answer-image {
+        max-width: 100%;
+        height: auto;
+    }
+}
+
+/* Small Mobile */
+@media (max-width: 480px) {
+    .katex-content {
+        font-size: 0.95rem;
+    }
+
+    .question-title {
+        font-size: 1rem;
+    }
+
+    .answer-text {
+        font-size: 0.9rem;
+    }
+
+    .answer-letter {
+        font-size: 0.95rem;
+    }
+
+    .question-item {
+        padding: 0.75rem;
+        margin-bottom: 1rem;
+    }
+
+    .question-item.group-child {
+        margin-left: 0.5rem;
+        padding: 0.5rem;
+    }
+
+    .answer-option {
+        padding: 0.5rem 0.625rem;
+        min-height: 2rem;
+    }
+
+    .answer-option input[type="radio"] {
+        width: 1rem;
+        height: 1rem;
+    }
+}
+
+/* ============================================
+   8. Print Styles
+   ============================================ */
+@media print {
+    .question-item {
+        page-break-inside: avoid;
+        box-shadow: none;
+        border: 1px solid #ccc;
+    }
+
+    .answer-option {
+        border: 1px solid #ccc;
+        page-break-inside: avoid;
+    }
+}
+
+/* ============================================
+   9. Accessibility Improvements
+   ============================================ */
+.answer-option:focus-within {
+    outline: 3px solid #1976d2;
+    outline-offset: 2px;
+}
+
+/* Screen reader only */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+}

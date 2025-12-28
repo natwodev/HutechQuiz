@@ -127,40 +127,43 @@ public class ExamPaperHelper
 
         _logger.LogInformation("Sinh viên {StudentCode} bắt đầu thi đúng thời gian. Thời gian bắt đầu: {StartTime}, Thời gian hiện tại: {CurrentTime}, Chênh lệch: {Minutes} phút", 
             studentCode, examStartTime, currentTime, timeDifference.TotalMinutes);
-        
+
+        bool isNewStartTime = false;
+        if (!studentExamSessionDto.StartTime.HasValue)
+        {
+            studentExamSessionDto.StartTime = DateTimeHelper.GetVietnamTime();
+            isNewStartTime = true;
+        }
+
         if (!studentExamSessionDto.ShuffledExamPaperId.HasValue)
         {
-
             _logger.LogInformation("Chưa có đề thi nên sẽ random đề thi mới cho sinh viên {StudentCode}", studentCode);
             var newExamPaper = await CreateNewExamPaperAsync(studentExamSessionDto.ExamSessionSubjectId, studentCode);
             _logger.LogInformation("Cập nhật đề thi vào phiên thi trên redis và db");
+            
             studentExamSessionDto.ShuffledExamPaperId = newExamPaper.ShuffledExamPaperId;
             studentExamSessionDto.OriginalExamPaperId = newExamPaper.OriginalExamPaperId;
-            studentExamSessionDto.StartTime = DateTimeHelper.GetVietnamTime();
             
             // Tính toán thời gian còn lại khi bắt đầu làm bài
-            // A: StartTime (thời gian bắt đầu gốc) = studentExamSessionDto.ExamSessionStartTime
-            // B: Thời gian sinh viên vào làm bài = DateTimeHelper.GetVietnamTime()
-            // C: Số phút đã qua = B - A
-            // D: RemainingMinutes = (Duration + ExtraMinutes) - C
             var originalExamStartTime = studentExamSessionDto.ExamSessionStartTime; // A
-            var studentStartTime = DateTimeHelper.GetVietnamTime(); // B
+            var studentStartTime = studentExamSessionDto.StartTime.Value; // B
             var initialMinutesPassed = (int)(studentStartTime - originalExamStartTime).TotalMinutes; // C
             studentExamSessionDto.RemainingMinutes = (studentExamSessionDto.Duration + studentExamSessionDto.ExtraMinutes) - initialMinutesPassed; // D
             
-            var originalExamPaper = await GetOriginalExamPaperAsync(newExamPaper.OriginalExamPaperId);
+            var originalExamPaperDto = await GetOriginalExamPaperAsync(newExamPaper.OriginalExamPaperId);
 
             // Tạo chuỗi đáp án rỗng dựa trên cấu trúc đề thi thực tế
-            var emptyAnswers = CreateEmptyAnswersString(originalExamPaper.KeyValueList);
+            var emptyAnswers = CreateEmptyAnswersString(originalExamPaperDto.KeyValueList);
             studentExamSessionDto.StudentAnswersString = emptyAnswers;
-            studentExamSessionDto.IsCompleted = false; // Chưa hoàn thành
-            await _sessionCacheHelper.UpdateStudentExamSessionAsync(studentCode,studentExamSessionDto);
+            studentExamSessionDto.IsCompleted = false; 
+
+            await _sessionCacheHelper.UpdateStudentExamSessionAsync(studentCode, studentExamSessionDto);
 
             var startExamMessage = new StartExamMessage
             {
                 StudentExamSessionId = studentExamSessionId,
                 StudentCode = studentCode,
-                StartTime = DateTimeHelper.GetVietnamTime(),
+                StartTime = studentExamSessionDto.StartTime.Value,
                 ShuffledExamPaperId = newExamPaper.ShuffledExamPaperId,
                 OriginalExamPaperId = newExamPaper.OriginalExamPaperId,
                 StudentAnswersString = emptyAnswers,
@@ -170,8 +173,8 @@ public class ExamPaperHelper
             
             try
             {
-                _rabbitMqService.Publish("start_exam_queue",startExamMessage);
-                _logger.LogInformation("Đã gửi đến message để lưu thông tin vào db cho sinh viên {studentCode}",studentCode);
+                _rabbitMqService.Publish("start_exam_queue", startExamMessage);
+                _logger.LogInformation("Đã gửi đến message để lưu thông tin vào db cho sinh viên {studentCode}", studentCode);
             }
             catch (Exception ex)
             {
@@ -179,8 +182,35 @@ public class ExamPaperHelper
                 await _messageProcessingService.ProcessMessageAsync("start_exam_queue", startExamMessage);
             }
             
+            return (studentExamSessionDto, newExamPaper, originalExamPaperDto);
+        }
+
+        // Trường hợp đã có đề thi nhưng có thể chưa có StartTime (do gán đề trước)
+        if (isNewStartTime)
+        {
+            await _sessionCacheHelper.UpdateStudentExamSessionAsync(studentCode, studentExamSessionDto);
             
-            return (studentExamSessionDto, newExamPaper, originalExamPaper);
+            var startExamMessage = new StartExamMessage
+            {
+                StudentExamSessionId = studentExamSessionId,
+                StudentCode = studentCode,
+                StartTime = studentExamSessionDto.StartTime.Value,
+                ShuffledExamPaperId = studentExamSessionDto.ShuffledExamPaperId ?? 0,
+                OriginalExamPaperId = studentExamSessionDto.OriginalExamPaperId ?? 0,
+                StudentAnswersString = studentExamSessionDto.StudentAnswersString ?? "",
+                IsCompleted = false,
+                RemainingMinutes = studentExamSessionDto.RemainingMinutes
+            };
+
+            try
+            {
+                _rabbitMqService.Publish("start_exam_queue", startExamMessage);
+                _logger.LogInformation("Đã gửi start_exam_message cho trường hợp đã có đề nhưng mới bắt đầu thi: {studentCode}", studentCode);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "RabbitMQ publish thất bại cho {studentCode}", studentCode);
+            }
         }
 
         _logger.LogInformation("Đã có đề thi, tiến hành lấy từ Redis với ID {ShuffledExamPaperId}", studentExamSessionDto.ShuffledExamPaperId.Value);
@@ -252,6 +282,29 @@ public class ExamPaperHelper
             }
 
             studentExamSessionDto.StartTime = DateTimeHelper.GetVietnamTime();
+            
+            // Lưu vào DB thông qua RabbitMQ để đảm bảo StartTime không bị mất
+            var startExamMessage = new StartExamMessage
+            {
+                StudentExamSessionId = studentExamSessionId,
+                StudentCode = studentCode,
+                StartTime = studentExamSessionDto.StartTime.Value,
+                ShuffledExamPaperId = studentExamSessionDto.ShuffledExamPaperId ?? 0,
+                OriginalExamPaperId = studentExamSessionDto.OriginalExamPaperId ?? 0,
+                StudentAnswersString = studentExamSessionDto.StudentAnswersString ?? "",
+                IsCompleted = false,
+                RemainingMinutes = studentExamSessionDto.RemainingMinutes
+            };
+
+            try
+            {
+                _rabbitMqService.Publish("start_exam_queue", startExamMessage);
+                _logger.LogInformation("Đã gửi start_exam_message cho đề gốc/không hoán vị của sinh viên {studentCode}", studentCode);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "RabbitMQ publish thất bại cho đề gốc của {studentCode}", studentCode);
+            }
         }
 
         // Cập nhật RemainingMinutes
@@ -640,52 +693,55 @@ public class ExamPaperHelper
                 return (false, 0, "Đã nộp bài thi trước đó", null, null);
             }
 
-            if (!studentExamSessionDto.ShuffledExamPaperId.HasValue)
+            if (!studentExamSessionDto.ShuffledExamPaperId.HasValue && !studentExamSessionDto.OriginalExamPaperId.HasValue)
             {
-                _logger.LogWarning("❌ Sinh viên {StudentCode} chưa có đề thi được gán", studentCode);
+                _logger.LogWarning("❌ Sinh viên {StudentCode} chưa có đề thi được gán (cả hoán vị và gốc)", studentCode);
                 return (false, 0, "Chưa có đề thi được gán", null, null);
             }
 
-            // Lấy đề thi từ Redis, nếu không có thì lấy từ database
-            var (s,paperDto) = await GetExamFromRedisAsync(studentExamSessionDto.ShuffledExamPaperId.Value);
-            if (paperDto == null)
+            string? answerKey = null;
+            int? shuffledId = studentExamSessionDto.ShuffledExamPaperId;
+
+            // Ưu tiên lấy từ đề hoán vị nếu có
+            if (shuffledId.HasValue && shuffledId.Value > 0)
             {
-                _logger.LogWarning("⚠️ Không thể lấy đề thi từ Redis cho ShuffledExamPaperId {PaperId}, thử lấy từ database", studentExamSessionDto.ShuffledExamPaperId.Value);
-                try
+                var (s, paperDto) = await GetExamFromRedisAsync(shuffledId.Value);
+                if (paperDto == null)
                 {
-                    paperDto = await GetExamFromDatabaseAsync(studentExamSessionDto.ShuffledExamPaperId.Value);
-                    if (paperDto == null)
-                    {
-                        _logger.LogError("❌ Không thể lấy đề thi từ database cho ShuffledExamPaperId {PaperId}", studentExamSessionDto.ShuffledExamPaperId.Value);
-                        return (false, 0, "Không thể lấy đề thi", null, null);
-                    }
-                    _logger.LogInformation("✅ Đã lấy được đề thi từ database cho ShuffledExamPaperId {PaperId}", studentExamSessionDto.ShuffledExamPaperId.Value);
+                    paperDto = await GetExamFromDatabaseAsync(shuffledId.Value);
                 }
-                catch (Exception ex)
+
+                if (paperDto != null)
                 {
-                    _logger.LogError(ex, "❌ Lỗi khi lấy đề thi từ database cho ShuffledExamPaperId {PaperId}", studentExamSessionDto.ShuffledExamPaperId.Value);
-                    return (false, 0, "Không thể lấy đề thi", null, null);
+                    answerKey = paperDto.AnswerKey;
+                }
+            }
+            
+            // Nếu không có đề hoán vị hoặc không lấy được AnswerKey, thử lấy từ đề gốc
+            if (string.IsNullOrEmpty(answerKey) && studentExamSessionDto.OriginalExamPaperId.HasValue)
+            {
+                var originalPaper = await GetOriginalExamPaperAsync(studentExamSessionDto.OriginalExamPaperId.Value);
+                if (originalPaper != null)
+                {
+                    answerKey = originalPaper.KeyValueList;
                 }
             }
 
-            
-            
-            if (string.IsNullOrEmpty(paperDto.AnswerKey))
+            if (string.IsNullOrEmpty(answerKey))
             {
-                _logger.LogError("❌ Đề thi không có đáp án chuẩn");
-                return (false, 0, "Đề thi không có đáp án chuẩn", null, null);
+                _logger.LogError("❌ Không thể lấy được đáp án chuẩn cho phiên thi {SessionId}", studentExamSessionId);
+                return (false, 0, "Không thể lấy đáp án chuẩn", null, null);
             }
 
             // Tính điểm và đếm câu đúng
             var (score, correctAnswers, totalQuestions) = CalculateScore(
                 studentExamSessionDto.StudentAnswersString, 
-                paperDto.AnswerKey
+                answerKey
             );
 
             // Cập nhật thông tin phiên thi
             var endTime = DateTimeHelper.GetVietnamTime();
             studentExamSessionDto.EndTime = endTime;
-            //studentExamSessionDto.Score = score;
             studentExamSessionDto.CorrectAnswers = correctAnswers;
             studentExamSessionDto.TotalQuestions = totalQuestions;
             studentExamSessionDto.IsCompleted = true;
@@ -697,7 +753,7 @@ public class ExamPaperHelper
             var examSubmissionMessage = new ExamSubmissionMessage
             {
                 StudentCode = studentCode,
-                ShuffledExamPaperId = studentExamSessionDto.ShuffledExamPaperId.Value,
+                ShuffledExamPaperId = studentExamSessionDto.ShuffledExamPaperId ?? 0,
                 Score = score,
                 CorrectAnswers = correctAnswers,
                 TotalQuestions = totalQuestions,
@@ -721,7 +777,7 @@ public class ExamPaperHelper
             _logger.LogInformation("✅ Hoàn thành nộp bài thi cho sinh viên {StudentCode}. Điểm: {Score}, Đúng: {CorrectAnswers}/{TotalQuestions}", 
                 studentCode, score, correctAnswers, totalQuestions);
 
-            return (true, score, $"Nộp bài thi thành công. Điểm: {score:F2}, Đúng: {correctAnswers}/{totalQuestions} câu", studentExamSessionDto, paperDto.AnswerKey);
+            return (true, score, $"Nộp bài thi thành công. Điểm: {score:F2}, Đúng: {correctAnswers}/{totalQuestions} câu", studentExamSessionDto, answerKey);
         }
         catch (Exception ex)
         {

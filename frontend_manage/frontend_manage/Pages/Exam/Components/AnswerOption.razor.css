@@ -7,14 +7,40 @@
     white-space: nowrap;
     width: 100%;
     margin-bottom: 8px;
+    border: 2px solid #e0e0e0;
+    background: #ffffff;
+    cursor: pointer;
 }
-.answer-option:hover { background:#f5f7fb; cursor:pointer; }
+
 .answer-option.selected {
-    border: 1px solid #1976d2;
-    background:#e8f1fd;
+    border-color: #1976d2;
+    background: #e3f2fd;
 }
-.answer-letter { font-weight:700; width:24px; min-width:24px; text-align:center; }
-.answer-text { font-size:15.5px; display:inline-block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+/* Explicitly disable all hover effects */
+.answer-option:hover {
+    background: #ffffff !important;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+.answer-option.selected:hover {
+    background: #e3f2fd !important;
+}
+
+.answer-letter {
+    font-weight: 700;
+    width: 24px;
+    min-width: 24px;
+    text-align: center;
+}
+
+.answer-text {
+    font-size: 15.5px;
+    display: inline-block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
 
 /* remove legacy custom radio styles to avoid misalignment with MudRadio */
-

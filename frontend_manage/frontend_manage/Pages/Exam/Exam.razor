@@ -1,15 +1,19 @@
 @page "/Exam"
 @using frontend_manage.Pages.Exam.Components
+@using frontend_manage.Components.MonitorLayout
 @using MudBlazor
+
+<link href="css/monitor/MonitorPage.css" rel="stylesheet" />
+<link href="css/exam/question-rendering.css" rel="stylesheet" />
+<link href="css/exam/audio-player.css" rel="stylesheet" />
+<link href="css/exam/custom-audio-player.css" rel="stylesheet" />
 
 <div id="exam-shell" class="exam-shell">
     @* Fixed Header *@
     <ExamHeader StudentSession="@StudentSession"
                 ShouldShowTimer="@ShouldShowTimer"
                 IsTimerVisible="@_showTimer"
-                IsFullscreen="@_isFullscreen"
                 ToggleTimerVisibility="ToggleTimerVisibility"
-                ToggleFullscreen="ToggleFullscreenAsync"
                 OnExamTimerExpired="HandleExamTimerExpired" />
 
     @* Main Content - Scrollable *@
@@ -20,19 +24,32 @@
         @if (_response != null && _questionDisplayItems.Any())
         {
             <div class="exam-content-wrapper">
-                @* Main Question Panel *@
+                @* Main Question Panel - Scrollable với tất cả câu hỏi *@
                 <div class="exam-question-area">
-                    <QuestionDisplayPanel ActiveQuestion="@ActiveQuestion?.Question"
-                                          ShuffledExamPaperCore="@_response?.ExamPaper?.ShuffledExamPaperCore"
-                                          CurrentIndex="@_activeQuestionIndex"
-                                          TotalQuestions="@_questionDisplayItems.Count"
-                                          OnPrevious="PreviousQuestion"
-                                          OnNext="NextQuestion"
-                                          GetQuestionLabel="GetQuestionLabel"
-                                          GetSelectedAnswerId="GetSelectedAnswerId"
-                                          OnAnswered="HandleQuestionAnswered"
-                                          StudentSession="@StudentSession"
-                                          OnExamTimerExpired="HandleExamTimerExpired" />
+                    @* Render tất cả câu hỏi *@
+                    @foreach (var questionItem in _questionDisplayItems)
+                    {
+                        var questionIndex = _questionDisplayItems.IndexOf(questionItem);
+                        var questionId = $"question-{questionItem.Question.OriginalExamPaperDetailId}";
+                        var isActive = questionIndex == _activeQuestionIndex;
+                        
+                        <div @key="@questionItem.Question.OriginalExamPaperDetailId" 
+                             id="@questionId" 
+                             class="question-container @(isActive ? "active-question" : "")" 
+                             style="margin-bottom: 2rem; scroll-margin-top: 100px;">
+                            <MudPaper Class="pa-4 exam-panel" Elevation="0">
+                                <QuestionItem Question="@questionItem.Question"
+                                              ShuffledExamPaperCore="@_response?.ExamPaper?.ShuffledExamPaperCore"
+                                              DisplayNumber="@GetQuestionLabel(questionItem.Question.OriginalExamPaperDetailId)"
+                                              LabelProvider="GetQuestionLabel"
+                                              SelectedAnswerId="@GetSelectedAnswerId(questionItem.Question.OriginalExamPaperDetailId)"
+                                              SelectedAnswerProvider="GetSelectedAnswerId"
+                                              OnAnswered="HandleQuestionAnswered"
+                                              StudentExamSessionId="@StudentExamSessionId"
+                                              QuestionId="@questionItem.Question.OriginalExamPaperDetailId" />
+                            </MudPaper>
+                        </div>
+                    }
                 </div>
 
                 @* Right Sidebar - Session Info & Navigation *@
@@ -40,26 +57,28 @@
                     <ExamSessionInfo StudentSession="@StudentSession"
                                      AllowViewMaterialsShuffled="@(_response?.ExamPaper?.AllowViewMaterials ?? false)"
                                      AllowViewMaterialsOriginal="@(_response?.OriginalExamPaper?.AllowViewMaterials ?? false)" />
+                    
+                    @* Violation Counter *@
+                    @if (!(_response?.ExamPaper?.AllowViewMaterials ?? true))
+                    {
+                        <ViolationCounter ViolationCount="@_violationCount" 
+                                         MaxViolations="@MAX_VIOLATIONS" />
+                    }
+                    
                     <QuestionNavigation TotalQuestions="@_navigationItems.Count"
                                         QuestionIds="@_navigationItems.Select(n => n.QuestionId).ToList()"
                                         ParentIndices="@_navigationItems.Select(n => n.ParentIndex).ToList()"
                                         AnsweredMap="@_questionAnswers"
                                         ActiveQuestionIndex="@_activeQuestionIndex"
-                                        OnNavigate="NavigateToEntry" />
+                                        OnNavigate="NavigateToEntry"
+                                        SubmitExam="SubmitExam" />
                 </aside>
             </div>
         }
     </main>
 
     @* Fixed Footer *@
-    <ExamFooter CanReload="@_canTriggerFetch"
-                ReloadLabel="@_fetchButtonLabel"
-                ActiveQuestionIndex="@_activeQuestionIndex"
-                TotalQuestions="@_questionDisplayItems.Count"
-                ReloadExam="ReloadExamAsync"
-                PreviousQuestion="PreviousQuestion"
-                NextQuestion="NextQuestion"
-                SubmitExam="SubmitExam" />
-    
-    
+    <div class="exam-footer">
+        <Footer ShowClock="true" />
+    </div>
 </div>

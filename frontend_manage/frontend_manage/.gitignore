@@ -1,3 +1,10 @@
 bin/
-obj/ 
+obj/
 .vs/
+
+# Config files nhạy cảm
+appsettings.json
+appsettings.*.json
+!.gitignore
+.env
+.env.local

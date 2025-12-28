@@ -6,6 +6,7 @@ using frontend_manage.DTOs;
 using frontend_manage.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
+using Microsoft.Extensions.Configuration;
 
 namespace frontend_manage.Pages.Exam.Components
 {
@@ -18,17 +19,41 @@ namespace frontend_manage.Pages.Exam.Components
         [Parameter] public int? SelectedAnswerId { get; set; }
         [Parameter] public Func<int, int?>? SelectedAnswerProvider { get; set; }
         [Parameter] public Func<int, string?>? LabelProvider { get; set; }
+        [Parameter] public int? StudentExamSessionId { get; set; }
+        [Parameter] public int? QuestionId { get; set; }
 
         [Inject] private IKaTeXService KaTeX { get; set; } = default!;
+        [Inject] private IExamRenderingService ExamRenderingService { get; set; } = default!;
 
         // Dùng HttpClient để lấy BaseAddress backend (đã cấu hình qua ApiBaseUrl)
         [Inject] private HttpClient HttpClient { get; set; } = default!;
+        [Inject] private IConfiguration Configuration { get; set; } = default!;
 
         private ElementReference _root;
 
         protected override async Task OnAfterRenderAsync(bool firstRender)
         {
-            await KaTeX.RenderAsync(".katex-content");
+            // Render KaTeX cho tất cả elements có class katex-content trong component này
+            // KaTeX sẽ tự động xử lý [latex]...[/latex] tags thông qua katexInterop.js
+            try
+            {
+                if (firstRender)
+                {
+                    // Sử dụng RenderWithRetryAsync để đảm bảo KaTeX đã sẵn sàng
+                    // Truyền _root để chỉ render trong phạm vi component này
+                    await KaTeX.RenderElementAsync(new ElementReferenceWrapper(_root));
+                }
+                else
+                {
+                    // Re-render khi content thay đổi, chỉ trong phạm vi component này
+                    await KaTeX.RenderElementAsync(new ElementReferenceWrapper(_root));
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log error nhưng không throw để không làm gián đoạn UI
+                System.Diagnostics.Debug.WriteLine($"Error rendering KaTeX: {ex.Message}");
+            }
         }
 
         protected override void OnParametersSet()
@@ -40,80 +65,49 @@ namespace frontend_manage.Pages.Exam.Components
             }
         }
 
-        protected bool IsMatching(QuestionStructureDto q)
-        {
-            return (q.QuestionContent ?? string.Empty).Contains("[matching]", StringComparison.OrdinalIgnoreCase);
-        }
-
         protected string NormalizeLatex(string? content)
         {
             if (string.IsNullOrWhiteSpace(content)) return string.Empty;
 
-            // 1. Bỏ các marker {<number>}
-            var cleaned = Regex.Replace(
-                content,
-                @"\{<\d+>\}",
-                string.Empty
-            );
-
-            // 2. Xử lý <audio>...</audio> → thêm controls + src trỏ về file mp3 trên backend
-            cleaned = Regex.Replace(
-                cleaned,
-                @"<audio>(.*?)</audio>",
-                match =>
-                {
-                    var inner = match.Groups[1].Value.Trim();
-                    if (string.IsNullOrEmpty(inner))
-                        return match.Value;
-
-                    // Chuẩn hóa path (giữ cả thư mục con)
-                    var normalized = inner.Replace("\\", "/").TrimStart('/');
-
-                    // Nếu format là audio/ENGx.mp3 thì map về Data/Audio/ENGx.mp3
-                    if (normalized.StartsWith("audio/", StringComparison.OrdinalIgnoreCase))
-                    {
-                        normalized = "Data/Audio/" + normalized.Substring("audio/".Length);
-                    }
-
-                    var relativePath = normalized;
-                    if (string.IsNullOrEmpty(relativePath))
-                        return match.Value;
-
-                    var audioUrl = GetAudioPath(relativePath);
-                    if (string.IsNullOrEmpty(audioUrl))
-                        return match.Value;
-
-                    return $"<audio controls src=\"{audioUrl}\"></audio>";
-                },
-                RegexOptions.IgnoreCase | RegexOptions.Singleline
-            );
-
-            return cleaned;
-        }
-
-        private string GetAudioPath(string audioFileName)
-        {
-            if (Question == null || string.IsNullOrEmpty(audioFileName))
-                return string.Empty;
-
-            // Lấy folder từ ShuffledExamPaperCore của đề đang thi (truyền từ trên xuống)
-            var core = ShuffledExamPaperCore ?? string.Empty;
-            if (string.IsNullOrEmpty(core))
-                return string.Empty;
-
-            var folderName = core.Split('_')[0];
-
-            // Lấy base address từ HttpClient (backend), đã cấu hình từ ApiBaseUrl trong Program.cs
-            var baseAddr = (HttpClient.BaseAddress?.ToString() ?? string.Empty).TrimEnd('/');
-            if (string.IsNullOrEmpty(baseAddr))
-                return string.Empty;
-
-            return $"{baseAddr}/EPZ/{folderName}/{audioFileName}";
+            // Sử dụng ExamRenderingService để normalize và render content
+            return ExamRenderingService.NormalizeAndRenderContent(content, ShuffledExamPaperCore);
         }
 
         protected bool IsGroupParent(QuestionStructureDto q)
         {
             return q.ChildQuestions != null && q.ChildQuestions.Count > 0;
+        }
+
+        /// <summary>
+        /// Kiểm tra xem đây có phải là group question (câu hỏi nhóm) không
+        /// Group question có pattern {<1>} — {<3>} trong nội dung
+        /// </summary>
+        protected bool IsGroupQuestion(QuestionStructureDto q)
+        {
+            if (q.ChildQuestions == null || q.ChildQuestions.Count == 0)
+                return false;
+
+            // Kiểm tra pattern {<...>} trong nội dung parent question
+            // Pattern có thể là: {<1>} — {<3>} hoặc {<1>} - {<3>} hoặc {<1>}—{<3>}
+            var stem = q.QuestionContent ?? string.Empty;
+            
+            // Kiểm tra nhiều pattern khác nhau cho group question
+            var patterns = new[]
+            {
+                @"\{<\d+>\}.*?\{<\d+>\}",  // {<1>} ... {<3>}
+                @"\{&lt;\d+&gt;\}.*?\{&lt;\d+&gt;\}",  // HTML encoded: {&lt;1&gt;} ... {&lt;3&gt;}
+                @"\{&lt;\d+&gt;\}.*?—.*?\{&lt;\d+&gt;\}",  // HTML encoded với dấu gạch ngang
+            };
+            
+            foreach (var pattern in patterns)
+            {
+                if (Regex.IsMatch(stem, pattern, RegexOptions.IgnoreCase))
+                {
+                    return true;
+                }
+            }
+            
+            return false;
         }
 
         protected int? _selectedSingle;
@@ -122,11 +116,6 @@ namespace frontend_manage.Pages.Exam.Components
         {
             _selectedSingle = answerId;
             return OnAnswered.InvokeAsync((questionId, (object?)answerId));
-        }
-
-        protected Task SelectMatching(int questionId, int leftAnswerId, string rightAnswerId)
-        {
-            return OnAnswered.InvokeAsync((questionId, new { left = leftAnswerId, right = rightAnswerId }));
         }
 
         protected Task OnOptionKeyDown(KeyboardEventArgs e, int questionId, int answerId)
@@ -139,5 +128,4 @@ namespace frontend_manage.Pages.Exam.Components
         }
     }
 }
-
 

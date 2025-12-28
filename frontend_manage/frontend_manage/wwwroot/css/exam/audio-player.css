@@ -1,0 +1,85 @@
+/* Audio player container với badge hiển thị số lần nghe */
+.audio-player-container {
+    position: relative !important;
+    display: inline-block !important;
+    margin: 0.5rem 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
+.audio-player-container audio {
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
+/* Overlay để chặn tương tác với timeline - chỉ cho phép play/pause */
+.audio-timeline-overlay {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    height: 100% !important;
+    background: transparent !important;
+    pointer-events: none !important;
+    z-index: 9999 !important;
+}
+
+/* Chặn phần timeline (bỏ qua phần play/pause button và volume) - chỉ chặn tua ngược */
+.audio-timeline-overlay::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 50px !important; /* Bỏ qua phần play/pause button (khoảng 50px) */
+    right: 120px !important; /* Bỏ qua phần volume controls (khoảng 120px) */
+    height: 100% !important;
+    background: transparent !important; /* Trong suốt để không che timeline */
+    pointer-events: none !important; /* Không chặn tương tác, để JavaScript xử lý */
+    cursor: default !important;
+    z-index: 10000 !important;
+}
+
+
+.audio-play-count-badge {
+    position: absolute !important;
+    top: -10px !important;
+    right: -5px !important;
+    background: #1976d2 !important;
+    color: white !important;
+    border-radius: 12px !important;
+    padding: 3px 10px !important;
+    font-size: 13px !important;
+    font-weight: bold !important;
+    z-index: 10000 !important;
+    min-width: 55px !important;
+    text-align: center !important;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3) !important;
+    white-space: nowrap !important;
+    pointer-events: none !important;
+    user-select: none !important;
+    line-height: 1.4 !important;
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+.audio-play-count-badge[data-remaining="0"] {
+    background: #d32f2f !important;
+}
+
+.audio-play-count-badge[data-remaining="1"] {
+    background: #f57c00 !important;
+}
+
+/* Đảm bảo badge hiển thị trên audio controls */
+.exam-audio-player {
+    position: relative;
+}
+
+/* Đảm bảo container có position relative để badge absolute hoạt động */
+.katex-content .audio-player-container,
+.question-inline .audio-player-container,
+.question-title .audio-player-container {
+    position: relative !important;
+    display: inline-block !important;
+}
+

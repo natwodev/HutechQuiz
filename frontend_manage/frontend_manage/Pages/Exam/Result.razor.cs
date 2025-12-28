@@ -50,6 +50,7 @@ public partial class Result : ComponentBase, IDisposable
             else
             {
                 _loadedSessionId = StudentExamSessionId.Value;
+                System.Diagnostics.Debug.WriteLine($"[OnInitializedAsync] Submission loaded. Score: {_submission.Score}, HasValue: {_submission.Score.HasValue}");
                 BuildAnswerComparisons();
             }
 
@@ -117,6 +118,7 @@ public partial class Result : ComponentBase, IDisposable
         {
             _submission = result;
             _loadedSessionId = sessionId;
+            System.Diagnostics.Debug.WriteLine($"[LoadSubmissionAsync] Submission loaded. Score: {_submission.Score}, HasValue: {_submission.Score.HasValue}, CorrectAnswers: {_submission.CorrectAnswers}, TotalQuestions: {_submission.TotalQuestions}");
             BuildAnswerComparisons();
 
             // Tham gia group theo mã sinh viên để nhận điểm đẩy về
@@ -141,12 +143,12 @@ public partial class Result : ComponentBase, IDisposable
     }
 
     private string ScoreDisplay =>
-        _submission?.Score.HasValue == true
-            ? $"{_submission.Score:0.##}"
+        _submission != null && _submission.Score.HasValue
+            ? $"{_submission.Score.Value:F2}"
             : "Chưa có điểm";
 
     private string ScoreSvgDataUri => BuildScoreSvgDataUri(
-        _submission?.Score ?? 0);
+        _submission != null && _submission.Score.HasValue ? _submission.Score.Value : 0);
 
     private static string FormatDate(DateTime? value) =>
         value?.ToString("HH:mm dd/MM/yyyy") ?? "Không có";
@@ -178,12 +180,33 @@ public partial class Result : ComponentBase, IDisposable
             return;
         }
 
+        // Debug: Log raw strings
+        System.Diagnostics.Debug.WriteLine($"[BuildAnswerComparisons] StudentAnswersString: {_submission.StudentAnswersString}");
+        System.Diagnostics.Debug.WriteLine($"[BuildAnswerComparisons] AnswerKey: {_submission.AnswerKey}");
+
         var studentAnswers = ParseAnswerString(_submission.StudentAnswersString);
         var correctAnswers = ParseAnswerString(_submission.AnswerKey);
 
+        // Debug: Log parsed dictionaries
+        System.Diagnostics.Debug.WriteLine($"[BuildAnswerComparisons] Parsed student answers count: {studentAnswers.Count}");
+        foreach (var kvp in studentAnswers)
+        {
+            System.Diagnostics.Debug.WriteLine($"[BuildAnswerComparisons] Student Q{kvp.Key}: {kvp.Value ?? "null"}");
+        }
+        System.Diagnostics.Debug.WriteLine($"[BuildAnswerComparisons] Parsed correct answers count: {correctAnswers.Count}");
+        foreach (var kvp in correctAnswers)
+        {
+            System.Diagnostics.Debug.WriteLine($"[BuildAnswerComparisons] Correct Q{kvp.Key}: {kvp.Value ?? "null"}");
+        }
+
+        // Lấy tất cả question IDs từ cả student answers và correct answers
+        // Đảm bảo không bỏ sót câu hỏi nào
         var allQuestionIds = studentAnswers.Keys
             .Union(correctAnswers.Keys)
-            .OrderBy(id => id);
+            .OrderBy(id => id)
+            .ToList();
+
+        System.Diagnostics.Debug.WriteLine($"[BuildAnswerComparisons] Total unique question IDs: {allQuestionIds.Count}");
 
         var list = new List<AnswerComparison>();
         foreach (var questionId in allQuestionIds)
@@ -193,12 +216,31 @@ public partial class Result : ComponentBase, IDisposable
 
             var state = DetermineState(studentAnswer, correctAnswer);
             list.Add(new AnswerComparison(questionId, studentAnswer, correctAnswer, state));
+            
+            System.Diagnostics.Debug.WriteLine($"[BuildAnswerComparisons] Q{questionId}: Student={studentAnswer ?? "null"}, Correct={correctAnswer ?? "null"}, State={state}");
         }
 
         _answerComparisons = list;
+        
+        // Đếm lại thống kê từ danh sách comparisons
         _correctCount = list.Count(a => a.State == AnswerState.Correct);
         _incorrectCount = list.Count(a => a.State == AnswerState.Incorrect);
         _unansweredCount = list.Count(a => a.State == AnswerState.Unanswered);
+        
+        System.Diagnostics.Debug.WriteLine($"[BuildAnswerComparisons] Summary: Correct={_correctCount}, Incorrect={_incorrectCount}, Unanswered={_unansweredCount}");
+        
+        // Đảm bảo tổng số câu hỏi khớp với TotalQuestions nếu có
+        var totalFromComparisons = _correctCount + _incorrectCount + _unansweredCount;
+        if (_submission.TotalQuestions.HasValue && 
+            totalFromComparisons != _submission.TotalQuestions.Value &&
+            _submission.TotalQuestions.Value > 0)
+        {
+            // Nếu số lượng không khớp, có thể có câu hỏi chưa được parse
+            // Log warning hoặc điều chỉnh (tùy yêu cầu)
+            System.Diagnostics.Debug.WriteLine(
+                $"Warning: Total questions mismatch. Expected: {_submission.TotalQuestions.Value}, " +
+                $"Found in comparisons: {totalFromComparisons}");
+        }
     }
 
     private void ResetSummaryCounts()
@@ -213,51 +255,100 @@ public partial class Result : ComponentBase, IDisposable
         var result = new Dictionary<int, string?>();
         if (string.IsNullOrWhiteSpace(answers))
         {
+            System.Diagnostics.Debug.WriteLine("[ParseAnswerString] Input is null or empty");
             return result;
         }
 
+        System.Diagnostics.Debug.WriteLine($"[ParseAnswerString] Parsing: {answers}");
+
+        // Format backend: "(key:value);(key:value);..."
+        // Backend parse: Split by ';', trim '()', split by ':', lưu Dictionary<string, string>
         var pairs = answers.Split(';', StringSplitOptions.RemoveEmptyEntries);
+        System.Diagnostics.Debug.WriteLine($"[ParseAnswerString] Found {pairs.Length} segments after splitting by ';'");
+        
         foreach (var rawPair in pairs)
         {
             var trimmed = rawPair.Trim();
-            if (trimmed.StartsWith("(") && trimmed.EndsWith(")"))
+            if (string.IsNullOrWhiteSpace(trimmed))
             {
-                trimmed = trimmed[1..^1];
+                continue;
             }
 
+            // Bỏ ngoặc tròn nếu có (giống backend: Trim('(', ')'))
+            if (trimmed.StartsWith("(") && trimmed.EndsWith(")"))
+            {
+                trimmed = trimmed[1..^1].Trim();
+            }
+
+            // Split by ':' (giống backend: Split(':', 2))
             var segments = trimmed.Split(':', 2, StringSplitOptions.TrimEntries);
             if (segments.Length != 2)
             {
+                System.Diagnostics.Debug.WriteLine($"[ParseAnswerString] Skipping invalid segment: {trimmed}");
                 continue;
             }
 
+            // Parse questionId (key) - backend lưu string nhưng frontend cần int
             if (!int.TryParse(segments[0], out var questionId))
             {
+                System.Diagnostics.Debug.WriteLine($"[ParseAnswerString] Failed to parse questionId from: {segments[0]}");
                 continue;
             }
 
+            // Lấy value (backend lưu string, giữ nguyên)
             var value = segments[1];
-            result[questionId] = string.IsNullOrWhiteSpace(value) || value == "-"
-                ? null
-                : value;
+            
+            // Backend kiểm tra: string.IsNullOrWhiteSpace(value) || value == "-"
+            if (string.IsNullOrWhiteSpace(value) || value == "-")
+            {
+                // Backend không lưu vào dict nếu empty hoặc "-", nhưng frontend cần biết là null
+                if (!result.ContainsKey(questionId))
+                {
+                    result[questionId] = null;
+                }
+                System.Diagnostics.Debug.WriteLine($"[ParseAnswerString] Q{questionId}: null (empty or '-')");
+            }
+            else
+            {
+                // Backend ghi đè value mới (answersDict[key] = value)
+                result[questionId] = value;
+                System.Diagnostics.Debug.WriteLine($"[ParseAnswerString] Q{questionId}: {value}");
+            }
         }
 
+        System.Diagnostics.Debug.WriteLine($"[ParseAnswerString] Parsed {result.Count} answers");
         return result;
     }
 
     private static AnswerState DetermineState(string? studentAnswer, string? correctAnswer)
     {
-        if (string.IsNullOrEmpty(studentAnswer))
+        // Backend logic: 
+        // if (string.IsNullOrWhiteSpace(studentAnswer) || studentAnswer == "-") => không đếm
+        // if (studentAnswer == correctAnswer) => correct
+        
+        // Nếu học sinh chưa trả lời (giống backend check)
+        if (string.IsNullOrWhiteSpace(studentAnswer) || studentAnswer == "-")
         {
+            System.Diagnostics.Debug.WriteLine($"[DetermineState] Unanswered: studentAnswer is null/empty or '-'");
             return AnswerState.Unanswered;
         }
 
-        if (!string.IsNullOrEmpty(correctAnswer) &&
-            string.Equals(studentAnswer, correctAnswer, StringComparison.OrdinalIgnoreCase))
+        // Nếu không có đáp án đúng để so sánh
+        if (string.IsNullOrWhiteSpace(correctAnswer) || correctAnswer == "-")
         {
+            System.Diagnostics.Debug.WriteLine($"[DetermineState] Unanswered: correctAnswer is null/empty or '-', but student answered: {studentAnswer}");
+            return AnswerState.Unanswered;
+        }
+
+        // Backend so sánh: studentAnswer == correctAnswer (string comparison, exact match)
+        // Không trim, không case-insensitive, so sánh trực tiếp
+        if (studentAnswer == correctAnswer)
+        {
+            System.Diagnostics.Debug.WriteLine($"[DetermineState] Correct: '{studentAnswer}' == '{correctAnswer}'");
             return AnswerState.Correct;
         }
 
+        System.Diagnostics.Debug.WriteLine($"[DetermineState] Incorrect: '{studentAnswer}' != '{correctAnswer}'");
         return AnswerState.Incorrect;
     }
 
@@ -279,6 +370,54 @@ public partial class Result : ComponentBase, IDisposable
 
     private static string FormatAnswerValue(string? value) => value ?? "-";
 
+    // Helper methods cho UI mới
+    private string GetScoreClass()
+    {
+        if (_submission?.Score == null) return "score-none";
+        var score = _submission.Score.Value;
+        if (score >= 8.0) return "score-excellent";
+        if (score >= 6.5) return "score-good";
+        if (score >= 5.0) return "score-pass";
+        return "score-fail";
+    }
+
+    private static string GetAnswerClass(AnswerState state) =>
+        state switch
+        {
+            AnswerState.Correct => "correct",
+            AnswerState.Incorrect => "incorrect",
+            _ => "skipped"
+        };
+
+    private static string GetTooltipText(AnswerComparison answer, int index)
+    {
+        var stateText = answer.State switch
+        {
+            AnswerState.Correct => "✓ Đúng",
+            AnswerState.Incorrect => "✗ Sai",
+            _ => "○ Chưa trả lời"
+        };
+        return $"Câu {index}: {stateText}";
+    }
+
+    private string GetScoreProgress()
+    {
+        if (_submission?.Score == null) return "0";
+        var score = _submission.Score.Value;
+        var progress = (score / 10.0) * 283; // 283 is circumference of circle with r=45
+        return progress.ToString("F0", System.Globalization.CultureInfo.InvariantCulture);
+    }
+
+    private string GetResultMessage()
+    {
+        if (_submission?.Score == null) return "Chưa có điểm";
+        var score = _submission.Score.Value;
+        if (score >= 8.0) return "Xuất sắc! 🎉";
+        if (score >= 6.5) return "Tốt lắm! 👍";
+        if (score >= 5.0) return "Đạt yêu cầu ✓";
+        return "Cần cố gắng hơn";
+    }
+
     private enum AnswerState
     {
         Correct,
@@ -294,10 +433,10 @@ public partial class Result : ComponentBase, IDisposable
         {
             if (data is JsonElement json)
             {
-                // Chỉ cập nhật điểm số và số câu đúng từ payload
-                // Không cập nhật studentAnswersString, answerKey để tránh làm sai thống kê
+                // Khởi tạo _submission nếu chưa có
                 _submission ??= new ExamSubmissionDto();
                 
+                // Cập nhật các thông tin cơ bản
                 if (json.TryGetProperty("score", out var pScore))
                     _submission.Score = pScore.GetDouble();
                 if (json.TryGetProperty("correctAnswers", out var pCorrect))
@@ -305,14 +444,35 @@ public partial class Result : ComponentBase, IDisposable
                 if (json.TryGetProperty("totalQuestions", out var pTotal))
                     _submission.TotalQuestions = pTotal.GetInt32();
 
-                // Không gọi BuildAnswerComparisons() để giữ nguyên thống kê hiện tại
-                // Chỉ cập nhật điểm số và số câu đúng
+                // Cập nhật thời gian
+                if (json.TryGetProperty("startTime", out var pStart) && pStart.ValueKind != JsonValueKind.Null)
+                {
+                    if (pStart.TryGetDateTime(out var start))
+                        _submission.StartTime = start;
+                }
+
+                if (json.TryGetProperty("endTime", out var pEnd) && pEnd.ValueKind != JsonValueKind.Null)
+                {
+                    if (pEnd.TryGetDateTime(out var end))
+                        _submission.EndTime = end;
+                }
+
+                // Cập nhật đáp án để BuildAnswerComparisons có dữ liệu mới nhất
+                if (json.TryGetProperty("studentAnswersString", out var pStudentAnswers) && pStudentAnswers.ValueKind != JsonValueKind.Null)
+                    _submission.StudentAnswersString = pStudentAnswers.GetString();
+                
+                if (json.TryGetProperty("answerKey", out var pAnswerKey) && pAnswerKey.ValueKind != JsonValueKind.Null)
+                    _submission.AnswerKey = pAnswerKey.GetString();
+
+                // Build lại comparisons để cập nhật các chấm tròn và thống kê chi tiết
+                BuildAnswerComparisons();
 
                 InvokeAsync(StateHasChanged);
             }
         }
-        catch
+        catch (Exception ex)
         {
+            System.Diagnostics.Debug.WriteLine($"[HandleExamScoreReceived] Error: {ex.Message}");
             // bỏ qua lỗi parse, không làm gián đoạn UI
         }
     }

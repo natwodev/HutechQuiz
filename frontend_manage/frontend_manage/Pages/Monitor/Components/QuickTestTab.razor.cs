@@ -4,6 +4,7 @@ using frontend_manage.Services;
 using frontend_manage.DTOs;
 using frontend_manage.Services.ExamManager;
 using System.Linq;
+using Microsoft.JSInterop;
 
 namespace frontend_manage.Pages.Monitor.Components;
 
@@ -18,6 +19,10 @@ public partial class QuickTestTab : ComponentBase
     [Inject] private IKaTeXService KaTeX { get; set; } = default!;
 
     [Inject] private IQrCodeService QRCodeService { get; set; } = default!;
+
+    [Inject] private IExamRenderingService ExamRenderingService { get; set; } = default!;
+
+    [Inject] private IJSRuntime JS { get; set; } = default!;
 
     [Parameter] public SubjectExamRoomStatusDto? Subject { get; set; }
 
@@ -123,6 +128,7 @@ public partial class QuickTestTab : ComponentBase
         if (Exam != null)
         {
             await KaTeX.RenderAsync(".katex-content");
+            await JS.InvokeVoidAsync("replaceAudioWithCustomControls");
         }
     }
 
@@ -130,13 +136,9 @@ public partial class QuickTestTab : ComponentBase
     {
         if (string.IsNullOrEmpty(content))
             return string.Empty;
-        
-        // Loại bỏ các ký tự {<number>} khỏi nội dung
-        return System.Text.RegularExpressions.Regex.Replace(
-            content, 
-            @"\{<\d+>\}", 
-            string.Empty
-        );
+
+        // Sử dụng ExamRenderingService để normalize và render content (bao gồm latex, audio, image)
+        return ExamRenderingService.NormalizeAndRenderContent(content, null, Exam?.OriginalExamPaperCore);
     }
     
     private char GetLetter(int order) => (char)('A' + Math.Max(0, order - 1));

@@ -1,5 +1,6 @@
 using frontend_manage.DTOs;
 using Microsoft.AspNetCore.SignalR.Client;
+using Microsoft.Extensions.Configuration;
 
 namespace frontend_manage.Services;
 
@@ -7,6 +8,7 @@ namespace frontend_manage.Services;
 public class NotificationService
 {
     private HubConnection? _hubConnection;
+    private readonly IConfiguration _configuration;
 
     public event Action<string, DateTime>? OnExamReminderReceived;
     public event Action<StudentListResponse>? OnRoomStatusUpdated;
@@ -14,13 +16,20 @@ public class NotificationService
     public event Action<object>? OnUserDisconnected;
     public event Action<object>? OnExamScoreReceived;
     public event Action<bool>? OnConnectionStateChanged;
+    public event Action<object>? OnStudentActivityDetected;
 
     private readonly HashSet<int> _joinedGroups = new(); // để rejoin khi reconnect
 
+    public NotificationService(IConfiguration configuration)
+    {
+        _configuration = configuration;
+    }
+
     public async Task StartAsync()
     {
+        var apiBaseUrl = GetApiBaseUrl();
         _hubConnection = new HubConnectionBuilder()
-            .WithUrl("http://0.0.0.0:5163/notificationHub")
+            .WithUrl($"{apiBaseUrl}/notificationHub")
             .WithAutomaticReconnect()
             .Build();
 
@@ -51,6 +60,10 @@ public class NotificationService
             OnExamScoreReceived?.Invoke(data);
         });
         
+        _hubConnection.On<object>("StudentActivityDetected", (data) =>
+        {
+            OnStudentActivityDetected?.Invoke(data);
+        });
         
         // Theo dõi trạng thái kết nối
         _hubConnection.Closed += async (error) =>
@@ -152,5 +165,12 @@ public class NotificationService
             await _hubConnection.DisposeAsync();
             _hubConnection = null;
         }
+    }
+
+    private string GetApiBaseUrl()
+    {
+        var apiBaseUrl = _configuration["ApiBaseUrl"] ?? throw new InvalidOperationException(
+            "ApiBaseUrl chưa được cấu hình trong appsettings.json");
+        return apiBaseUrl.TrimEnd('/');
     }
 }
