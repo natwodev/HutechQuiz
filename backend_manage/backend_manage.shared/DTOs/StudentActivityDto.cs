@@ -10,5 +10,6 @@ public class StudentActivityDto
     public string? Metadata { get; set; }
     public DateTime ActivityTime { get; set; }
     public string? StudentName { get; set; }
+    public int CheatingWarningCount { get; set; }
 }
 
