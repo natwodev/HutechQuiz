@@ -25,7 +25,15 @@ namespace backend_manage.core.Services.AuthService
         private readonly IRepository<Student> _studentRepository;
         private readonly IRepository<StudentExamSession> _studentExamSessionRepository;
         private readonly StudentCacheHelper _studentCacheHelper;
+        private readonly IRepository<StudentActivity> _activityRepository;
         private readonly ILogger<ExamSessionSubjectService> _logger;
+        
+        private static readonly HashSet<string> _violationTypes = new()
+        {
+            "TabSwitch", "FullscreenExit", "Copy", "Paste", 
+            "RightClick", "DevTools", "Screenshot",
+            "AppBackground", "AppSwitch"
+        };
         
         public ExamSessionSubjectService(
             IRepository<ExamSessionSubject> repository,
@@ -39,6 +47,7 @@ namespace backend_manage.core.Services.AuthService
             IRepository<Student> studentRepository,
             IRepository<StudentExamSession> studentExamSessionRepository,
             StudentCacheHelper studentCacheHelper,
+            IRepository<StudentActivity> activityRepository,
             ILogger<ExamSessionSubjectService> logger
             )
         {
@@ -53,6 +62,7 @@ namespace backend_manage.core.Services.AuthService
             _studentRepository = studentRepository;
             _studentExamSessionRepository = studentExamSessionRepository;
             _studentCacheHelper = studentCacheHelper;
+            _activityRepository = activityRepository;
             _logger = logger;
         }
 
@@ -323,7 +333,30 @@ namespace backend_manage.core.Services.AuthService
 
             // Map sang DTO sử dụng AutoMapper
             var subjectExamRoomStatusDto = _mapper.Map<SubjectExamRoomStatusDto>(examSessionSubject);
-            var studentDtos = _mapper.Map<IEnumerable<StudentExamRoomStatusDto>>(examSessionSubject.StudentExamSessions);
+            
+            var sessionIds = examSessionSubject.StudentExamSessions.Select(s => s.StudentExamSessionId).ToList();
+
+            // Lấy danh sách hành động vi phạm cho tất cả sinh viên trong ca thi
+            var activities = await _activityRepository.GetQueryable()
+                .Where(a => sessionIds.Contains(a.StudentExamSessionId) && _violationTypes.Contains(a.ActivityType))
+                .ToListAsync();
+
+            var studentDtos = examSessionSubject.StudentExamSessions.Select(x => {
+                var dto = _mapper.Map<StudentExamRoomStatusDto>(x);
+                
+                // Lọc các activity của sinh viên này
+                var studentActivities = activities
+                    .Where(a => a.StudentExamSessionId == x.StudentExamSessionId)
+                    .OrderByDescending(a => a.ActivityTime)
+                    .ToList();
+                    
+                dto.CheatingWarningCount = studentActivities.Count;
+                dto.CheatingWarningDetails = studentActivities
+                    .Select(a => $"{a.ActivityTime:HH:mm:ss}: {a.Description ?? a.ActivityType}")
+                    .ToList();
+                    
+                return dto;
+            }).ToList();
 
             return (subjectExamRoomStatusDto, studentDtos);
         }
