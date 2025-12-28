@@ -18,6 +18,13 @@ public class StudentActivityService : IStudentActivityService
     private readonly IHubContext<NotificationHub> _hubContext;
     private readonly ILogger<StudentActivityService> _logger;
 
+    private static readonly HashSet<string> _violationTypes = new()
+    {
+        "TabSwitch", "FullscreenExit", "Copy", "Paste", 
+        "RightClick", "DevTools", "Screenshot",
+        "AppBackground", "AppSwitch"
+    };
+
     public StudentActivityService(
         IRepository<StudentActivity> activityRepository,
         IRepository<StudentExamSession> studentExamSessionRepository,
@@ -55,6 +62,10 @@ public class StudentActivityService : IStudentActivityService
 
         var savedActivity = await _activityRepository.AddAsync(activity);
 
+        // Đếm tổng số vi phạm hiện tại của sinh viên này trong phiên thi (chỉ đếm các loại vi phạm)
+        var cheatingCount = await _activityRepository.GetQueryable()
+            .CountAsync(a => a.StudentExamSessionId == dto.StudentExamSessionId && _violationTypes.Contains(a.ActivityType));
+
         // Gửi thông báo real-time qua SignalR cho giám thị
         if (session.ExamSessionSubjectId.HasValue)
         {
@@ -73,7 +84,8 @@ public class StudentActivityService : IStudentActivityService
                         studentName = studentName,
                         activityType = dto.ActivityType,
                         description = dto.Description,
-                        activityTime = savedActivity.ActivityTime
+                        activityTime = savedActivity.ActivityTime,
+                        cheatingWarningCount = cheatingCount // Gửi kèm tổng số để frontend cập nhật luôn
                     });
             }
             catch (Exception ex)
