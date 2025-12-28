@@ -503,7 +503,7 @@ window.getAudioRemainingCount = function(audioId) {
     return Math.max(0, MAX_PLAY_COUNT - currentCount);
 };
 
-function updateAudioButton(audioId) {
+window.updateAudioButton = function(audioId) {
     // Tìm audio element - thử nhiều cách
     let audio = document.getElementById(audioId);
     

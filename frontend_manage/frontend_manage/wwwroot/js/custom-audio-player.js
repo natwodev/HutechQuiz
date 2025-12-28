@@ -60,10 +60,10 @@ window.replaceAudioWithCustomControls = function() {
         
         // Thay thế audio element
         const container = audio.closest('.audio-player-container');
-        if (container) {
+        if (container && container.parentNode) {
             // Nếu có container bao quanh (từ ExamRenderingService), thay thế cả container
             container.parentNode.replaceChild(customControls, container);
-        } else {
+        } else if (audio.parentNode) {
             // Nếu không, chỉ thay thế thẻ audio
             audio.parentNode.replaceChild(customControls, audio);
         }
@@ -84,7 +84,7 @@ function initializeCustomAudioControls(audioId) {
     const volumeSlider = document.querySelector(`.audio-volume-slider[data-audio-id="${audioId}"]`);
     const badge = document.querySelector(`.custom-audio-play-count-badge[data-audio-id="${audioId}"]`);
     
-    if (!playButton || !timelineSlider || !timeDisplay) return;
+    if (!playButton || !timelineSlider || !timeDisplay || !volumeButton || !volumeSlider) return;
     
     let isPlaying = false;
     let isMuted = false;

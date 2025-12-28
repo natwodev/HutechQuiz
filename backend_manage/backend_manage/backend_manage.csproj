@@ -6,7 +6,10 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
         <DisableStaticWebAssetsCompression>true</DisableStaticWebAssetsCompression>
+        <EnableStaticWebAssetsCompression>false</EnableStaticWebAssetsCompression>
+        <ComputePrecompressedAssets>false</ComputePrecompressedAssets>
         <ErrorOnDuplicatePublishOutputFiles>false</ErrorOnDuplicatePublishOutputFiles>
+        <StaticWebAssetsEnabled>false</StaticWebAssetsEnabled>
     </PropertyGroup>
 
     <ItemGroup>
@@ -48,58 +51,8 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Content Remove="wwwroot\EPZ_DL\**" />
-      <None Include="wwwroot\EPZ_DL\**" />
-      <_ContentIncludedByDefault Remove="wwwroot\audio\helloim-going-to-talk-about-b1672025838.mp3" />
-      <_ContentIncludedByDefault Remove="wwwroot\audio\What_are_you_going_to_do.mp3" />
-      <_ContentIncludedByDefault Remove="wwwroot\css\admin\ManageExam.css" />
-      <_ContentIncludedByDefault Remove="wwwroot\css\admin\MessageBox.css" />
-      <_ContentIncludedByDefault Remove="wwwroot\css\admin\monitor\global.css" />
-      <_ContentIncludedByDefault Remove="wwwroot\css\admin\monitor\style.css" />
-      <_ContentIncludedByDefault Remove="wwwroot\css\admin\monitor\styleguide.css" />
-      <_ContentIncludedByDefault Remove="wwwroot\css\app.css" />
-      <_ContentIncludedByDefault Remove="wwwroot\css\exam\reset.css" />
-      <_ContentIncludedByDefault Remove="wwwroot\css\exam\style.css" />
-      <_ContentIncludedByDefault Remove="wwwroot\css\info\info.css" />
-      <_ContentIncludedByDefault Remove="wwwroot\css\login\login.css" />
-      <_ContentIncludedByDefault Remove="wwwroot\css\main_layout\notauthorize.css" />
-      <_ContentIncludedByDefault Remove="wwwroot\css\monitor.css" />
-      <_ContentIncludedByDefault Remove="wwwroot\css\Result\style.css" />
-      <_ContentIncludedByDefault Remove="wwwroot\jquery\jquery.min.js" />
-      <_ContentIncludedByDefault Remove="wwwroot\EPZ\CNPM003\9f92ab68-54e9-4efe-af23-6f7f59e68373\9f92ab68-54e9-4efe-af23-6f7f59e68373.xml" />
-      <_ContentIncludedByDefault Remove="wwwroot\EPZ\CNPM004\9f92ab68-54e9-4efe-af23-6f7f59e68373\9f92ab68-54e9-4efe-af23-6f7f59e68373.xml" />
-      <_ContentIncludedByDefault Remove="wwwroot\EPZ\CNPM002\9f92ab68-54e9-4efe-af23-6f7f59e68373\9f92ab68-54e9-4efe-af23-6f7f59e68373.xml" />
-      <_ContentIncludedByDefault Remove="wwwroot\EPZ\CNPMNN1\31371555-afe8-45ec-b629-7450801efba7\31371555-afe8-45ec-b629-7450801efba7.xml" />
-      <_ContentIncludedByDefault Remove="wwwroot\EPZ\CNPMNN1\31371555-afe8-45ec-b629-7450801efba7\Data\Audio\4ab18c17-8193-43ce-9b4a-5141ae1272ff.mp3" />
-      <_ContentIncludedByDefault Remove="wwwroot\EPZ\CNPMNN1\31371555-afe8-45ec-b629-7450801efba7\Data\Audio\6529febd-3097-4673-bb39-792b73ce8dc9.mp3" />
-      <_ContentIncludedByDefault Remove="wwwroot\EPZ\CNPMNN9\31371555-afe8-45ec-b629-7450801efba7\31371555-afe8-45ec-b629-7450801efba7.xml" />
-      <_ContentIncludedByDefault Remove="wwwroot\EPZ\CNPMNN9\31371555-afe8-45ec-b629-7450801efba7\Data\Audio\4ab18c17-8193-43ce-9b4a-5141ae1272ff.mp3" />
-      <_ContentIncludedByDefault Remove="wwwroot\EPZ\CNPMNN9\31371555-afe8-45ec-b629-7450801efba7\Data\Audio\6529febd-3097-4673-bb39-792b73ce8dc9.mp3" />
-      <_ContentIncludedByDefault Remove="wwwroot\EPZ\CNPMNN11\31371555-afe8-45ec-b629-7450801efba7\31371555-afe8-45ec-b629-7450801efba7.xml" />
-      <_ContentIncludedByDefault Remove="wwwroot\EPZ\CNPMNN11\31371555-afe8-45ec-b629-7450801efba7\Data\Audio\4ab18c17-8193-43ce-9b4a-5141ae1272ff.mp3" />
-      <_ContentIncludedByDefault Remove="wwwroot\EPZ\CNPMNN11\31371555-afe8-45ec-b629-7450801efba7\Data\Audio\6529febd-3097-4673-bb39-792b73ce8dc9.mp3" />
-      <_ContentIncludedByDefault Remove="wwwroot\EPZ\CNPMNN2\31371555-afe8-45ec-b629-7450801efba7\31371555-afe8-45ec-b629-7450801efba7.xml" />
-      <_ContentIncludedByDefault Remove="wwwroot\EPZ\CNPMNN2\31371555-afe8-45ec-b629-7450801efba7\Data\Audio\4ab18c17-8193-43ce-9b4a-5141ae1272ff.mp3" />
-      <_ContentIncludedByDefault Remove="wwwroot\EPZ\CNPMNN2\31371555-afe8-45ec-b629-7450801efba7\Data\Audio\6529febd-3097-4673-bb39-792b73ce8dc9.mp3" />
-      <_ContentIncludedByDefault Remove="wwwroot\EPZ\CNPMNN1\62b9864d-56c1-46ec-89c5-24d3021876fc\62b9864d-56c1-46ec-89c5-24d3021876fc.xml" />
-      <_ContentIncludedByDefault Remove="wwwroot\EPZ\CNPMNN1\62b9864d-56c1-46ec-89c5-24d3021876fc\Data\Audio\874ec53e-0423-488e-ad8a-66263a907bd5.mp3" />
-      <_ContentIncludedByDefault Remove="wwwroot\EPZ\CNPMNN1\62b9864d-56c1-46ec-89c5-24d3021876fc\Data\Audio\ea2ed0e6-d5d5-4532-aba8-ee940becfd87.mp3" />
-      <_ContentIncludedByDefault Remove="wwwroot\EPZ\CNPMNN1\a87e988f-b09f-47be-aacc-23fc887e93a7\a87e988f-b09f-47be-aacc-23fc887e93a7.xml" />
-      <_ContentIncludedByDefault Remove="wwwroot\EPZ\CNPMNN1\a87e988f-b09f-47be-aacc-23fc887e93a7\Data\Audio\69024ffe-d9d6-4308-a846-508ccd33e4b3.mp3" />
-      <_ContentIncludedByDefault Remove="wwwroot\EPZ\CNPMNN1\Data\Audio\69024ffe-d9d6-4308-a846-508ccd33e4b3.mp3" />
-      <_ContentIncludedByDefault Remove="wwwroot\EPZ\CNPMNN1\Data\Audio\874ec53e-0423-488e-ad8a-66263a907bd5.mp3" />
-      <_ContentIncludedByDefault Remove="wwwroot\EPZ\CNPMNN1\Data\Audio\ea2ed0e6-d5d5-4532-aba8-ee940becfd87.mp3" />
-      <_ContentIncludedByDefault Remove="wwwroot\EPZ\CNPMNN2\a87e988f-b09f-47be-aacc-23fc887e93a7\a87e988f-b09f-47be-aacc-23fc887e93a7.xml" />
-      <_ContentIncludedByDefault Remove="wwwroot\EPZ\CNPMNN2\a87e988f-b09f-47be-aacc-23fc887e93a7\Data\Audio\69024ffe-d9d6-4308-a846-508ccd33e4b3.mp3" />
-      <_ContentIncludedByDefault Remove="wwwroot\EPZ\CNPMNN2\62b9864d-56c1-46ec-89c5-24d3021876fc\62b9864d-56c1-46ec-89c5-24d3021876fc.xml" />
-      <_ContentIncludedByDefault Remove="wwwroot\EPZ\CNPMNN2\Data\Audio\874ec53e-0423-488e-ad8a-66263a907bd5.mp3" />
-      <_ContentIncludedByDefault Remove="wwwroot\EPZ\CNPMNN2\Data\Audio\ea2ed0e6-d5d5-4532-aba8-ee940becfd87.mp3" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <Folder Include="Logs\" />
-      <Folder Include="wwwroot\EPZ\" />
-      <Folder Include="wwwroot\Images\" />
+      <Content Remove="wwwroot\**" />
+      <None Include="wwwroot\**" />
     </ItemGroup>
 
     <ItemGroup>

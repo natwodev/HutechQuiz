@@ -118,10 +118,8 @@ public class ExamRenderingService : IExamRenderingService
                 }
 
                 // Escape HTML để tránh XSS nhưng giữ nguyên các ký tự LaTeX
-                var escaped = latexContent
-                    .Replace("&", "&amp;")
-                    .Replace("<", "&lt;")
-                    .Replace(">", "&gt;");
+                // Chú ý: Không escape các ký tự đặc biệt của LaTeX như \
+                var escaped = latexContent;
 
                 // Trả về với format [latex]...[/latex] để JavaScript katexInterop.js xử lý
                 // katexInterop.js sẽ convert thành <span class="katex-custom">\(...\)</span>
