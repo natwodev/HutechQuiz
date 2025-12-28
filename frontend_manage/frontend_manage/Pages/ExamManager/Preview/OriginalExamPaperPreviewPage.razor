@@ -1,7 +1,6 @@
 @page "/exammanager/preview/original"
 @using frontend_manage.DTOs
 @using frontend_manage.Pages.ExamManager.Components
-@using frontend_manage.Pages.Exam.Components
 @using frontend_manage.Pages.ExamManager.Preview.Components
 @using frontend_manage.Components.MonitorLayout
 @using System.Linq
@@ -10,6 +9,7 @@
 
 <link href="css/exammanager/preview-page.css" rel="stylesheet" />
 <link href="css/monitor/MonitorPage.css" rel="stylesheet" />
+<link href="css/exam/custom-audio-player.css" rel="stylesheet" />
 
 <div class="preview-page">
     <!-- Header -->
@@ -283,11 +283,9 @@
                 @for (int i = 0; i < flatQuestions.Count; i++)
                 {
                     var q = flatQuestions[i];
-                    // Xác định xem có phải là matching question không
-                    var isMatchingParent = IsMatchingParent(q);
-                    // Xác định xem có phải là parent question không (có child questions nhưng không phải matching)
-                    var isParentQuestion = q.ParentQuestionId == null && q.ChildQuestions != null && q.ChildQuestions.Count > 0 && !isMatchingParent;
-                    // Bỏ qua parent question thông thường ở đây (sẽ render riêng ở section group questions)
+                    // Xác định xem có phải là parent question không (có child questions)
+                    var isParentQuestion = q.ParentQuestionId == null && q.ChildQuestions != null && q.ChildQuestions.Count > 0;
+                    // Bỏ qua parent question ở đây (sẽ render riêng ở section group questions)
                     if (isParentQuestion)
                     {
                         continue;
@@ -409,16 +407,16 @@
                         else
                         {
                             <!-- Hiển thị câu hỏi -->
-                            <MudStack Spacing="2" Style="@(isMatchingParent ? "display: block !important;" : "")">
+                            <MudStack Spacing="2">
                                 <div class="preview-question-header">
                                     <div class="preview-question-number">
+                                        <span class="preview-question-title">
+                                            Câu hỏi
+                                        </span>
                                         @if (questionNumber.HasValue)
                                         {
                                             <span class="preview-question-number-chip">@questionNumber.Value</span>
                                         }
-                                        <span class="preview-question-title">
-                                            Câu hỏi
-                                        </span>
                                     </div>
                                     <MudMenu Icon="@Icons.Material.Filled.MoreVert" Size="Size.Small" Color="Color.Default">
                                         <MudMenuItem OnClick="() => OpenEditQuestion(q.OriginalExamPaperDetailId)">
@@ -435,22 +433,7 @@
                                     @((MarkupString)RenderHtml(q.QuestionContent))
                                 </div>
                                 
-                                @if (isMatchingParent)
-                                {
-                                    @* Render matching question với 2 cột và đường nối *@
-                                    var leftItems = GetMatchingLeftItems(q);
-                                    var rightItems = GetMatchingRightItems(q);
-                                    var correctPairs = GetMatchingCorrectPairs(q);
-                                    <div class="preview-matching-container">
-                                        <MatchingQuestion LeftItems="@leftItems" 
-                                                        RightItems="@rightItems" 
-                                                        OnPair="@((pair) => { })"
-                                                        OriginalExamPaperCore="@Exam?.OriginalExamPaperCore"
-                                                        IsPreviewMode="true"
-                                                        CorrectPairs="@correctPairs" />
-                                    </div>
-                                }
-                                else if (q.Answers != null && q.Answers.Count > 0)
+                                @if (q.Answers != null && q.Answers.Count > 0)
                                 {
                                     <div class="answers-preview">
                                         @foreach (var ans in q.Answers.OrderBy(a => a.Order))
@@ -473,7 +456,7 @@
                     </div>
                 }
                 
-                @* Render Group Questions (Parent-Child Questions không phải matching) *@
+                @* Render Group Questions (Parent-Child Questions) *@
                 @foreach (var groupParent in groupParents)
                 {
                     var parentNumber = GetGroupParentNumber(groupParent);

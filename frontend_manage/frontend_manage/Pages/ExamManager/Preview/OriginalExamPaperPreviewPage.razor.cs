@@ -4,6 +4,7 @@ using frontend_manage.DTOs.AcademicAffairs;
 using frontend_manage.Services.ExamManager;
 using frontend_manage.Services;
 using MudBlazor;
+using Microsoft.JSInterop;
 
 namespace frontend_manage.Pages.ExamManager.Preview
 {
@@ -24,6 +25,9 @@ namespace frontend_manage.Pages.ExamManager.Preview
 
         [Inject]
         private IExamRenderingService ExamRenderingService { get; set; } = null!;
+
+        [Inject]
+        private IJSRuntime JS { get; set; } = null!;
 
         private OriginalExamPaperDto? Exam;
         private bool isLoading = true;
@@ -91,8 +95,11 @@ namespace frontend_manage.Pages.ExamManager.Preview
                 else
                 {
                     // Re-render khi content thay đổi (ví dụ: sau khi load data, thêm/sửa câu hỏi)
-                await KaTeX.RenderAsync(".katex-content");
+                    await KaTeX.RenderAsync(".katex-content");
                 }
+
+                // Thay thế audio tags bằng custom controls
+                await JS.InvokeVoidAsync("replaceAudioWithCustomControls");
             }
             catch (Exception ex)
             {
@@ -135,7 +142,7 @@ namespace frontend_manage.Pages.ExamManager.Preview
         }
         
         /// <summary>
-        /// Lấy danh sách các parent questions không phải matching (câu hỏi nhóm)
+        /// Lấy danh sách các parent questions (câu hỏi nhóm)
         /// </summary>
         private List<OriginalExamPaperDetailDto> GetGroupParentQuestions()
         {
@@ -145,8 +152,7 @@ namespace frontend_manage.Pages.ExamManager.Preview
             return Exam.Details
                 .Where(q => q.ParentQuestionId == null 
                     && q.ChildQuestions != null 
-                    && q.ChildQuestions.Count > 0 
-                    && !IsMatchingParent(q))
+                    && q.ChildQuestions.Count > 0)
                 .OrderBy(q => q.Order)
                 .ToList();
         }
@@ -190,15 +196,9 @@ namespace frontend_manage.Pages.ExamManager.Preview
                     return number;
                 }
                 
-                var isMatching = IsMatchingParent(q);
-                var isGroupParent = q.ParentQuestionId == null && q.ChildQuestions != null && q.ChildQuestions.Count > 0 && !isMatching;
+                var isGroupParent = q.ParentQuestionId == null && q.ChildQuestions != null && q.ChildQuestions.Count > 0;
                 
-                if (isMatching)
-                {
-                    // Matching question: đếm như 1 câu hỏi
-                    number++;
-                }
-                else if (isGroupParent)
+                if (isGroupParent)
                 {
                     // Group question: parent đếm như 1 câu hỏi, child questions đếm tiếp
                     number++; // Đếm parent
@@ -238,176 +238,6 @@ namespace frontend_manage.Pages.ExamManager.Preview
             return (startNumber, endNumber);
         }
 
-        /// <summary>
-        /// Kiểm tra xem đây có phải là group question (câu hỏi nhóm) không
-        /// Group question có pattern {<1>} — {<3>} trong nội dung
-        /// </summary>
-        private bool IsGroupQuestion(OriginalExamPaperDetailDto q)
-        {
-            if (q.ChildQuestions == null || q.ChildQuestions.Count == 0)
-                return false;
-
-            // Kiểm tra pattern {<...>} trong nội dung parent question
-            // Pattern có thể là: {<1>} — {<3>} hoặc {<1>} - {<3>} hoặc {<1>}—{<3>}
-            var stem = q.QuestionContent ?? string.Empty;
-            
-            // Kiểm tra nhiều pattern khác nhau cho group question
-            var patterns = new[]
-            {
-                @"\{<\d+>\}.*?\{<\d+>\}",  // {<1>} ... {<3>}
-                @"\{&lt;\d+&gt;\}.*?\{&lt;\d+&gt;\}",  // HTML encoded: {&lt;1&gt;} ... {&lt;3&gt;}
-                @"\{&lt;\d+&gt;\}.*?—.*?\{&lt;\d+&gt;\}",  // HTML encoded với dấu gạch ngang
-            };
-            
-            foreach (var pattern in patterns)
-            {
-                if (System.Text.RegularExpressions.Regex.IsMatch(stem, pattern, System.Text.RegularExpressions.RegexOptions.IgnoreCase))
-                {
-                    return true;
-                }
-            }
-            
-            return false;
-        }
-
-        /// <summary>
-        /// Kiểm tra xem đây có phải là matching question dạng parent-child không
-        /// Matching question có đặc điểm:
-        /// 1. Parent question không có answers (chỉ có stem)
-        /// 2. Tất cả child questions có cùng số lượng answers
-        /// 3. Parent question có từ khóa về matching (Nối cột, nối, match)
-        /// 4. KHÔNG có pattern {<...>} (đó là group question)
-        /// </summary>
-        private bool IsMatchingParent(OriginalExamPaperDetailDto q)
-        {
-            if (q.ChildQuestions == null || q.ChildQuestions.Count == 0)
-                return false;
-
-            // QUAN TRỌNG: Kiểm tra group question TRƯỚC - nếu có pattern {<...>} thì chắc chắn không phải matching
-            if (IsGroupQuestion(q))
-                return false;
-
-            // Parent question không nên có answers (chỉ có stem)
-            if (q.Answers != null && q.Answers.Count > 0)
-                return false;
-
-            // Kiểm tra xem tất cả child questions có cùng số lượng answers không
-            var firstChild = q.ChildQuestions.FirstOrDefault();
-            if (firstChild == null || firstChild.Answers == null || firstChild.Answers.Count == 0)
-                return false;
-
-            var answerCount = firstChild.Answers.Count;
-            
-            // Tất cả child questions phải có cùng số lượng answers
-            if (q.ChildQuestions.Any(child => child.Answers == null || child.Answers.Count != answerCount))
-                return false;
-
-            // Kiểm tra thêm: parent question có stem chứa từ khóa về matching không
-            var stem = q.QuestionContent ?? string.Empty;
-            var hasMatchingKeywords = stem.Contains("Nối cột", StringComparison.OrdinalIgnoreCase) ||
-                                     stem.Contains("nối", StringComparison.OrdinalIgnoreCase) ||
-                                     stem.Contains("match", StringComparison.OrdinalIgnoreCase);
-
-            // CHỈ trả về true nếu CÓ từ khóa matching VÀ đáp ứng các điều kiện trên
-            // Không dựa vào pattern (số lượng child >= 2 và số lượng answers >= 2) vì group questions cũng có thể có pattern này
-            if (hasMatchingKeywords)
-            {
-                // Đảm bảo tất cả child questions đều là MCQ (có answers)
-                return q.ChildQuestions.All(child => 
-                    child.Answers != null && 
-                    child.Answers.Count > 0 &&
-                    child.Answers.Count == answerCount);
-            }
-
-            return false;
-        }
-
-        /// <summary>
-        /// Lấy left items cho matching question (từ child questions)
-        /// </summary>
-        private List<AnswerStructureDto> GetMatchingLeftItems(OriginalExamPaperDetailDto parent)
-        {
-            var leftItems = new List<AnswerStructureDto>();
-            
-            if (parent.ChildQuestions == null)
-                return leftItems;
-
-            foreach (var child in parent.ChildQuestions.OrderBy(c => c.Order))
-                    {
-                // Tạo AnswerStructureDto từ child question stem
-                leftItems.Add(new AnswerStructureDto
-                {
-                    AnswerId = child.OriginalExamPaperDetailId, // Dùng question ID làm AnswerId
-                    AnswerContent = child.QuestionContent ?? string.Empty,
-                    Order = child.Order,
-                    OriginalExamPaperDetailId = child.OriginalExamPaperDetailId
-                });
-                    }
-
-            return leftItems;
-        }
-
-        /// <summary>
-        /// Lấy right items cho matching question (từ answers của child đầu tiên)
-        /// </summary>
-        private List<AnswerStructureDto> GetMatchingRightItems(OriginalExamPaperDetailDto parent)
-        {
-            if (parent.ChildQuestions == null || parent.ChildQuestions.Count == 0)
-                return new List<AnswerStructureDto>();
-
-            var firstChild = parent.ChildQuestions.OrderBy(c => c.Order).First();
-            if (firstChild.Answers == null)
-                return new List<AnswerStructureDto>();
-
-            // Trả về answers từ child đầu tiên (tất cả child đều có cùng answers)
-            return firstChild.Answers
-                .OrderBy(a => a.Order)
-                .Select(a => new AnswerStructureDto
-                {
-                    AnswerId = a.AnswerId,
-                    AnswerContent = a.AnswerContent,
-                    Order = a.Order,
-                    OriginalExamPaperDetailId = a.OriginalExamPaperDetailId
-                })
-                .ToList();
-        }
-
-        /// <summary>
-        /// Lấy đáp án đúng cho matching question (Dictionary<leftQuestionId, rightAnswerId>)
-        /// </summary>
-        private Dictionary<int, int> GetMatchingCorrectPairs(OriginalExamPaperDetailDto parent)
-        {
-            var correctPairs = new Dictionary<int, int>();
-            
-            if (parent.ChildQuestions == null || parent.ChildQuestions.Count == 0)
-                return correctPairs;
-
-            var firstChild = parent.ChildQuestions.OrderBy(c => c.Order).First();
-            if (firstChild.Answers == null || firstChild.Answers.Count == 0)
-                return correctPairs;
-
-            // Lấy danh sách answers từ child đầu tiên (tất cả child đều có cùng answers)
-            var rightAnswers = firstChild.Answers.OrderBy(a => a.Order).ToList();
-
-            // Duyệt qua từng child question để lấy đáp án đúng
-            foreach (var child in parent.ChildQuestions.OrderBy(c => c.Order))
-            {
-                if (child.CorrectAnswerIndex.HasValue && child.CorrectAnswerIndex.Value > 0)
-                {
-                    // CorrectAnswerIndex là 1-based, chuyển sang 0-based
-                    var answerIndex = child.CorrectAnswerIndex.Value - 1;
-                    
-                    if (answerIndex >= 0 && answerIndex < rightAnswers.Count)
-                    {
-                        var correctAnswer = rightAnswers[answerIndex];
-                        // leftQuestionId = child.OriginalExamPaperDetailId, rightAnswerId = correctAnswer.AnswerId
-                        correctPairs[child.OriginalExamPaperDetailId] = correctAnswer.AnswerId;
-                    }
-                }
-            }
-
-            return correctPairs;
-        }
 
         private int? GetQuestionNumber(OriginalExamPaperDetailDto question, int indexInFlatList)
         {
@@ -424,12 +254,7 @@ namespace frontend_manage.Pages.ExamManager.Preview
                 // Nếu đã đến câu hỏi hiện tại, dừng lại
                 if (q.OriginalExamPaperDetailId == question.OriginalExamPaperDetailId)
                 {
-                    // Nếu là matching parent, trả về số đã đếm
-                    if (IsMatchingParent(question))
-                    {
-                        return number;
-                    }
-                    // Nếu là parent question thông thường, không có số
+                    // Nếu là parent question, không có số
                     if (question.ParentQuestionId == null && question.ChildQuestions != null && question.ChildQuestions.Count > 0)
                     {
                         return null;
@@ -439,15 +264,9 @@ namespace frontend_manage.Pages.ExamManager.Preview
                 }
                 
                 // Đếm các câu hỏi trước câu hỏi hiện tại
-                var isMatching = IsMatchingParent(q);
-                var isGroupParent = q.ParentQuestionId == null && q.ChildQuestions != null && q.ChildQuestions.Count > 0 && !isMatching;
+                var isGroupParent = q.ParentQuestionId == null && q.ChildQuestions != null && q.ChildQuestions.Count > 0;
                 
-                if (isMatching)
-                {
-                    // Matching question: đếm như một câu hỏi độc lập
-                    number++;
-                }
-                else if (isGroupParent)
+                if (isGroupParent)
                 {
                     // Group question: parent đếm như 1 câu hỏi, child questions đếm tiếp
                     number++; // Đếm parent

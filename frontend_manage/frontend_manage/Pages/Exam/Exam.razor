@@ -5,15 +5,15 @@
 
 <link href="css/monitor/MonitorPage.css" rel="stylesheet" />
 <link href="css/exam/question-rendering.css" rel="stylesheet" />
+<link href="css/exam/audio-player.css" rel="stylesheet" />
+<link href="css/exam/custom-audio-player.css" rel="stylesheet" />
 
 <div id="exam-shell" class="exam-shell">
     @* Fixed Header *@
     <ExamHeader StudentSession="@StudentSession"
                 ShouldShowTimer="@ShouldShowTimer"
                 IsTimerVisible="@_showTimer"
-                IsFullscreen="@_isFullscreen"
                 ToggleTimerVisibility="ToggleTimerVisibility"
-                ToggleFullscreen="ToggleFullscreenAsync"
                 OnExamTimerExpired="HandleExamTimerExpired" />
 
     @* Main Content - Scrollable *@
@@ -33,7 +33,8 @@
                         var questionId = $"question-{questionItem.Question.OriginalExamPaperDetailId}";
                         var isActive = questionIndex == _activeQuestionIndex;
                         
-                        <div id="@questionId" 
+                        <div @key="@questionItem.Question.OriginalExamPaperDetailId" 
+                             id="@questionId" 
                              class="question-container @(isActive ? "active-question" : "")" 
                              style="margin-bottom: 2rem; scroll-margin-top: 100px;">
                             <MudPaper Class="pa-4 exam-panel" Elevation="0">
@@ -43,7 +44,9 @@
                                               LabelProvider="GetQuestionLabel"
                                               SelectedAnswerId="@GetSelectedAnswerId(questionItem.Question.OriginalExamPaperDetailId)"
                                               SelectedAnswerProvider="GetSelectedAnswerId"
-                                              OnAnswered="HandleQuestionAnswered" />
+                                              OnAnswered="HandleQuestionAnswered"
+                                              StudentExamSessionId="@StudentExamSessionId"
+                                              QuestionId="@questionItem.Question.OriginalExamPaperDetailId" />
                             </MudPaper>
                         </div>
                     }

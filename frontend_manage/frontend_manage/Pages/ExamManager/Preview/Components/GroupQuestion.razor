@@ -6,11 +6,11 @@
 <div class="preview-group-question-container">
     <div class="preview-group-header">
         <div class="preview-group-title">
+            <span class="preview-group-label">Nhóm câu hỏi</span>
             @if (ParentNumber.HasValue)
             {
                 <span class="preview-question-number-chip">@ParentNumber.Value</span>
             }
-            <span class="preview-group-label">Nhóm câu hỏi</span>
         </div>
         @if (ShowMenu)
         {
@@ -45,12 +45,12 @@
             {
                 <div class="preview-group-child-item">
                     <div class="preview-group-child-header">
+                        <span class="preview-question-title">Câu hỏi</span>
                         @if (GetChildNumber != null)
                         {
                             var childNumber = GetChildNumber(child);
                             <span class="preview-question-number-chip">@(childNumber?.ToString() ?? child.Order.ToString())</span>
                         }
-                        <span class="preview-question-title">Câu hỏi</span>
                     </div>
                     <div class="katex-content question-content-preview" style="padding: 0.75rem 0; margin-bottom: 0.75rem;">
                         @((MarkupString)RenderHtml(child.QuestionContent))

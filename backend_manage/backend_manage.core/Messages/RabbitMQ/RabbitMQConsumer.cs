@@ -149,8 +149,6 @@ namespace backend_manage.core.Messages.RabbitMQ
                         try
                         {
                             _logger.LogInformation("🕒 ExamSubmission Consumer {ConsumerId} bắt đầu xử lý: {Time}", consumerId, DateTime.UtcNow);
-                            // Delay 10 giây theo yêu cầu trước khi xử lý nộp bài
-                            await Task.Delay(TimeSpan.FromSeconds(10));
                             await ProcessExamSubmission(message);
                             _logger.LogInformation("✅ ExamSubmission Consumer {ConsumerId} hoàn tất xử lý: {Time}", consumerId, DateTime.UtcNow);
                         }
@@ -248,8 +246,6 @@ namespace backend_manage.core.Messages.RabbitMQ
         {
             try
             {
-                await Task.Delay(10000);
-                
                 using var scope = _serviceScopeFactory.CreateScope();
                 var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 

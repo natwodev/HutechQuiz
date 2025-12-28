@@ -85,11 +85,11 @@ window.examFullscreen = (function () {
         }
     });
 
-    // Right click event
+    // Right click event - chỉ chặn menu, không tính là gian lận
     document.addEventListener('contextmenu', (e) => {
-        if (state.dotNetRef) {
-            state.dotNetRef.invokeMethodAsync('OnRightClickDetected');
-        }
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
     });
 
     // DevTools detection (check periodically)

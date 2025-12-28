@@ -1,0 +1,67 @@
+<div class="custom-audio-player" @ref="_containerRef" id="@($"container-{AudioId}")">
+    <audio id="@AudioId" 
+           src="@AudioUrl" 
+           data-audio-path="@AudioPath" 
+           class="exam-audio-player"
+           @ref="_audioRef"
+           @onloadedmetadata="OnAudioLoaded"
+           @ontimeupdate="OnTimeUpdate"
+           @onended="OnAudioEnded"
+           @onplay="OnPlay"
+           @onpause="OnPause">
+    </audio>
+    
+    <div class="custom-audio-controls">
+        @* Play/Pause Button *@
+        <button class="audio-play-button" 
+                @onclick="TogglePlay" 
+                disabled="@(_remainingCount <= 0)"
+                title="@(_isPlaying ? "Pause" : "Play")">
+            <span class="audio-icon">@(_isPlaying ? "⏸" : "▶")</span>
+        </button>
+        
+        @* Timeline Slider *@
+        <div class="audio-timeline-container">
+            <input type="range" 
+                   class="audio-timeline-slider" 
+                   min="0" 
+                   max="@_duration" 
+                   step="0.1" 
+                   value="@_currentTime"
+                   @onchange="OnSliderChanged"
+                   disabled="@(_remainingCount <= 0)"
+                   title="Timeline" />
+        </div>
+        
+        @* Time Display *@
+        <div class="audio-time-display">
+            <span>@FormatTime(_currentTime)</span>
+            <span class="time-separator">/</span>
+            <span>@FormatTime(_duration)</span>
+        </div>
+        
+        @* Volume Control *@
+        <button class="audio-volume-button" 
+                @onclick="ToggleMute"
+                title="@(_isMuted ? "Unmute" : "Mute")">
+            <span class="audio-icon">@(_isMuted ? "🔇" : "🔊")</span>
+        </button>
+        
+        <div class="audio-volume-container">
+            <input type="range" 
+                   class="audio-volume-slider" 
+                   min="0" 
+                   max="100" 
+                   step="1" 
+                   value="@_volume"
+                   @onchange="OnVolumeChanged"
+                   title="Volume" />
+        </div>
+        
+        @* Badge số lần nghe *@
+        <div class="custom-audio-play-count-badge" id="@($"badge-{AudioId}")">
+            @BadgeText
+        </div>
+    </div>
+</div>
+

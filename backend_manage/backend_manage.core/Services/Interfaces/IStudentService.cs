@@ -50,4 +50,5 @@ public interface IStudentService
     Task<byte[]> ExportStudentGradesToExcelAsync(IEnumerable<StudentGradeDto> grades);
     
     Task<IEnumerable<StudentExamSessionHistoryDto>> GetStudentExamSessionsByStudentCodeAsync(string studentCode);
+    Task<AllSubjectRankingResponseDto> GetAllCompletedSubjectRankingsAsync(string studentCode);
 } 

@@ -80,6 +80,16 @@ public partial class Exam : ComponentBase, IAsyncDisposable
             await JS.InvokeVoidAsync("examFullscreen.registerExamEvents", _dotNetRef);
             _jsEventsRegistered = true;
             
+            // Tự động phóng to màn hình khi vào làm bài
+            try
+            {
+                await JS.InvokeVoidAsync("examFullscreen.enter", "#exam-shell");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[Exam] Auto fullscreen failed: {ex.Message}");
+            }
+            
             // Load audio play counts from localStorage (sẽ persist qua refresh)
             if (StudentExamSessionId.HasValue)
             {
@@ -321,29 +331,9 @@ public partial class Exam : ComponentBase, IAsyncDisposable
 
     private void CollectNavigationLeaves(QuestionStructureDto question, int parentIndex, List<NavigationItem> items, ref int counter)
     {
-        // Kiểm tra xem có phải matching parent không
-        bool isMatchingParent = IsMatchingParent(question);
-        
-        if (isMatchingParent)
-        {
-            // Matching question được đánh số như một câu hỏi độc lập
-            var label = counter.ToString();
-            _questionLabelMap[question.OriginalExamPaperDetailId] = label;
-            counter++;
-
-            items.Add(new NavigationItem
-            {
-                QuestionId = question.OriginalExamPaperDetailId,
-                ParentIndex = parentIndex
-            });
-            
-            // Không đếm child questions của matching parent (chúng là phần của matching question)
-            return;
-        }
-        
         if (question.ChildQuestions?.Any() == true)
         {
-            // Câu hỏi nhóm thông thường: chỉ đếm child questions, không đếm parent
+            // Câu hỏi nhóm: chỉ đếm child questions, không đếm parent
             foreach (var child in question.ChildQuestions.OrderBy(q => q.Order))
             {
                 CollectNavigationLeaves(child, parentIndex, items, ref counter);
@@ -353,8 +343,8 @@ public partial class Exam : ComponentBase, IAsyncDisposable
         }
 
         // Câu hỏi độc lập: đếm như bình thường
-        var label2 = counter.ToString();
-        _questionLabelMap[question.OriginalExamPaperDetailId] = label2;
+        var label = counter.ToString();
+        _questionLabelMap[question.OriginalExamPaperDetailId] = label;
         counter++;
 
         items.Add(new NavigationItem
@@ -363,92 +353,7 @@ public partial class Exam : ComponentBase, IAsyncDisposable
             ParentIndex = parentIndex
         });
     }
-    
-    /// <summary>
-    /// Kiểm tra xem đây có phải là matching question dạng parent-child không
-    /// (giống logic trong QuestionItem.razor.cs)
-    /// <summary>
-    /// Kiểm tra xem đây có phải là group question (câu hỏi nhóm) không
-    /// Group question có pattern {<1>} — {<3>} trong nội dung
-    /// </summary>
-    private bool IsGroupQuestion(QuestionStructureDto q)
-    {
-        if (q.ChildQuestions == null || q.ChildQuestions.Count == 0)
-            return false;
 
-        // Kiểm tra pattern {<...>} trong nội dung parent question
-        var stem = q.QuestionContent ?? string.Empty;
-        
-        // Kiểm tra nhiều pattern khác nhau cho group question
-        var patterns = new[]
-        {
-            @"\{<\d+>\}.*?\{<\d+>\}",  // {<1>} ... {<3>}
-            @"\{&lt;\d+&gt;\}.*?\{&lt;\d+&gt;\}",  // HTML encoded: {&lt;1&gt;} ... {&lt;3&gt;}
-            @"\{&lt;\d+&gt;\}.*?—.*?\{&lt;\d+&gt;\}",  // HTML encoded với dấu gạch ngang
-        };
-        
-        foreach (var pattern in patterns)
-        {
-            if (System.Text.RegularExpressions.Regex.IsMatch(stem, pattern, System.Text.RegularExpressions.RegexOptions.IgnoreCase))
-            {
-                return true;
-            }
-        }
-        
-        return false;
-    }
-
-    /// <summary>
-    /// Kiểm tra xem đây có phải là matching question dạng parent-child không
-    /// Matching question có đặc điểm:
-    /// 1. Parent question không có answers (chỉ có stem)
-    /// 2. Tất cả child questions có cùng số lượng answers
-    /// 3. Parent question có từ khóa về matching (Nối cột, nối, match)
-    /// 4. KHÔNG có pattern {<...>} (đó là group question)
-    /// </summary>
-    private bool IsMatchingParent(QuestionStructureDto q)
-    {
-        if (q.ChildQuestions == null || q.ChildQuestions.Count == 0)
-            return false;
-
-        // QUAN TRỌNG: Kiểm tra group question TRƯỚC - nếu có pattern {<...>} thì chắc chắn không phải matching
-        if (IsGroupQuestion(q))
-            return false;
-
-        // Parent question không nên có answers (chỉ có stem)
-        if (q.Answers != null && q.Answers.Count > 0)
-            return false;
-
-        // Kiểm tra xem tất cả child questions có cùng số lượng answers không
-        var firstChild = q.ChildQuestions.FirstOrDefault();
-        if (firstChild == null || firstChild.Answers == null || firstChild.Answers.Count == 0)
-            return false;
-
-        var answerCount = firstChild.Answers.Count;
-        
-        // Tất cả child questions phải có cùng số lượng answers
-        if (q.ChildQuestions.Any(child => child.Answers == null || child.Answers.Count != answerCount))
-            return false;
-
-        // Kiểm tra thêm: parent question có stem chứa từ khóa về matching không
-        var stem = q.QuestionContent ?? string.Empty;
-        var hasMatchingKeywords = stem.Contains("Nối cột", StringComparison.OrdinalIgnoreCase) ||
-                                 stem.Contains("nối", StringComparison.OrdinalIgnoreCase) ||
-                                 stem.Contains("match", StringComparison.OrdinalIgnoreCase);
-
-        // CHỈ trả về true nếu CÓ từ khóa matching VÀ đáp ứng các điều kiện trên
-        // Không dựa vào pattern (số lượng child >= 2 và số lượng answers >= 2) vì group questions cũng có thể có pattern này
-        if (hasMatchingKeywords)
-        {
-            // Đảm bảo tất cả child questions đều là MCQ (có answers)
-            return q.ChildQuestions.All(child => 
-                child.Answers != null && 
-                child.Answers.Count > 0 &&
-                child.Answers.Count == answerCount);
-        }
-
-        return false;
-    }
 
     private bool _isSubmitting = false;
 
@@ -484,7 +389,18 @@ public partial class Exam : ComponentBase, IAsyncDisposable
 
         Snackbar.Add(result.Message, Severity.Success);
 
-        Navigation.NavigateTo($"/Exam/Result?studentExamSessionId={StudentExamSessionId.Value}");
+        // Exit fullscreen trước khi navigate để tránh lỗi
+        try
+        {
+            await JS.InvokeVoidAsync("examFullscreen.exit");
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[SubmitExam] Error exiting fullscreen: {ex.Message}");
+        }
+
+        // Navigate đến trang kết quả với forceLoad để đảm bảo navigation hoạt động
+        Navigation.NavigateTo($"/Exam/Result?studentExamSessionId={StudentExamSessionId.Value}", forceLoad: true);
 
         _isSubmitting = false;
         StateHasChanged();
@@ -581,7 +497,6 @@ public partial class Exam : ComponentBase, IAsyncDisposable
         }
 
         // Giá trị từ UI: với câu hỏi 1 đáp án sẽ là int (answerId)
-        // Với matching question sẽ là object { left = leftAnswerId, right = rightAnswerId }
         int? answerId = null;
         if (payload.value is int intValue)
         {
@@ -589,28 +504,13 @@ public partial class Exam : ComponentBase, IAsyncDisposable
         }
         else if (payload.value != null)
         {
-            // Xử lý matching question: object với left và right
-            // Với matching question, có thể lưu rightAnswerId hoặc serialize toàn bộ object
+            // Xử lý khi value không phải int
             try
             {
                 var valueStr = payload.value.ToString();
                 if (!string.IsNullOrEmpty(valueStr) && int.TryParse(valueStr, out var parsedId))
                 {
                     answerId = parsedId;
-                }
-                else
-                {
-                    // Nếu không parse được, thử lấy từ object properties
-                    var type = payload.value.GetType();
-                    var rightProp = type.GetProperty("right");
-                    if (rightProp != null)
-                    {
-                        var rightValue = rightProp.GetValue(payload.value);
-                        if (rightValue != null && int.TryParse(rightValue.ToString(), out var rightId))
-                        {
-                            answerId = rightId;
-                        }
-                    }
                 }
             }
             catch (Exception ex)
@@ -793,37 +693,6 @@ public partial class Exam : ComponentBase, IAsyncDisposable
         try
         {
             _isNavigatingToEntry = true;
-            
-            // Clear tất cả LeaderLines khi điều hướng sang câu hỏi khác
-            // Đợi một chút để đảm bảo UI đã update
-            try
-            {
-                if (JS != null)
-                {
-                    // Clear ngay lập tức
-                    await JS.InvokeVoidAsync("matchingHelpers.clearAllLeaderLines");
-                    
-                    // Clear lại sau một chút để đảm bảo không có line nào sót lại
-                    await Task.Delay(100);
-                    await JS.InvokeVoidAsync("matchingHelpers.clearAllLeaderLines");
-                }
-            }
-            catch (JSDisconnectedException)
-            {
-                // JS runtime đã disconnect, bỏ qua
-            }
-            catch (ObjectDisposedException)
-            {
-                // Component đã bị dispose, bỏ qua
-            }
-            catch (InvalidOperationException)
-            {
-                // JS interop có thể fail, bỏ qua
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Error clearing all lines on navigation: {ex.Message}");
-            }
 
             // Kiểm tra state trước khi navigate
             if (_navigationItems == null || _navigationItems.Count == 0)

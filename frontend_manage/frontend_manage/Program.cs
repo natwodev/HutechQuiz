@@ -52,9 +52,6 @@ builder.Services.AddScoped<IQrCodeService, QrCodeService>();
 // Đăng ký ExamRenderingService để xử lý render đề thi
 builder.Services.AddScoped<IExamRenderingService, ExamRenderingService>();
 
-// Mock exam service
-builder.Services.AddSingleton<ExamMockService>();
-
 // Đăng ký AuthHeaderHandler
 builder.Services.AddScoped<AuthHeaderHandler>();
 

@@ -276,47 +276,7 @@
 }
 
 /* ============================================
-   5. Matching Question Preview Styles
-   ============================================ */
-.preview-matching-container {
-    width: 100%;
-    overflow-x: auto;
-    display: block !important;
-    margin: 1rem 0;
-}
-
-.preview-matching-container .matching-root {
-    width: 100% !important;
-    max-width: 100% !important;
-    display: block !important;
-    background: white;
-    border-radius: 12px;
-    padding: 1.5rem;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.preview-matching-container .matching-columns {
-    display: grid !important;
-    grid-template-columns: 1fr 1fr !important;
-    gap: 2rem !important;
-    flex-direction: row !important;
-    width: 100% !important;
-}
-
-.preview-matching-container .matching-columns .col.left {
-    grid-column: 1 !important;
-    display: flex !important;
-    flex-direction: column !important;
-}
-
-.preview-matching-container .matching-columns .col.right {
-    grid-column: 2 !important;
-    display: flex !important;
-    flex-direction: column !important;
-}
-
-/* ============================================
-   6. Group Questions Container (Parent-Child không phải matching)
+   6. Group Questions Container (Parent-Child)
    ============================================ */
 .preview-group-question-container {
     background: white;
@@ -529,14 +489,6 @@
     .preview-action-button {
         width: 100%;
     }
-}
-
-/* ============================================
-   12. Override MudStack for Matching Questions
-   ============================================ */
-.mud-stack:has(.matching-root) {
-    display: block !important;
-    flex-direction: column !important;
 }
 
 /* ============================================

@@ -1,0 +1,235 @@
+/* Custom Audio Player Styles */
+.custom-audio-player {
+    position: relative;
+    width: 100%;
+    margin: 0.5rem 0;
+}
+
+.custom-audio-player audio {
+    display: none; /* Ẩn audio element mặc định */
+}
+
+.custom-audio-controls {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: #ffffff;
+    border-radius: 12px;
+    border: 1px solid #dee2e6;
+    position: relative;
+    flex-wrap: wrap;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+/* Play/Pause Button */
+.audio-play-button {
+    background: #1976d2;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+    box-shadow: 0 2px 4px rgba(25, 118, 210, 0.3);
+}
+
+.audio-play-button:hover:not(:disabled) {
+    background: #1565c0;
+    transform: scale(1.05);
+    box-shadow: 0 4px 8px rgba(25, 118, 210, 0.4);
+}
+
+.audio-play-button:active:not(:disabled) {
+    transform: scale(0.95);
+}
+
+.audio-play-button:disabled {
+    background: #bdbdbd;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.audio-icon {
+    font-size: 18px;
+    line-height: 1;
+}
+
+/* Timeline Container */
+.audio-timeline-container {
+    flex: 1;
+    min-width: 200px;
+    position: relative;
+}
+
+.audio-timeline-slider {
+    width: 100%;
+    height: 6px;
+    border-radius: 3px;
+    background: #e0e0e0;
+    outline: none;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.audio-timeline-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #1976d2;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.audio-timeline-slider::-webkit-slider-thumb:hover {
+    background: #1565c0;
+}
+
+.audio-timeline-slider::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #1976d2;
+    cursor: pointer;
+    border: none;
+    transition: background 0.2s;
+}
+
+.audio-timeline-slider::-moz-range-thumb:hover {
+    background: #1565c0;
+}
+
+.audio-timeline-slider:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Time Display */
+.audio-time-display {
+    font-size: 13px;
+    color: #424242;
+    white-space: nowrap;
+    min-width: 100px;
+    text-align: center;
+    font-family: monospace;
+}
+
+.time-separator {
+    margin: 0 4px;
+    color: #9e9e9e;
+}
+
+/* Volume Button */
+.audio-volume-button {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 4px;
+    transition: background 0.2s;
+    flex-shrink: 0;
+}
+
+.audio-volume-button:hover {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+.audio-volume-button .audio-icon {
+    font-size: 20px;
+}
+
+/* Volume Slider Container */
+.audio-volume-container {
+    width: 80px;
+}
+
+.audio-volume-slider {
+    width: 100%;
+    height: 4px;
+    border-radius: 2px;
+    background: #e0e0e0;
+    outline: none;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.audio-volume-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #757575;
+    cursor: pointer;
+}
+
+.audio-volume-slider::-moz-range-thumb {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #757575;
+    cursor: pointer;
+    border: none;
+}
+
+/* Badge số lần nghe */
+.custom-audio-play-count-badge {
+    position: absolute;
+    top: -12px;
+    right: 12px;
+    background: #1976d2;
+    color: white;
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    z-index: 10;
+    min-width: 80px;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(25, 118, 210, 0.4);
+    white-space: nowrap;
+    pointer-events: none;
+    user-select: none;
+    line-height: 1.2;
+    border: 2px solid #ffffff;
+}
+
+.custom-audio-play-count-badge::before {
+    content: 'Số lần nghe: ';
+}
+
+.custom-audio-play-count-badge[data-remaining="0"] {
+    background: #d32f2f !important;
+}
+
+.custom-audio-play-count-badge[data-remaining="1"] {
+    background: #f57c00 !important;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+    .custom-audio-controls {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .audio-timeline-container {
+        min-width: 100%;
+    }
+    
+    .audio-time-display {
+        text-align: center;
+    }
+    
+    .audio-volume-container {
+        width: 100%;
+    }
+}
+

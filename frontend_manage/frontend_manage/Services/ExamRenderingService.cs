@@ -90,17 +90,6 @@ public class ExamRenderingService : IExamRenderingService
             RegexOptions.IgnoreCase | RegexOptions.Singleline
         );
 
-        // 1.5. Xử lý [matching] marker - loại bỏ phần A: và B: columns khi render QuestionContent
-        // Vì MatchingQuestion component sẽ tự render columns từ Answers
-        // Format: "...stem... [matching] \n\nA:\n1. ...\n2. ...\n\nB:\na. ...\nb. ..."
-        // Chỉ giữ lại phần stem, loại bỏ [matching] và tất cả sau đó
-        cleaned = Regex.Replace(
-            cleaned,
-            @"\s*\[matching\][\s\S]*",
-            string.Empty,
-            RegexOptions.IgnoreCase | RegexOptions.Singleline
-        );
-
         // 2. Xử lý [latex]...[/latex] tags
         // KaTeX auto-render cần delimiters như \(...\) hoặc $...$ để nhận diện công thức toán học
         // Nếu nội dung trong [latex]...[/latex] chưa có delimiters, tự động thêm \(...\)
@@ -177,7 +166,9 @@ public class ExamRenderingService : IExamRenderingService
                 
                 // Thêm data attributes để JavaScript có thể track play count
                 // Note: questionId và studentExamSessionId sẽ được set bởi JavaScript sau khi render
-                return $"<audio id=\"{audioId}\" controls src=\"{audioUrl}\" data-audio-path=\"{audioPath}\" class=\"exam-audio-player\"></audio>";
+                // Thêm container, badge và overlay vào HTML để JavaScript có thể cập nhật
+                // controlsList="nodownload nofullscreen" để ẩn các nút không cần thiết
+                return $"<div class=\"audio-player-container\"><audio id=\"{audioId}\" controls controlsList=\"nodownload nofullscreen noremoteplayback\" src=\"{audioUrl}\" data-audio-path=\"{audioPath}\" class=\"exam-audio-player\"></audio><div class=\"audio-timeline-overlay\"></div><div class=\"custom-audio-play-count-badge\" data-audio-id=\"{audioId}\">5/5</div></div>";
             },
             RegexOptions.IgnoreCase | RegexOptions.Singleline
         );
@@ -196,7 +187,7 @@ public class ExamRenderingService : IExamRenderingService
                 
                 // Extract image ID (loại bỏ extension)
                 var imageId = imageFileName.Split('.').FirstOrDefault() ?? imageFileName;
-                var baseUrl = GetImageUrl(imageId, shuffledExamPaperCore, originalExamPaperCore);
+                var baseUrl = GetImageUrl(imageFileName, shuffledExamPaperCore, originalExamPaperCore); // Pass full filename
                 if (string.IsNullOrEmpty(baseUrl))
                     return match.Value;
 
@@ -204,9 +195,14 @@ public class ExamRenderingService : IExamRenderingService
                 var attributes = beforeSrc + afterSrc;
                 var newAttributes = Regex.Replace(attributes, @"\s*(alt|style|onerror)=[""'][^""']*[""']", string.Empty, RegexOptions.IgnoreCase);
                 
-                // Tạo img với fallback cho nhiều extension (.png, .jpg, .jpeg)
-                var basePath = baseUrl.Replace($"/{imageId}", "");
-                return $"<img{newAttributes} src=\"{basePath}/{imageId}.png\" onerror=\"this.onerror=null; this.src='{basePath}/{imageId}.jpg'; this.onerror=function(){{this.src='{basePath}/{imageId}.jpeg'; this.onerror=function(){{this.style.display='none';}};}}\" alt=\"Question {imageId}\" style=\"max-width: 100%; height: auto; display: block; margin: 1rem auto;\" />";
+                // Nếu baseUrl đã có extension đúng từ backend, dùng luôn
+                // Tuy nhiên để an toàn (trường hợp cache cũ hoặc sai ext), vẫn giữ fallback nhưng fix logic path
+                var directoryUrl = baseUrl.Substring(0, baseUrl.LastIndexOf('/'));
+                
+                // Construct final HTML
+                // Note: baseUrl chính là đường dẫn ảnh đúng (VD: .../Images/Q5.jpg)
+                // Fallback chỉ cần thiết nếu backend không gửi extension hoặc file không tồn tại
+                return $"<img{newAttributes} src=\"{baseUrl}\" onerror=\"this.onerror=null; this.src='{directoryUrl}/{imageId}.png'; this.onerror=function(){{this.src='{directoryUrl}/{imageId}.jpg'; this.onerror=function(){{this.src='{directoryUrl}/{imageId}.jpeg'; this.style.display='none';}};}}\" alt=\"Question {imageId}\" style=\"max-width: 100%; height: auto; display: block; margin: 1rem auto;\" />";
             },
             RegexOptions.IgnoreCase | RegexOptions.Singleline
         );
@@ -222,15 +218,15 @@ public class ExamRenderingService : IExamRenderingService
                 var afterSrc = match.Groups[3].Value ?? string.Empty;
                 
                 var imageId = imageFileName.Split('.').FirstOrDefault() ?? imageFileName;
-                var baseUrl = GetImageUrl(imageId, shuffledExamPaperCore, originalExamPaperCore);
+                var baseUrl = GetImageUrl(imageFileName, shuffledExamPaperCore, originalExamPaperCore);
                 if (string.IsNullOrEmpty(baseUrl))
                     return match.Value;
 
                 var attributes = beforeSrc + afterSrc;
                 var newAttributes = Regex.Replace(attributes, @"\s*(alt|style|onerror)=[""']?[^""'\s>]*[""']?", string.Empty, RegexOptions.IgnoreCase);
                 
-                var basePath = baseUrl.Replace($"/{imageId}", "");
-                return $"<img{newAttributes} src=\"{basePath}/{imageId}.png\" onerror=\"this.onerror=null; this.src='{basePath}/{imageId}.jpg'; this.onerror=function(){{this.src='{basePath}/{imageId}.jpeg'; this.onerror=function(){{this.style.display='none';}};}}\" alt=\"Question {imageId}\" style=\"max-width: 100%; height: auto; display: block; margin: 1rem auto;\" />";
+                var directoryUrl = baseUrl.Substring(0, baseUrl.LastIndexOf('/'));
+                return $"<img{newAttributes} src=\"{baseUrl}\" onerror=\"this.onerror=null; this.src='{directoryUrl}/{imageId}.png'; this.onerror=function(){{this.src='{directoryUrl}/{imageId}.jpg'; this.onerror=function(){{this.src='{directoryUrl}/{imageId}.jpeg'; this.style.display='none';}};}}\" alt=\"Question {imageId}\" style=\"max-width: 100%; height: auto; display: block; margin: 1rem auto;\" />";
             },
             RegexOptions.IgnoreCase | RegexOptions.Singleline
         );
@@ -247,8 +243,8 @@ public class ExamRenderingService : IExamRenderingService
                     return match.Value;
 
                 // Tạo img với fallback cho nhiều extension
-                var basePath = baseUrl.Replace($"/{imageId}", "");
-                return $"<img src=\"{basePath}/{imageId}.png\" onerror=\"this.onerror=null; this.src='{basePath}/{imageId}.jpg'; this.onerror=function(){{this.src='{basePath}/{imageId}.jpeg'; this.onerror=function(){{this.style.display='none';}};}}\" alt=\"Question {imageId}\" style=\"max-width: 100%; height: auto; display: block; margin: 1rem auto;\" />";
+                var directoryUrl = baseUrl.Substring(0, baseUrl.LastIndexOf('/'));
+                return $"<img src=\"{baseUrl}\" onerror=\"this.onerror=null; this.src='{directoryUrl}/{imageId}.png'; this.onerror=function(){{this.src='{directoryUrl}/{imageId}.jpg'; this.onerror=function(){{this.src='{directoryUrl}/{imageId}.jpeg'; this.style.display='none';}};}}\" alt=\"Question {imageId}\" style=\"max-width: 100%; height: auto; display: block; margin: 1rem auto;\" />";
             },
             RegexOptions.IgnoreCase | RegexOptions.Singleline
         );

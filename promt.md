@@ -1,9 +1,6 @@
 ĐỀ MẪU – SPEC CUỐI CÙNG (HOÁN VỊ + IMAGE + AUDIO + ANSWER + MATCH)
-Ghi chú: File này dùng để test parser. Ảnh chèn ngay dưới [image]. Audio chỉ đánh dấu bằng [audio]. Có đầy đủ dạng: MCQ, LATEX, IMAGE, AUDIO, SHORT, MATCH.
-
-[exam permute=true]
-
-[question id="Q1"]
+Ghi chú: File này dùng để test parser. Ảnh chèn ngay dưới [image]. Audio chỉ đánh dấu bằng [audio]. Có đầy đủ dạng: MCQ, LATEX, AUDIO, SHORT, MATCH.
+[question id="Q1", exam permute=true]
 When did the woman put her keys in her purse?
 A. When she came home
 B. When she was driving the car
@@ -12,7 +9,7 @@ D. When she opened the front door
 [answer]A[/answer]
 [/question]
 
-[question id="Q2"]
+[question id="Q2", exam permute=true]
 Galileo ______ his first telescope in 1609.
 A. has built
 B. had built
@@ -21,7 +18,7 @@ D. builds
 [answer]C[/answer]
 [/question]
 
-[question id="Q3"]
+[question id="Q3", exam permute=true]
 Chuyển tích phân sau sang tọa độ trụ:
 [latex]\iiint_V f(x,y,z)\, dV[/latex]
 A. ...
@@ -33,8 +30,7 @@ D. ...
 
 [question id="Q4"]
 Nhỏ vài giọt dung dịch iot vào mặt cắt của một lát bánh mì như hình.
-[image]
- 
+[Image]
 A. Iot và glucozo
 B. Iot và tinh bột
 C. ...
@@ -42,10 +38,9 @@ D. ...
 [answer]B[/answer]
 [/question]
 
-[question id="Q5"]
+[question id="Q5", exam permute=true]
 Cho miền Ω như hình, tính:
-[image]
- 
+[Image]
 [latex]\iint_{\Omega} f(x,y)\, dxdy[/latex]
 A. ...
 B. ...
@@ -54,7 +49,7 @@ D. ...
 [answer]A[/answer]
 [/question]
 
-[question id="Q6"]
+[question id="Q6", exam permute=true]
 [audio]
 What does the man keep in his wallet?
 A. ID card
@@ -64,9 +59,8 @@ D. All are correct
 [answer]D[/answer]
 [/question]
 
-[question id="Q7"]
+[question id="Q7", exam permute=true]
 [audio]
-[image]
 What does the man keep in his wallet?
 A. Sound
 B. Correct
@@ -75,36 +69,14 @@ D. All are correct
 [answer]B[/answer]
 [/question]
 
-[question id="Q8"]
+
+[question id="Q8", exam permute=true]
 Giải thích hiện tượng đổi màu khi nhỏ iot vào bánh mì.
 [answer]Iot phản ứng với tinh bột tạo màu xanh tím.[/answer]
 [/question]
 
-[question id="Q9" type="match"]
-Nối cột A với cột B cho phù hợp:
 
-A:
-1. Iodine
-2. Glucose
-3. Oxygen
-
-B:
-a. Starch indicator
-b. Sugar
-c. Gas for breathing
-[answer]1-a;2-b;3-c[/answer]
-[/question]
-
-[question id="Q10"]
-Which word is a noun?
-A. Quickly
-B. Beauty
-C. Run
-D. Very
-[answer]B[/answer]
-[/question]
-
-[question id="Q11"]
+[question id="Q9", exam permute=true]
 Which sentence is correct?
 A. She don’t like coffee.
 B. She doesn’t likes coffee.
@@ -113,7 +85,7 @@ D. She not like coffee.
 [answer]C[/answer]
 [/question]
 
-[question id="Q12"]
+[question id="Q10", exam permute=true]
 Tính đạo hàm:
 [latex]\frac{d}{dx}(x^2 + 3x)[/latex]
 A. 2x + 3
@@ -123,12 +95,12 @@ D. x^2
 [answer]A[/answer]
 [/question]
 
-[question id="Q13"]
+[question id="Q11", exam permute=true]
 Viết công thức tính vận tốc trung bình.
 [answer]v_tb = Δs / Δt[/answer]
 [/question]
 
-[question id="Q14"]
+[question id="Q12", exam permute=true]
 Which is a renewable energy source?
 A. Coal
 B. Oil
@@ -137,7 +109,7 @@ D. Gas
 [answer]C[/answer]
 [/question]
 
-[question id="Q15"]
+[question id="Q13", exam permute=true]
 [audio]
 What time is the meeting?
 A. 8 AM
@@ -147,7 +119,7 @@ D. 11 AM
 [answer]B[/answer]
 [/question]
 
-[question id="Q16"]
+[question id="Q14", exam permute=true]
 Choose the correct passive form:
 They built the house in 1990.
 A. The house is built in 1990.
@@ -157,7 +129,7 @@ D. The house is building in 1990.
 [answer]B[/answer]
 [/question]
 
-[question id="Q17"]
+[question id="Q15", exam permute=true]
 [latex]\int_0^1 x dx[/latex]
 A. 1
 B. 1/2
@@ -166,12 +138,12 @@ D. 2
 [answer]B[/answer]
 [/question]
 
-[question id="Q18"]
+[question id="Q16", exam permute=true]
 Nêu định nghĩa phản ứng hóa học.
 [answer]Quá trình biến đổi chất ban đầu thành chất mới.[/answer]
 [/question]
 
-[question id="Q19"]
+[question id="Q17", exam permute=true]
 Which one is an adjective?
 A. Run
 B. Quickly
@@ -180,7 +152,7 @@ D. Eat
 [answer]C[/answer]
 [/question]
 
-[question id="Q20"]
+[question id="Q18", exam permute=true]
 What is the capital of France?
 A. Berlin
 B. Madrid
@@ -189,17 +161,17 @@ D. Rome
 [answer]C[/answer]
 [/question]
 
-[/exam]
-
-
-Cách thêm audio
+Cách thêm audio và image:
 ExamPackage.zip
  ├── exam.docx
- └── Audio/
-      └── Q6.mp3
+ ├── Audio/
+ │    └── Q6.mp3
+ └── Images/
+      └── Q4.png
 
-tạo folder Audio ở wwwroot lưu audio tương ứng ở đó 
+Quy tắc xử lý:
+1. Audio: Tạo folder Audio ở wwwroot, lưu file audio vào đó. Thẻ [audio] trong câu hỏi sẽ được thay thế bằng trình phát âm thanh. Tên file audio trùng với ID câu hỏi (ví dụ: Q6.mp3 cho câu hỏi Q6).
+2. Image: Tạo folder Images ở wwwroot, lưu file ảnh vào đó. Thẻ [image] trong nội dung câu hỏi là vị trí hiển thị ảnh. Tên file ảnh tương ứng với ID câu hỏi (ví dụ: Q4.png cho câu hỏi Q4).
 
-và hình ảnh sẽ ở dưới mỗi thẻ image bạn sẽ lưu nó vào folder image với tên ảnh tương ứng với id câu hỏi ví dụ câu hỏi id là Q6 thì ảnh sẽ là Q6 
+Đây là cách import file word bằng zip file
 
-Đây là cách import file word bằng zip file 

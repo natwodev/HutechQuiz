@@ -370,6 +370,54 @@ public partial class Result : ComponentBase, IDisposable
 
     private static string FormatAnswerValue(string? value) => value ?? "-";
 
+    // Helper methods cho UI mới
+    private string GetScoreClass()
+    {
+        if (_submission?.Score == null) return "score-none";
+        var score = _submission.Score.Value;
+        if (score >= 8.0) return "score-excellent";
+        if (score >= 6.5) return "score-good";
+        if (score >= 5.0) return "score-pass";
+        return "score-fail";
+    }
+
+    private static string GetAnswerClass(AnswerState state) =>
+        state switch
+        {
+            AnswerState.Correct => "correct",
+            AnswerState.Incorrect => "incorrect",
+            _ => "skipped"
+        };
+
+    private static string GetTooltipText(AnswerComparison answer, int index)
+    {
+        var stateText = answer.State switch
+        {
+            AnswerState.Correct => "✓ Đúng",
+            AnswerState.Incorrect => "✗ Sai",
+            _ => "○ Chưa trả lời"
+        };
+        return $"Câu {index}: {stateText}";
+    }
+
+    private string GetScoreProgress()
+    {
+        if (_submission?.Score == null) return "0";
+        var score = _submission.Score.Value;
+        var progress = (score / 10.0) * 283; // 283 is circumference of circle with r=45
+        return progress.ToString("F0", System.Globalization.CultureInfo.InvariantCulture);
+    }
+
+    private string GetResultMessage()
+    {
+        if (_submission?.Score == null) return "Chưa có điểm";
+        var score = _submission.Score.Value;
+        if (score >= 8.0) return "Xuất sắc! 🎉";
+        if (score >= 6.5) return "Tốt lắm! 👍";
+        if (score >= 5.0) return "Đạt yêu cầu ✓";
+        return "Cần cố gắng hơn";
+    }
+
     private enum AnswerState
     {
         Correct,
@@ -385,10 +433,10 @@ public partial class Result : ComponentBase, IDisposable
         {
             if (data is JsonElement json)
             {
-                // Chỉ cập nhật điểm số và số câu đúng từ payload
-                // Không cập nhật studentAnswersString, answerKey để tránh làm sai thống kê
+                // Khởi tạo _submission nếu chưa có
                 _submission ??= new ExamSubmissionDto();
                 
+                // Cập nhật các thông tin cơ bản
                 if (json.TryGetProperty("score", out var pScore))
                     _submission.Score = pScore.GetDouble();
                 if (json.TryGetProperty("correctAnswers", out var pCorrect))
@@ -396,14 +444,35 @@ public partial class Result : ComponentBase, IDisposable
                 if (json.TryGetProperty("totalQuestions", out var pTotal))
                     _submission.TotalQuestions = pTotal.GetInt32();
 
-                // Không gọi BuildAnswerComparisons() để giữ nguyên thống kê hiện tại
-                // Chỉ cập nhật điểm số và số câu đúng
+                // Cập nhật thời gian
+                if (json.TryGetProperty("startTime", out var pStart) && pStart.ValueKind != JsonValueKind.Null)
+                {
+                    if (pStart.TryGetDateTime(out var start))
+                        _submission.StartTime = start;
+                }
+
+                if (json.TryGetProperty("endTime", out var pEnd) && pEnd.ValueKind != JsonValueKind.Null)
+                {
+                    if (pEnd.TryGetDateTime(out var end))
+                        _submission.EndTime = end;
+                }
+
+                // Cập nhật đáp án để BuildAnswerComparisons có dữ liệu mới nhất
+                if (json.TryGetProperty("studentAnswersString", out var pStudentAnswers) && pStudentAnswers.ValueKind != JsonValueKind.Null)
+                    _submission.StudentAnswersString = pStudentAnswers.GetString();
+                
+                if (json.TryGetProperty("answerKey", out var pAnswerKey) && pAnswerKey.ValueKind != JsonValueKind.Null)
+                    _submission.AnswerKey = pAnswerKey.GetString();
+
+                // Build lại comparisons để cập nhật các chấm tròn và thống kê chi tiết
+                BuildAnswerComparisons();
 
                 InvokeAsync(StateHasChanged);
             }
         }
-        catch
+        catch (Exception ex)
         {
+            System.Diagnostics.Debug.WriteLine($"[HandleExamScoreReceived] Error: {ex.Message}");
             // bỏ qua lỗi parse, không làm gián đoạn UI
         }
     }

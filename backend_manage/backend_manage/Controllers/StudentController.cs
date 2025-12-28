@@ -467,8 +467,24 @@ public async Task<IActionResult> SubmitExam([FromBody] SubmitExamRequest request
         var result = await _studentService.GetStudentExamSessionsByStudentCodeAsync(studentCode);
         return Ok(result);
     }
-    
-    
+
+    [HttpGet("rankings/all-completed-subjects")]
+    [Authorize(Roles = "Student")]
+    public async Task<IActionResult> GetAllCompletedSubjectRankings()
+    {
+        var studentCode = User.FindFirst("studentCode")?.Value;
+        if (string.IsNullOrEmpty(studentCode))
+            return Unauthorized();
+
+        var result = await _studentService
+            .GetAllCompletedSubjectRankingsAsync(studentCode);
+
+        return Ok(result);
+    }
+
+
+
+
 
 }
 

@@ -3,14 +3,43 @@
     line-height: 1.75;
 }
 
-.question-title { font-size:19px; font-weight:600; display:flex; align-items:baseline; gap:6px; }
-.title-prefix { white-space:nowrap; font-weight:700; }
-.question-inline { display:inline; font-weight:600; }
-/* Không làm đậm công thức để KaTeX hiển thị đẹp */
-.question-inline .katex, .question-inline .katex * { font-weight:400; }
+.question-title {
+    font-size: 19px;
+    font-weight: 600;
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+}
 
-.group-parent { border:none; background:transparent; padding:0; border-radius:0; }
-.group-child { margin-left:0; padding-left:0; border-left:none; border-radius:0; }
+.title-prefix {
+    white-space: nowrap;
+    font-weight: 700;
+}
+
+.question-inline {
+    display: inline;
+    font-weight: 600;
+}
+
+/* Không làm đậm công thức để KaTeX hiển thị đẹp */
+.question-inline .katex,
+.question-inline .katex * {
+    font-weight: 400;
+}
+
+.group-parent {
+    border: none;
+    background: transparent;
+    padding: 0;
+    border-radius: 0;
+}
+
+.group-child {
+    margin-left: 0;
+    padding-left: 0;
+    border-left: none;
+    border-radius: 0;
+}
 
 .katex-content {
     line-height: 1.6;
@@ -20,8 +49,15 @@
     margin: 16px 0;
 }
 
-.answers { display:block; }
-.answer-row { display:block; width:100%; margin-bottom:8px; }
+.answers {
+    display: block;
+}
+
+.answer-row {
+    display: block;
+    width: 100%;
+    margin-bottom: 8px;
+}
 
 .option-card {
     padding: 8px 10px;
@@ -34,17 +70,14 @@
 }
 
 .option-card.selectable {
-    border: 1px solid rgba(0,0,0,0.12);
-}
-
-.option-card.selectable:hover {
-    background: #f5f7fb;
+    border: 1px solid rgba(0, 0, 0, 0.12);
     cursor: pointer;
 }
 
 .option-card.selected {
-    border: 2px solid #1976d2;
+    border: 1px solid #1976d2;
     background: #e8f1fd;
+    box-shadow: 0 0 0 1px #1976d2;
 }
 
 .custom-indicator {
@@ -86,5 +119,3 @@
     display: inline-flex !important;
     align-items: center;
 }
-
-

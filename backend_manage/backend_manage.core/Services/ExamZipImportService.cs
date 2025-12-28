@@ -148,9 +148,30 @@ public class ExamZipImportService
                 }
             }
 
-            // Extract images từ Word document và lưu vào thư mục Images
-            // Lấy tất cả questions (chỉ child questions có thể có image, parent chỉ có text)
-            await ExtractImagesFromWordAsync(examDocxPath, imageDir, parsedQuestions);
+            // Dictionary map QuestionId -> ImageFileName (VD: Q6 -> Q6.png)
+            var imageFilesMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+            // Copy images files từ ZIP vào thư mục Images
+            var imageSourceDir = Path.Combine(tempDir, "Images");
+            if (Directory.Exists(imageSourceDir))
+            {
+                var imageFiles = Directory.GetFiles(imageSourceDir, "*.*", SearchOption.TopDirectoryOnly);
+                foreach (var imageFile in imageFiles)
+                {
+                    var fileName = Path.GetFileName(imageFile);
+                    var destPath = Path.Combine(imageDir, fileName);
+                    File.Copy(imageFile, destPath, overwrite: true);
+                    _logger.LogInformation("Copied image file: {FileName} to {DestPath}", fileName, destPath);
+                    
+                    // Lưu mapping để replace trong content
+                    // Filename format: {QuestionId}.{Ext} (VD: Q6.png)
+                    var fileNameWithoutExt = Path.GetFileNameWithoutExtension(fileName);
+                    imageFilesMap[fileNameWithoutExt] = fileName;
+                }
+            }
+            
+            // Bỏ logic extract từ Word
+            // await ExtractImagesFromWordAsync(examDocxPath, imageDir, parsedQuestions);
 
             // Tạo OriginalExamPaper
             var totalQuestions = parsedParents.Count + parsedQuestions.Count; // Bao gồm cả parent và child
@@ -179,26 +200,10 @@ public class ExamZipImportService
             int globalOrder = 1;
 
             // Bước 1: Lưu parent questions vào database TRƯỚC để có ID
-            // Xác định các parent questions là matching questions (có child questions với type="match")
-            var matchingParentIds = new HashSet<string>();
-            foreach (var parentGroup in parsedQuestions.Where(q => !string.IsNullOrEmpty(q.ParentId)).GroupBy(q => q.ParentId))
-            {
-                // Nếu tất cả child questions trong group này đều là match type, thì parent là matching question
-                if (parentGroup.All(q => q.QuestionType == "match"))
-                {
-                    matchingParentIds.Add(parentGroup.Key);
-                }
-            }
-
             foreach (var parent in parsedParents)
             {
-                // Nếu là matching question, không cho phép hoán vị parent question
-                bool isMatchingParent = matchingParentIds.Contains(parent.ParentId);
-                
                 // Sử dụng giá trị CanShuffle từ parent (từ [parent permute=true] hoặc global permuteEnabled)
-                // Trừ khi là matching question (matching questions không được hoán vị)
-                // Giống EPZ import: CanShuffleQuestion = parentCauHoi.HoanVi
-                bool canShuffleParent = isMatchingParent ? false : parent.CanShuffle;
+                bool canShuffleParent = parent.CanShuffle;
                 
                 var parentDetail = new OriginalExamPaperDetail
                 {
@@ -240,19 +245,21 @@ public class ExamZipImportService
 
                 var parentQuestionId = parentIdMap[parentId];
                 int childOrder = 1; // Order riêng cho từng nhóm child
-                
-                // Kiểm tra xem parent này có phải là matching question không
-                bool isMatchingParent = matchingParentIds.Contains(parentId);
 
                 foreach (var q in parentGroup)
                 {
+                    // Bỏ qua match type questions
+                    if (q.QuestionType == "match")
+                    {
+                        _logger.LogInformation("Bỏ qua match type question: {QuestionId}", q.QuestionId);
+                        continue;
+                    }
+                    
                     // Xây dựng QuestionContent với các markers
-                    var questionContent = BuildQuestionContent(q, originalExamPaperCore);
+                    var questionContent = BuildQuestionContent(q, originalExamPaperCore, imageFilesMap);
 
-                    // Xác định CanShuffleQuestion:
-                    // - Nếu là matching parent: không được hoán vị
-                    // - Nếu không phải matching: dùng giá trị từ question tag (q.CanShuffle) hoặc permuteEnabled global
-                    bool canShuffle = isMatchingParent ? false : (q.CanShuffle || permuteEnabled);
+                    // Xác định CanShuffleQuestion
+                    bool canShuffle = q.CanShuffle;
 
                     var detail = new OriginalExamPaperDetail
                     {
@@ -263,7 +270,7 @@ public class ExamZipImportService
                             ? q.Answers.FindIndex(a => a.Label == q.CorrectAnswerLabel) + 1
                             : null,
                         ParentQuestionId = parentQuestionId, // Liên kết với parent đã lưu
-                        CanShuffleQuestion = canShuffle, // Sử dụng giá trị từ question tag hoặc global
+                        CanShuffleQuestion = canShuffle,
                         ChapterId = null,
                         CreatedAt = now,
                         CreatedBy = userId
@@ -273,9 +280,7 @@ public class ExamZipImportService
                     await _originalExamPaperDetailRepository.AddAsync(detail);
 
                     // Xử lý đáp án cho child question
-                    // Với matching questions (parent-child structure), answers không được hoán vị
-                    // Sử dụng giá trị từ question tag (q.CanShuffle) hoặc global permuteEnabled, giống EPZ import
-                    bool canShuffleAnswers = isMatchingParent ? false : (q.CanShuffle || permuteEnabled);
+                    bool canShuffleAnswers = q.CanShuffle;
                     
                     if (q.QuestionType == "mcq")
                     {
@@ -288,7 +293,7 @@ public class ExamZipImportService
                                 Order = aOrder++,
                                 AnswerContent = a.Content,
                                 IsCorrect = q.CorrectAnswerLabel == a.Label,
-                                CanShuffleAnswer = canShuffleAnswers, // Không hoán vị nếu là matching parent
+                                CanShuffleAnswer = canShuffleAnswers,
                                 CreatedAt = now,
                                 CreatedBy = userId
                             });
@@ -308,54 +313,24 @@ public class ExamZipImportService
                             CreatedBy = userId
                         });
                     }
-                    else if (q.QuestionType == "match")
-                    {
-                        // Câu hỏi nối cột: tạo Answers từ MatchColumnA và MatchColumnB
-                        // MatchColumnA → LeftItems (nửa đầu), MatchColumnB → RightItems (nửa sau)
-                        // Matching questions không được hoán vị answers
-                        int order = 1;
-                        
-                        // Thêm các items từ cột A (left) - nửa đầu của Answers
-                        foreach (var itemA in q.MatchColumnA)
-                        {
-                            answers.Add(new Answers
-                            {
-                                OriginalExamPaperDetail = detail,
-                                Order = order++,
-                                AnswerContent = itemA,
-                                IsCorrect = false, // Sẽ được validate khi match
-                                CanShuffleAnswer = false, // Matching questions không được hoán vị answers
-                                CreatedAt = now,
-                                CreatedBy = userId
-                            });
-                        }
-                        
-                        // Thêm các items từ cột B (right) - nửa sau của Answers
-                        foreach (var itemB in q.MatchColumnB)
-                        {
-                            answers.Add(new Answers
-                            {
-                                OriginalExamPaperDetail = detail,
-                                Order = order++,
-                                AnswerContent = itemB,
-                                IsCorrect = false,
-                                CanShuffleAnswer = false, // Matching questions không được hoán vị answers
-                                CreatedAt = now,
-                                CreatedBy = userId
-                            });
-                        }
-                    }
                 }
             }
 
             // Bước 4: Lưu các câu hỏi độc lập (không có parent)
             foreach (var q in independentQuestions)
             {
+                // Bỏ qua match type questions
+                if (q.QuestionType == "match")
+                {
+                    _logger.LogInformation("Bỏ qua match type question: {QuestionId}", q.QuestionId);
+                    continue;
+                }
+                
                 // Xây dựng QuestionContent với các markers
-                var questionContent = BuildQuestionContent(q, originalExamPaperCore);
+                var questionContent = BuildQuestionContent(q, originalExamPaperCore, imageFilesMap);
 
-                // Sử dụng giá trị CanShuffle từ question tag, nếu không có thì dùng permuteEnabled global
-                bool canShuffle = q.CanShuffle || permuteEnabled;
+                // Sử dụng giá trị CanShuffle từ question tag.
+                bool canShuffle = q.CanShuffle;
 
                 var detail = new OriginalExamPaperDetail
                 {
@@ -366,7 +341,7 @@ public class ExamZipImportService
                         ? q.Answers.FindIndex(a => a.Label == q.CorrectAnswerLabel) + 1
                         : null,
                     ParentQuestionId = null, // Câu hỏi độc lập
-                    CanShuffleQuestion = canShuffle, // Sử dụng giá trị từ question tag hoặc global
+                    CanShuffleQuestion = canShuffle,
                     ChapterId = null,
                     CreatedAt = now,
                     CreatedBy = userId
@@ -376,8 +351,7 @@ public class ExamZipImportService
                 await _originalExamPaperDetailRepository.AddAsync(detail);
 
                 // Xử lý đáp án cho câu hỏi độc lập
-                // Sử dụng giá trị CanShuffle từ question tag hoặc global permuteEnabled
-                bool canShuffleAnswers = q.CanShuffle || permuteEnabled;
+                bool canShuffleAnswers = q.CanShuffle;
                 
                 if (q.QuestionType == "mcq")
                 {
@@ -390,7 +364,7 @@ public class ExamZipImportService
                             Order = aOrder++,
                             AnswerContent = a.Content,
                             IsCorrect = q.CorrectAnswerLabel == a.Label,
-                            CanShuffleAnswer = canShuffleAnswers, // Sử dụng giá trị từ question tag hoặc global
+                            CanShuffleAnswer = canShuffleAnswers,
                             CreatedAt = now,
                             CreatedBy = userId
                         });
@@ -408,42 +382,6 @@ public class ExamZipImportService
                         CreatedAt = now,
                         CreatedBy = userId
                     });
-                }
-                else if (q.QuestionType == "match")
-                {
-                    // Câu hỏi nối cột: tạo Answers từ MatchColumnA và MatchColumnB
-                    // Matching questions độc lập không được hoán vị answers
-                    int order = 1;
-                    
-                    // Thêm các items từ cột A (left) - nửa đầu của Answers
-                    foreach (var itemA in q.MatchColumnA)
-                    {
-                        answers.Add(new Answers
-                        {
-                            OriginalExamPaperDetail = detail,
-                            Order = order++,
-                            AnswerContent = itemA,
-                            IsCorrect = false,
-                            CanShuffleAnswer = false, // Matching questions không được hoán vị answers
-                            CreatedAt = now,
-                            CreatedBy = userId
-                        });
-                    }
-                    
-                    // Thêm các items từ cột B (right) - nửa sau của Answers
-                    foreach (var itemB in q.MatchColumnB)
-                    {
-                        answers.Add(new Answers
-                        {
-                            OriginalExamPaperDetail = detail,
-                            Order = order++,
-                            AnswerContent = itemB,
-                            IsCorrect = false,
-                            CanShuffleAnswer = false, // Matching questions không được hoán vị answers
-                            CreatedAt = now,
-                            CreatedBy = userId
-                        });
-                    }
                 }
             }
 
@@ -480,12 +418,13 @@ public class ExamZipImportService
     /// <summary>
     /// Xây dựng QuestionContent với các markers cho image, audio, latex
     /// Format phải tương thích với frontend: <audio>...</audio> cho audio, giữ nguyên [latex]...[/latex]
+    /// Image: thay thế [image] bằng thẻ <img>
     /// </summary>
-    private string BuildQuestionContent(ExamZipParsedQuestion q, string originalExamPaperCore)
+    private string BuildQuestionContent(ExamZipParsedQuestion q, string originalExamPaperCore, Dictionary<string, string> imageFilesMap)
     {
         var content = new StringBuilder();
 
-        // Thêm stem
+        // Thêm stem (đã bao gồm [image] nếu có)
         if (!string.IsNullOrEmpty(q.Stem))
         {
             content.Append(q.Stem);
@@ -499,14 +438,29 @@ public class ExamZipImportService
             content.Append($" <audio>{audioFileName}</audio> ");
         }
 
-        // Thêm image marker - dùng format <img> để frontend có thể render
+        // Thay thế [image] bằng thẻ <img> với đúng filename
         if (q.HasImage)
         {
-            // Image sẽ được lưu với tên = QuestionId trong thư mục Images
-            // Frontend sẽ cần xử lý để load từ đúng path (tương tự audio)
-            var imageFileName = $"{q.QuestionId}.jpg"; // Mặc định .jpg, có thể là .png
-            // Frontend có thể cần xử lý path tương tự audio: /EPZ/{folderName}/Images/{imageFileName}
-            content.Append($" <img src=\"Images/{imageFileName}\" alt=\"Question {q.QuestionId}\" style=\"max-width: 100%; height: auto;\" /> ");
+            // Tìm file ảnh tương ứng trong map
+            if (imageFilesMap.TryGetValue(q.QuestionId, out var imageFileName))
+            {
+                var imgTag = $"<img src=\"Images/{imageFileName}\" alt=\"{q.QuestionId}\" style=\"max-width: 100%; height: auto;\" />";
+                
+                // Replace case-insensitive [image], [Image], [IMAGE]
+                var contentStr = content.ToString();
+                var regex = new System.Text.RegularExpressions.Regex(@"\[image\]", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+                
+                if (regex.IsMatch(contentStr))
+                {
+                    content.Clear();
+                    content.Append(regex.Replace(contentStr, imgTag));
+                }
+                else
+                {
+                    // Nếu không tìm thấy tag (trường hợp parser cũ skip), append vào cuối
+                    content.Append($" {imgTag} ");
+                }
+            }
         }
 
         // Thêm latex - giữ nguyên format [latex]...[/latex] vì frontend đã hỗ trợ
@@ -515,25 +469,10 @@ public class ExamZipImportService
             content.Append($" [latex]{q.LatexContent}[/latex] ");
         }
 
-        // Thêm match columns nếu là match type
+        // Skip match type questions - no longer supported
         if (q.QuestionType == "match")
         {
-            // Thêm marker [matching] để frontend detect và render MatchingQuestion component
-            // Marker được thêm sau stem để frontend có thể hiển thị stem trước khi render matching component
-            content.Append(" [matching] ");
-            
-            // Thêm format A: và B: để hiển thị trong QuestionContent (nếu cần)
-            // Frontend sẽ parse và hiển thị trong MatchingQuestion component
-            content.Append("\n\nA:\n");
-            for (int i = 0; i < q.MatchColumnA.Count; i++)
-            {
-                content.Append($"{i + 1}. {q.MatchColumnA[i]}\n");
-            }
-            content.Append("\nB:\n");
-            for (int i = 0; i < q.MatchColumnB.Count; i++)
-            {
-                content.Append($"{(char)('a' + i)}. {q.MatchColumnB[i]}\n");
-            }
+            return content.ToString().Trim();
         }
 
         return content.ToString().Trim();

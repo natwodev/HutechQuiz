@@ -7,8 +7,8 @@
    1. LaTeX Content Styling
    ============================================ */
 .katex-content {
-    font-size: 1.15rem;
-    line-height: 1.6;
+    font-size: 1rem;
+    line-height: 1.5;
     color: #333;
     word-wrap: break-word;
     overflow-wrap: break-word;
@@ -43,16 +43,11 @@
    2. Question Item Styling
    ============================================ */
 .question-item {
-    margin-bottom: 2rem;
-    padding: 1.5rem;
+    margin-bottom: 1rem;
+    padding: 0.75rem 1rem;
     background: #ffffff;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-    transition: box-shadow 0.2s ease;
-}
-
-.question-item:hover {
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 6px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 
 /* Parent question styling */
@@ -72,11 +67,11 @@
 
 /* Question title */
 .question-title {
-    margin-bottom: 1.5rem;
-    font-size: 1.25rem;
+    margin-bottom: 0.75rem;
+    font-size: 1.05rem;
     font-weight: 600;
     color: #1976d2;
-    line-height: 1.6;
+    line-height: 1.5;
 }
 
 .title-prefix {
@@ -104,60 +99,40 @@
 .answer-option {
     display: flex;
     align-items: flex-start;
-    padding: 0.875rem 1rem;
-    margin-bottom: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    margin-bottom: 0.375rem;
     background: #ffffff;
-    border: 2px solid #e0e0e0;
-    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
     cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    min-height: 3rem;
+    min-height: 2.25rem;
     position: relative;
     overflow: hidden;
 }
 
-.answer-option::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(25, 118, 210, 0.1), transparent);
-    transition: left 0.5s ease;
-}
-
+/* Explicitly disable all hover effects to ensure UI stability */
 .answer-option:hover {
-    background: #f5f5f5;
-    border: none;
-    transform: translateX(4px);
+    background: #ffffff !important;
+    transform: none !important;
+    box-shadow: none !important;
+    border-color: #e0e0e0 !important;
 }
 
-.answer-option:hover::before {
-    left: 100%;
+.answer-option.selected:hover {
+    background: #e3f2fd !important;
+    border-color: #1976d2 !important;
+}
+
+.answer-option,
+.answer-option * {
+    transition: none !important;
+    animation: none !important;
 }
 
 .answer-option.selected {
     background: #e3f2fd;
-    border-color: #e0e0e0;
-    box-shadow: 0 4px 12px rgba(25, 118, 210, 0.15);
-    transform: scale(1.02);
-    animation: selectPulse 0.4s ease-out;
-}
-
-@keyframes selectPulse {
-    0% {
-        transform: scale(1);
-        box-shadow: 0 2px 4px rgba(25, 118, 210, 0.1);
-    }
-    50% {
-        transform: scale(1.03);
-        box-shadow: 0 6px 16px rgba(25, 118, 210, 0.25);
-    }
-    100% {
-        transform: scale(1.02);
-        box-shadow: 0 4px 12px rgba(25, 118, 210, 0.15);
-    }
+    border-color: #1976d2;
+    box-shadow: 0 2px 8px rgba(25, 118, 210, 0.1);
 }
 
 .answer-option input[type="radio"] {
@@ -172,19 +147,17 @@
 .answer-letter {
     font-weight: 700;
     color: #1976d2;
-    min-width: 1.5rem;
-    margin-right: 0.5rem;
-    font-size: 1.15rem;
+    min-width: 1.25rem;
+    margin-right: 0.375rem;
+    font-size: 0.95rem;
     flex-shrink: 0;
-    margin-top: 0.125rem;
 }
 
 .answer-text {
     flex: 1;
-    line-height: 1.6;
+    line-height: 1.5;
     color: #424242;
-    padding-top: 0.125rem;
-    font-size: 1.1rem;
+    font-size: 0.95rem;
 }
 
 .answer-text .katex-content {
@@ -192,184 +165,7 @@
 }
 
 /* ============================================
-   4. Matching Question Styling
-   ============================================ */
-.matching-root {
-    position: relative;
-    padding: 16px;
-    background: #ffffff;
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-}
-
-.matching-lines {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-    z-index: 2;
-}
-
-.matching-columns {
-    position: relative;
-    z-index: 1;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 40px;
-    padding: 20px;
-    border: 2px dashed #cbd5e1;
-    border-radius: 12px;
-    min-height: 250px;
-    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-}
-
-.matching-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 16px;
-    padding: 12px 16px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-radius: 8px;
-    color: #ffffff;
-    font-size: 13px;
-    font-weight: 500;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.matching-header .side-title {
-    flex: 1;
-}
-
-.matching-header .legend {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 12px;
-}
-
-.dot {
-    display: inline-block;
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    background: #ffffff;
-    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3);
-}
-
-.dot.left {
-    background: #60a5fa;
-}
-
-.dot.right {
-    background: #f87171;
-}
-
-.match-item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 14px 16px;
-    border-radius: 10px;
-    cursor: pointer;
-    background: #ffffff;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
-    border: 2px solid #e5e7eb;
-    margin-bottom: 12px;
-    width: 90%;
-    margin-left: auto;
-    margin-right: auto;
-    transition: all 0.2s ease;
-    user-select: none;
-}
-
-.match-item:hover {
-    background: #f8fafc;
-    border-color: #cbd5e1;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
-    transform: translateY(-2px);
-}
-
-.match-item.active {
-    outline: 3px solid #3b82f6;
-    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
-    border-color: #3b82f6;
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-    transform: translateY(-2px);
-}
-
-.anchor {
-    width: 16px;
-    height: 16px;
-    border: 3px solid #3b82f6;
-    background: #dbeafe;
-    border-radius: 50%;
-    box-shadow: 0 0 0 2px #ffffff inset, 0 2px 4px rgba(0, 0, 0, 0.1);
-    flex-shrink: 0;
-}
-
-.anchor.right {
-    border-color: #ef4444;
-    background: #fee2e2;
-}
-
-.match-text {
-    flex: 1;
-    white-space: normal;
-    word-wrap: break-word;
-    font-size: 15px;
-    color: #111827;
-    line-height: 1.5;
-    font-weight: 500;
-}
-
-.pairs-bar {
-    margin-top: 8px;
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-}
-
-.pair-chip {
-    background: #f3f4f6;
-    border-radius: 9999px;
-    padding: 2px 8px;
-    font-size: 12px;
-}
-
-/* Đảm bảo LeaderLine hiển thị trên cùng */
-body > svg[data-leader-line],
-body > svg[data-container-id],
-body > svg.leader-line {
-    pointer-events: none !important;
-    z-index: 99999 !important;
-}
-
-/* Đảm bảo LeaderLine hiển thị trong fullscreen mode */
-:fullscreen body > svg[data-leader-line],
-:fullscreen body > svg[data-container-id],
-:fullscreen body > svg.leader-line,
-:-webkit-full-screen body > svg[data-leader-line],
-:-webkit-full-screen body > svg[data-container-id],
-:-webkit-full-screen body > svg.leader-line,
-:-moz-full-screen body > svg[data-leader-line],
-:-moz-full-screen body > svg[data-container-id],
-:-moz-full-screen body > svg.leader-line,
-:-ms-fullscreen body > svg[data-leader-line],
-:-ms-fullscreen body > svg[data-container-id],
-:-ms-fullscreen body > svg.leader-line {
-    pointer-events: none !important;
-    z-index: 99999 !important;
-    display: block !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-}
-
-
-/* ============================================
-   5. Media Content (Images & Audio)
+   4. Media Content (Images & Audio)
    ============================================ */
 .katex-content img {
     max-width: 100%;
@@ -471,7 +267,7 @@ body > svg.leader-line {
 }
 
 /* ============================================
-   6. Child Questions Container
+   5. Child Questions Container
    ============================================ */
 .child-questions {
     margin-top: 1.5rem;
@@ -488,7 +284,7 @@ body > svg.leader-line {
 }
 
 /* ============================================
-   7. Preview Page Specific Styles
+   6. Preview Page Specific Styles
    ============================================ */
 .preview-page .katex-content {
     font-size: 1rem;
@@ -508,9 +304,10 @@ body > svg.leader-line {
 }
 
 /* ============================================
-   8. Responsive Design
+   7. Responsive Design
    ============================================ */
 @media (max-width: 768px) {
+
     /* Font sizes */
     .katex-content {
         font-size: 1rem;
@@ -526,18 +323,6 @@ body > svg.leader-line {
 
     .answer-letter {
         font-size: 1rem;
-    }
-
-    .side-title {
-        font-size: 1rem;
-    }
-
-    .match-text {
-        font-size: 0.9rem;
-    }
-
-    .match-number {
-        font-size: 0.85rem;
     }
 
     /* Spacing */
@@ -561,36 +346,6 @@ body > svg.leader-line {
         width: 1.1rem;
         height: 1.1rem;
         margin-right: 0.5rem;
-    }
-
-    /* Matching questions */
-    .matching-columns {
-        grid-template-columns: 1fr;
-        gap: 1.25rem;
-    }
-    
-    .col-divider {
-        display: none;
-    }
-    
-    .matching-columns .col.left,
-    .matching-columns .col.right {
-        padding: 0;
-    }
-
-    .matching-root {
-        padding: 1rem;
-        margin: 1rem 0;
-    }
-
-    .match-item {
-        min-height: 2.75rem;
-        padding: 0.625rem;
-    }
-
-    .matching-header {
-        margin-bottom: 1rem;
-        padding-bottom: 0.75rem;
     }
 
     /* Images */
@@ -619,18 +374,6 @@ body > svg.leader-line {
         font-size: 0.95rem;
     }
 
-    .side-title {
-        font-size: 0.95rem;
-    }
-
-    .match-text {
-        font-size: 0.85rem;
-    }
-
-    .match-number {
-        font-size: 0.8rem;
-    }
-
     .question-item {
         padding: 0.75rem;
         margin-bottom: 1rem;
@@ -650,24 +393,10 @@ body > svg.leader-line {
         width: 1rem;
         height: 1rem;
     }
-
-    .matching-root {
-        padding: 0.75rem;
-    }
-
-    .match-item {
-        min-height: 2.5rem;
-        padding: 0.5rem;
-    }
-
-    .matching-header {
-        margin-bottom: 0.75rem;
-        padding-bottom: 0.5rem;
-    }
 }
 
 /* ============================================
-   9. Print Styles
+   8. Print Styles
    ============================================ */
 @media print {
     .question-item {
@@ -680,21 +409,12 @@ body > svg.leader-line {
         border: 1px solid #ccc;
         page-break-inside: avoid;
     }
-
-    .matching-root {
-        page-break-inside: avoid;
-    }
 }
 
 /* ============================================
-   10. Accessibility Improvements
+   9. Accessibility Improvements
    ============================================ */
 .answer-option:focus-within {
-    outline: 3px solid #1976d2;
-    outline-offset: 2px;
-}
-
-.match-item:focus {
     outline: 3px solid #1976d2;
     outline-offset: 2px;
 }
@@ -711,4 +431,3 @@ body > svg.leader-line {
     white-space: nowrap;
     border-width: 0;
 }
-
