@@ -38,6 +38,13 @@ namespace frontend_manage.Pages.Monitor
         // Tránh đăng ký event trùng lặp khi re-render
         private bool _signalRHandlersBound = false;
         private bool _signalRInitialized = false;
+        
+        private static readonly HashSet<string> _violationTypes = new()
+        {
+            "TabSwitch", "FullscreenExit", "Copy", "Paste", 
+            "RightClick", "DevTools", "Screenshot",
+            "AppBackground", "AppSwitch"
+        };
 
         protected override async Task OnInitializedAsync()
         {
@@ -157,6 +164,7 @@ namespace frontend_manage.Pages.Monitor
                 {
                     NotificationService.OnConnectionStateChanged += OnConnectionStateChanged;
                     NotificationService.OnRoomStatusUpdated += OnRoomStatusUpdated;
+                    NotificationService.OnStudentActivityDetected += OnStudentActivityDetected;
                     _signalRHandlersBound = true;
                 }
 
@@ -208,6 +216,39 @@ namespace frontend_manage.Pages.Monitor
             }
         }
 
+        private void OnStudentActivityDetected(object data)
+        {
+            try
+            {
+                var json = System.Text.Json.JsonSerializer.Serialize(data);
+                var activity = System.Text.Json.JsonSerializer.Deserialize<StudentActivityDto>(json, new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+                if (activity != null && _violationTypes.Contains(activity.ActivityType))
+                {
+                    InvokeAsync(() =>
+                    {
+                        if (examData?.Students != null)
+                        {
+                            var student = examData.Students.FirstOrDefault(s => s.StudentCode == activity.StudentCode);
+                            if (student != null)
+                            {
+                                // Cập nhật trực tiếp số lượng từ backend gửi qua (backend đã lọc theo _violationTypes)
+                                student.CheatingWarningCount = activity.CheatingWarningCount;
+                                student.CheatingWarningDetails ??= new List<string>();
+                                student.CheatingWarningDetails.Insert(0, $"{activity.ActivityTime:HH:mm:ss}: {activity.Description ?? activity.ActivityType}");
+                                StateHasChanged();
+                                Console.WriteLine($"Realtime update: Student {student.StudentCode} now has {student.CheatingWarningCount} violations.");
+                            }
+                        }
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error updating student violation count realtime: {ex.Message}");
+            }
+        }
+
 
         private void ShowNotification(string message, bool isError = false)
         {
@@ -236,6 +277,7 @@ namespace frontend_manage.Pages.Monitor
             {
                 NotificationService.OnRoomStatusUpdated -= OnRoomStatusUpdated;
                 NotificationService.OnConnectionStateChanged -= OnConnectionStateChanged;
+                NotificationService.OnStudentActivityDetected -= OnStudentActivityDetected;
             }
 
             if (ExamSessionSubjectId.HasValue)
