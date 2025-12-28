@@ -63,30 +63,297 @@ public static class ExamZipWordParserService
 
         if (body == null) return blocks;
 
-        foreach (var p in body.Elements<Paragraph>())
+        // Sử dụng phương pháp duyệt qua tất cả các phần tử con của body 
+        // để hỗ trợ cả Paragraph và Table (nơi chứa câu hỏi/đáp án)
+        foreach (var child in body.ChildElements)
         {
-            var sb = new StringBuilder();
-
-            foreach (var run in p.Elements<Run>())
+            if (child is Paragraph p)
             {
-                if (run.Descendants<Drawing>().Any())
-                {
-                    sb.Append(" [[IMAGE]] ");
-                }
-                else
-                {
-                    sb.Append(run.InnerText);
-                }
+                ProcessParagraph(p, blocks);
             }
-
-            var line = sb.ToString().Trim();
-            if (!string.IsNullOrWhiteSpace(line))
+            else if (child is Table t)
             {
-                blocks.Add(line);
+                foreach (var row in t.Elements<TableRow>())
+                {
+                    foreach (var cell in row.Elements<TableCell>())
+                    {
+                        foreach (var cellP in cell.Elements<Paragraph>())
+                        {
+                            ProcessParagraph(cellP, blocks);
+                        }
+                    }
+                }
             }
         }
 
         return blocks;
+    }
+
+    private static void ProcessParagraph(Paragraph p, List<string> blocks)
+    {
+        var sb = new StringBuilder();
+        foreach (var element in p.ChildElements)
+        {
+            ProcessElement(element, sb);
+        }
+
+        var line = sb.ToString().Trim();
+        if (!string.IsNullOrWhiteSpace(line))
+        {
+            blocks.Add(line);
+        }
+    }
+
+    private static void ProcessElement(DocumentFormat.OpenXml.OpenXmlElement element, StringBuilder sb)
+    {
+        // Xử lý AlternateContent để tránh bị lặp nội dung (ví dụ: một cái là oMath, một cái là text thô)
+        if (element.LocalName == "alternateContent")
+        {
+            // Thường Choice sẽ chứa nội dung "xịn" hơn (như oMath)
+            var choice = element.ChildElements.FirstOrDefault(x => x.LocalName == "choice");
+            if (choice != null)
+            {
+                foreach (var child in choice.ChildElements) ProcessElement(child, sb);
+                return;
+            }
+            // Nếu không có Choice thì lấy Fallback
+            var fallback = element.ChildElements.FirstOrDefault(x => x.LocalName == "fallback");
+            if (fallback != null)
+            {
+                foreach (var child in fallback.ChildElements) ProcessElement(child, sb);
+                return;
+            }
+        }
+
+        if (element is Run run)
+        {
+            if (run.Descendants<Drawing>().Any())
+            {
+                sb.Append(" [[IMAGE]] ");
+            }
+            else
+            {
+                sb.Append(run.InnerText);
+            }
+        }
+        // Sử dụng LocalName để nhận diện các thẻ Math (oMath và oMathPara) 
+        // nhằm tránh lỗi thiếu assembly reference cho namespace DocumentFormat.OpenXml.Math
+        else if (element.LocalName == "oMath")
+        {
+            var latex = ConvertOmmlToLatex(element);
+            if (!string.IsNullOrWhiteSpace(latex))
+            {
+                sb.Append($" [latex]{latex}[/latex] ");
+            }
+        }
+        else if (element.LocalName == "oMathPara")
+        {
+            foreach (var m in element.Descendants())
+            {
+                if (m.LocalName == "oMath")
+                {
+                    var latex = ConvertOmmlToLatex(m);
+                    if (!string.IsNullOrWhiteSpace(latex))
+                    {
+                        sb.Append($" [latex]{latex}[/latex] ");
+                    }
+                }
+            }
+        }
+        else if (element is Hyperlink hyperlink)
+        {
+            foreach (var child in hyperlink.ChildElements)
+            {
+                ProcessElement(child, sb);
+            }
+        }
+        else if (element.HasChildren)
+        {
+            // Xử lý đệ quy cho các phần tử chứa khác (ví dụ: SmartTag, v.v.)
+            foreach (var child in element.ChildElements)
+            {
+                ProcessElement(child, sb);
+            }
+        }
+    }
+
+    private static string ConvertOmmlToLatex(DocumentFormat.OpenXml.OpenXmlElement mathElement)
+    {
+        if (mathElement == null) return "";
+        var sb = new StringBuilder();
+        foreach (var child in mathElement.ChildElements)
+        {
+            sb.Append(TranslateOmmlElement(child));
+        }
+        return sb.ToString().Trim();
+    }
+
+    private static string TranslateOmmlElement(DocumentFormat.OpenXml.OpenXmlElement el)
+    {
+        switch (el.LocalName)
+        {
+            case "r": // Run
+                var text = "";
+                foreach (var child in el.ChildElements)
+                {
+                    if (child.LocalName == "t") text += child.InnerText;
+                }
+                return MapMathSymbols(text);
+
+            case "f": // Fraction
+                var num = el.ChildElements.FirstOrDefault(x => x.LocalName == "num");
+                var den = el.ChildElements.FirstOrDefault(x => x.LocalName == "den");
+                return $"\\frac{{{ConvertOmmlToLatex(num)}}}{{{ConvertOmmlToLatex(den)}}}";
+
+            case "sSub": // Subscript
+                var subBase = el.ChildElements.FirstOrDefault(x => x.LocalName == "e");
+                var sub = el.ChildElements.FirstOrDefault(x => x.LocalName == "sub");
+                return $"{ConvertOmmlToLatex(subBase)}_{{{ConvertOmmlToLatex(sub)}}}";
+
+            case "sSup": // Superscript
+                var supBase = el.ChildElements.FirstOrDefault(x => x.LocalName == "e");
+                var sup = el.ChildElements.FirstOrDefault(x => x.LocalName == "sup");
+                return $"{ConvertOmmlToLatex(supBase)}^{{{ConvertOmmlToLatex(sup)}}}";
+
+            case "sSubSup": // Sub-Superscript
+                var subSupBase = el.ChildElements.FirstOrDefault(x => x.LocalName == "e");
+                var subVal = el.ChildElements.FirstOrDefault(x => x.LocalName == "sub");
+                var supVal = el.ChildElements.FirstOrDefault(x => x.LocalName == "sup");
+                return $"{ConvertOmmlToLatex(subSupBase)}_{{{ConvertOmmlToLatex(subVal)}}}^{{{ConvertOmmlToLatex(supVal)}}}";
+
+            case "nary": // N-ary (Sum, Integral)
+                var naryPr = el.ChildElements.FirstOrDefault(x => x.LocalName == "naryPr");
+                var chrAttr = naryPr?.ChildElements.FirstOrDefault(x => x.LocalName == "chr")?.GetAttribute("val", "http://schemas.openxmlformats.org/officeDocument/2006/math");
+                var chr = chrAttr?.Value ?? "∫";
+                var op = MapMathSymbols(chr);
+                
+                var narySub = el.ChildElements.FirstOrDefault(x => x.LocalName == "sub");
+                var narySup = el.ChildElements.FirstOrDefault(x => x.LocalName == "sup");
+                var naryE = el.ChildElements.FirstOrDefault(x => x.LocalName == "e");
+                
+                var res = op;
+                if (narySub != null) res += $"_{{{ConvertOmmlToLatex(narySub)}}}";
+                if (narySup != null) res += $"^{{{ConvertOmmlToLatex(narySup)}}}";
+                res += $" {ConvertOmmlToLatex(naryE)}";
+                return res;
+
+            case "d": // Delimiter (Parentheses)
+                var dBase = el.ChildElements.FirstOrDefault(x => x.LocalName == "e");
+                // Mặc định là ngoặc đơn, có thể lấy từ dPr nếu cần
+                return $"\\left( {ConvertOmmlToLatex(dBase)} \\right)";
+
+            case "limLow": // Limit
+                var limBase = el.ChildElements.FirstOrDefault(x => x.LocalName == "e");
+                var lim = el.ChildElements.FirstOrDefault(x => x.LocalName == "lim");
+                return $"\\lim_{{{ConvertOmmlToLatex(lim)}}} {ConvertOmmlToLatex(limBase)}";
+
+            case "rad": // Radical (Square root)
+                var radBase = el.ChildElements.FirstOrDefault(x => x.LocalName == "e");
+                var deg = el.ChildElements.FirstOrDefault(x => x.LocalName == "deg");
+                if (deg != null && !string.IsNullOrEmpty(deg.InnerText))
+                    return $"\\sqrt[{ConvertOmmlToLatex(deg)}]{{{ConvertOmmlToLatex(radBase)}}}";
+                return $"\\sqrt{{{ConvertOmmlToLatex(radBase)}}}";
+
+            case "m": // Matrix
+                return "[Matrix]"; // Tạm thời chưa xử lý matrix phức tạp
+
+            case "e": // Base/Element container
+                var sbE = new StringBuilder();
+                foreach (var child in el.ChildElements) sbE.Append(TranslateOmmlElement(child));
+                return sbE.ToString();
+
+            default:
+                if (el.HasChildren)
+                {
+                    var sbDefault = new StringBuilder();
+                    foreach (var child in el.ChildElements) sbDefault.Append(TranslateOmmlElement(child));
+                    return sbDefault.ToString();
+                }
+                return MapMathSymbols(el.InnerText);
+        }
+    }
+
+    private static string MapMathSymbols(string text)
+    {
+        if (string.IsNullOrEmpty(text)) return "";
+
+        var result = text;
+        // Mapping các ký hiệu Unicode sang LaTeX command
+        var maps = new Dictionary<string, string>
+        {
+            { "∬", "\\iint" },
+            { "∭", "\\iiint" },
+            { "∫", "\\int" },
+            { "∑", "\\sum" },
+            { "∏", "\\prod" },
+            { "Ω", "\\Omega" },
+            { "ω", "\\omega" },
+            { "Δ", "\\Delta" },
+            { "δ", "\\delta" },
+            { "α", "\\alpha" },
+            { "β", "\\beta" },
+            { "γ", "\\gamma" },
+            { "λ", "\\lambda" },
+            { "π", "\\pi" },
+            { "θ", "\\theta" },
+            { "φ", "\\phi" },
+            { "σ", "\\sigma" },
+            { "μ", "\\mu" },
+            { "τ", "\\tau" },
+            { "ε", "\\epsilon" },
+            { "ζ", "\\zeta" },
+            { "η", "\\eta" },
+            { "κ", "\\kappa" },
+            { "ρ", "\\rho" },
+            { "ψ", "\\psi" },
+            { "χ", "\\chi" },
+            { "→", "\\to" },
+            { "∞", "\\infty" },
+            { "√", "\\sqrt" },
+            { "≤", "\\le" },
+            { "≥", "\\ge" },
+            { "≠", "\\neq" },
+            { "≈", "\\approx" },
+            { "±", "\\pm" },
+            { "×", "\\times" },
+            { "÷", "\\div" },
+            { "⋅", "\\cdot" },
+            { "∂", "\\partial" },
+            { "∇", "\\nabla" },
+            { "∀", "\\forall" },
+            { "∃", "\\exists" },
+            { "∈", "\\in" },
+            { "∉", "\\notin" },
+            { "⊂", "\\subset" },
+            { "⊃", "\\supset" },
+            { "∪", "\\cup" },
+             { "∩", "\\cap" },
+             { "∧", "\\wedge" },
+             { "∨", "\\vee" },
+             { "¬", "\\neg" },
+             { "⇒", "\\Rightarrow" },
+             { "⇔", "\\Leftrightarrow" },
+             { "≡", "\\equiv" },
+             { "≅", "\\cong" },
+             { "∝", "\\propto" },
+             { "∠", "\\angle" },
+             { "⊥", "\\perp" },
+             { "∥", "\\parallel" }
+         };
+
+        foreach (var map in maps)
+        {
+            // Thêm dấu cách sau mỗi command LaTeX để tránh bị dính vào ký tự sau (ví dụ: \DeltaV -> \Delta V)
+            // Chỉ thêm nếu map.Value bắt đầu bằng \
+            string replacement = map.Value;
+            if (replacement.StartsWith("\\"))
+            {
+                replacement += " ";
+            }
+            result = result.Replace(map.Key, replacement);
+        }
+
+        return result;
     }
 
     // =========================
@@ -279,16 +546,28 @@ public static class ExamZipWordParserService
             if (audioRegex.IsMatch(line))
             {
                 current.HasAudio = true;
-                // Audio sẽ được lưu với tên = QuestionId
-                continue;
+                // Logic cũ: Nếu dòng chỉ chứa duy nhất tag audio, skip line
+                if (line.Trim().Equals("[audio]", StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+                // Thêm trường hợp: Nếu audio nằm trong dòng văn bản, không skip để giữ nội dung
             }
 
             // ===== LATEX TAG =====
             var latexMatch = latexRegex.Match(line);
             if (latexMatch.Success)
             {
-                current.LatexContent = (current.LatexContent ?? "") + " " + latexMatch.Groups[1].Value.Trim();
-                continue;
+                // Logic cũ: Nếu dòng chỉ chứa duy nhất tag latex, gán vào LatexContent và skip
+                if (line.Trim().Equals(latexMatch.Value.Trim(), StringComparison.OrdinalIgnoreCase))
+                {
+                    current.LatexContent = (current.LatexContent ?? "") + " " + latexMatch.Groups[1].Value.Trim();
+                    continue;
+                }
+                
+                // Thêm trường hợp: Nếu latex nằm trong dòng văn bản (inline) hoặc có nhiều tag,
+                // ta không skip để nội dung (bao gồm cả các tag latex) được lưu vào Stem/Content.
+                // Việc xử lý LatexContent ở đây được bỏ qua để tránh lặp nội dung khi ImportService append.
             }
 
             // ===== ANSWER OPTIONS (A. B. C. D.) =====
