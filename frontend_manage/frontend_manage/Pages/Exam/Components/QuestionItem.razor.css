@@ -64,9 +64,9 @@
     border-radius: 8px;
     display: grid;
     grid-template-columns: auto 24px 1fr;
-    align-items: center;
+    align-items: flex-start;
     column-gap: 8px;
-    white-space: nowrap;
+    white-space: normal;
 }
 
 .option-card.selectable {
@@ -105,12 +105,16 @@
     margin-right: 0;
     width: 24px;
     text-align: center;
+    padding-top: 2px;
 }
 
 .option-text {
     font-size: 15.5px;
     display: inline-block;
-    white-space: nowrap;
+    white-space: normal;
+    word-break: break-word;
+    line-height: 1.5;
+    padding-top: 2px;
 }
 
 .option-card .mud-radio,
