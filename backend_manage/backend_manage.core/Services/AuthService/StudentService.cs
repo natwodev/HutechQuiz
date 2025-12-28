@@ -19,6 +19,7 @@ using OfficeOpenXml;
 using StackExchange.Redis;
 using backend_manage.core.Services.AuthService.Helpers;
 using backend_manage.core.Services.Interfaces;
+using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace backend_manage.core.Services.AuthService;
 
@@ -40,6 +41,14 @@ public class StudentService : IStudentService
     private readonly ExamPaperHelper _examPaperHelper;
     private readonly StudentAnswerHelper _answerHelper;
     private readonly StudentImportHelper _importHelper;
+    private readonly IRepository<StudentActivity> _activityRepository;
+
+    private static readonly HashSet<string> _violationTypes = new()
+    {
+        "TabSwitch", "FullscreenExit", "Copy", "Paste", 
+        "RightClick", "DevTools", "Screenshot",
+        "AppBackground", "AppSwitch"
+    };
 
     public StudentService(
         IRepository<Student> repository,
@@ -57,7 +66,8 @@ public class StudentService : IStudentService
         StudentExamSessionCacheHelper sessionCacheHelper,
         ExamPaperHelper examPaperHelper,
         StudentAnswerHelper answerHelper,
-        StudentImportHelper importHelper)
+        StudentImportHelper importHelper,
+        IRepository<StudentActivity> activityRepository)
     {
         _repository = repository;
         _studentExamSessionRepository = studentExamSessionRepository;
@@ -75,6 +85,7 @@ public class StudentService : IStudentService
         _examPaperHelper = examPaperHelper;
         _answerHelper = answerHelper;
         _importHelper = importHelper;
+        _activityRepository = activityRepository;
     }
 
     //đã tối ưu
@@ -648,8 +659,29 @@ public class StudentService : IStudentService
             .AsSplitQuery();
 
         var sessions = await query.ToListAsync();
+        var sessionIds = sessions.Select(s => s.StudentExamSessionId).ToList();
 
-        var students = sessions.Select(x => _mapper.Map<StudentExamRoomStatusDto>(x)).ToList();
+        // Lấy danh sách hành động vi phạm cho tất cả sinh viên trong ca thi
+        var activities = await _activityRepository.GetQueryable()
+            .Where(a => sessionIds.Contains(a.StudentExamSessionId) && _violationTypes.Contains(a.ActivityType))
+            .ToListAsync();
+
+        var students = sessions.Select(x => {
+            var dto = _mapper.Map<StudentExamRoomStatusDto>(x);
+            
+            // Lọc các activity của sinh viên này
+            var studentActivities = activities
+                .Where(a => a.StudentExamSessionId == x.StudentExamSessionId)
+                .OrderByDescending(a => a.ActivityTime)
+                .ToList();
+                
+            dto.CheatingWarningCount = studentActivities.Count;
+            dto.CheatingWarningDetails = studentActivities
+                .Select(a => $"{a.ActivityTime:HH:mm:ss}: {a.Description ?? a.ActivityType}")
+                .ToList();
+                
+            return dto;
+        }).ToList();
 
         var anySession = sessions.FirstOrDefault();
         SubjectExamRoomStatusDto subjectInfo;
@@ -1090,7 +1122,89 @@ public class StudentService : IStudentService
 
 
     #endregion
-    
-} 
+
+    #region RankByExamSessionSubjectAsync
+    public async Task<AllSubjectRankingResponseDto>
+GetAllCompletedSubjectRankingsAsync(string studentCode)
+    {
+        // 1️⃣ Lấy tất cả bài đã nộp của sinh viên
+        var completedSessions = await _studentExamSessionRepository
+            .GetQueryable()
+            .Where(x =>
+                x.StudentCode == studentCode &&
+                x.IsCompleted == true
+            )
+            .Select(x => x.ExamSessionSubjectId)
+            .Distinct()
+            .ToListAsync();
+
+        var result = new List<SubjectRankingDto>();
+
+        foreach (var subjectId in completedSessions)
+        {
+            // 2️⃣ Lấy toàn bộ bài đã nộp của môn đó
+            var sessions = await _studentExamSessionRepository
+                .GetQueryable()
+                .Where(x =>
+                    x.ExamSessionSubjectId == subjectId &&
+                    x.IsCompleted == true
+                )
+                .Include(x => x.Student)
+                .OrderByDescending(x => x.Score)
+                .ToListAsync();
+
+            var rankedList = new List<RankedStudentDto>();
+
+            int rank = 0;
+            int index = 0;
+            double? lastScore = null;
+
+            foreach (var session in sessions)
+            {
+                index++;
+
+                if (lastScore != session.Score)
+                {
+                    rank = index;
+                    lastScore = session.Score;
+                }
+
+                rankedList.Add(new RankedStudentDto
+                {
+                    Rank = rank,
+                    StudentCode = session.StudentCode,
+                    FullName = $"{session.Student?.LastName} {session.Student?.FirstName}".Trim(),
+                    Score = session.Score
+                });
+            }
+
+            var myRank = rankedList.FirstOrDefault(x => x.StudentCode == studentCode);
+
+            // ⚠️ Lấy tên môn – SỬA THEO ENTITY THỰC TẾ CỦA BẠN
+            var subjectName = await _studentExamSessionRepository
+                .GetQueryable()
+                .Where(x => x.ExamSessionSubjectId == subjectId)
+                .Select(x => x.ExamSessionSubject.Subject.SubjectName)
+                .FirstAsync();
+
+            result.Add(new SubjectRankingDto
+            {
+                ExamSessionSubjectId = subjectId ?? 0,
+                SubjectName = subjectName,
+                Top5 = rankedList.Take(5).ToList(),
+                MyRank = myRank
+            });
+        }
+
+        return new AllSubjectRankingResponseDto
+        {
+            Subjects = result
+        };
+    }
+
+
+    #endregion
+
+}
 
 
