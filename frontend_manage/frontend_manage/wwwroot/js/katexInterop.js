@@ -14,7 +14,16 @@ function preprocessCustomLatexTags(root) {
         nodesToProcess.forEach(textNode => {
             const html = textNode.nodeValue.replace(/\[latex\]([\s\S]*?)\[\/latex\]/gi, function (_, inner) {
                 // Keep inner delimiters ($$, $, \[, \() to let auto-render decide display vs inline
-                const encoded = inner
+                // decode HTML entities first because the text node might have been escaped
+                let decoded = inner
+                    .replace(/&amp;/g, '&')
+                    .replace(/&lt;/g, '<')
+                    .replace(/&gt;/g, '>')
+                    .replace(/&quot;/g, '"')
+                    .replace(/&#39;/g, "'");
+
+                // Encode specifically for KaTeX to handle & and other chars correctly in math mode
+                const encoded = decoded
                     .replace(/&/g, '&amp;')
                     .replace(/</g, '&lt;')
                     .replace(/>/g, '&gt;');
