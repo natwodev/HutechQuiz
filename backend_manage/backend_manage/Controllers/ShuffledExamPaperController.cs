@@ -74,6 +74,62 @@ namespace backend_manage.Controllers
         {
             public bool AllowViewMaterials { get; set; }
         }
+
+        /// <summary>
+        /// Lấy tất cả đề hoán vị để test (không cần student session)
+        /// </summary>
+        [HttpGet("all-for-test")]
+        [Authorize]
+        public async Task<IActionResult> GetAllForTest()
+        {
+            try
+            {
+                var result = await _service.GetAllShuffledPapersForTestAsync();
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi lấy danh sách đề hoán vị cho test");
+                return StatusCode(500, new { message = $"Lỗi: {ex.Message}" });
+            }
+        }
+
+        /// <summary>
+        /// Lấy chi tiết đề hoán vị để làm bài test (không cần student session)
+        /// </summary>
+        [HttpGet("{core}/test-details")]
+        [Authorize]
+        public async Task<IActionResult> GetTestDetails(string core)
+        {
+            try
+            {
+                var result = await _service.GetTestDetailsAsync(core);
+                if (result == null) return NotFound("Không tìm thấy đề hoán vị");
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi lấy chi tiết đề hoán vị {Core} cho test", core);
+                return StatusCode(500, new { message = $"Lỗi: {ex.Message}" });
+            }
+        }
+
+        [HttpGet("{id:int}/with-details-by-id")]
+        [Authorize]
+        public async Task<IActionResult> GetWithDetailsById(int id)
+        {
+            try
+            {
+                var result = await _service.GetWithDetailsByIdAsync(id);
+                if (result == null) return NotFound("Không tìm thấy đề hoán vị");
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi lấy chi tiết đề hoán vị ID {Id}", id);
+                return StatusCode(500, new { message = $"Lỗi: {ex.Message}" });
+            }
+        }
     
     }
 } 

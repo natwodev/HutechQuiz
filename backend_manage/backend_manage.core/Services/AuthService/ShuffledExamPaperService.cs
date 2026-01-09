@@ -112,6 +112,90 @@ namespace backend_manage.core.Services.AuthService
 
             return true;
         }
+
+        /// <summary>
+        /// Lấy tất cả đề hoán vị để test
+        /// </summary>
+        public async Task<List<ShuffledExamPaperDto>> GetAllShuffledPapersForTestAsync()
+        {
+            var papers = await _shuffledExamPaperRepository.GetQueryable()
+                .Where(x => !x.IsDeleted)
+                .Include(x => x.OriginalExamPaper)
+                .Include(x => x.Subject)
+                .OrderByDescending(x => x.CreatedAt)
+                .Take(50) // Giới hạn 50 đề gần nhất để tránh quá tải
+                .ToListAsync();
+            
+            return papers.Select(x => _mapper.Map<ShuffledExamPaperDto>(x)).ToList();
+        }
+
+        /// <summary>
+        /// Lấy chi tiết đề hoán vị để làm bài test
+        /// </summary>
+        public async Task<TestExamPaperDto?> GetTestDetailsAsync(string shuffledExamPaperCore)
+        {
+            var paper = await _shuffledExamPaperRepository.GetQueryable()
+                .Where(x => x.ShuffledExamPaperCore == shuffledExamPaperCore && !x.IsDeleted)
+                .Include(x => x.OriginalExamPaper)
+                    .ThenInclude(o => o.OriginalExamPaperDetails)
+                        .ThenInclude(d => d.Answers)
+                .Include(x => x.OriginalExamPaper)
+                    .ThenInclude(o => o.OriginalExamPaperDetails)
+                        .ThenInclude(d => d.ChildQuestions)
+                            .ThenInclude(c => c.Answers)
+                .Include(x => x.Subject)
+                .FirstOrDefaultAsync();
+            
+            if (paper == null) return null;
+
+            var shuffledDto = _mapper.Map<ShuffledExamPaperDto>(paper);
+            var originalDto = _mapper.Map<OriginalExamPaperDto>(paper.OriginalExamPaper);
+            
+            // Get folder name from original exam paper core
+            var folderName = paper.OriginalExamPaper.OriginalExamPaperCore?.Split('_').FirstOrDefault() ?? "";
+
+            return new TestExamPaperDto
+            {
+                ExamPaper = shuffledDto,
+                OriginalExamPaper = originalDto,
+                DurationMinutes = paper.OriginalExamPaper.DurationMinutes,
+                FolderName = folderName
+            };
+        }
+        public async Task<ShuffledExamPaperDto?> GetWithDetailsByIdAsync(int id)
+        {
+            var paper = await _shuffledExamPaperRepository.GetQueryable()
+                .Where(x => x.ShuffledExamPaperId == id && !x.IsDeleted)
+                .Include(x => x.OriginalExamPaper)
+                    .ThenInclude(o => o.OriginalExamPaperDetails)
+                        .ThenInclude(d => d.Answers)
+                .Include(x => x.OriginalExamPaper)
+                    .ThenInclude(o => o.OriginalExamPaperDetails)
+                        .ThenInclude(d => d.ChildQuestions)
+                            .ThenInclude(c => c.Answers)
+                .Include(x => x.Subject)
+                .FirstOrDefaultAsync();
+            
+            if (paper == null) return null;
+
+            var dto = _mapper.Map<ShuffledExamPaperDto>(paper);
+
+            // Manual mapping fix for QuestionStructures
+            if ((dto.QuestionStructures == null || !dto.QuestionStructures.Any()) 
+                && !string.IsNullOrEmpty(paper.QuestionStructure))
+            {
+                try 
+                {
+                    dto.QuestionStructures = Newtonsoft.Json.JsonConvert.DeserializeObject<List<QuestionStructureDto>>(paper.QuestionStructure) ?? new List<QuestionStructureDto>();
+                }
+                catch
+                {
+                    dto.QuestionStructures = new List<QuestionStructureDto>();
+                }
+            }
+            
+            return dto;
+        }
         
     }
 } 

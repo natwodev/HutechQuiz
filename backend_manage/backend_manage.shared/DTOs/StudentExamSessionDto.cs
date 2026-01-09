@@ -13,9 +13,9 @@ namespace backend_manage.shared.DTOs
         public DateTime EndTime { get; set; }
         public int StudentExamSessionId { get; set; }
         public int? OriginalExamPaperId { get; set; }
-        public int? ShuffledExamPaperId { get; set; }
         public string StudentAnswersString { get; set; }
+        public string AnswerKey { get; set; }
         public DateTime ExamSessionStartTime { get; set; }
         public DateTime ExamSessionEndTime { get; set; }
     }
-} 
+}

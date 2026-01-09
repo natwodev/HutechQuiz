@@ -139,6 +139,17 @@ public partial class StudentManagementTab : ComponentBase
     private async Task OpenImportDialog()
     {
         var parameters = new DialogParameters();
+        
+        // Nếu đang filter theo ca thi môn học, tìm Core tương ứng để truyền vào dialog
+        if (_selectedExamSessionSubjectIdValue.HasValue)
+        {
+            var selectedSubject = ExamSessionSubjects.FirstOrDefault(e => e.ExamSessionSubjectId == _selectedExamSessionSubjectIdValue.Value);
+            if (selectedSubject != null)
+            {
+                parameters.Add("DefaultExamSessionSubjectCore", selectedSubject.ExamSessionSubjectCore);
+            }
+        }
+        
         var dialog = await DialogService.ShowAsync<StudentImportDialog>("Import sinh viên từ Excel", parameters);
         var result = await dialog.Result;
         

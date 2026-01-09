@@ -19,15 +19,19 @@ public sealed class ExamZipParsedQuestion
 {
     public string QuestionId { get; set; } = string.Empty; // Q1, Q2, ...
     public string? ParentId { get; set; } // P1, P2, ... nếu thuộc parent
-    public string QuestionType { get; set; } = "mcq"; // mcq, short
+    public string QuestionType { get; set; } = "mcq"; // mcq, short, fill, match
     public string Stem { get; set; } = string.Empty;
     public string? LatexContent { get; set; }
     public bool HasImage { get; set; }
     public bool HasAudio { get; set; }
     public char? CorrectAnswerLabel { get; set; } // A, B, C, D cho MCQ
-    public string? CorrectAnswerText { get; set; } // Cho SHORT answer
+    public string? CorrectAnswerText { get; set; } // Cho SHORT answer hoặc MATCH answer (A-1;B-2)
     public bool CanShuffle { get; set; } = true; // Từ exam permute attribute trong question tag
     public List<ExamZipParsedAnswer> Answers { get; set; } = new();
+    
+    // For matching questions
+    public List<string> ColumnA { get; set; } = new(); // A. Scaffold, B. Row, ...
+    public List<string> ColumnB { get; set; } = new(); // 1. Something, 2. Something, ...
 }
 
 public sealed class ExamZipParsedAnswer
@@ -377,14 +381,27 @@ public static class ExamZipWordParserService
         var parentRegex = new Regex(@"\[parent\s+id\s*=\s*""([^""]+)""(?:\s+permute\s*=\s*(true|false))?\s*\]", RegexOptions.IgnoreCase);
         var parentEndRegex = new Regex(@"\[/parent\]", RegexOptions.IgnoreCase);
         
-        // Groups: 1 = id, 2 = exam permute (nếu có dấu phẩy trước), 3 = type, 4 = exam permute (nếu không có dấu phẩy, đứng sau type)
-        var questionRegex = new Regex(@"\[question\s+id\s*=\s*""([^""]+)""(?:\s*,\s*exam\s+permute\s*=\s*['""]?(true|false)['""]?)?(?:\s+type\s*=\s*""([^""]+)"")?(?:\s+exam\s+permute\s*=\s*['""]?(true|false)['""]?)?\s*\]", RegexOptions.IgnoreCase);
+        // Updated: Support both quoted and unquoted type values: type="match" or type=match or type=fill-multi
+        // Groups: 1 = id, 2 = exam permute (trước type), 3 = type (quoted), 4 = type (unquoted), 5 = exam permute (sau type)
+        var questionRegex = new Regex(@"\[question\s+id\s*=\s*""([^""]+)""(?:\s*,?\s*exam\s+permute\s*=\s*['""]?(true|false)['""]?)?(?:\s*,?\s*type\s*=\s*(?:""([^""]+)""|([a-zA-Z0-9\-]+)))?(?:\s*,?\s*exam\s+permute\s*=\s*['""]?(true|false)['""]?)?\s*\]", RegexOptions.IgnoreCase);
         var questionEndRegex = new Regex(@"\[/question\]", RegexOptions.IgnoreCase);
         var answerRegex = new Regex(@"\[answer\](.*?)\[/answer\]", RegexOptions.Singleline | RegexOptions.IgnoreCase);
+        var answerStartRegex = new Regex(@"\[answer\]", RegexOptions.IgnoreCase);
+        var answerEndRegex = new Regex(@"\[/answer\]", RegexOptions.IgnoreCase);
         var imageRegex = new Regex(@"\[image\]", RegexOptions.IgnoreCase);
         var audioRegex = new Regex(@"\[audio\]", RegexOptions.IgnoreCase);
         var latexRegex = new Regex(@"\[latex\](.*?)\[/latex\]", RegexOptions.Singleline | RegexOptions.IgnoreCase);
-        var answerOptionRegex = new Regex(@"^([A-Z])[\.\)]\s*(.*)$");
+        var answerOptionRegex = new Regex(@"^([A-Z])[\.\\)]\s*(.*)$");
+        var columnAStartRegex = new Regex(@"\[columnA\]", RegexOptions.IgnoreCase);
+        var columnAEndRegex = new Regex(@"\[/columnA\]", RegexOptions.IgnoreCase);
+        var columnBStartRegex = new Regex(@"\[columnB\]", RegexOptions.IgnoreCase);
+        var columnBEndRegex = new Regex(@"\[/columnB\]", RegexOptions.IgnoreCase);
+        
+        // State variables for parsing multi-line blocks
+        bool inAnswerBlock = false;
+        bool inColumnABlock = false;
+        bool inColumnBBlock = false;
+        var answerBlockContent = new StringBuilder();
 
         foreach (var raw in lines)
         {
@@ -454,18 +471,30 @@ public static class ExamZipWordParserService
                 {
                     examPermuteValue = questionMatch.Groups[2].Value.Trim().Equals("true", StringComparison.OrdinalIgnoreCase);
                 }
-                else if (questionMatch.Groups.Count > 4 && !string.IsNullOrEmpty(questionMatch.Groups[4].Value))
+                else if (questionMatch.Groups.Count > 5 && !string.IsNullOrEmpty(questionMatch.Groups[5].Value))
                 {
-                    examPermuteValue = questionMatch.Groups[4].Value.Trim().Equals("true", StringComparison.OrdinalIgnoreCase);
+                    examPermuteValue = questionMatch.Groups[5].Value.Trim().Equals("true", StringComparison.OrdinalIgnoreCase);
                 }
                 
-                // Lấy type từ group 3
-                var questionType = questionMatch.Groups.Count > 3 && !string.IsNullOrEmpty(questionMatch.Groups[3].Value)
-                    ? questionMatch.Groups[3].Value.Trim().ToLower()
-                    : "mcq";
+                // Lấy type từ group 3 (quoted) hoặc group 4 (unquoted)
+                // Hỗ trợ: type="match" hoặc type=match hoặc type=fill-multi
+                string questionType = "mcq";
+                if (questionMatch.Groups.Count > 3 && !string.IsNullOrEmpty(questionMatch.Groups[3].Value))
+                {
+                    questionType = questionMatch.Groups[3].Value.Trim().ToLower();
+                }
+                else if (questionMatch.Groups.Count > 4 && !string.IsNullOrEmpty(questionMatch.Groups[4].Value))
+                {
+                    questionType = questionMatch.Groups[4].Value.Trim().ToLower();
+                }
+                
+                // Normalize fill-multi to fill
+                if (questionType.StartsWith("fill"))
+                {
+                    questionType = "fill";
+                }
 
-                // Chỉ hỗ trợ mcq và short
-                if (questionType == "match") questionType = "mcq";
+                // Hỗ trợ các loại câu hỏi: mcq, short, fill, match
 
                 current = new ExamZipParsedQuestion
                 {
@@ -570,9 +599,137 @@ public static class ExamZipWordParserService
                 // Việc xử lý LatexContent ở đây được bỏ qua để tránh lặp nội dung khi ImportService append.
             }
 
-            // ===== ANSWER OPTIONS (A. B. C. D.) =====
+            // ===== COLUMN A/B FOR MATCHING QUESTIONS (multi-line) =====
+            if (current != null && current.QuestionType == "match")
+            {
+                // Handle [columnA] start
+                if (columnAStartRegex.IsMatch(line))
+                {
+                    inColumnABlock = true;
+                    // If content is on same line: [columnA]A. Something
+                    var afterTag = columnAStartRegex.Replace(line, "").Trim();
+                    if (!string.IsNullOrEmpty(afterTag) && !columnAEndRegex.IsMatch(afterTag))
+                    {
+                        current.ColumnA.Add(afterTag);
+                    }
+                    continue;
+                }
+                
+                // Handle [/columnA] end
+                if (columnAEndRegex.IsMatch(line))
+                {
+                    inColumnABlock = false;
+                    continue;
+                }
+                
+                // Collect columnA content
+                if (inColumnABlock && !string.IsNullOrWhiteSpace(line))
+                {
+                    current.ColumnA.Add(line.Trim());
+                    continue;
+                }
+                
+                // Handle [columnB] start
+                if (columnBStartRegex.IsMatch(line))
+                {
+                    inColumnBBlock = true;
+                    var afterTag = columnBStartRegex.Replace(line, "").Trim();
+                    if (!string.IsNullOrEmpty(afterTag) && !columnBEndRegex.IsMatch(afterTag))
+                    {
+                        current.ColumnB.Add(afterTag);
+                    }
+                    continue;
+                }
+                
+                // Handle [/columnB] end
+                if (columnBEndRegex.IsMatch(line))
+                {
+                    inColumnBBlock = false;
+                    continue;
+                }
+                
+                // Collect columnB content
+                if (inColumnBBlock && !string.IsNullOrWhiteSpace(line))
+                {
+                    current.ColumnB.Add(line.Trim());
+                    continue;
+                }
+            }
+            
+            // ===== MULTI-LINE ANSWER BLOCK =====
+            if (current != null)
+            {
+                // Handle [answer] start (multi-line)
+                if (answerStartRegex.IsMatch(line) && !answerEndRegex.IsMatch(line))
+                {
+                    inAnswerBlock = true;
+                    answerBlockContent.Clear();
+                    // Get content after [answer] tag on same line
+                    var afterTag = answerStartRegex.Replace(line, "").Trim();
+                    if (!string.IsNullOrEmpty(afterTag))
+                    {
+                        answerBlockContent.AppendLine(afterTag);
+                    }
+                    continue;
+                }
+                
+                // Handle [/answer] end
+                if (answerEndRegex.IsMatch(line))
+                {
+                    if (inAnswerBlock)
+                    {
+                        // Get content before [/answer] tag
+                        var beforeTag = answerEndRegex.Replace(line, "").Trim();
+                        if (!string.IsNullOrEmpty(beforeTag))
+                        {
+                            answerBlockContent.AppendLine(beforeTag);
+                        }
+                        
+                        // Process the collected answer content
+                        var answerContent = answerBlockContent.ToString().Trim();
+                        if (current.QuestionType == "match")
+                        {
+                            // Match answer format: A-2 \n B-3 \n C-1 -> A-2;B-3;C-1
+                            var pairs = answerContent.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries)
+                                .Select(s => s.Trim())
+                                .Where(s => !string.IsNullOrEmpty(s));
+                            current.CorrectAnswerText = string.Join(";", pairs);
+                        }
+                        else if (current.QuestionType == "fill")
+                        {
+                            // Fill answer format: StatelessWidget|StatefulWidget -> stored as CorrectAnswerText
+                            // Không tạo answer options, chỉ lưu CorrectAnswerText để mobile hiển thị ô nhập
+                            current.CorrectAnswerText = answerContent;
+                        }
+                        else if (current.QuestionType == "mcq" || current.QuestionType == "short")
+                        {
+                            // MCQ: single letter answer like "A" or "B"
+                            if (answerContent.Length == 1 && char.IsLetter(answerContent[0]))
+                            {
+                                current.CorrectAnswerLabel = char.ToUpper(answerContent[0]);
+                            }
+                            else
+                            {
+                                current.CorrectAnswerText = answerContent;
+                            }
+                        }
+                        
+                        inAnswerBlock = false;
+                    }
+                    continue;
+                }
+                
+                // Collect answer block content
+                if (inAnswerBlock && !string.IsNullOrWhiteSpace(line))
+                {
+                    answerBlockContent.AppendLine(line);
+                    continue;
+                }
+            }
+
+            // ===== ANSWER OPTIONS (A. B. C. D.) for MCQ and FILL =====
             var ansOptionMatch = answerOptionRegex.Match(line);
-            if (ansOptionMatch.Success && current.QuestionType == "mcq")
+            if (ansOptionMatch.Success && (current.QuestionType == "mcq" || current.QuestionType == "fill"))
             {
                 if (currentAnswer != null)
                     current.Answers.Add(currentAnswer);

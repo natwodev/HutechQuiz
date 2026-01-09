@@ -43,8 +43,17 @@ public class AdminStudentService
         try
         {
             using var formData = new MultipartFormDataContent();
-            using var stream = file.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024); // 10MB max
-            formData.Add(new StreamContent(stream), "file", file.Name);
+            
+            // Read file to byte array first to avoid stream issues
+            using var stream = file.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024);
+            using var memoryStream = new MemoryStream();
+            await stream.CopyToAsync(memoryStream);
+            var fileBytes = memoryStream.ToArray();
+            
+            var fileContent = new ByteArrayContent(fileBytes);
+            fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"); // Or detect mime type
+            
+            formData.Add(fileContent, "file", file.Name);
             formData.Add(new StringContent(examSessionSubjectCore), "examSessionSubjectCore");
 
             var response = await _httpClient.PostAsync("/api/Student/import-excel", formData);
@@ -58,10 +67,16 @@ public class AdminStudentService
                     Message = result?.message ?? "Import thành công"
                 };
             }
+            else 
+            {
+                var errorBody = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"Import failed. Status: {response.StatusCode}. Body: {errorBody}");
+            }
             return null;
         }
-        catch
+        catch (Exception ex)
         {
+            Console.WriteLine($"Error in ImportFromExcelAsync: {ex.Message}");
             return null;
         }
     }

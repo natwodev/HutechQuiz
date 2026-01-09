@@ -12,11 +12,22 @@ public partial class StudentImportDialog : ComponentBase
     [Inject] private AdminStudentService AdminStudentService { get; set; } = default!;
     [Inject] private ISnackbar Snackbar { get; set; } = default!;
     
+    [Parameter] public string DefaultExamSessionSubjectCore { get; set; } = "";
+
     private IBrowserFile? selectedFile;
     private string examSessionSubjectCore = "";
 
+    protected override void OnInitialized()
+    {
+        if (!string.IsNullOrEmpty(DefaultExamSessionSubjectCore))
+        {
+            examSessionSubjectCore = DefaultExamSessionSubjectCore;
+        }
+    }
+
     private void OnInputFileChange(InputFileChangeEventArgs e)
     {
+        Console.WriteLine($"File selected: {e.File.Name}, Size: {e.File.Size}");
         selectedFile = e.File;
         StateHasChanged();
     }
@@ -29,11 +40,15 @@ public partial class StudentImportDialog : ComponentBase
 
     private async Task HandleImport()
     {
+        Console.WriteLine("HandleImport called");
+        Console.WriteLine($"Core: {examSessionSubjectCore}, File: {selectedFile?.Name}");
+
         if (selectedFile == null || string.IsNullOrEmpty(examSessionSubjectCore))
         {
             Snackbar.Add("Vui lòng chọn file và nhập mã ca thi môn học", Severity.Warning);
             return;
         }
+
 
         try
         {

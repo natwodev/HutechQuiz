@@ -121,7 +121,8 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.StartTime, opt => opt.MapFrom(src => src.ExamSessionSubject.StartTime))
             .ForMember(dest => dest.EndTime, opt => opt.MapFrom(src => src.ExamSessionSubject.EndTime))
             .ForMember(dest => dest.ExtraMinutes, opt => opt.MapFrom(src => src.ExtraMinutes))
-            .ForMember(dest => dest.RemainingMinutes, opt => opt.MapFrom(src => src.RemainingMinutes));
+            .ForMember(dest => dest.RemainingMinutes, opt => opt.MapFrom(src => src.RemainingMinutes))
+            .ForMember(dest => dest.AnswerKey, opt => opt.MapFrom(src => src.OriginalExamPaper != null ? src.OriginalExamPaper.KeyValueList : (src.ShuffledExamPaper != null ? src.ShuffledExamPaper.AnswerKey : null)));
 
         // Mapping cho StudentExamSessionCacheDto
         CreateMap<StudentExamSession, StudentExamSessionCacheDto>()

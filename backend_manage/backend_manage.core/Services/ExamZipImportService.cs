@@ -248,12 +248,6 @@ public class ExamZipImportService
 
                 foreach (var q in parentGroup)
                 {
-                    // Bỏ qua match type questions
-                    if (q.QuestionType == "match")
-                    {
-                        _logger.LogInformation("Bỏ qua match type question: {QuestionId}", q.QuestionId);
-                        continue;
-                    }
                     
                     // Xây dựng QuestionContent với các markers
                     var questionContent = BuildQuestionContent(q, originalExamPaperCore, imageFilesMap);
@@ -313,18 +307,31 @@ public class ExamZipImportService
                             CreatedBy = userId
                         });
                     }
+                    else if (q.QuestionType == "fill")
+                    {
+                        // Fill question: Lưu CorrectAnswerText (format: answer1|answer2|...)
+                        answers.Add(new Answers
+                        {
+                            OriginalExamPaperDetail = detail,
+                            Order = 1,
+                            AnswerContent = q.CorrectAnswerText ?? "",
+                            IsCorrect = true,
+                            CanShuffleAnswer = false,
+                            CreatedAt = now,
+                            CreatedBy = userId
+                        });
+                    }
+                    else if (q.QuestionType == "match")
+                    {
+                        // Match question: Mỗi cặp nối = 1 câu hỏi riêng
+                        await ProcessMatchQuestion(q, detail, answers, now, userId, originalExamPaper.OriginalExamPaperId, childOrder);
+                    }
                 }
             }
 
             // Bước 4: Lưu các câu hỏi độc lập (không có parent)
             foreach (var q in independentQuestions)
             {
-                // Bỏ qua match type questions
-                if (q.QuestionType == "match")
-                {
-                    _logger.LogInformation("Bỏ qua match type question: {QuestionId}", q.QuestionId);
-                    continue;
-                }
                 
                 // Xây dựng QuestionContent với các markers
                 var questionContent = BuildQuestionContent(q, originalExamPaperCore, imageFilesMap);
@@ -382,6 +389,27 @@ public class ExamZipImportService
                         CreatedAt = now,
                         CreatedBy = userId
                     });
+                }
+                else if (q.QuestionType == "fill")
+                {
+                    // Fill question: Lưu CorrectAnswerText (format: answer1|answer2|...)
+                    // Tương tự short answer nhưng có thể có nhiều đáp án đúng ngăn cách bởi |
+                    answers.Add(new Answers
+                    {
+                        OriginalExamPaperDetail = detail,
+                        Order = 1,
+                        AnswerContent = q.CorrectAnswerText ?? "",
+                        IsCorrect = true,
+                        CanShuffleAnswer = false, // Fill answer không được hoán vị
+                        CreatedAt = now,
+                        CreatedBy = userId
+                    });
+                }
+                else if (q.QuestionType == "match")
+                {
+                    // Match question: Mỗi cặp nối = 1 câu hỏi riêng
+                    // Parse answer format: A-1;B-2;C-3
+                    await ProcessMatchQuestion(q, detail, answers, now, userId, originalExamPaper.OriginalExamPaperId, globalOrder);
                 }
             }
 
@@ -469,10 +497,22 @@ public class ExamZipImportService
             content.Append($" [latex]{q.LatexContent}[/latex] ");
         }
 
-        // Skip match type questions - no longer supported
+        // Build match question content với columnA và columnB tags
         if (q.QuestionType == "match")
         {
-            return content.ToString().Trim();
+            // Thêm các column vào content để mobile có thể parse
+            if (q.ColumnA.Any())
+            {
+                content.Append("\n[columnA]\n");
+                content.Append(string.Join("\n", q.ColumnA));
+                content.Append("\n[/columnA]");
+            }
+            if (q.ColumnB.Any())
+            {
+                content.Append("\n[columnB]\n");
+                content.Append(string.Join("\n", q.ColumnB));
+                content.Append("\n[/columnB]");
+            }
         }
 
         return content.ToString().Trim();
@@ -572,7 +612,7 @@ public class ExamZipImportService
                     .FirstOrDefaultAsync(o => o.OriginalExamPaperId == originalExamPaperId);
                 
                 if (originalExamPaper != null)
-                {
+            {
                     originalExamPaper.KeyValueList = keyValueList;
                     await _originalExamPaperRepository.UpdateAsync(originalExamPaper);
                     _logger.LogInformation("Đã tạo KeyValueList cho đề thi {OriginalExamPaperCore}: {KeyValueList}", 
@@ -584,6 +624,82 @@ public class ExamZipImportService
         {
             _logger.LogError(ex, "Lỗi khi tạo KeyValueList cho đề thi {OriginalExamPaperId}", originalExamPaperId);
             // Không throw exception để không làm gián đoạn quá trình import
+        }
+    }
+
+    /// <summary>
+    /// Xử lý câu hỏi nối (match type): Mỗi cặp nối (A-1, B-2) = 1 câu hỏi riêng
+    /// Tức là nếu có 4 cột A, B, C, D nối với 1, 2, 3, 4 thì tạo ra 4 câu hỏi con
+    /// </summary>
+    private async Task ProcessMatchQuestion(
+        ExamZipParsedQuestion q,
+        OriginalExamPaperDetail parentDetail,
+        List<Answers> answers,
+        DateTime now,
+        string userId,
+        int originalExamPaperId,
+        int startOrder)
+    {
+        // Parse answer format: A-1;B-2;C-3
+        if (string.IsNullOrEmpty(q.CorrectAnswerText))
+        {
+            _logger.LogWarning("Match question {QuestionId} không có đáp án đúng", q.QuestionId);
+            return;
+        }
+
+        var pairs = q.CorrectAnswerText.Split(';', StringSplitOptions.RemoveEmptyEntries);
+        int subOrder = 1;
+
+        foreach (var pair in pairs)
+        {
+            // Parse pair: A-1 -> leftLabel = A, rightLabel = 1
+            var parts = pair.Trim().Split('-');
+            if (parts.Length != 2) continue;
+
+            var leftLabel = parts[0].Trim();
+            var rightLabel = parts[1].Trim();
+
+            // Tìm content từ ColumnA và ColumnB
+            var leftContent = q.ColumnA.FirstOrDefault(c => c.StartsWith(leftLabel + ".") || c.StartsWith(leftLabel + ")"));
+            var rightContent = q.ColumnB.FirstOrDefault(c => c.StartsWith(rightLabel + ".") || c.StartsWith(rightLabel + ")"));
+
+            // Tạo nội dung câu hỏi con: "Nối A với đáp án đúng"
+            var subQuestionContent = $"Nối {leftContent ?? leftLabel} với đáp án đúng.";
+
+            // Tạo câu hỏi con
+            var subDetail = new OriginalExamPaperDetail
+            {
+                OriginalExamPaperId = originalExamPaperId,
+                Order = startOrder + subOrder++,
+                QuestionContent = subQuestionContent,
+                CorrectAnswerIndex = 1, // Đáp án đúng luôn là index 1 (đáp án đầu tiên)
+                ParentQuestionId = parentDetail.OriginalExamPaperDetailId,
+                CanShuffleQuestion = false, // Match không được hoán vị
+                ChapterId = null,
+                CreatedAt = now,
+                CreatedBy = userId
+            };
+
+            await _originalExamPaperDetailRepository.AddAsync(subDetail);
+
+            // Thêm các đáp án từ ColumnB
+            int aOrder = 1;
+            foreach (var rightItem in q.ColumnB)
+            {
+                var isCorrect = rightItem.StartsWith(rightLabel + ".") || rightItem.StartsWith(rightLabel + ")");
+                answers.Add(new Answers
+                {
+                    OriginalExamPaperDetail = subDetail,
+                    Order = aOrder++,
+                    AnswerContent = rightItem,
+                    IsCorrect = isCorrect,
+                    CanShuffleAnswer = false, // Match answer không được hoán vị
+                    CreatedAt = now,
+                    CreatedBy = userId
+                });
+            }
+
+            _logger.LogInformation("Đã tạo sub-question cho match: {LeftLabel}-{RightLabel}", leftLabel, rightLabel);
         }
     }
 }

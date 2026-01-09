@@ -30,7 +30,16 @@ public class StudentController : ControllerBase
     }
 
 
-     [HttpPost("login")]
+
+    [HttpGet]
+    [Authorize(Policy = "AdminOnly")]
+    public async Task<IActionResult> GetAll()
+    {
+        var students = await _studentService.GetAllAsync();
+        return Ok(students);
+    }
+
+    [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
         var result = await _studentService.LoginAsync(request.StudentCode1, request.StudentCode2);
