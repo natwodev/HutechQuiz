@@ -93,7 +93,7 @@ public class StudentAnswerHelper
     }
 
     // Overload method để tương thích với code cũ
-    public async Task<(bool Success, string Message, string? NewAnswersString)> UpdateSingleAnswerAsync(string studentCode, int studentExamSessionId, int key, int value)
+    public async Task<(bool Success, string Message, string? NewAnswersString)> UpdateSingleAnswerAsync(string studentCode, int studentExamSessionId, int key, object value)
     {
         var saveAnswerDto = new SaveAnswerDto
         {
@@ -106,7 +106,7 @@ public class StudentAnswerHelper
         return await UpdateSingleAnswerAsync(saveAnswerDto, studentCode);
     }
 
-    private static string UpdateSingleQuestionAnswer(string currentAnswerString, int key, int value)
+    private static string UpdateSingleQuestionAnswer(string currentAnswerString, int key, object value)
     {
         // Parse chuỗi đáp án hiện tại
         var answersDict = ParseAnswersString(currentAnswerString);

@@ -921,7 +921,7 @@ public class StudentService : IStudentService
 
     
     #region UpdateSingleAnswerAsync
-    public async Task<(bool Success, string Message, string? NewAnswersString)> UpdateSingleAnswerAsync(string studentCode, int studentExamSessionId, int key ,int value)
+    public async Task<(bool Success, string Message, string? NewAnswersString)> UpdateSingleAnswerAsync(string studentCode, int studentExamSessionId, int key ,object value)
     {
         try
         {

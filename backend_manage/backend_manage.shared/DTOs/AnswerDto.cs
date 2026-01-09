@@ -64,7 +64,7 @@ namespace backend_manage.shared.DTOs
         [Required]
         public int key { get; set; }
         // Dùng cho câu hỏi con trong câu cha
-        public int value { get; set; }
+        public object value { get; set; }
         
     }
 
