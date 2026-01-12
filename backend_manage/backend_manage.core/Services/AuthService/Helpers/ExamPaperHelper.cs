@@ -734,10 +734,59 @@ public class ExamPaperHelper
             }
 
             // Tính điểm và đếm câu đúng
-            var (score, correctAnswers, totalQuestions) = CalculateScore(
-                studentExamSessionDto.StudentAnswersString, 
-                answerKey
-            );
+            // Tính điểm và đếm câu đúng
+            double score = 0;
+            int correctAnswers = 0;
+            int totalQuestions = 0;
+
+            // Fetch Original Paper Details for Hierarchical Scoring (Support Matching Questions)
+            OriginalExamPaperDto? originalPaperFull = null;
+            if (studentExamSessionDto.OriginalExamPaperId.HasValue)
+            {
+                originalPaperFull = await GetOriginalExamPaperAsync(studentExamSessionDto.OriginalExamPaperId.Value);
+            }
+
+            if (originalPaperFull != null && originalPaperFull.Details != null && originalPaperFull.Details.Any())
+            {
+                 // Use Hierarchy Scoring
+                 // Need to convert DTOs to Entities or adjust Helper to accept DTOs?
+                 // Helper defined with: List<OriginalExamPaperDetail> details (Entities)
+                 // StartExam/SubmitExam uses DTOs. 
+                 // We need to map DTOs -> Entities or Overload Helper.
+                 // Overloading Helper for DTOs is cleaner.
+                 
+                 // Let's create Overload or Mapping.
+                 // Or easier: Just map DTO to needed Entity properties in a local helper or inline.
+                 // Actually CalculateScoreWithHierarchy uses: OriginalExamPaperDetailId, QuestionContent, ParentQuestionId, Order, Answers (List<Answer>).
+                 
+                 // DTO has: OriginalExamPaperDetailId, QuestionContent, ParentQuestionId, Order, Answers (List<AnswerDto>).
+                 // Properties map 1:1. We can create a lightweight mapper or overload.
+                 
+                 // Quick fix: Map DTO to Entity list manually here to avoid changing Helper sig excessively?
+                 // Or add overload to Helper.
+                 // Let's add Overload to Helper.
+                 
+                 var (s, c, t) = CalculateScoreWithHierarchyDto(
+                    answerKey, 
+                    ParseAnswerKey(studentExamSessionDto.StudentAnswersString), // Using existing ParseAnswerKey which returns Dict
+                    originalPaperFull.Details
+                 );
+                 score = s;
+                 correctAnswers = c;
+                 totalQuestions = t;
+            }
+            else
+            {
+                // Fallback: Standard Flat Scoring
+                 var (s, c, t) = CalculateScore(
+                    answerKey, 
+                    studentExamSessionDto.StudentAnswersString,
+                    _logger // Logger is field, pass logger if signature matches old one or remove if new one doesn't take it
+                 );
+                 score = s;
+                 correctAnswers = c;
+                 totalQuestions = t;
+            }
 
             // Cập nhật thông tin phiên thi
             var endTime = DateTimeHelper.GetVietnamTime();
@@ -786,8 +835,10 @@ public class ExamPaperHelper
         }
     }
 
-    private (double score, int correctAnswers, int totalQuestions) CalculateScore(string studentAnswers, string answerKey)
+    public (double score, int correctAnswers, int totalQuestions) CalculateScore(string studentAnswers, string answerKey, ILogger? logger = null)
     {
+        // Use provided logger or class logger
+        var log = logger ?? _logger;
         try
         {
             if (string.IsNullOrWhiteSpace(studentAnswers) || string.IsNullOrWhiteSpace(answerKey))
@@ -813,10 +864,35 @@ public class ExamPaperHelper
                 {
                     if (!string.IsNullOrWhiteSpace(studentAnswer) && studentAnswer != "-")
                     {
-                        // So sánh trực tiếp vì bây giờ value là số, không cần StringComparison
-                        if (studentAnswer == correctAnswer)
+                        // Handle Matching Question Logic: Check if it looks like a list of pairs (e.g. "A-1;B-2")
+                        // We check if both contain '-' and require splitting.
+                        bool isMatching = correctAnswer.Contains("-") && (correctAnswer.Contains(";") || correctAnswer.Contains("|"));
+
+                        if (isMatching)
                         {
-                            correctCount++;
+                            // Normalize and Split into sets
+                            var studentPairs = studentAnswer.Split(new[] { ';', '|' }, StringSplitOptions.RemoveEmptyEntries)
+                                .Select(p => p.Trim())
+                                .ToHashSet();
+                            var correctPairs = correctAnswer.Split(new[] { ';', '|' }, StringSplitOptions.RemoveEmptyEntries)
+                                .Select(p => p.Trim())
+                                .ToHashSet();
+
+                            if (studentPairs.SetEquals(correctPairs))
+                            {
+                                correctCount++;
+                            }
+                        }
+                        else
+                        {
+                            // Standard String Comparison
+                            string normStudent = studentAnswer.Replace('|', ';');
+                            string normCorrect = correctAnswer.Replace('|', ';');
+
+                            if (normStudent == normCorrect)
+                            {
+                                correctCount++;
+                            }
                         }
                     }
                 }
@@ -824,7 +900,7 @@ public class ExamPaperHelper
 
             double score = totalCount > 0 ? (double)correctCount / totalCount * 10 : 0;
 
-            _logger.LogInformation("📊 Kết quả tính điểm: Đúng {CorrectCount}/{TotalCount}, Điểm: {Score:F2}",
+            _logger.LogInformation("📊 Kết quả tính điểm (Flat): Đúng {CorrectCount}/{TotalCount}, Điểm: {Score:F2}",
                 correctCount, totalCount, score);
 
             return (score, correctCount, totalCount);
@@ -835,6 +911,267 @@ public class ExamPaperHelper
             return (0, 0, 0);
         }
     }
+
+    public (double Score, int CorrectAnswers, int TotalQuestions) CalculateScoreWithHierarchy(
+            string answerKey,
+            Dictionary<string, string> studentAnswerPairs,
+            List<OriginalExamPaperDetail> details)
+        {
+            // Parse Answers (Legacy/Child Answers)
+            var correctAnswerPairs = ParseAnswerKey(answerKey);
+
+            int correctCount = 0;
+            int totalCount = 0;
+
+            // Group by Parent to handle Hierarchy
+            // Top-level questions or Questions that are parents
+            // Note: details list might be flat, we need to identify roots.
+            // A matching question is a Parent.
+            
+            // 1. Identify Questions involved in scoring.
+            // We iterate through "Question Containers".
+            // If a question is a child, it is scored as part of its parent IF the parent is a Matching Question.
+            // Otherwise, handled individually? 
+            // Current flat logic counts every entry in answerKey.
+            // Changing to Hierarchy logic requires careful count.
+            
+            // BETTER STRATEGY: Iterate through the ANSWER KEY keys? 
+            // No, because Matching Parent doesn't have a key in AnswerKey, only children do.
+            // But Student Answer has Parent Key.
+            
+            // Strategy: Iterate through Details (Hierarchy)
+            var processedDetailIds = new HashSet<int>();
+            
+            // We assume details are all questions in this exam variant.
+            foreach (var detail in details)
+            {
+                if (processedDetailIds.Contains(detail.OriginalExamPaperDetailId)) continue;
+
+                // Check if Matching Question
+                bool isMatching = !string.IsNullOrEmpty(detail.QuestionContent) && 
+                                  detail.QuestionContent.Contains("[columnA]") && 
+                                  detail.QuestionContent.Contains("[columnB]");
+
+                if (isMatching)
+                {
+                    // Processing Matching Question (Parent)
+                    processedDetailIds.Add(detail.OriginalExamPaperDetailId);
+                    totalCount++; // Counts as 1 question container?
+                    // NOTE: Previous logic counted sub-questions. If we change totalCount here, Score changes.
+                    // Frontend 'TotalQuestions' is now Container Count. So scoring should align?
+                    // User complained "Not Scored". If we align Score Calculation to Container Count:
+                    // 1 Matching Question = 1 Point (or weighted?). Default 1.
+                    
+                    // RECONSTRUCT CORRECT ANSWER FOR PARENT
+                    // Get Children from the ChildQuestions property (since 'details' list only contains Roots/Parents)
+                    var children = detail.ChildQuestions != null 
+                        ? detail.ChildQuestions.OrderBy(d => d.Order).ToList() 
+                        : new List<OriginalExamPaperDetail>();
+
+                    // Note: No need to add children to processedDetailIds manually if we are only iterating Roots in the main loop.
+                    // But if 'details' flat list logic is assumed elsewhere, we might need care.
+                    // Since 'details' passed in comes from DTO.Details (Roots only), we are fine.
+                    
+                    // Build Correct Pattern: A-1|B-2
+                    var correctParts = new List<string>();
+                    
+                    // Need to parse Left Column to get Labels A, B...?
+                    // MatchQuestionHelper logic: Left Index -> Right Index.
+                    // Here we have Child ID -> Answer ID -> Answer Order.
+                    
+                    // Parse Left Column Count to map Index to Child
+                    int childIndex = 0;
+                    foreach (var child in children)
+                    {
+                        // Get Correct Answer ID from Answer Key (if any)
+                        // key in dict is string "childId"
+                        if (correctAnswerPairs.TryGetValue(child.OriginalExamPaperDetailId.ToString(), out var ansIdStr))
+                        {
+                            if (int.TryParse(ansIdStr, out int ansId))
+                            {
+                                // Find Answer Entity with this ID in child.Answers
+                                var ans = child.Answers.FirstOrDefault(a => a.AnswerId == ansId);
+                                if (ans != null)
+                                {
+                                    // Right Index = Order - 1 (Assuming Order 1..N)
+                                    // Left Label? We can just use "A", "B" etc based on childIndex.
+                                    // Or fetch from content if needed.
+                                    // Frontend reconstruction uses extractLabel. 
+                                    // For backend simpilicity: Let's assume standard A, B, C... maps to 0, 1, 2...
+                                    // Or better: Use the SAME comparison logic as frontend?
+                                    // Frontend sends "A-1|B-2".
+                                    // We construct "A-1|B-2".
+                                    
+                                    // Helper to get Char from Index (0->A, 1->B)
+                                    string leftLabel = GetLabelFromIndex(childIndex);
+                                    string rightLabel = ans.Order.ToString(); 
+                                    // Note: Frontend might send "1. Item" or just "1". 
+                                    // Frontend fix uses "1", "2" (index+1).
+                                    
+                                    correctParts.Add($"{leftLabel}-{rightLabel}");
+                                }
+                            }
+                        }
+                        childIndex++;
+                    }
+                    
+                    var correctReconstructed = string.Join("|", correctParts);
+                    var correctSet = correctParts.ToHashSet();
+
+                    // Get Student Answer
+                    if (studentAnswerPairs.TryGetValue(detail.OriginalExamPaperDetailId.ToString(), out var studentAnsRaw))
+                    {
+                        // Student Ans: A-1|B-2
+                         var studentSet = studentAnsRaw.Split(new[] { ';', '|' }, StringSplitOptions.RemoveEmptyEntries)
+                                .Select(p => p.Trim())
+                                .ToHashSet();
+                        
+                        _logger.LogInformation("MATCHING CHECK: ParentID={ParentID} Correct='{Correct}' Student='{Student}'", 
+                            detail.OriginalExamPaperDetailId, correctReconstructed, studentAnsRaw);
+
+                        // Compare Sets
+                         if (correctSet.Count > 0 && 
+                             studentSet.Count == correctSet.Count && 
+                             studentSet.SetEquals(correctSet))
+                         {
+                             correctCount++;
+                             _logger.LogInformation("MATCHING: CORRECT");
+                         }
+                         else
+                         {
+                             _logger.LogInformation("MATCHING: INCORRECT CorrectSetCount={C} StudentSetCount={S}", correctSet.Count, studentSet.Count);
+                         }
+                    }
+                }
+                else
+                {
+                    // Regular Question or Child of non-matching (shouldn't happen if looped correctly)
+                    // If it has children (Group Question?), handle children?
+                    // Logic: If ParentId is null, check children.
+                    
+                    if (detail.ParentQuestionId == null)
+                    {
+                        var children = detail.ChildQuestions != null ? detail.ChildQuestions.ToList() : new List<OriginalExamPaperDetail>();
+                        if (children.Any())
+                        {
+                           // Not Matching, but Group. Score each child individually?
+                           // Or Score as 1?
+                           // Existing Logic was Flat.
+                           // If we want to support "TotalQuestions" as Containers, we should probably score by container.
+                           // BUT: Reading/Listening groups usually score per sub-question.
+                           // Matching is unique because user answers ONCE for the whole block.
+                           
+                           // If regular group: Treat children as individual score-able items.
+                           // Do NOT add to processedDetailIds of children here, let loop handle or process them now?
+                           // Let's process valid AnswerKey entries only.
+                           
+                           processedDetailIds.Add(detail.OriginalExamPaperDetailId); // Process parent
+                           // But parent itself might not have answer.
+                           
+                           // Loop children will be picked up by main loop? 
+                           // Yes, assuming details list contains children.
+                           // So we just continue.
+                        }
+                        else
+                        {
+                            // Single Question
+                            processedDetailIds.Add(detail.OriginalExamPaperDetailId);
+                            // Check Answer
+                             if (CheckAnswer(detail.OriginalExamPaperDetailId.ToString(), studentAnswerPairs, correctAnswerPairs))
+                             {
+                                 correctCount++;
+                             }
+                             totalCount++;
+                        }
+                    }
+                    else
+                    {
+                        // Is a Child Question.
+                        // If Parent was Matching, it's already processed.
+                        // If Parent was Group (Reading), it is processed here individually.
+                        processedDetailIds.Add(detail.OriginalExamPaperDetailId);
+                        
+                         if (CheckAnswer(detail.OriginalExamPaperDetailId.ToString(), studentAnswerPairs, correctAnswerPairs))
+                         {
+                             correctCount++;
+                         }
+                         totalCount++;
+                    }
+                }
+            }
+
+             double score = totalCount > 0 ? (double)correctCount / totalCount * 10 : 0;
+
+            _logger.LogInformation("📊 Kết quả tính điểm (Hierarchy): Đúng {CorrectCount}/{TotalCount}, Điểm: {Score:F2}",
+                correctCount, totalCount, score);
+
+            return (score, correctCount, totalCount);
+        }
+        
+        public (double Score, int CorrectAnswers, int TotalQuestions) CalculateScoreWithHierarchyDto(
+            string answerKey,
+            Dictionary<string, string> studentAnswerPairs,
+            List<OriginalExamPaperDetailDto> detailsDto)
+        {
+            // Map DTO to Entity for reuse logic
+            // We only need specific fields.
+            // Mapping List<AnswerDto> to List<Answer>
+            
+            var details = detailsDto.Select(d => new OriginalExamPaperDetail
+            {
+                OriginalExamPaperDetailId = d.OriginalExamPaperDetailId,
+                QuestionContent = d.QuestionContent,
+                ParentQuestionId = d.ParentQuestionId,
+                Order = d.Order,
+                Answers = d.Answers?.Select(a => new Answers
+                {
+                    AnswerId = a.AnswerId,
+                    Order = a.Order,
+                    AnswerContent = a.AnswerContent
+                    // Other fields not needed for scoring
+                }).ToList() ?? new List<Answers>(),
+                
+                // CRITICAL FIX: Map ChildQuestions for Hierarchy Logic
+                ChildQuestions = d.ChildQuestions?.Select(c => new OriginalExamPaperDetail 
+                {
+                    OriginalExamPaperDetailId = c.OriginalExamPaperDetailId,
+                    Order = c.Order,
+                    ParentQuestionId = c.ParentQuestionId,
+                    QuestionContent = c.QuestionContent,
+                    Answers = c.Answers?.Select(a => new Answers 
+                    {
+                        AnswerId = a.AnswerId,
+                        Order = a.Order,
+                        AnswerContent = a.AnswerContent
+                    }).ToList() ?? new List<Answers>()
+                }).ToList() ?? new List<OriginalExamPaperDetail>()
+                
+            }).ToList();
+
+            return CalculateScoreWithHierarchy(answerKey, studentAnswerPairs, details);
+        }
+        private string GetLabelFromIndex(int index)
+        {
+            // 0 -> A, 1 -> B ...
+            return ((char)('A' + index)).ToString();
+        }
+
+        private bool CheckAnswer(string key, Dictionary<string,string> studentPairs, Dictionary<string,string> correctPairs)
+        {
+             if (correctPairs.TryGetValue(key, out var correctAns))
+             {
+                 if (studentPairs.TryGetValue(key, out var studentAns))
+                 {
+                    if (!string.IsNullOrWhiteSpace(studentAns) && studentAns != "-")
+                    {
+                          string normStudent = studentAns.Replace('|', ';');
+                          string normCorrect = correctAns.Replace('|', ';');
+                          return normStudent == normCorrect;
+                    }
+                 }
+             }
+             return false;
+        }
 
     public async Task<OriginalExamPaperDto> GetWithDetailsByIdAsync(int originalExamPaperId)
     {
@@ -884,7 +1221,7 @@ public class ExamPaperHelper
         try
         {
             var db = _redisService.GetDatabase();
-            string cacheKey = $"original_exam_paper:{originalExamPaperId}";
+            string cacheKey = $"original_exam_paper_v2:{originalExamPaperId}";
             _logger.LogInformation("Đang tìm đề thi gốc từ Redis với key: {CacheKey}", cacheKey);
 
             var cachedPaper = await db.StringGetAsync(cacheKey);
@@ -948,7 +1285,7 @@ public class ExamPaperHelper
             }
 
             var db = _redisService.GetDatabase();
-            string cacheKey = $"original_exam_paper:{originalExamPaperId}";
+            string cacheKey = $"original_exam_paper_v2:{originalExamPaperId}";
             
             var jsonOptions = new JsonSerializerOptions
             {
