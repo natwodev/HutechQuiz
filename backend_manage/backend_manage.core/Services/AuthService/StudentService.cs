@@ -1151,12 +1151,59 @@ public class StudentService : IStudentService
             .Include(x => x.ExamSessionSubject)
             .ThenInclude(x => x.ExamSession)    // để lấy ExamSessionName
             .Include(x => x.OriginalExamPaper)
+            .ThenInclude(op => op.OriginalExamPaperDetails)
             .Include(x => x.ShuffledExamPaper)
             .ToListAsync();
 
 
         // Map sang DTO
         var result = _mapper.Map<List<StudentExamSessionHistoryDto>>(studentExamSession);
+
+        // Recalculate logic based on Grouped Questions (matching Frontend ExamResultScreen logic)
+        foreach (var dto in result)
+        {
+            try
+            {
+                var session = studentExamSession.FirstOrDefault(x => x.StudentExamSessionId == dto.StudentExamSessionId);
+                if (session?.OriginalExamPaper?.OriginalExamPaperDetails == null) continue;
+
+                var allDetails = session.OriginalExamPaper.OriginalExamPaperDetails.ToList();
+                var parentQuestions = allDetails.Where(q => q.ParentQuestionId == null).ToList();
+
+                // If no parents found but details exist, assume flat structure (all are parents)
+                if (parentQuestions.Count == 0 && allDetails.Count > 0)
+                {
+                    parentQuestions = allDetails;
+                }
+
+                // Update Total Count to be the number of "Question Containers" by default
+                dto.TotalQuestions = parentQuestions.Count;
+
+                // Recalculate Correct Answers & Score using Hierarchy Logic (Matching Support)
+                if (!string.IsNullOrEmpty(session.StudentAnswersString))
+                {
+                    string answerKey = session.ShuffledExamPaper?.AnswerKey ?? session.OriginalExamPaper.KeyValueList;
+                    
+                    if (!string.IsNullOrEmpty(answerKey))
+                    {
+                        // Use the new helper method that supports matching questions
+                        var (score, correct, total) = _examPaperHelper.CalculateScoreWithHierarchy(
+                            answerKey,
+                            _examPaperHelper.ParseAnswerKey(session.StudentAnswersString),
+                            allDetails
+                        );
+
+                        dto.CorrectAnswers = correct;
+                        dto.TotalQuestions = total; // This confirms the container count
+                        dto.Score = score;
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                // Fallback: keep original values from DB if calculation fails
+            }
+        }
 
         return result;
     }
